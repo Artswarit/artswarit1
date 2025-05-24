@@ -2,8 +2,12 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LayoutDashboard, Users, MessageSquare, FileText, Settings, CreditCard, Heart, Bell, ChevronRight, Search, CheckCircle, Clock } from "lucide-react";
+import { LayoutDashboard, Users, MessageSquare, FileText, Settings, CreditCard, Heart, Bell, ChevronRight, Search, CheckCircle, Clock, Star } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import SavedArtists from "@/components/dashboard/SavedArtists";
+import ClientMessages from "@/components/dashboard/ClientMessages";
+import ProjectRating from "@/components/dashboard/ProjectRating";
+import ClientPayments from "@/components/dashboard/ClientPayments";
 
 // Mock data for projects
 const activeProjects = [{
@@ -109,8 +113,12 @@ const ClientDashboard = () => {
                 Messages
               </TabsTrigger>
               <TabsTrigger value="artists" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Artists
+                <Heart className="h-4 w-4" />
+                Saved Artists
+              </TabsTrigger>
+              <TabsTrigger value="ratings" className="flex items-center gap-2">
+                <Star className="h-4 w-4" />
+                Reviews
               </TabsTrigger>
               <TabsTrigger value="payments" className="flex items-center gap-2">
                 <CreditCard className="h-4 w-4" />
@@ -294,31 +302,27 @@ const ClientDashboard = () => {
             </div>
           </TabsContent>
           
-          {/* Other tab contents would go here */}
+          {/* Messages Tab */}
           <TabsContent value="messages">
-            <div className="bg-white/60 backdrop-blur-sm p-6 rounded-xl shadow-sm border border-blue-100 text-center py-20">
-              <h3 className="font-heading text-xl font-semibold mb-2">Messages</h3>
-              <p className="text-muted-foreground mb-4">Stay connected with your artists and manage your conversations.</p>
-              <Button>Open Messages</Button>
-            </div>
+            <ClientMessages />
           </TabsContent>
           
+          {/* Saved Artists Tab */}
           <TabsContent value="artists">
-            <div className="bg-white/60 backdrop-blur-sm p-6 rounded-xl shadow-sm border border-blue-100 text-center py-20">
-              <h3 className="font-heading text-xl font-semibold mb-2">Artists</h3>
-              <p className="text-muted-foreground mb-4">View your favorite artists and discover new talent.</p>
-              <Button>Browse Artists</Button>
-            </div>
+            <SavedArtists />
+          </TabsContent>
+
+          {/* Ratings Tab */}
+          <TabsContent value="ratings">
+            <ProjectRating />
           </TabsContent>
           
+          {/* Payments Tab */}
           <TabsContent value="payments">
-            <div className="bg-white/60 backdrop-blur-sm p-6 rounded-xl shadow-sm border border-blue-100 text-center py-20">
-              <h3 className="font-heading text-xl font-semibold mb-2">Payment History</h3>
-              <p className="text-muted-foreground mb-4">View your payment history and manage billing information.</p>
-              <Button>Manage Payments</Button>
-            </div>
+            <ClientPayments />
           </TabsContent>
           
+          {/* Settings Tab */}
           <TabsContent value="settings">
             <div className="bg-white/60 backdrop-blur-sm p-6 rounded-xl shadow-sm border border-blue-100 text-center py-20">
               <h3 className="font-heading text-xl font-semibold mb-2">Account Settings</h3>
