@@ -8,12 +8,13 @@ import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Search, Filter, Eye, Heart } from "lucide-react";
+import { Search, Filter, Eye, Heart, Shield, AlertTriangle } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
-// Mock data for artwork (expanded)
+// Mock data for artwork (expanded with AI detection status)
 const allArtwork = [
   {
     id: "1",
@@ -27,7 +28,10 @@ const allArtwork = [
     likes: 243,
     views: 1862,
     price: 450,
-    year: 2023
+    year: 2023,
+    aiDetected: false,
+    aiConfidence: 0.15,
+    verified: true
   }, 
   {
     id: "2",
@@ -41,7 +45,10 @@ const allArtwork = [
     likes: 187,
     views: 1253,
     price: 350,
-    year: 2022
+    year: 2022,
+    aiDetected: true,
+    aiConfidence: 0.85,
+    verified: false
   }, 
   {
     id: "3",
@@ -55,7 +62,10 @@ const allArtwork = [
     likes: 329,
     views: 2451,
     price: 550,
-    year: 2023
+    year: 2023,
+    aiDetected: false,
+    aiConfidence: 0.25,
+    verified: true
   }, 
   {
     id: "4",
@@ -69,7 +79,10 @@ const allArtwork = [
     likes: 156,
     views: 983,
     price: 300,
-    year: 2021
+    year: 2021,
+    aiDetected: true,
+    aiConfidence: 0.78,
+    verified: false
   }, 
   {
     id: "5",
@@ -83,7 +96,10 @@ const allArtwork = [
     likes: 274,
     views: 1764,
     price: 480,
-    year: 2023
+    year: 2023,
+    aiDetected: false,
+    aiConfidence: 0.12,
+    verified: true
   }, 
   {
     id: "6",
@@ -97,7 +113,10 @@ const allArtwork = [
     likes: 412,
     views: 2891,
     price: 680,
-    year: 2022
+    year: 2022,
+    aiDetected: false,
+    aiConfidence: 0.08,
+    verified: true
   }, 
   {
     id: "7",
@@ -111,7 +130,10 @@ const allArtwork = [
     likes: 382,
     views: 2176,
     price: 520,
-    year: 2023
+    year: 2023,
+    aiDetected: true,
+    aiConfidence: 0.92,
+    verified: false
   }, 
   {
     id: "8",
@@ -125,7 +147,10 @@ const allArtwork = [
     likes: 276,
     views: 1654,
     price: 490,
-    year: 2021
+    year: 2021,
+    aiDetected: false,
+    aiConfidence: 0.18,
+    verified: true
   }
 ];
 
@@ -152,8 +177,11 @@ const Explore = () => {
   const [selectedMedium, setSelectedMedium] = useState("All");
   const [sortBy, setSortBy] = useState("latest");
   const [priceRange, setPriceRange] = useState([0, 1000]);
+  const [aiFilter, setAiFilter] = useState("all"); // all, verified-only, ai-flagged, human-only
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [viewMode, setViewMode] = useState("carousel"); // carousel, grid
 
-  // Filter artwork based on search, category, artist type, and other filters
+  // Filter artwork based on all criteria
   const filteredArtwork = allArtwork.filter(artwork => {
     const matchesSearch = artwork.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           artwork.artist.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -164,7 +192,23 @@ const Explore = () => {
     const matchesMedium = selectedMedium === "All" || artwork.medium === selectedMedium;
     const matchesPrice = artwork.price >= priceRange[0] && artwork.price <= priceRange[1];
     
-    return matchesSearch && matchesCategory && matchesArtistType && matchesMedium && matchesPrice;
+    // AI Detection Filter
+    let matchesAiFilter = true;
+    switch (aiFilter) {
+      case "verified-only":
+        matchesAiFilter = artwork.verified;
+        break;
+      case "ai-flagged":
+        matchesAiFilter = artwork.aiDetected;
+        break;
+      case "human-only":
+        matchesAiFilter = !artwork.aiDetected;
+        break;
+      default:
+        matchesAiFilter = true;
+    }
+    
+    return matchesSearch && matchesCategory && matchesArtistType && matchesMedium && matchesPrice && matchesAiFilter;
   });
 
   // Sort the filtered artwork
@@ -179,9 +223,21 @@ const Explore = () => {
       return a.price - b.price;
     } else if (sortBy === "priceHighLow") {
       return b.price - a.price;
+    } else if (sortBy === "aiConfidence") {
+      return b.aiConfidence - a.aiConfidence;
     }
     return 0;
   });
+
+  const clearAllFilters = () => {
+    setSearchTerm("");
+    setSelectedCategory("All");
+    setSelectedArtistType("All");
+    setSelectedMedium("All");
+    setPriceRange([0, 1000]);
+    setAiFilter("all");
+    setSortBy("latest");
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -199,145 +255,196 @@ const Explore = () => {
             </p>
           </div>
 
-          {/* Search and filter section */}
-          <div className="mb-8">
-            <div className="relative max-w-xl mx-auto mb-6">
-              <Input 
-                type="text" 
-                placeholder="Search artworks by title or artist..." 
-                value={searchTerm} 
-                onChange={e => setSearchTerm(e.target.value)} 
-                className="pl-10 pr-4 py-2 text-sm backdrop-blur-sm bg-white/80 border-blue-100 focus:border-artswarit-purple" 
-              />
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                <Search size={16} />
-              </div>
+          {/* Search */}
+          <div className="relative max-w-xl mx-auto mb-6">
+            <Input 
+              type="text" 
+              placeholder="Search artworks by title or artist..." 
+              value={searchTerm} 
+              onChange={e => setSearchTerm(e.target.value)} 
+              className="pl-10 pr-4 py-2 text-sm backdrop-blur-sm bg-white/80 border-blue-100 focus:border-artswarit-purple" 
+            />
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+              <Search size={16} />
             </div>
+          </div>
 
-            <div className="bg-white/60 backdrop-blur-md p-6 rounded-lg shadow-sm border border-blue-100 mb-6">
-              <div className="flex items-center gap-2 mb-4">
+          {/* Quick AI Filter Buttons */}
+          <div className="flex justify-center gap-2 mb-6 flex-wrap">
+            <Button 
+              variant={aiFilter === "all" ? "default" : "outline"} 
+              size="sm" 
+              onClick={() => setAiFilter("all")}
+              className={aiFilter === "all" ? "bg-gradient-to-r from-artswarit-purple to-blue-500 border-none" : ""}
+            >
+              All Artwork
+            </Button>
+            <Button 
+              variant={aiFilter === "verified-only" ? "default" : "outline"} 
+              size="sm" 
+              onClick={() => setAiFilter("verified-only")}
+              className={`flex items-center gap-1 ${aiFilter === "verified-only" ? "bg-green-500 hover:bg-green-600 border-none" : ""}`}
+            >
+              <Shield className="w-3 h-3" />
+              Verified Only
+            </Button>
+            <Button 
+              variant={aiFilter === "human-only" ? "default" : "outline"} 
+              size="sm" 
+              onClick={() => setAiFilter("human-only")}
+              className={aiFilter === "human-only" ? "bg-blue-500 hover:bg-blue-600 border-none" : ""}
+            >
+              Human Created
+            </Button>
+            <Button 
+              variant={aiFilter === "ai-flagged" ? "default" : "outline"} 
+              size="sm" 
+              onClick={() => setAiFilter("ai-flagged")}
+              className={`flex items-center gap-1 ${aiFilter === "ai-flagged" ? "bg-red-500 hover:bg-red-600 border-none" : ""}`}
+            >
+              <AlertTriangle className="w-3 h-3" />
+              AI Flagged
+            </Button>
+          </div>
+
+          {/* Advanced Filters */}
+          <div className="bg-white/60 backdrop-blur-md p-6 rounded-lg shadow-sm border border-blue-100 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
                 <Filter size={18} className="text-primary" />
                 <h3 className="font-semibold text-lg">Filters</h3>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Category filter */}
-                <div>
-                  <Label className="block mb-2 font-medium">Category</Label>
-                  <div className="flex flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={clearAllFilters}>
+                  Clear All
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                >
+                  {showAdvancedFilters ? "Hide" : "Show"} Advanced
+                </Button>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Category filter */}
+              <div>
+                <Label className="block mb-2 font-medium">Category</Label>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
                     {categories.map(category => (
-                      <Button 
-                        key={category} 
-                        variant={selectedCategory === category ? "default" : "outline"} 
-                        size="sm" 
-                        onClick={() => setSelectedCategory(category)} 
-                        className={selectedCategory === category ? "bg-gradient-to-r from-artswarit-purple to-blue-500 border-none" : "border-blue-200"}
-                      >
-                        {category}
-                      </Button>
+                      <SelectItem key={category} value={category}>{category}</SelectItem>
                     ))}
-                  </div>
-                </div>
-                
-                {/* Artist Type filter */}
-                <div>
-                  <Label className="block mb-2 font-medium">Artist Type</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {artistTypes.map(type => (
-                      <Button 
-                        key={type} 
-                        variant={selectedArtistType === type ? "default" : "outline"} 
-                        size="sm" 
-                        onClick={() => setSelectedArtistType(type)} 
-                        className={selectedArtistType === type ? "bg-gradient-to-r from-artswarit-purple to-blue-500 border-none" : "border-blue-200"}
-                      >
-                        {type}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* Medium filter */}
-                <div>
-                  <Label className="block mb-2 font-medium">Medium</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {mediums.map(medium => (
-                      <Button 
-                        key={medium} 
-                        variant={selectedMedium === medium ? "default" : "outline"} 
-                        size="sm" 
-                        onClick={() => setSelectedMedium(medium)} 
-                        className={selectedMedium === medium ? "bg-gradient-to-r from-artswarit-purple to-blue-500 border-none" : "border-blue-200"}
-                      >
-                        {medium}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Price range filter */}
-                <div>
-                  <Label htmlFor="price-range" className="block mb-2 font-medium">
-                    Price range: ${priceRange[0]} - ${priceRange[1]}
-                  </Label>
-                  <Slider 
-                    id="price-range" 
-                    defaultValue={[0, 1000]} 
-                    max={1000} 
-                    step={50} 
-                    value={priceRange} 
-                    onValueChange={setPriceRange} 
-                    className="my-4" 
-                  />
-                </div>
+                  </SelectContent>
+                </Select>
               </div>
               
-              <Separator className="my-4" />
+              {/* Artist Type filter */}
+              <div>
+                <Label className="block mb-2 font-medium">Artist Type</Label>
+                <Select value={selectedArtistType} onValueChange={setSelectedArtistType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select artist type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {artistTypes.map(type => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {/* Medium filter */}
+              <div>
+                <Label className="block mb-2 font-medium">Medium</Label>
+                <Select value={selectedMedium} onValueChange={setSelectedMedium}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select medium" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mediums.map(medium => (
+                      <SelectItem key={medium} value={medium}>{medium}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-              {/* Sort options */}
+              {/* Sort */}
               <div>
                 <Label className="block mb-2 font-medium">Sort by</Label>
-                <RadioGroup 
-                  defaultValue="latest" 
-                  value={sortBy} 
-                  onValueChange={setSortBy} 
-                  className="flex flex-wrap gap-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="latest" id="latest" />
-                    <Label htmlFor="latest">Latest</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="mostLiked" id="mostLiked" />
-                    <Label htmlFor="mostLiked">Most Liked</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="mostViewed" id="mostViewed" />
-                    <Label htmlFor="mostViewed">Most Viewed</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="priceLowHigh" id="priceLowHigh" />
-                    <Label htmlFor="priceLowHigh">Price: Low to High</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="priceHighLow" id="priceHighLow" />
-                    <Label htmlFor="priceHighLow">Price: High to Low</Label>
-                  </div>
-                </RadioGroup>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="latest">Latest</SelectItem>
+                    <SelectItem value="mostLiked">Most Liked</SelectItem>
+                    <SelectItem value="mostViewed">Most Viewed</SelectItem>
+                    <SelectItem value="priceLowHigh">Price: Low to High</SelectItem>
+                    <SelectItem value="priceHighLow">Price: High to Low</SelectItem>
+                    <SelectItem value="aiConfidence">AI Detection Score</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            {/* Results count */}
-            <div className="mb-6">
-              <p className="text-muted-foreground">
-                Showing {filteredArtwork.length} of {allArtwork.length} artworks
-              </p>
-              <Separator className="mt-2" />
-            </div>
+            {showAdvancedFilters && (
+              <>
+                <Separator className="my-4" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Price range filter */}
+                  <div>
+                    <Label htmlFor="price-range" className="block mb-2 font-medium">
+                      Price range: ${priceRange[0]} - ${priceRange[1]}
+                    </Label>
+                    <Slider 
+                      id="price-range" 
+                      defaultValue={[0, 1000]} 
+                      max={1000} 
+                      step={50} 
+                      value={priceRange} 
+                      onValueChange={setPriceRange} 
+                      className="my-4" 
+                    />
+                  </div>
 
-            {/* Artwork carousel/slider - Larger slides */}
-            {filteredArtwork.length > 0 ? (
-              <div className="mt-8">
+                  {/* View Mode */}
+                  <div>
+                    <Label className="block mb-2 font-medium">View Mode</Label>
+                    <RadioGroup value={viewMode} onValueChange={setViewMode} className="flex gap-4">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="carousel" id="carousel" />
+                        <Label htmlFor="carousel">Carousel</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="grid" id="grid" />
+                        <Label htmlFor="grid">Grid</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Results count */}
+          <div className="mb-6">
+            <p className="text-muted-foreground">
+              Showing {filteredArtwork.length} of {allArtwork.length} artworks
+              {aiFilter !== "all" && <span className="ml-2 text-sm">• {aiFilter.replace("-", " ")}</span>}
+            </p>
+            <Separator className="mt-2" />
+          </div>
+
+          {/* Artwork display */}
+          {filteredArtwork.length > 0 ? (
+            <div className="mt-8">
+              {viewMode === "carousel" ? (
                 <Carousel
                   opts={{
                     align: "start",
@@ -354,6 +461,26 @@ const Explore = () => {
                             alt={artwork.title}
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                           />
+                          
+                          {/* AI Detection Badge */}
+                          <div className="absolute top-4 right-4 z-10">
+                            {artwork.aiDetected ? (
+                              <div className="bg-red-500/90 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
+                                <AlertTriangle className="w-3 h-3" />
+                                AI Detected ({Math.round(artwork.aiConfidence * 100)}%)
+                              </div>
+                            ) : artwork.verified ? (
+                              <div className="bg-green-500/90 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
+                                <Shield className="w-3 h-3" />
+                                Verified
+                              </div>
+                            ) : (
+                              <div className="bg-blue-500/90 text-white px-2 py-1 rounded-full text-xs">
+                                Human Created
+                              </div>
+                            )}
+                          </div>
+
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-300">
                             <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col space-y-2">
                               <h3 className="text-white text-3xl font-semibold">{artwork.title}</h3>
@@ -385,31 +512,53 @@ const Explore = () => {
                   <CarouselPrevious className="left-2 bg-white/80 backdrop-blur-md border border-white/30 text-primary hover:bg-white/90" />
                   <CarouselNext className="right-2 bg-white/80 backdrop-blur-md border border-white/30 text-primary hover:bg-white/90" />
                 </Carousel>
-              </div>
-            ) : (
-              <div className="text-center py-12 bg-white/50 backdrop-blur-sm rounded-lg">
-                <h3 className="font-heading text-xl font-semibold mb-2">No artwork found</h3>
-                <p className="text-muted-foreground">
-                  Try adjusting your search or filters to find more artwork.
-                </p>
-              </div>
-            )}
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {sortedArtwork.map(artwork => (
+                    <div key={artwork.id} className="artwork-card group h-[400px] rounded-xl overflow-hidden shadow-lg transition-all duration-500 neo-blur-sm relative">
+                      <img
+                        src={artwork.imageUrl}
+                        alt={artwork.title}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                      
+                      {/* AI Detection Badge */}
+                      <div className="absolute top-3 right-3 z-10">
+                        {artwork.aiDetected ? (
+                          <div className="bg-red-500/90 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
+                            <AlertTriangle className="w-3 h-3" />
+                            AI
+                          </div>
+                        ) : artwork.verified ? (
+                          <div className="bg-green-500/90 text-white px-2 py-1 rounded-full text-xs">
+                            ✓
+                          </div>
+                        ) : null}
+                      </div>
 
-            {/* Pagination */}
-            <div className="mt-12 flex justify-center">
-              <div className="flex space-x-2">
-                <Button variant="outline" disabled className="backdrop-blur-sm bg-white/50">
-                  Previous
-                </Button>
-                <Button variant="outline" className="bg-gradient-to-r from-artswarit-purple to-blue-500 text-white border-none">
-                  1
-                </Button>
-                <Button variant="outline" className="backdrop-blur-sm bg-white/50">2</Button>
-                <Button variant="outline" className="backdrop-blur-sm bg-white/50">3</Button>
-                <Button variant="outline" className="backdrop-blur-sm bg-white/50">Next</Button>
-              </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="absolute bottom-0 left-0 right-0 p-4">
+                          <h3 className="text-white text-lg font-semibold mb-1">{artwork.title}</h3>
+                          <p className="text-gray-200 text-sm">by {artwork.artist}</p>
+                          <p className="text-white text-lg font-semibold mt-2">${artwork.price}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
+          ) : (
+            <div className="text-center py-12 bg-white/50 backdrop-blur-sm rounded-lg">
+              <h3 className="font-heading text-xl font-semibold mb-2">No artwork found</h3>
+              <p className="text-muted-foreground mb-4">
+                Try adjusting your search or filters to find more artwork.
+              </p>
+              <Button onClick={clearAllFilters} variant="outline">
+                Clear All Filters
+              </Button>
+            </div>
+          )}
         </div>
       </main>
 

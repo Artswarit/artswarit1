@@ -1,315 +1,324 @@
 
-import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, Music, BookOpen, Play, MessageCircle, Heart, Lock } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { Users, Heart, Eye, MapPin, Calendar, Award, Star } from "lucide-react";
 
-// Mock data for artist profile
-const artistData = {
-  id: "1",
-  name: "Alex Rivera",
-  category: "Musician",
-  bio: "Award-winning musician with over 10 years of experience in the industry. Specializing in creating unique sound experiences for advertising, film, and personal projects.",
-  imageUrl: "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
-  coverImageUrl: "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80",
-  location: "Los Angeles, CA",
-  followersCount: 12458,
-  projectsCount: 87,
-  verified: true,
-  premium: true,
-  rating: 4.9,
-  reviewsCount: 142,
-  socialLinks: {
-    instagram: "https://instagram.com/alexrivera",
-    twitter: "https://twitter.com/alexrivera",
-    youtube: "https://youtube.com/alexrivera",
-    website: "https://alexrivera.com",
+// Mock artist data - In a real app, this would come from an API
+const artistsData = {
+  "1": {
+    id: "1",
+    name: "Alex Rivera",
+    category: "Musician",
+    imageUrl: "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
+    coverImage: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80",
+    verified: true,
+    premium: true,
+    followers: 12543,
+    following: 456,
+    likes: 4580,
+    views: 28750,
+    bio: "Multi-platinum musician with over 10 years of experience in the industry. Passionate about creating music that moves people and tells stories.",
+    location: "Los Angeles, CA",
+    joinDate: "January 2020",
+    specialties: ["Pop", "Rock", "Electronic", "Acoustic"],
+    achievements: ["Grammy Nominee", "Platinum Album", "10M+ Streams"],
+    portfolio: [
+      {
+        id: "1",
+        title: "Midnight Symphony",
+        type: "Audio",
+        thumbnail: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&q=80",
+        likes: 1250,
+        plays: 8900
+      }
+    ]
   },
-  services: [
-    { name: "Custom Music Track", price: 300, deliveryTime: "3-5 days" },
-    { name: "Music Mixing & Mastering", price: 150, deliveryTime: "2 days" },
-    { name: "Audio Editing", price: 100, deliveryTime: "1 day" },
-  ],
-  portfolio: [
-    {
-      id: "p1",
-      title: "Summer Vibes EP",
-      category: "Music",
-      imageUrl: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80",
-      isPremium: false,
-      views: 2345,
-    },
-    {
-      id: "p2",
-      title: "Urban Nights",
-      category: "Music",
-      imageUrl: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
-      isPremium: true,
-      views: 1256,
-    },
-    {
-      id: "p3",
-      title: "Acoustic Sessions",
-      category: "Music",
-      imageUrl: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
-      isPremium: false,
-      views: 3678,
-    },
-    {
-      id: "p4",
-      title: "Electric Dreams",
-      category: "Music",
-      imageUrl: "https://images.unsplash.com/photo-1501612780327-45045538702b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
-      isPremium: true,
-      views: 982,
-    },
-  ],
-  reviews: [
-    {
-      id: "r1",
-      name: "Sarah Johnson",
-      rating: 5,
-      date: "2023-05-15",
-      comment: "Alex created the perfect soundtrack for our short film. Professional, creative, and a pleasure to work with!",
-      avatarUrl: "https://i.pravatar.cc/150?img=1",
-    },
-    {
-      id: "r2",
-      name: "Michael Chen",
-      rating: 5,
-      date: "2023-04-22",
-      comment: "Incredible talent and attention to detail. The music Alex created perfectly matched our brand's vision.",
-      avatarUrl: "https://i.pravatar.cc/150?img=2",
-    },
-    {
-      id: "r3",
-      name: "Jessica Lee",
-      rating: 4,
-      date: "2023-03-10",
-      comment: "Great communication throughout the project. The final product was excellent, just took a bit longer than expected.",
-      avatarUrl: "https://i.pravatar.cc/150?img=3",
-    },
-  ],
+  "2": {
+    id: "2",
+    name: "Maya Johnson",
+    category: "Writer",
+    imageUrl: "https://images.unsplash.com/photo-1544717305-2782549b5136?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
+    coverImage: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80",
+    verified: true,
+    premium: false,
+    followers: 8765,
+    following: 234,
+    likes: 3240,
+    views: 19500,
+    bio: "Award-winning author specializing in fantasy and science fiction novels. Creating worlds that inspire imagination and wonder.",
+    location: "New York, NY",
+    joinDate: "March 2019",
+    specialties: ["Fantasy", "Sci-Fi", "Young Adult", "Short Stories"],
+    achievements: ["Hugo Award Winner", "Bestselling Author", "5+ Published Novels"],
+    portfolio: [
+      {
+        id: "2",
+        title: "The Crystal Realm",
+        type: "Book",
+        thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&q=80",
+        likes: 2100,
+        reads: 45000
+      }
+    ]
+  },
+  "3": {
+    id: "3",
+    name: "Jordan Smith",
+    category: "Rapper",
+    imageUrl: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
+    coverImage: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80",
+    verified: false,
+    premium: true,
+    followers: 6421,
+    following: 189,
+    likes: 2870,
+    views: 16200,
+    bio: "Underground hip-hop artist known for thought-provoking lyrics and innovative beats. Bringing conscious rap to the mainstream.",
+    location: "Atlanta, GA",
+    joinDate: "June 2021",
+    specialties: ["Hip-Hop", "Conscious Rap", "Freestyle", "Beatmaking"],
+    achievements: ["Viral Hit", "Independent Artist", "1M+ Views"],
+    portfolio: [
+      {
+        id: "3",
+        title: "Street Philosophy",
+        type: "Audio",
+        thumbnail: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&q=80",
+        likes: 890,
+        plays: 12000
+      }
+    ]
+  }
 };
 
 const ArtistProfile = () => {
   const { id } = useParams();
-  // In a real application, you would fetch the artist data based on the id parameter
-  const artist = artistData;
-  const [followStatus, setFollowStatus] = useState(false);
+  const [artist, setArtist] = useState(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate API call
+    const fetchArtist = () => {
+      setIsLoading(true);
+      setTimeout(() => {
+        const artistData = artistsData[id];
+        if (artistData) {
+          setArtist(artistData);
+        }
+        setIsLoading(false);
+      }, 500);
+    };
+
+    fetchArtist();
+  }, [id]);
+
+  const handleFollow = () => {
+    setIsFollowing(!isFollowing);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-artswarit-purple mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Loading artist profile...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!artist) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Artist Not Found</h1>
+            <p className="text-muted-foreground mb-4">The artist you're looking for doesn't exist.</p>
+            <Button asChild>
+              <Link to="/explore">Browse Artists</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
-
+      
       <main className="flex-1">
-        {/* Cover image and profile section */}
-        <div className="relative">
-          <div className="h-64 md:h-80 overflow-hidden">
-            <img
-              src={artist.coverImageUrl}
-              alt={`${artist.name}'s cover`}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="relative -mt-24 sm:-mt-16 flex flex-col sm:flex-row items-center sm:items-end sm:space-x-6 pb-4">
-              <div className="w-32 h-32 sm:w-36 sm:h-36 rounded-full overflow-hidden border-4 border-white bg-white">
+        {/* Cover Image */}
+        <div className="relative h-64 md:h-80 bg-gradient-to-r from-artswarit-purple to-blue-500">
+          <img
+            src={artist.coverImage}
+            alt={`${artist.name} cover`}
+            className="w-full h-full object-cover opacity-60"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+        </div>
+
+        <div className="container mx-auto px-4 -mt-20 relative z-10">
+          <div className="flex flex-col md:flex-row gap-6 mb-8">
+            {/* Profile Image and Basic Info */}
+            <div className="flex flex-col items-center md:items-start">
+              <div className="relative">
                 <img
                   src={artist.imageUrl}
                   alt={artist.name}
-                  className="w-full h-full object-cover"
+                  className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white shadow-lg object-cover"
                 />
+                {artist.verified && (
+                  <div className="absolute -bottom-2 -right-2 bg-blue-500 text-white rounded-full p-2">
+                    <Award className="w-4 h-4" />
+                  </div>
+                )}
               </div>
-              <div className="mt-4 sm:mt-0 text-center sm:text-left flex-1">
-                <div className="flex items-center justify-center sm:justify-start">
-                  <h1 className="text-2xl font-heading font-bold">{artist.name}</h1>
-                  {artist.verified && (
-                    <CheckCircle className="ml-2 h-5 w-5 text-blue-500" />
-                  )}
+            </div>
+
+            {/* Artist Details */}
+            <div className="flex-1 text-center md:text-left mt-4 md:mt-12">
+              <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{artist.name}</h1>
+                  <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+                    <Badge variant="secondary">{artist.category}</Badge>
+                    {artist.verified && <Badge variant="default">Verified</Badge>}
+                    {artist.premium && <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500">Premium</Badge>}
+                  </div>
                 </div>
-                <p className="text-muted-foreground">{artist.category}</p>
-                <div className="flex items-center justify-center sm:justify-start mt-1 text-sm">
-                  <span className="flex items-center">
-                    <span className="text-yellow-500 mr-1">★</span>
-                    {artist.rating}
-                  </span>
-                  <span className="mx-2">•</span>
-                  <span>{artist.reviewsCount} reviews</span>
-                  <span className="mx-2">•</span>
-                  <span>{artist.location}</span>
-                </div>
-              </div>
-              <div className="flex mt-4 sm:mt-0 space-x-2">
                 <Button
-                  onClick={() => setFollowStatus(!followStatus)}
-                  variant={followStatus ? "default" : "outline"}
+                  onClick={handleFollow}
+                  className={`ml-auto ${isFollowing ? 'bg-gray-500 hover:bg-gray-600' : 'bg-gradient-to-r from-artswarit-purple to-blue-500'}`}
                 >
-                  {followStatus ? "Following" : "Follow"}
+                  {isFollowing ? 'Following' : 'Follow'}
                 </Button>
-                <Button>
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  Message
-                </Button>
+              </div>
+
+              {/* Stats */}
+              <div className="flex items-center justify-center md:justify-start gap-6 text-white/90 text-sm">
+                <div className="flex items-center gap-1">
+                  <Users className="w-4 h-4" />
+                  <span>{artist.followers.toLocaleString()} followers</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Heart className="w-4 h-4" />
+                  <span>{artist.likes.toLocaleString()} likes</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Eye className="w-4 h-4" />
+                  <span>{artist.views.toLocaleString()} views</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Profile content */}
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Tabs defaultValue="portfolio" className="w-full">
-            <TabsList className="mb-8">
-              <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
-              <TabsTrigger value="about">About</TabsTrigger>
-              <TabsTrigger value="services">Services</TabsTrigger>
-              <TabsTrigger value="reviews">Reviews</TabsTrigger>
-            </TabsList>
+          {/* Content Sections */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Bio */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>About</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground leading-relaxed">{artist.bio}</p>
+                </CardContent>
+              </Card>
 
-            {/* Portfolio Tab */}
-            <TabsContent value="portfolio">
-              <h2 className="font-heading text-2xl font-bold mb-4">Portfolio</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {artist.portfolio.map((item) => (
-                  <Card key={item.id} className="overflow-hidden group">
-                    <div className="relative aspect-video">
-                      <img
-                        src={item.imageUrl}
-                        alt={item.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="default" className="rounded-full p-2">
-                          {item.isPremium ? <Lock size={20} /> : <Play size={20} />}
-                        </Button>
-                      </div>
-                      {item.isPremium && (
-                        <div className="absolute top-2 right-2">
-                          <Badge variant="outline" className="badge-premium">
-                            Premium
-                          </Badge>
-                        </div>
-                      )}
-                    </div>
-                    <CardContent className="p-4">
-                      <h3 className="font-semibold">{item.title}</h3>
-                      <div className="flex justify-between items-center mt-2 text-sm text-muted-foreground">
-                        <span>{item.category}</span>
-                        <span className="flex items-center">
-                          <Heart size={14} className="mr-1" />
-                          {item.views}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-
-            {/* About Tab */}
-            <TabsContent value="about">
-              <div className="max-w-3xl">
-                <h2 className="font-heading text-2xl font-bold mb-4">About {artist.name}</h2>
-                <p className="mb-6">{artist.bio}</p>
-                
-                <div className="flex flex-wrap gap-4 mb-6">
-                  <div className="bg-gray-50 rounded-lg p-4 flex-1 min-w-[150px]">
-                    <div className="text-lg font-bold">{artist.followersCount.toLocaleString()}</div>
-                    <div className="text-sm text-muted-foreground">Followers</div>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4 flex-1 min-w-[150px]">
-                    <div className="text-lg font-bold">{artist.projectsCount}</div>
-                    <div className="text-sm text-muted-foreground">Projects</div>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4 flex-1 min-w-[150px]">
-                    <div className="text-lg font-bold">{artist.rating}</div>
-                    <div className="text-sm text-muted-foreground">Avg. Rating</div>
-                  </div>
-                </div>
-
-                <h3 className="font-heading text-xl font-semibold mb-3">Connect with {artist.name}</h3>
-                <div className="flex flex-wrap gap-3 mb-6">
-                  {Object.entries(artist.socialLinks).map(([platform, url]) => (
-                    <Button key={platform} variant="outline" size="sm" asChild>
-                      <a href={url} target="_blank" rel="noopener noreferrer" className="capitalize">
-                        {platform}
-                      </a>
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </TabsContent>
-
-            {/* Services Tab */}
-            <TabsContent value="services">
-              <h2 className="font-heading text-2xl font-bold mb-4">Services</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {artist.services.map((service, index) => (
-                  <Card key={index}>
-                    <CardContent className="p-6">
-                      <h3 className="font-heading text-lg font-semibold mb-2">{service.name}</h3>
-                      <p className="text-2xl font-bold mb-1">${service.price}</p>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Delivery in {service.deliveryTime}
-                      </p>
-                      <Button className="w-full">Order Now</Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-
-            {/* Reviews Tab */}
-            <TabsContent value="reviews">
-              <div className="max-w-3xl">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="font-heading text-2xl font-bold">
-                    Reviews ({artist.reviewsCount})
-                  </h2>
-                  <div className="flex items-center">
-                    <span className="text-2xl font-bold mr-2">{artist.rating}</span>
-                    <div className="text-yellow-500">
-                      {'★'.repeat(Math.floor(artist.rating))}
-                      {artist.rating % 1 !== 0 ? '½' : ''}
-                      {'☆'.repeat(Math.floor(5 - artist.rating))}
-                    </div>
-                  </div>
-                </div>
-                <Separator className="mb-6" />
-                
-                <div className="space-y-6">
-                  {artist.reviews.map((review) => (
-                    <div key={review.id} className="pb-6 border-b border-gray-200 last:border-none">
-                      <div className="flex items-start">
+              {/* Portfolio */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Portfolio</CardTitle>
+                  <CardDescription>Recent works and creations</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {artist.portfolio.map((item) => (
+                      <div key={item.id} className="bg-gray-50 rounded-lg p-4 hover:shadow-md transition-shadow">
                         <img
-                          src={review.avatarUrl}
-                          alt={review.name}
-                          className="w-10 h-10 rounded-full mr-4"
+                          src={item.thumbnail}
+                          alt={item.title}
+                          className="w-full h-32 object-cover rounded-md mb-3"
                         />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-semibold">{review.name}</h4>
-                            <span className="text-sm text-muted-foreground">{review.date}</span>
+                        <h3 className="font-semibold mb-2">{item.title}</h3>
+                        <div className="flex items-center justify-between text-sm text-muted-foreground">
+                          <span>{item.type}</span>
+                          <div className="flex items-center gap-3">
+                            <span className="flex items-center gap-1">
+                              <Heart className="w-3 h-3" />
+                              {item.likes || item.reads || item.plays}
+                            </span>
                           </div>
-                          <div className="text-yellow-500 my-1">
-                            {'★'.repeat(review.rating)}
-                            {'☆'.repeat(5 - review.rating)}
-                          </div>
-                          <p className="text-gray-700">{review.comment}</p>
                         </div>
                       </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Details */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-2 text-sm">
+                    <MapPin className="w-4 h-4 text-muted-foreground" />
+                    <span>{artist.location}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    <span>Joined {artist.joinDate}</span>
+                  </div>
+                  <Separator />
+                  <div>
+                    <h4 className="font-medium mb-2">Specialties</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {artist.specialties.map((specialty) => (
+                        <Badge key={specialty} variant="outline">{specialty}</Badge>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Achievements */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Star className="w-4 h-4" />
+                    Achievements
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {artist.achievements.map((achievement) => (
+                      <div key={achievement} className="flex items-center gap-2 text-sm">
+                        <div className="w-2 h-2 bg-gradient-to-r from-artswarit-purple to-blue-500 rounded-full"></div>
+                        <span>{achievement}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
       </main>
 
