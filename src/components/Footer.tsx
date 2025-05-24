@@ -1,9 +1,6 @@
-
 import { Link } from "react-router-dom";
-
 const Footer = () => {
-  return (
-    <footer className="bg-gradient-to-r from-violet-900/90 via-indigo-900/90 to-purple-900/90 text-white/90 backdrop-blur-sm">
+  return <footer className="bg-gradient-to-r from-violet-900/90 via-indigo-900/90 to-purple-900/90 text-white/90 backdrop-blur-sm">
       <div className="container mx-auto px-4 py-8 sm:py-10 lg:py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
           <div className="col-span-2 md:col-span-1 mb-6 md:mb-0">
@@ -62,7 +59,7 @@ const Footer = () => {
                   About Us
                 </Link>
               </li>
-              <li>
+              <li className="Help">
                 <Link to="/contact" className="text-xs sm:text-sm text-white/70 hover:text-white transition-colors">
                   Contact
                 </Link>
@@ -99,8 +96,6 @@ const Footer = () => {
           </div>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
-
 export default Footer;
