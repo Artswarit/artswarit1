@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,9 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, ImageIcon, MusicIcon, VideoIcon, FileTextIcon } from "lucide-react";
+import { Calendar as CalendarIcon, ImageIcon, MusicIcon, VideoIcon, FileTextIcon, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
+import AIContentDetection from "@/components/dashboard/AIContentDetection";
 
 const contentTypes = [
   { id: "image", label: "Image", icon: ImageIcon },
@@ -40,12 +40,24 @@ const ArtworkUploadForm = () => {
   const [releaseDate, setReleaseDate] = useState<Date | undefined>(undefined);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [detectionResults, setDetectionResults] = useState<any[]>([]);
+  const [hasAiContent, setHasAiContent] = useState(false);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const fileArray = Array.from(e.target.files);
       setSelectedFiles(fileArray);
     }
+  };
+
+  const handleDetectionComplete = (result: any, fileIndex: number) => {
+    const newResults = [...detectionResults];
+    newResults[fileIndex] = result;
+    setDetectionResults(newResults);
+    
+    // Check if any file is flagged as AI content
+    const hasAi = newResults.some(r => r && r.flagged);
+    setHasAiContent(hasAi);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -81,6 +93,17 @@ const ArtworkUploadForm = () => {
       });
       setIsUploading(false);
       return;
+    }
+
+    // Additional validation for AI content
+    if (hasAiContent) {
+      const proceed = window.confirm(
+        "Some files have been flagged as AI-generated content. Do you want to proceed anyway? This may affect content visibility."
+      );
+      if (!proceed) {
+        setIsUploading(false);
+        return;
+      }
     }
 
     // Simulate upload process
@@ -187,6 +210,42 @@ const ArtworkUploadForm = () => {
                   )}
                 </Label>
               </div>
+              
+              {/* AI Content Detection for uploaded files */}
+              {selectedFiles.length > 0 && (
+                <div className="space-y-4 mt-4">
+                  <h4 className="font-medium text-sm">AI Content Analysis</h4>
+                  {selectedFiles.map((file, index) => (
+                    <div key={index} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-medium truncate">{file.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {(file.size / 1024 / 1024).toFixed(2)} MB
+                        </span>
+                      </div>
+                      <AIContentDetection
+                        fileUrl={URL.createObjectURL(file)}
+                        contentType={selectedType as any}
+                        onDetectionComplete={(result) => handleDetectionComplete(result, index)}
+                        autoDetect={true}
+                      />
+                    </div>
+                  ))}
+                  
+                  {hasAiContent && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 text-amber-800">
+                        <AlertTriangle className="h-4 w-4" />
+                        <span className="font-medium">AI Content Detected</span>
+                      </div>
+                      <p className="text-sm text-amber-700 mt-1">
+                        Some of your files have been flagged as potentially AI-generated. 
+                        You can still upload them, but they may be subject to additional review.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

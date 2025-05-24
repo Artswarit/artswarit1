@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -14,6 +13,7 @@ import ArtistProfile from "./pages/ArtistProfile";
 import ClientDashboard from "./pages/ClientDashboard";
 import ArtistDashboard from "./pages/ArtistDashboard";
 import NotFound from "./pages/NotFound";
+import AIDetection from "./pages/AIDetection";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -44,6 +44,7 @@ const App = () => {
               <Route path="/artist-dashboard" element={<ArtistDashboard />} />
               <Route path="/artist-dashboard/:tab" element={<ArtistDashboard />} />
               <Route path="/artist-dashboard/upload" element={<ArtistDashboard />} />
+              <Route path="/ai-detection" element={<AIDetection />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
