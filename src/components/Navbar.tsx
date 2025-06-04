@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Search, Menu, X, User, Home, TrendingUp, Sparkles, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +18,7 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut, loading } = useAuth();
+  const { profile } = useProfile();
   
   // Handle scroll event to change navbar appearance
   useEffect(() => {
@@ -63,7 +65,9 @@ const Navbar = () => {
   };
 
   const getUserDashboard = () => {
-    // Get user profile to determine role - for now default to client
+    if (profile?.role === 'artist') {
+      return "/artist-dashboard";
+    }
     return "/client-dashboard";
   };
 
@@ -92,44 +96,6 @@ const Navbar = () => {
                 Home
               </Link>
               
-              {location.pathname === '/' ? (
-                <a 
-                  href="#featured-artists" 
-                  onClick={(e) => scrollToSection(e, 'featured-artists')}
-                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-600 hover:text-primary border-b-2 border-transparent hover:border-primary transition-colors duration-200"
-                >
-                  <User className="mr-1 h-4 w-4" />
-                  Artists
-                </a>
-              ) : (
-                <Link 
-                  to="/#featured-artists"
-                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-600 hover:text-primary border-b-2 border-transparent hover:border-primary transition-colors duration-200"
-                >
-                  <User className="mr-1 h-4 w-4" />
-                  Artists
-                </Link>
-              )}
-              
-              {location.pathname === '/' ? (
-                <a 
-                  href="#artwork" 
-                  onClick={(e) => scrollToSection(e, 'artwork')}
-                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-600 hover:text-primary border-b-2 border-transparent hover:border-primary transition-colors duration-200"
-                >
-                  <Sparkles className="mr-1 h-4 w-4" />
-                  Artwork
-                </a>
-              ) : (
-                <Link 
-                  to="/#artwork"
-                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-600 hover:text-primary border-b-2 border-transparent hover:border-primary transition-colors duration-200"
-                >
-                  <Sparkles className="mr-1 h-4 w-4" />
-                  Artwork
-                </Link>
-              )}
-              
               <Link 
                 to="/explore" 
                 className={`inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 transition-colors duration-200 ${
@@ -139,7 +105,7 @@ const Navbar = () => {
                 }`}
               >
                 <TrendingUp className="mr-1 h-4 w-4" />
-                Trending
+                Explore
               </Link>
             </div>
           </div>
@@ -160,7 +126,7 @@ const Navbar = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="hover:bg-primary/10 hover:text-primary">
                     <User className="mr-2 h-4 w-4" />
-                    {user.email}
+                    {profile?.full_name || user.email}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -197,7 +163,7 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* Mobile menu - Now with fixed position when open */}
+      {/* Mobile menu */}
       {isOpen && (
         <div className="sm:hidden bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-lg fixed w-full left-0 z-50 max-h-[calc(100vh-4rem)] overflow-y-auto">
           <div className="pt-2 pb-4 space-y-1">
@@ -214,46 +180,6 @@ const Navbar = () => {
               Home
             </Link>
             
-            {location.pathname === '/' ? (
-              <a
-                href="#featured-artists"
-                onClick={(e) => scrollToSection(e, 'featured-artists')}
-                className="flex items-center pl-3 pr-4 py-2 text-base font-medium text-gray-600 hover:bg-primary/10 hover:text-primary"
-              >
-                <User className="mr-2 h-4 w-4" />
-                Artists
-              </a>
-            ) : (
-              <Link
-                to="/#featured-artists"
-                className="flex items-center pl-3 pr-4 py-2 text-base font-medium text-gray-600 hover:bg-primary/10 hover:text-primary"
-                onClick={() => setIsOpen(false)}
-              >
-                <User className="mr-2 h-4 w-4" />
-                Artists
-              </Link>
-            )}
-            
-            {location.pathname === '/' ? (
-              <a
-                href="#artwork"
-                onClick={(e) => scrollToSection(e, 'artwork')}
-                className="flex items-center pl-3 pr-4 py-2 text-base font-medium text-gray-600 hover:bg-primary/10 hover:text-primary"
-              >
-                <Sparkles className="mr-2 h-4 w-4" />
-                Artwork
-              </a>
-            ) : (
-              <Link
-                to="/#artwork"
-                className="flex items-center pl-3 pr-4 py-2 text-base font-medium text-gray-600 hover:bg-primary/10 hover:text-primary"
-                onClick={() => setIsOpen(false)}
-              >
-                <Sparkles className="mr-2 h-4 w-4" />
-                Artwork
-              </Link>
-            )}
-            
             <Link
               to="/explore"
               className={`flex items-center pl-3 pr-4 py-2 text-base font-medium ${
@@ -264,7 +190,7 @@ const Navbar = () => {
               onClick={() => setIsOpen(false)}
             >
               <TrendingUp className="mr-2 h-4 w-4" />
-              Trending
+              Explore
             </Link>
           </div>
           <div className="pt-4 pb-3 border-t border-gray-200">
@@ -275,7 +201,7 @@ const Navbar = () => {
               <div className="ml-3 space-y-2">
                 {user ? (
                   <>
-                    <div className="text-base font-medium text-gray-600">{user.email}</div>
+                    <div className="text-base font-medium text-gray-600">{profile?.full_name || user.email}</div>
                     <button
                       onClick={() => {
                         setIsOpen(false);
