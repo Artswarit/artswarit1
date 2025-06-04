@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SignupHeader from "@/components/auth/SignupHeader";
@@ -11,7 +11,7 @@ import TestLinks from "@/components/auth/TestLinks";
 
 const Signup = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { signUp, signInWithGoogle, loading } = useAuth();
   
   const [formData, setFormData] = useState<SignupFormData>({
     name: "",
@@ -44,50 +44,41 @@ const Signup = () => {
     });
   };
 
-  const handleSocialSignup = (provider: string) => {
-    console.log(`Signup attempted with ${provider}`);
-    toast({
-      title: `${provider} Sign up initiated`,
-      description: "This feature would connect to the OAuth provider in a production environment.",
-    });
+  const handleSocialSignup = async (provider: string) => {
+    if (provider === "Google") {
+      const { error } = await signInWithGoogle();
+      if (!error) {
+        // Redirect will happen automatically via auth state change
+      }
+    } else {
+      console.log(`${provider} signup not implemented yet`);
+    }
   };
   
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     
     // Simple validation
     if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Passwords do not match",
-        description: "Please make sure your passwords match.",
-        variant: "destructive"
-      });
       return;
     }
     
     if (!formData.acceptTerms) {
-      toast({
-        title: "Terms not accepted",
-        description: "Please accept the terms of service.",
-        variant: "destructive"
-      });
       return;
     }
     
-    // In a real application, this would call an API to create a new user
-    console.log("Signup attempted with:", formData);
-    
-    // Show success message
-    toast({
-      title: "Account created!",
-      description: "You've successfully signed up.",
+    const { error } = await signUp(formData.email, formData.password, {
+      full_name: formData.name,
+      role: formData.role
     });
     
-    // Redirect based on role
-    if (formData.role === "artist") {
-      setTimeout(() => navigate("/artist-dashboard"), 1000);
-    } else {
-      setTimeout(() => navigate("/client-dashboard"), 1000);
+    if (!error) {
+      // Redirect based on role after successful signup
+      if (formData.role === "artist") {
+        setTimeout(() => navigate("/artist-dashboard"), 1000);
+      } else {
+        setTimeout(() => navigate("/client-dashboard"), 1000);
+      }
     }
   };
 
@@ -106,6 +97,7 @@ const Signup = () => {
             handleRoleChange={handleRoleChange}
             handleTermsChange={handleTermsChange}
             handleSubmit={handleSubmit}
+            loading={loading}
           />
           
           {/* For testing purposes - direct links to dashboards */}

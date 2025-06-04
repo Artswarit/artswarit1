@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 export interface SignupFormData {
   name: string;
@@ -22,6 +23,7 @@ interface SignupFormProps {
   handleRoleChange: (value: string) => void;
   handleTermsChange: (checked: boolean) => void;
   handleSubmit: (event: React.FormEvent) => void;
+  loading?: boolean;
 }
 
 const SignupForm = ({
@@ -29,10 +31,47 @@ const SignupForm = ({
   handleChange,
   handleRoleChange,
   handleTermsChange,
-  handleSubmit
+  handleSubmit,
+  loading = false
 }: SignupFormProps) => {
+  const { toast } = useToast();
+
+  const validateAndSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    
+    // Validation
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Passwords do not match",
+        description: "Please make sure your passwords match.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!formData.acceptTerms) {
+      toast({
+        title: "Terms not accepted",
+        description: "Please accept the terms of service.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    handleSubmit(event);
+  };
+
   return (
-    <form className="space-y-6" onSubmit={handleSubmit}>
+    <form className="space-y-6" onSubmit={validateAndSubmit}>
       <div className="space-y-4">
         <div>
           <Label htmlFor="name">Full name</Label>
@@ -44,7 +83,8 @@ const SignupForm = ({
             value={formData.name} 
             onChange={handleChange} 
             required 
-            className="mt-1" 
+            className="mt-1"
+            disabled={loading}
           />
         </div>
         <div>
@@ -57,7 +97,8 @@ const SignupForm = ({
             value={formData.email} 
             onChange={handleChange} 
             required 
-            className="mt-1" 
+            className="mt-1"
+            disabled={loading}
           />
         </div>
         <div>
@@ -70,7 +111,8 @@ const SignupForm = ({
             value={formData.password} 
             onChange={handleChange} 
             required 
-            className="mt-1" 
+            className="mt-1"
+            disabled={loading}
           />
         </div>
         <div>
@@ -83,20 +125,21 @@ const SignupForm = ({
             value={formData.confirmPassword} 
             onChange={handleChange} 
             required 
-            className="mt-1" 
+            className="mt-1"
+            disabled={loading}
           />
         </div>
         <div>
           <div className="mb-2">
             <Label>I am a</Label>
           </div>
-          <RadioGroup value={formData.role} onValueChange={handleRoleChange} className="flex gap-6">
+          <RadioGroup value={formData.role} onValueChange={handleRoleChange} className="flex gap-6" disabled={loading}>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="artist" id="artist" />
+              <RadioGroupItem value="artist" id="artist" disabled={loading} />
               <Label htmlFor="artist">Artist</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="client" id="client" />
+              <RadioGroupItem value="client" id="client" disabled={loading} />
               <Label htmlFor="client">Client</Label>
             </div>
           </RadioGroup>
@@ -106,7 +149,8 @@ const SignupForm = ({
             id="terms" 
             checked={formData.acceptTerms} 
             onCheckedChange={handleTermsChange} 
-            required 
+            required
+            disabled={loading}
           />
           <Label htmlFor="terms" className="text-sm">
             I accept the{" "}
@@ -121,8 +165,8 @@ const SignupForm = ({
         </div>
       </div>
 
-      <Button type="submit" className="w-full">
-        Create account
+      <Button type="submit" className="w-full" disabled={loading}>
+        {loading ? "Creating account..." : "Create account"}
       </Button>
     </form>
   );

@@ -1,13 +1,22 @@
 
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Search, Menu, X, User, Home, TrendingUp, Sparkles } from "lucide-react";
+import { Search, Menu, X, User, Home, TrendingUp, Sparkles, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut, loading } = useAuth();
   
   // Handle scroll event to change navbar appearance
   useEffect(() => {
@@ -46,6 +55,16 @@ const Navbar = () => {
       // If we're not on the home page, navigate to home with hash
       setIsOpen(false);
     }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  const getUserDashboard = () => {
+    // Get user profile to determine role - for now default to client
+    return "/client-dashboard";
   };
 
   return (
@@ -135,12 +154,35 @@ const Navbar = () => {
                 <Search size={16} />
               </div>
             </div>
-            <Button asChild variant="ghost" className="hover:bg-primary/10 hover:text-primary">
-              <Link to="/login">Log in</Link>
-            </Button>
-            <Button asChild className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all">
-              <Link to="/signup">Sign up</Link>
-            </Button>
+            
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="hover:bg-primary/10 hover:text-primary">
+                    <User className="mr-2 h-4 w-4" />
+                    {user.email}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate(getUserDashboard())}>
+                    Dashboard
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleSignOut} disabled={loading}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Button asChild variant="ghost" className="hover:bg-primary/10 hover:text-primary">
+                  <Link to="/login">Log in</Link>
+                </Button>
+                <Button asChild className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all">
+                  <Link to="/signup">Sign up</Link>
+                </Button>
+              </>
+            )}
           </div>
           <div className="flex items-center sm:hidden">
             <button
@@ -231,20 +273,47 @@ const Navbar = () => {
                 <User className="h-10 w-10 rounded-full text-gray-400" />
               </div>
               <div className="ml-3 space-y-2">
-                <Link
-                  to="/login"
-                  className="block text-base font-medium text-gray-600 hover:text-primary"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Log in
-                </Link>
-                <Link
-                  to="/signup"
-                  className="block text-base font-medium text-primary"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Sign up
-                </Link>
+                {user ? (
+                  <>
+                    <div className="text-base font-medium text-gray-600">{user.email}</div>
+                    <button
+                      onClick={() => {
+                        setIsOpen(false);
+                        navigate(getUserDashboard());
+                      }}
+                      className="block text-base font-medium text-gray-600 hover:text-primary"
+                    >
+                      Dashboard
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsOpen(false);
+                        handleSignOut();
+                      }}
+                      className="block text-base font-medium text-primary"
+                      disabled={loading}
+                    >
+                      Sign out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      className="block text-base font-medium text-gray-600 hover:text-primary"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Log in
+                    </Link>
+                    <Link
+                      to="/signup"
+                      className="block text-base font-medium text-primary"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Sign up
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>

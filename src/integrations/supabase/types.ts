@@ -9,7 +9,296 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      artwork_likes: {
+        Row: {
+          artwork_id: string | null
+          created_at: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          artwork_id?: string | null
+          created_at?: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          artwork_id?: string | null
+          created_at?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artwork_likes_artwork_id_fkey"
+            columns: ["artwork_id"]
+            isOneToOne: false
+            referencedRelation: "artworks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "artwork_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      artworks: {
+        Row: {
+          artist_id: string | null
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string
+          is_featured: boolean | null
+          is_for_sale: boolean | null
+          is_pinned: boolean | null
+          likes_count: number | null
+          price: number | null
+          release_date: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+          views_count: number | null
+        }
+        Insert: {
+          artist_id?: string | null
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url: string
+          is_featured?: boolean | null
+          is_for_sale?: boolean | null
+          is_pinned?: boolean | null
+          likes_count?: number | null
+          price?: number | null
+          release_date?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          views_count?: number | null
+        }
+        Update: {
+          artist_id?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string
+          is_featured?: boolean | null
+          is_for_sale?: boolean | null
+          is_pinned?: boolean | null
+          likes_count?: number | null
+          price?: number | null
+          release_date?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artworks_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          artist_id: string | null
+          client_id: string | null
+          created_at: string
+          id: string
+          project_title: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          artist_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          project_title?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          artist_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          project_title?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          attachments: Json | null
+          content: string
+          conversation_id: string | null
+          created_at: string
+          id: string
+          is_read: boolean | null
+          sender_id: string | null
+        }
+        Insert: {
+          attachments?: Json | null
+          content: string
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          sender_id?: string | null
+        }
+        Update: {
+          attachments?: Json | null
+          content?: string
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          sender_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          is_verified: boolean | null
+          location: string | null
+          role: string
+          social_links: Json | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          is_verified?: boolean | null
+          location?: string | null
+          role?: string
+          social_links?: Json | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          is_verified?: boolean | null
+          location?: string | null
+          role?: string
+          social_links?: Json | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          artist_id: string | null
+          budget: number | null
+          client_id: string | null
+          created_at: string
+          deadline: string | null
+          description: string | null
+          id: string
+          status: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          artist_id?: string | null
+          budget?: number | null
+          client_id?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          status?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          artist_id?: string | null
+          budget?: number | null
+          client_id?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          status?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

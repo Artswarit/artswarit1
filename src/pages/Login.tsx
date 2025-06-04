@@ -1,25 +1,41 @@
+
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const handleSubmit = (event: React.FormEvent) => {
+  const { signIn, signInWithGoogle, loading } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    // In a real application, this would call an authentication API
-    console.log("Login attempted with:", {
-      email,
-      password,
-      rememberMe
-    });
+    
+    const { error } = await signIn(email, password);
+    
+    if (!error) {
+      // Redirect to appropriate dashboard or home page
+      navigate("/");
+    }
   };
-  return <div className="flex flex-col min-h-screen">
+
+  const handleGoogleSignin = async () => {
+    const { error } = await signInWithGoogle();
+    if (!error) {
+      // Redirect will happen automatically via auth state change
+    }
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen">
       <Navbar />
       <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="w-full max-w-md space-y-8">
@@ -39,11 +55,29 @@ const Login = () => {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="email">Email address</Label>
-                <Input id="email" type="email" placeholder="name@example.com" value={email} onChange={e => setEmail(e.target.value)} required className="mt-1" />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="name@example.com" 
+                  value={email} 
+                  onChange={e => setEmail(e.target.value)} 
+                  required 
+                  className="mt-1"
+                  disabled={loading}
+                />
               </div>
               <div>
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className="mt-1" />
+                <Input 
+                  id="password" 
+                  type="password" 
+                  placeholder="••••••••" 
+                  value={password} 
+                  onChange={e => setPassword(e.target.value)} 
+                  required 
+                  className="mt-1"
+                  disabled={loading}
+                />
                 <div className="flex justify-end mt-1">
                   <Link to="/forgot-password" className="text-sm font-medium text-artswarit-purple hover:text-artswarit-purple-dark">
                     Forgot your password?
@@ -51,13 +85,18 @@ const Login = () => {
                 </div>
               </div>
               <div className="flex items-center space-x-2">
-                <Checkbox id="rememberMe" checked={rememberMe} onCheckedChange={checked => setRememberMe(checked === true)} />
+                <Checkbox 
+                  id="rememberMe" 
+                  checked={rememberMe} 
+                  onCheckedChange={checked => setRememberMe(checked === true)}
+                  disabled={loading}
+                />
                 <Label htmlFor="rememberMe" className="text-sm">Remember me</Label>
               </div>
             </div>
 
-            <Button type="submit" className="w-full">
-              Log in
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Signing in..." : "Log in"}
             </Button>
 
             <div className="flex items-center my-4">
@@ -67,7 +106,13 @@ const Login = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Button variant="outline" className="w-full flex items-center justify-center">
+              <Button 
+                variant="outline" 
+                className="w-full flex items-center justify-center"
+                onClick={handleGoogleSignin}
+                type="button"
+                disabled={loading}
+              >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" className="mr-2">
                   <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
                   <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
@@ -76,7 +121,7 @@ const Login = () => {
                 </svg>
                 Google
               </Button>
-              <Button variant="outline" className="w-full flex items-center justify-center">
+              <Button variant="outline" className="w-full flex items-center justify-center" disabled>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" className="mr-2">
                   <linearGradient id="Ld6sqrtcxMyckEl6xeDdMa" x1="9.993" x2="40.615" y1="9.993" y2="40.615" gradientUnits="userSpaceOnUse">
                     <stop offset="0" stopColor="#2aa4f4" />
@@ -92,6 +137,8 @@ const Login = () => {
         </div>
       </div>
       <Footer />
-    </div>;
+    </div>
+  );
 };
+
 export default Login;
