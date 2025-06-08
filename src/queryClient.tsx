@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient as TanstackQueryClient, QueryClientProvider as TanstackQueryClientProvider } from '@tanstack/react-query';
 
-const queryClient = new QueryClient({
+const queryClient = new TanstackQueryClient({
   defaultOptions: {
     queries: {
       staleTime: 60 * 1000, // 1 minute
@@ -11,14 +11,14 @@ const queryClient = new QueryClient({
   },
 });
 
-interface QueryClientProps {
+interface QueryClientProviderProps {
   children: React.ReactNode;
 }
 
-export const QueryClient: React.FC<QueryClientProps> = ({ children }) => {
+export const QueryClientProvider: React.FC<QueryClientProviderProps> = ({ children }) => {
   return (
-    <QueryClientProvider client={queryClient}>
+    <TanstackQueryClientProvider client={queryClient}>
       {children}
-    </QueryClientProvider>
+    </TanstackQueryClientProvider>
   );
 };

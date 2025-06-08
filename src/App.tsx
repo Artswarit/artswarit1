@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from '@/contexts/AuthContext';
 import Index from './pages/Index';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -12,7 +13,7 @@ import ArtistProfile from './pages/ArtistProfile';
 import ArtistDashboard from './pages/ArtistDashboard';
 import ClientDashboard from './pages/ClientDashboard';
 import NotFound from './pages/NotFound';
-import { QueryClient } from './queryClient';
+import { QueryClientProvider } from './queryClient';
 import ProtectedRoute from './components/ProtectedRoute';
 import ExploreArtists from './pages/ExploreArtists';
 
@@ -20,7 +21,7 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <QueryClient>
+        <QueryClientProvider>
           <Toaster />
           <Routes>
             <Route path="/" element={<Index />} />
@@ -49,7 +50,7 @@ function App() {
             />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </QueryClient>
+        </QueryClientProvider>
       </AuthProvider>
     </Router>
   );
