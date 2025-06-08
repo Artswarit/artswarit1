@@ -14,7 +14,6 @@ import {
 import { ModeToggle } from "@/components/ModeToggle";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu, X } from "lucide-react";
-import logo from "@/assets/artswarit-logo.png";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
@@ -45,7 +44,6 @@ const Navbar = () => {
             className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
             onClick={scrollToTop}
           >
-            <img src={logo} alt="Artswarit Logo" className="h-8" />
             <span className="font-bold text-xl text-artswarit-purple">Artswarit</span>
           </Link>
 
