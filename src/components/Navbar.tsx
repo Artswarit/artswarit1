@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Search, Menu, X, User, Home, TrendingUp, Sparkles, LogOut } from "lucide-react";
+import { Search, Menu, X, User, Home, TrendingUp, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import {
@@ -23,40 +23,21 @@ const Navbar = () => {
   // Handle scroll event to change navbar appearance
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
-      }
+      setScrolled(window.scrollY > 50);
     };
     
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location.pathname]);
   
-  // Improved smooth scroll function with offset for any section
-  const scrollToSection = (e: React.MouseEvent, sectionId: string) => {
-    e.preventDefault();
-    
-    // Only try to scroll if we're on the home page
-    if (location.pathname === "/") {
-      const section = document.getElementById(sectionId);
-      if (section) {
-        // Set timeout to ensure DOM is ready
-        setTimeout(() => {
-          // Add offset for fixed header (80px)
-          const yOffset = -80; 
-          const y = section.getBoundingClientRect().top + window.pageYOffset + yOffset;
-          window.scrollTo({ top: y, behavior: 'smooth' });
-          
-          // Close mobile menu after navigation
-          setIsOpen(false);
-        }, 100);
-      }
-    } else {
-      // If we're not on the home page, navigate to home with hash
-      setIsOpen(false);
-    }
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setIsOpen(false);
   };
 
   const handleSignOut = async () => {
@@ -71,19 +52,21 @@ const Navbar = () => {
     return "/client-dashboard";
   };
 
+  const closeMobileMenu = () => setIsOpen(false);
+
   return (
-    <header className={`fixed top-0 left-0 right-0 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 z-50 shadow-sm transition-all duration-300 ${scrolled ? 'shadow-md' : ''}`}>
+    <header className={`fixed top-0 left-0 right-0 w-full bg-white/95 backdrop-blur-md border-b border-gray-100 z-50 transition-all duration-300 ${scrolled ? 'shadow-lg' : 'shadow-sm'}`}>
       <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link 
-              to="/" 
-              className="flex-shrink-0 flex items-center cursor-pointer" 
-              onClick={() => setIsOpen(false)}
+            <button 
+              onClick={scrollToTop}
+              className="flex-shrink-0 flex items-center cursor-pointer hover:opacity-80 transition-opacity" 
             >
-              <span className="font-heading font-bold text-2xl text-gradient-purple">Artswarit</span>
-            </Link>
-            <div className="hidden sm:ml-10 sm:flex sm:space-x-8">
+              <span className="font-heading font-bold text-2xl bg-gradient-to-r from-artswarit-purple to-blue-500 bg-clip-text text-transparent">Artswarit</span>
+            </button>
+            
+            <div className="hidden md:ml-10 md:flex md:space-x-8">
               <Link 
                 to="/" 
                 className={`inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 transition-colors duration-200 ${
@@ -109,12 +92,13 @@ const Navbar = () => {
               </Link>
             </div>
           </div>
-          <div className="hidden sm:flex sm:items-center sm:space-x-4">
+          
+          <div className="hidden md:flex md:items-center md:space-x-4">
             <div className="relative">
               <input
                 type="text"
                 placeholder="Search artists..."
-                className="pl-10 pr-4 py-2 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/70 focus:border-transparent bg-white/80"
+                className="pl-10 pr-4 py-2 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/70 focus:border-transparent bg-white/80 w-64"
               />
               <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                 <Search size={16} />
@@ -126,10 +110,10 @@ const Navbar = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="hover:bg-primary/10 hover:text-primary">
                     <User className="mr-2 h-4 w-4" />
-                    {profile?.full_name || user.email}
+                    <span className="max-w-32 truncate">{profile?.full_name || user.email}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="bg-white border border-gray-200 shadow-lg">
                   <DropdownMenuItem onClick={() => navigate(getUserDashboard())}>
                     Dashboard
                   </DropdownMenuItem>
@@ -150,10 +134,11 @@ const Navbar = () => {
               </>
             )}
           </div>
-          <div className="flex items-center sm:hidden">
+          
+          <div className="flex items-center md:hidden">
             <button
               type="button"
-              className="p-2 rounded-md text-gray-500 hover:text-primary focus:outline-none"
+              className="p-2 rounded-md text-gray-500 hover:text-primary hover:bg-gray-100 focus:outline-none transition-colors"
               onClick={() => setIsOpen(!isOpen)}
               aria-label="Toggle menu"
             >
@@ -163,84 +148,103 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* Mobile menu */}
+      {/* Mobile menu with improved styling and functionality */}
       {isOpen && (
-        <div className="sm:hidden bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-lg fixed w-full left-0 z-50 max-h-[calc(100vh-4rem)] overflow-y-auto">
-          <div className="pt-2 pb-4 space-y-1">
+        <div className="md:hidden bg-white/98 backdrop-blur-md border-b border-gray-100 shadow-xl">
+          <div className="container mx-auto px-4 py-4 space-y-3">
+            {/* Search bar for mobile */}
+            <div className="relative mb-4">
+              <input
+                type="text"
+                placeholder="Search artists..."
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/70 focus:border-transparent bg-white"
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+            </div>
+
+            {/* Navigation Links */}
             <Link
               to="/"
-              className={`flex items-center pl-3 pr-4 py-2 text-base font-medium ${
+              onClick={closeMobileMenu}
+              className={`flex items-center px-3 py-3 text-base font-medium rounded-lg transition-colors ${
                 location.pathname === '/' 
                   ? 'text-primary bg-primary/10' 
-                  : 'text-gray-600 hover:bg-primary/10 hover:text-primary'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-primary'
               }`}
-              onClick={() => setIsOpen(false)}
             >
-              <Home className="mr-2 h-4 w-4" />
+              <Home className="mr-3 h-5 w-5" />
               Home
             </Link>
             
             <Link
               to="/explore"
-              className={`flex items-center pl-3 pr-4 py-2 text-base font-medium ${
+              onClick={closeMobileMenu}
+              className={`flex items-center px-3 py-3 text-base font-medium rounded-lg transition-colors ${
                 location.pathname === '/explore' 
                   ? 'text-primary bg-primary/10' 
-                  : 'text-gray-600 hover:bg-primary/10 hover:text-primary'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-primary'
               }`}
-              onClick={() => setIsOpen(false)}
             >
-              <TrendingUp className="mr-2 h-4 w-4" />
+              <TrendingUp className="mr-3 h-5 w-5" />
               Explore
             </Link>
-          </div>
-          <div className="pt-4 pb-3 border-t border-gray-200">
-            <div className="flex items-center px-4">
-              <div className="flex-shrink-0">
-                <User className="h-10 w-10 rounded-full text-gray-400" />
-              </div>
-              <div className="ml-3 space-y-2">
-                {user ? (
-                  <>
-                    <div className="text-base font-medium text-gray-600">{profile?.full_name || user.email}</div>
-                    <button
-                      onClick={() => {
-                        setIsOpen(false);
-                        navigate(getUserDashboard());
-                      }}
-                      className="block text-base font-medium text-gray-600 hover:text-primary"
-                    >
-                      Dashboard
-                    </button>
-                    <button
-                      onClick={() => {
-                        setIsOpen(false);
-                        handleSignOut();
-                      }}
-                      className="block text-base font-medium text-primary"
-                      disabled={loading}
-                    >
-                      Sign out
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      to="/login"
-                      className="block text-base font-medium text-gray-600 hover:text-primary"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Log in
-                    </Link>
-                    <Link
-                      to="/signup"
-                      className="block text-base font-medium text-primary"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Sign up
-                    </Link>
-                  </>
-                )}
-              </div>
+
+            {/* User Section */}
+            <div className="pt-4 border-t border-gray-200">
+              {user ? (
+                <div className="space-y-3">
+                  <div className="flex items-center px-3 py-2">
+                    <User className="h-8 w-8 text-gray-400 mr-3" />
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {profile?.full_name || user.email}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {profile?.role || 'User'}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={() => {
+                      closeMobileMenu();
+                      navigate(getUserDashboard());
+                    }}
+                    className="w-full flex items-center px-3 py-3 text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-primary rounded-lg transition-colors"
+                  >
+                    Dashboard
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      closeMobileMenu();
+                      handleSignOut();
+                    }}
+                    className="w-full flex items-center px-3 py-3 text-base font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    disabled={loading}
+                  >
+                    <LogOut className="mr-3 h-5 w-5" />
+                    Sign out
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <Link
+                    to="/login"
+                    onClick={closeMobileMenu}
+                    className="block w-full px-3 py-3 text-center text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-primary rounded-lg transition-colors"
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    to="/signup"
+                    onClick={closeMobileMenu}
+                    className="block w-full px-3 py-3 text-center text-base font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors"
+                  >
+                    Sign up
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>

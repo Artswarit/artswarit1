@@ -256,63 +256,65 @@ const Index = () => {
       
       <AnimatedHeroSlider />
       
-      {/* Featured Artists Section - Updated to be a carousel */}
-      <section id="featured-artists" className="container mx-auto px-4 py-16 sm:px-6 lg:px-8 mt-8">
-        <div className="text-center mb-12">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-artswarit-purple to-blue-500">
+      {/* Featured Artists Section */}
+      <section id="featured-artists" className="container mx-auto px-4 py-12 sm:py-16 sm:px-6 lg:px-8 mt-4 sm:mt-8">
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-artswarit-purple to-blue-500">
             Featured Artists
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
             Discover trending creators making waves on Artswarit, updated regularly based on popularity.
           </p>
         </div>
         
-        <Carousel 
-          opts={{
-            align: "start",
-            loop: true
-          }} 
-          className="w-full"
-        >
-          <CarouselContent>
-            {featuredArtists.map(artist => (
-              <CarouselItem key={artist.id} className="md:basis-1/2 lg:basis-1/3 pl-4">
-                <div className="h-full">
-                  <FeaturedArtistCard {...artist} />
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="left-2 bg-white/80 backdrop-blur-md border border-white/30 text-primary hover:bg-white/90" />
-          <CarouselNext className="right-2 bg-white/80 backdrop-blur-md border border-white/30 text-primary hover:bg-white/90" />
-        </Carousel>
+        <div className="relative">
+          <Carousel 
+            opts={{
+              align: "start",
+              loop: true
+            }} 
+            className="w-full"
+          >
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {featuredArtists.map(artist => (
+                <CarouselItem key={artist.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
+                  <div className="h-full">
+                    <FeaturedArtistCard {...artist} />
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden sm:flex left-2 bg-white/80 backdrop-blur-md border border-white/30 text-primary hover:bg-white/90" />
+            <CarouselNext className="hidden sm:flex right-2 bg-white/80 backdrop-blur-md border border-white/30 text-primary hover:bg-white/90" />
+          </Carousel>
+        </div>
       </section>
       
       {/* Artwork Carousel Section */}
       <ArtworkCarousel />
 
       {/* Categories Section */}
-      <section className="py-16 bg-gradient-to-r from-indigo-50 to-purple-50">
+      <section className="py-12 sm:py-16 bg-gradient-to-r from-indigo-50 to-purple-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-artswarit-purple to-blue-500">
-              Important Categories
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-artswarit-purple to-blue-500">
+              Popular Categories
             </h2>
-            <p className="text-lg font-serif text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg font-serif text-muted-foreground max-w-2xl mx-auto px-4">
               Find the perfect creative professional for your project from our diverse selection of specialized talents.
             </p>
             <p className="text-sm text-muted-foreground mt-2">
               <span className="inline-block w-2 h-2 bg-green-400 rounded-full mr-2"></span>
-              Live counts • Updated every minute
+              Live counts • Updated regularly
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {categories.slice(0, 6).map((category, index) => (
               <CategoryCard key={index} {...category} />
             ))}
           </div>
           <div className="text-center mt-8">
-            <p className="text-lg italic text-muted-foreground mb-4">
+            <p className="text-base sm:text-lg italic text-muted-foreground mb-4 px-4">
               ...and many more categories to explore with thousands of talented artists
             </p>
             <Button 
@@ -328,45 +330,45 @@ const Index = () => {
       </section>
 
       {/* How It Works Section */}
-      <section className="container mx-auto px-4 py-16 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-artswarit-purple to-blue-500">
+      <section className="container mx-auto px-4 py-12 sm:py-16 sm:px-6 lg:px-8">
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-artswarit-purple to-blue-500">
             How Artswarit Works
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
             A simple process to showcase your talent or find the perfect creative professional.
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="text-center p-6 bg-white/60 backdrop-blur-sm rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-all">
-            <div className="bg-gradient-to-r from-artswarit-purple to-blue-500 h-16 w-16 rounded-full flex items-center justify-center text-white mx-auto mb-4">
-              <span className="font-bold text-xl">1</span>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+          <div className="text-center p-4 sm:p-6 bg-white/60 backdrop-blur-sm rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-all">
+            <div className="bg-gradient-to-r from-artswarit-purple to-blue-500 h-12 w-12 sm:h-16 sm:w-16 rounded-full flex items-center justify-center text-white mx-auto mb-4">
+              <span className="font-bold text-lg sm:text-xl">1</span>
             </div>
-            <h3 className="font-heading text-xl font-semibold mb-2">Create Your Profile</h3>
-            <p className="text-muted-foreground">
+            <h3 className="font-heading text-lg sm:text-xl font-semibold mb-2">Create Your Profile</h3>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Sign up as an artist and build your custom profile showcasing your skills, portfolio, and services.
             </p>
           </div>
-          <div className="text-center p-6 bg-white/60 backdrop-blur-sm rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-all">
-            <div className="bg-gradient-to-r from-artswarit-purple to-blue-500 h-16 w-16 rounded-full flex items-center justify-center text-white mx-auto mb-4">
-              <span className="font-bold text-xl">2</span>
+          <div className="text-center p-4 sm:p-6 bg-white/60 backdrop-blur-sm rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-all">
+            <div className="bg-gradient-to-r from-artswarit-purple to-blue-500 h-12 w-12 sm:h-16 sm:w-16 rounded-full flex items-center justify-center text-white mx-auto mb-4">
+              <span className="font-bold text-lg sm:text-xl">2</span>
             </div>
-            <h3 className="font-heading text-xl font-semibold mb-2">Upload Your Content</h3>
-            <p className="text-muted-foreground">
+            <h3 className="font-heading text-lg sm:text-xl font-semibold mb-2">Upload Your Content</h3>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Share your work with the world. Upload audio, video, or text content to showcase your talent.
             </p>
           </div>
-          <div className="text-center p-6 bg-white/60 backdrop-blur-sm rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-all">
-            <div className="bg-gradient-to-r from-artswarit-purple to-blue-500 h-16 w-16 rounded-full flex items-center justify-center text-white mx-auto mb-4">
-              <span className="font-bold text-xl">3</span>
+          <div className="text-center p-4 sm:p-6 bg-white/60 backdrop-blur-sm rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-all">
+            <div className="bg-gradient-to-r from-artswarit-purple to-blue-500 h-12 w-12 sm:h-16 sm:w-16 rounded-full flex items-center justify-center text-white mx-auto mb-4">
+              <span className="font-bold text-lg sm:text-xl">3</span>
             </div>
-            <h3 className="font-heading text-xl font-semibold mb-2">Connect & Earn</h3>
-            <p className="text-muted-foreground">
+            <h3 className="font-heading text-lg sm:text-xl font-semibold mb-2">Connect & Earn</h3>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Get discovered by clients, receive project offers, and monetize your creative skills.
             </p>
           </div>
         </div>
-        <div className="text-center mt-10">
+        <div className="text-center mt-8 sm:mt-10">
           <Button asChild size="lg" className="bg-gradient-to-r from-artswarit-purple to-blue-500 border-none">
             <Link to="/signup">Get Started Now</Link>
           </Button>
@@ -374,49 +376,52 @@ const Index = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-16 bg-gradient-to-r from-indigo-50 to-purple-50">
+      <section className="py-12 sm:py-16 bg-gradient-to-r from-indigo-50 to-purple-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-artswarit-purple to-blue-500">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-artswarit-purple to-blue-500">
               Success Stories
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
               Hear from artists who have transformed their careers with Artswarit.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => <div key={index} className="bg-white/60 backdrop-blur-sm p-6 rounded-xl shadow-sm border border-blue-100 hover:shadow-md transition-all">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+            {testimonials.map((testimonial, index) => (
+              <div key={index} className="bg-white/60 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-sm border border-blue-100 hover:shadow-md transition-all">
                 <div className="mb-4">
-                  {[...Array(5)].map((_, i) => <span key={i} className="text-yellow-400">★</span>)}
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className="text-yellow-400">★</span>
+                  ))}
                 </div>
-                <p className="text-gray-700 mb-4">"{testimonial.content}"</p>
+                <p className="text-gray-700 mb-4 text-sm sm:text-base">"{testimonial.content}"</p>
                 <div>
-                  <p className="font-heading font-semibold">{testimonial.author}</p>
-                  <p className="text-sm text-muted-foreground">{testimonial.role}</p>
+                  <p className="font-heading font-semibold text-sm sm:text-base">{testimonial.author}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{testimonial.role}</p>
                 </div>
-              </div>)}
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="bg-gradient-to-r from-artswarit-purple to-blue-500 text-white py-16">
+      <section className="bg-gradient-to-r from-artswarit-purple to-blue-500 text-white py-12 sm:py-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="max-w-3xl mx-auto relative">
-            {/* Decorative elements */}
-            <div className="absolute -top-10 -left-10 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
-            <div className="absolute -bottom-10 -right-10 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
+            <div className="absolute -top-10 -left-10 w-20 h-20 bg-white/10 rounded-full blur-xl hidden sm:block"></div>
+            <div className="absolute -bottom-10 -right-10 w-20 h-20 bg-white/10 rounded-full blur-xl hidden sm:block"></div>
             
-            <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4">Ready to Showcase Your Talent?</h2>
-            <p className="text-xl mb-8 max-w-2xl mx-auto text-white/90">
+            <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-4 px-4">Ready to Showcase Your Talent?</h2>
+            <p className="text-lg sm:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto text-white/90 px-4">
               Join thousands of creative professionals who are building their careers with Artswarit.
             </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Button size="lg" variant="default" className="bg-white text-artswarit-purple hover:bg-gray-100">
-                <Link to="/signup">Join as Artist</Link>
+            <div className="flex flex-col sm:flex-row justify-center gap-4 px-4">
+              <Button size="lg" variant="default" className="bg-white text-artswarit-purple hover:bg-gray-100 w-full sm:w-auto">
+                <Link to="/signup" className="block w-full">Join as Artist</Link>
               </Button>
-              <Button size="lg" variant="outline" className="border-white hover:bg-white text-violet-600">
-                <Link to="/client-dashboard" className="">Join as Client</Link>
+              <Button size="lg" variant="outline" className="border-white hover:bg-white text-white hover:text-violet-600 w-full sm:w-auto">
+                <Link to="/client-dashboard" className="block w-full">Join as Client</Link>
               </Button>
             </div>
           </div>
