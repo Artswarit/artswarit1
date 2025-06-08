@@ -22,13 +22,28 @@ const Explore = () => {
   }) => {
     let filtered = [...artworks];
 
-    // Search filter
+    // Search filter - prioritize artist name matches first
     if (filters.search) {
-      filtered = filtered.filter(artwork =>
-        artwork.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-        artwork.description?.toLowerCase().includes(filters.search.toLowerCase()) ||
-        artwork.profiles?.full_name.toLowerCase().includes(filters.search.toLowerCase())
-      );
+      const searchTerm = filters.search.toLowerCase();
+      
+      // Separate artworks by artist name matches vs other matches
+      const artistNameMatches: typeof filtered = [];
+      const otherMatches: typeof filtered = [];
+      
+      filtered.forEach(artwork => {
+        const artistNameMatch = artwork.profiles?.full_name.toLowerCase().includes(searchTerm);
+        const titleMatch = artwork.title.toLowerCase().includes(searchTerm);
+        const descriptionMatch = artwork.description?.toLowerCase().includes(searchTerm);
+        
+        if (artistNameMatch) {
+          artistNameMatches.push(artwork);
+        } else if (titleMatch || descriptionMatch) {
+          otherMatches.push(artwork);
+        }
+      });
+      
+      // Combine with artist matches first
+      filtered = [...artistNameMatches, ...otherMatches];
     }
 
     // Category filter
@@ -67,7 +82,7 @@ const Explore = () => {
       });
     }
 
-    // Sort filter
+    // Sort filter - with artist priority for some sorts
     switch (filters.sortBy) {
       case 'popular':
         filtered.sort((a, b) => (b.views_count + b.likes_count) - (a.views_count + a.likes_count));
@@ -80,6 +95,13 @@ const Explore = () => {
         break;
       case 'price_high':
         filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
+        break;
+      case 'artist_name':
+        filtered.sort((a, b) => {
+          const nameA = a.profiles?.full_name || '';
+          const nameB = b.profiles?.full_name || '';
+          return nameA.localeCompare(nameB);
+        });
         break;
       case 'recent':
       default:
