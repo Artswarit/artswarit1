@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -28,16 +27,14 @@ const artistsData = {
     joinDate: "January 2020",
     specialties: ["Pop", "Rock", "Electronic", "Acoustic"],
     achievements: ["Grammy Nominee", "Platinum Album", "10M+ Streams"],
-    portfolio: [
-      {
-        id: "1",
-        title: "Midnight Symphony",
-        type: "Audio",
-        thumbnail: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&q=80",
-        likes: 1250,
-        plays: 8900
-      }
-    ]
+    portfolio: [{
+      id: "1",
+      title: "Midnight Symphony",
+      type: "Audio",
+      thumbnail: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&q=80",
+      likes: 1250,
+      plays: 8900
+    }]
   },
   "2": {
     id: "2",
@@ -56,16 +53,14 @@ const artistsData = {
     joinDate: "March 2019",
     specialties: ["Fantasy", "Sci-Fi", "Young Adult", "Short Stories"],
     achievements: ["Hugo Award Winner", "Bestselling Author", "5+ Published Novels"],
-    portfolio: [
-      {
-        id: "2",
-        title: "The Crystal Realm",
-        type: "Book",
-        thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&q=80",
-        likes: 2100,
-        reads: 45000
-      }
-    ]
+    portfolio: [{
+      id: "2",
+      title: "The Crystal Realm",
+      type: "Book",
+      thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&q=80",
+      likes: 2100,
+      reads: 45000
+    }]
   },
   "3": {
     id: "3",
@@ -84,25 +79,23 @@ const artistsData = {
     joinDate: "June 2021",
     specialties: ["Hip-Hop", "Conscious Rap", "Freestyle", "Beatmaking"],
     achievements: ["Viral Hit", "Independent Artist", "1M+ Views"],
-    portfolio: [
-      {
-        id: "3",
-        title: "Street Philosophy",
-        type: "Audio",
-        thumbnail: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&q=80",
-        likes: 890,
-        plays: 12000
-      }
-    ]
+    portfolio: [{
+      id: "3",
+      title: "Street Philosophy",
+      type: "Audio",
+      thumbnail: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&q=80",
+      likes: 890,
+      plays: 12000
+    }]
   }
 };
-
 const ArtistProfile = () => {
-  const { id } = useParams();
+  const {
+    id
+  } = useParams();
   const [artist, setArtist] = useState(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
     // Simulate API call
     const fetchArtist = () => {
@@ -115,17 +108,13 @@ const ArtistProfile = () => {
         setIsLoading(false);
       }, 500);
     };
-
     fetchArtist();
   }, [id]);
-
   const handleFollow = () => {
     setIsFollowing(!isFollowing);
   };
-
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col">
+    return <div className="min-h-screen flex flex-col">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
@@ -133,13 +122,10 @@ const ArtistProfile = () => {
             <p className="mt-4 text-muted-foreground">Loading artist profile...</p>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (!artist) {
-    return (
-      <div className="min-h-screen flex flex-col">
+    return <div className="min-h-screen flex flex-col">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
@@ -150,22 +136,15 @@ const ArtistProfile = () => {
             </Button>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen flex flex-col">
+  return <div className="min-h-screen flex flex-col">
       <Navbar />
       
       <main className="flex-1">
         {/* Cover Image */}
         <div className="relative h-64 md:h-80 bg-gradient-to-r from-artswarit-purple to-blue-500">
-          <img
-            src={artist.coverImage}
-            alt={`${artist.name} cover`}
-            className="w-full h-full object-cover opacity-60"
-          />
+          <img src={artist.coverImage} alt={`${artist.name} cover`} className="w-full h-full object-cover opacity-60" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
         </div>
 
@@ -174,16 +153,10 @@ const ArtistProfile = () => {
             {/* Profile Image and Basic Info */}
             <div className="flex flex-col items-center md:items-start">
               <div className="relative">
-                <img
-                  src={artist.imageUrl}
-                  alt={artist.name}
-                  className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white shadow-lg object-cover"
-                />
-                {artist.verified && (
-                  <div className="absolute -bottom-2 -right-2 bg-blue-500 text-white rounded-full p-2">
+                <img src={artist.imageUrl} alt={artist.name} className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white shadow-lg object-cover" />
+                {artist.verified && <div className="absolute -bottom-2 -right-2 bg-blue-500 text-white rounded-full p-2">
                     <Award className="w-4 h-4" />
-                  </div>
-                )}
+                  </div>}
               </div>
             </div>
 
@@ -198,10 +171,7 @@ const ArtistProfile = () => {
                     {artist.premium && <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500">Premium</Badge>}
                   </div>
                 </div>
-                <Button
-                  onClick={handleFollow}
-                  className={`ml-auto ${isFollowing ? 'bg-gray-500 hover:bg-gray-600' : 'bg-gradient-to-r from-artswarit-purple to-blue-500'}`}
-                >
+                <Button onClick={handleFollow} className={`ml-auto ${isFollowing ? 'bg-gray-500 hover:bg-gray-600' : 'bg-gradient-to-r from-artswarit-purple to-blue-500'}`}>
                   {isFollowing ? 'Following' : 'Follow'}
                 </Button>
               </div>
@@ -210,15 +180,15 @@ const ArtistProfile = () => {
               <div className="flex items-center justify-center md:justify-start gap-6 text-white/90 text-sm">
                 <div className="flex items-center gap-1">
                   <Users className="w-4 h-4" />
-                  <span>{artist.followers.toLocaleString()} followers</span>
+                  <span className="text-blue-800">{artist.followers.toLocaleString()} followers</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Heart className="w-4 h-4" />
-                  <span>{artist.likes.toLocaleString()} likes</span>
+                  <span className="text-blue-700">{artist.likes.toLocaleString()} likes</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Eye className="w-4 h-4" />
-                  <span>{artist.views.toLocaleString()} views</span>
+                  <span className="text-blue-700">{artist.views.toLocaleString()} views</span>
                 </div>
               </div>
             </div>
@@ -246,13 +216,8 @@ const ArtistProfile = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {artist.portfolio.map((item) => (
-                      <div key={item.id} className="bg-gray-50 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <img
-                          src={item.thumbnail}
-                          alt={item.title}
-                          className="w-full h-32 object-cover rounded-md mb-3"
-                        />
+                    {artist.portfolio.map(item => <div key={item.id} className="bg-gray-50 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <img src={item.thumbnail} alt={item.title} className="w-full h-32 object-cover rounded-md mb-3" />
                         <h3 className="font-semibold mb-2">{item.title}</h3>
                         <div className="flex items-center justify-between text-sm text-muted-foreground">
                           <span>{item.type}</span>
@@ -263,8 +228,7 @@ const ArtistProfile = () => {
                             </span>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                 </CardContent>
               </Card>
@@ -290,9 +254,7 @@ const ArtistProfile = () => {
                   <div>
                     <h4 className="font-medium mb-2">Specialties</h4>
                     <div className="flex flex-wrap gap-2">
-                      {artist.specialties.map((specialty) => (
-                        <Badge key={specialty} variant="outline">{specialty}</Badge>
-                      ))}
+                      {artist.specialties.map(specialty => <Badge key={specialty} variant="outline">{specialty}</Badge>)}
                     </div>
                   </div>
                 </CardContent>
@@ -308,12 +270,10 @@ const ArtistProfile = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {artist.achievements.map((achievement) => (
-                      <div key={achievement} className="flex items-center gap-2 text-sm">
+                    {artist.achievements.map(achievement => <div key={achievement} className="flex items-center gap-2 text-sm">
                         <div className="w-2 h-2 bg-gradient-to-r from-artswarit-purple to-blue-500 rounded-full"></div>
                         <span>{achievement}</span>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                 </CardContent>
               </Card>
@@ -323,8 +283,6 @@ const ArtistProfile = () => {
       </main>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default ArtistProfile;
