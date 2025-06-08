@@ -17,7 +17,7 @@ import { Menu, X } from "lucide-react";
 import logo from "@/assets/artswarit-logo.png";
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const isMobile = useIsMobile();
@@ -69,19 +69,19 @@ const Navbar = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="h-8 w-8 p-0">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.image} alt={user.name} />
-                      <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
+                      <AvatarImage src={user.user_metadata?.avatar_url} alt={user.user_metadata?.full_name || user.email} />
+                      <AvatarFallback>{user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0)}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuItem asChild>
-                    <Link to={user.role === 'artist' ? "/artist-dashboard" : "/client-dashboard"}>
+                    <Link to={user.user_metadata?.role === 'artist' ? "/artist-dashboard" : "/client-dashboard"}>
                       Dashboard
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => logout()}>Logout</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => signOut()}>Logout</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
@@ -142,13 +142,13 @@ const Navbar = () => {
               {user ? (
                 <>
                   <Link
-                    to={user.role === 'artist' ? "/artist-dashboard" : "/client-dashboard"}
+                    to={user.user_metadata?.role === 'artist' ? "/artist-dashboard" : "/client-dashboard"}
                     className="block px-3 py-2 text-gray-700 hover:text-artswarit-purple hover:bg-gray-50 rounded-md transition-colors"
                     onClick={closeMenu}
                   >
                     Dashboard
                   </Link>
-                  <Button variant="ghost" className="w-full justify-start" onClick={() => { logout(); closeMenu(); }}>
+                  <Button variant="ghost" className="w-full justify-start" onClick={() => { signOut(); closeMenu(); }}>
                     Logout
                   </Button>
                 </>
