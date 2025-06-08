@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,7 +35,6 @@ const sortOptions = [
   { value: 'recent', label: 'Most Recent' },
   { value: 'popular', label: 'Most Popular' },
   { value: 'liked', label: 'Most Liked' },
-  { value: 'artist_name', label: 'Artist Name A-Z' },
   { value: 'price_low', label: 'Price: Low to High' },
   { value: 'price_high', label: 'Price: High to Low' },
 ];
@@ -51,7 +51,7 @@ const ExploreFilters = ({ onFiltersChange }: FiltersProps) => {
   const [filters, setFilters] = useState({
     search: '',
     category: 'All Categories',
-    sortBy: 'artist_name',
+    sortBy: 'recent',
     priceRange: 'all',
     tags: [] as string[],
   });
@@ -89,7 +89,7 @@ const ExploreFilters = ({ onFiltersChange }: FiltersProps) => {
     const clearedFilters = {
       search: '',
       category: 'All Categories',
-      sortBy: 'artist_name',
+      sortBy: 'recent',
       priceRange: 'all',
       tags: [],
     };
@@ -104,7 +104,7 @@ const ExploreFilters = ({ onFiltersChange }: FiltersProps) => {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
-            placeholder="Search by artist name, artwork title, or tags..."
+            placeholder="Search artworks, artists..."
             value={filters.search}
             onChange={(e) => updateFilters({ ...filters, search: e.target.value })}
             className="pl-10"
