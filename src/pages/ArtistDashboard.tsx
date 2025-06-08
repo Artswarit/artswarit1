@@ -79,11 +79,11 @@ const ArtistDashboard = () => {
             </TabsContent>
 
             <TabsContent value="profile" className="space-y-6">
-              <ArtistProfile />
+              <ArtistProfile isLoading={profileLoading} />
             </TabsContent>
 
             <TabsContent value="earnings" className="space-y-6">
-              <ArtistEarnings />
+              <ArtistEarnings isLoading={profileLoading} />
             </TabsContent>
 
             <TabsContent value="messages" className="space-y-6">
@@ -91,7 +91,7 @@ const ArtistDashboard = () => {
             </TabsContent>
 
             <TabsContent value="settings" className="space-y-6">
-              <ArtistSettings />
+              <ArtistSettings isLoading={profileLoading} />
             </TabsContent>
           </Tabs>
         </main>
