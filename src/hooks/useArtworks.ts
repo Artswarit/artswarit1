@@ -17,7 +17,8 @@ export const useArtworks = () => {
       category: "Music",
       audioUrl: "https://www.soundjay.com/misc/sounds/magic-chime-02.wav",
       is_pinned: false,
-      is_for_sale: true
+      is_for_sale: true,
+      tags: ["ambient", "electronic", "chill"]
     },
     {
       id: "2",
@@ -32,7 +33,8 @@ export const useArtworks = () => {
       price: 150,
       category: "Digital Art",
       is_pinned: true,
-      is_for_sale: true
+      is_for_sale: true,
+      tags: ["digital", "surreal", "colorful"]
     },
     {
       id: "3",
@@ -48,7 +50,8 @@ export const useArtworks = () => {
       category: "Hip-Hop",
       audioUrl: "https://www.soundjay.com/misc/sounds/magic-chime-02.wav",
       is_pinned: false,
-      is_for_sale: true
+      is_for_sale: true,
+      tags: ["hip-hop", "conscious", "urban"]
     },
     {
       id: "4",
@@ -64,7 +67,8 @@ export const useArtworks = () => {
       category: "Music Video",
       videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
       is_pinned: false,
-      is_for_sale: true
+      is_for_sale: true,
+      tags: ["music video", "urban", "street"]
     },
     {
       id: "5",
@@ -79,7 +83,8 @@ export const useArtworks = () => {
       price: 120,
       category: "Abstract Art",
       is_pinned: false,
-      is_for_sale: true
+      is_for_sale: true,
+      tags: ["abstract", "emotional", "expressive"]
     },
     {
       id: "6",
@@ -95,7 +100,8 @@ export const useArtworks = () => {
       category: "Conscious Rap",
       audioUrl: "https://www.soundjay.com/misc/sounds/magic-chime-02.wav",
       is_pinned: false,
-      is_for_sale: true
+      is_for_sale: true,
+      tags: ["conscious rap", "lyrical", "meaningful"]
     },
     {
       id: "7",
@@ -110,7 +116,8 @@ export const useArtworks = () => {
       price: 180,
       category: "Landscape",
       is_pinned: true,
-      is_for_sale: true
+      is_for_sale: true,
+      tags: ["nature", "ocean", "peaceful"]
     },
     {
       id: "8",
@@ -126,7 +133,8 @@ export const useArtworks = () => {
       category: "Urban",
       videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
       is_pinned: false,
-      is_for_sale: true
+      is_for_sale: true,
+      tags: ["urban", "night", "timelapse"]
     }
   ]);
 
@@ -145,9 +153,7 @@ export const useArtworks = () => {
 
   return {
     artworks,
-    data: artworks,
     loading: false,
-    isLoading: false,
     error: null,
     fetchArtworks,
     toggleLike,
