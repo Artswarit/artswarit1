@@ -68,7 +68,7 @@ const ArtworkUpload = ({ onClose }: ArtworkUploadProps) => {
 
     const tagsArray = formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
     
-    const { error } = await uploadArtwork({
+    const result = await uploadArtwork({
       title: formData.title,
       description: formData.description,
       category: formData.category,
@@ -80,7 +80,7 @@ const ArtworkUpload = ({ onClose }: ArtworkUploadProps) => {
       file: selectedFile,
     });
 
-    if (!error) {
+    if (!result?.error) {
       // Reset form
       setFormData({
         title: '',

@@ -59,8 +59,18 @@ const ArtworkManagement = () => {
               {userArtworks.map((artwork) => (
                 <ArtworkCard
                   key={artwork.id}
-                  artwork={artwork}
-                  onLike={toggleLike}
+                  id={artwork.id}
+                  title={artwork.title}
+                  artist={artwork.artist}
+                  artistId={artwork.artistId}
+                  type={artwork.type}
+                  imageUrl={artwork.imageUrl}
+                  likes={artwork.likes}
+                  views={artwork.views}
+                  price={artwork.price}
+                  category={artwork.category}
+                  audioUrl={artwork.audioUrl}
+                  videoUrl={artwork.videoUrl}
                 />
               ))}
             </div>
@@ -82,8 +92,18 @@ const ArtworkManagement = () => {
               {pinnedArtworks.map((artwork) => (
                 <ArtworkCard
                   key={artwork.id}
-                  artwork={artwork}
-                  onLike={toggleLike}
+                  id={artwork.id}
+                  title={artwork.title}
+                  artist={artwork.artist}
+                  artistId={artwork.artistId}
+                  type={artwork.type}
+                  imageUrl={artwork.imageUrl}
+                  likes={artwork.likes}
+                  views={artwork.views}
+                  price={artwork.price}
+                  category={artwork.category}
+                  audioUrl={artwork.audioUrl}
+                  videoUrl={artwork.videoUrl}
                 />
               ))}
             </div>
@@ -100,8 +120,18 @@ const ArtworkManagement = () => {
               {forSaleArtworks.map((artwork) => (
                 <ArtworkCard
                   key={artwork.id}
-                  artwork={artwork}
-                  onLike={toggleLike}
+                  id={artwork.id}
+                  title={artwork.title}
+                  artist={artwork.artist}
+                  artistId={artwork.artistId}
+                  type={artwork.type}
+                  imageUrl={artwork.imageUrl}
+                  likes={artwork.likes}
+                  views={artwork.views}
+                  price={artwork.price}
+                  category={artwork.category}
+                  audioUrl={artwork.audioUrl}
+                  videoUrl={artwork.videoUrl}
                 />
               ))}
             </div>

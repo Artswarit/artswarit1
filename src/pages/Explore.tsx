@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useArtworks } from '@/hooks/useArtworks';
 import Navbar from '@/components/Navbar';
@@ -17,7 +18,7 @@ import { Grid, List, Filter } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Explore = () => {
-  const { data: artworks, isLoading: loading, error } = useArtworks();
+  const { artworks, loading, error } = useArtworks();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filteredArtworks, setFilteredArtworks] = useState(artworks || []);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
