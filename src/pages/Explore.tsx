@@ -54,7 +54,7 @@ const Explore = () => {
     }
 
     // Category filter (artist category)
-    if (filters.category && filters.category !== 'All Categories') {
+    if (filters.category && filters.category !== 'all') {
       filtered = filtered.filter(artwork => artwork.category === filters.category);
     }
 

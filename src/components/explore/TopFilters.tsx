@@ -24,9 +24,9 @@ interface TopFiltersProps {
 const TopFilters = ({ onFiltersChange, onViewModeChange, viewMode, resultsCount }: TopFiltersProps) => {
   const [filters, setFilters] = useState<FilterState>({
     search: '',
-    category: '',
-    artworkType: '',
-    priceRange: '',
+    category: 'all',
+    artworkType: 'all',
+    priceRange: 'all',
     sortBy: 'most_recent'
   });
 
@@ -41,9 +41,9 @@ const TopFilters = ({ onFiltersChange, onViewModeChange, viewMode, resultsCount 
   const resetFilters = () => {
     const resetFilters = {
       search: '',
-      category: '',
-      artworkType: '',
-      priceRange: '',
+      category: 'all',
+      artworkType: 'all',
+      priceRange: 'all',
       sortBy: 'most_recent'
     };
     setFilters(resetFilters);
@@ -73,7 +73,7 @@ const TopFilters = ({ onFiltersChange, onViewModeChange, viewMode, resultsCount 
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent className="bg-white/95 backdrop-blur-md border-white/30">
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
                 <SelectItem value="Musician">Musician</SelectItem>
                 <SelectItem value="Writer">Writer</SelectItem>
                 <SelectItem value="Rapper">Rapper</SelectItem>
@@ -86,7 +86,7 @@ const TopFilters = ({ onFiltersChange, onViewModeChange, viewMode, resultsCount 
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
               <SelectContent className="bg-white/95 backdrop-blur-md border-white/30">
-                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="music">Music</SelectItem>
                 <SelectItem value="video">Video</SelectItem>
                 <SelectItem value="image">Image</SelectItem>
@@ -98,7 +98,7 @@ const TopFilters = ({ onFiltersChange, onViewModeChange, viewMode, resultsCount 
                 <SelectValue placeholder="Price" />
               </SelectTrigger>
               <SelectContent className="bg-white/95 backdrop-blur-md border-white/30">
-                <SelectItem value="">All Prices</SelectItem>
+                <SelectItem value="all">All Prices</SelectItem>
                 <SelectItem value="free">Free</SelectItem>
                 <SelectItem value="0-50">$0-50</SelectItem>
                 <SelectItem value="50-100">$50-100</SelectItem>
