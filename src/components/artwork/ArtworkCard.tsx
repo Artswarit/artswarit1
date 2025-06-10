@@ -130,11 +130,11 @@ const ArtworkCard = ({
 
       <DialogContent className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl">{title}</DialogTitle>
+          <DialogTitle className="text-2xl my-0 mx-0">{title}</DialogTitle>
         </DialogHeader>
         <div className="space-y-6">
           {/* Media content */}
-          <div className="space-y-4">
+          <div className="space-y-4 my-0 mx-[66px]">
             {type === 'music' && audioUrl && <div className="bg-gray-50 p-4 rounded-lg">
                 <audio controls className="w-full">
                   <source src={audioUrl} type="audio/mpeg" />
