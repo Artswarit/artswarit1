@@ -14,7 +14,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Grid, List, Filter, Search } from 'lucide-react';
+import { Grid, List, Filter } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Explore = () => {
@@ -24,7 +24,7 @@ const Explore = () => {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const isMobile = useIsMobile();
-  const itemsPerPage = isMobile ? 6 : 9;
+  const itemsPerPage = 12;
 
   // Pagination logic
   const totalPages = Math.ceil((filteredArtworks?.length || 0) / itemsPerPage);
@@ -43,6 +43,7 @@ const Explore = () => {
   }) => {
     let filtered = [...(artworks || [])];
 
+    // Search filter - prioritize artist name matches
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase();
       filtered = filtered.filter(artwork => {
@@ -50,20 +51,24 @@ const Explore = () => {
         const title = artwork.title.toLowerCase();
         const category = artwork.category?.toLowerCase() || '';
         
+        // Prioritize artist name matches
         return artistName.includes(searchTerm) || 
                title.includes(searchTerm) || 
                category.includes(searchTerm);
       });
     }
 
+    // Category filter (artist category)
     if (filters.category && filters.category !== 'All Categories') {
       filtered = filtered.filter(artwork => artwork.category === filters.category);
     }
 
+    // Artwork type filter
     if (filters.artworkType && filters.artworkType !== 'all') {
       filtered = filtered.filter(artwork => artwork.type === filters.artworkType);
     }
 
+    // Price range filter
     if (filters.priceRange !== 'all') {
       filtered = filtered.filter(artwork => {
         if (!artwork.price && filters.priceRange === 'free') return true;
@@ -86,6 +91,7 @@ const Explore = () => {
       });
     }
 
+    // Tags filter
     if (filters.tags.length > 0) {
       filtered = filtered.filter(artwork =>
         filters.tags.some(tag =>
@@ -96,6 +102,7 @@ const Explore = () => {
       );
     }
 
+    // Sort filter
     switch (filters.sortBy) {
       case 'artist_name':
         filtered.sort((a, b) => {
@@ -121,11 +128,12 @@ const Explore = () => {
         break;
       case 'most_recent':
       default:
+        // Keep original order for mock data
         break;
     }
 
     setFilteredArtworks(filtered);
-    setCurrentPage(1);
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   useEffect(() => {
@@ -136,13 +144,10 @@ const Explore = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
+      <div className="min-h-screen flex flex-col">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto"></div>
-            <p className="mt-6 text-muted-foreground text-lg">Discovering amazing artworks...</p>
-          </div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
         </div>
       </div>
     );
@@ -153,46 +158,23 @@ const Explore = () => {
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-8 pt-24">
-        {/* Enhanced Header */}
-        <div className="mb-12 text-center">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-            Explore Artworks
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Discover amazing artworks from talented artists around the world
-          </p>
-          
-          {/* Quick stats */}
-          <div className="flex items-center justify-center gap-8 mt-8 text-sm text-gray-500">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-              <span>{filteredArtworks?.length || 0} artworks</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <span>5+ categories</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span>All skill levels</span>
-            </div>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Explore Artworks</h1>
+          <p className="text-gray-600">Discover amazing artworks from talented artists around the world</p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-6">
           {/* Desktop Filters Sidebar */}
           {!isMobile && (
             <div className="lg:w-80 flex-shrink-0">
-              <div className="sticky top-24">
-                <ExploreFilters onFiltersChange={handleFiltersChange} />
-              </div>
+              <ExploreFilters onFiltersChange={handleFiltersChange} />
             </div>
           )}
 
           {/* Main Content */}
           <div className="flex-1">
-            {/* Enhanced Controls */}
-            <div className="flex items-center justify-between mb-8 bg-white rounded-xl p-6 shadow-md">
+            {/* Mobile Filter Toggle & View Controls */}
+            <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
                 {isMobile && (
                   <Button
@@ -204,20 +186,16 @@ const Explore = () => {
                     Filters
                   </Button>
                 )}
-                <div className="flex items-center gap-3">
-                  <Search className="h-5 w-5 text-gray-400" />
-                  <p className="text-lg font-medium text-gray-700">
-                    {filteredArtworks?.length || 0} artwork{(filteredArtworks?.length || 0) !== 1 ? 's' : ''} found
-                  </p>
-                </div>
+                <p className="text-sm text-gray-600">
+                  {filteredArtworks?.length || 0} artwork{(filteredArtworks?.length || 0) !== 1 ? 's' : ''} found
+                </p>
               </div>
               
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
                 <Button
                   variant={viewMode === 'grid' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setViewMode('grid')}
-                  className="px-4"
                 >
                   <Grid className="h-4 w-4" />
                 </Button>
@@ -225,16 +203,15 @@ const Explore = () => {
                   variant={viewMode === 'list' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setViewMode('list')}
-                  className="px-4"
                 >
                   <List className="h-4 w-4" />
                 </Button>
               </div>
             </div>
 
-            {/* Mobile Filters */}
+            {/* Mobile Filters Drawer */}
             {isMobile && showMobileFilters && (
-              <div className="mb-8 bg-white rounded-xl shadow-md">
+              <div className="mb-6">
                 <ExploreFilters 
                   onFiltersChange={handleFiltersChange}
                   onClose={() => setShowMobileFilters(false)}
@@ -242,81 +219,75 @@ const Explore = () => {
               </div>
             )}
 
-            {/* Enhanced Artworks Grid/List */}
+            {/* Artworks Grid/List */}
             {currentArtworks && currentArtworks.length > 0 ? (
               <>
                 <div className={
                   viewMode === 'grid'
-                    ? `grid gap-8 ${isMobile ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`
-                    : 'space-y-6'
+                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+                    : 'space-y-4'
                 }>
                   {currentArtworks.map((artwork) => (
-                    <div key={artwork.id} className="transform transition-all duration-300 hover:scale-[1.02]">
-                      <ArtworkCard
-                        id={artwork.id}
-                        title={artwork.title}
-                        artist={artwork.artist}
-                        artistId={artwork.artistId}
-                        type={artwork.type}
-                        imageUrl={artwork.imageUrl}
-                        likes={artwork.likes}
-                        views={artwork.views}
-                        price={artwork.price}
-                        category={artwork.category}
-                        audioUrl={artwork.audioUrl}
-                        videoUrl={artwork.videoUrl}
-                      />
-                    </div>
+                    <ArtworkCard
+                      key={artwork.id}
+                      id={artwork.id}
+                      title={artwork.title}
+                      artist={artwork.artist}
+                      artistId={artwork.artistId}
+                      type={artwork.type}
+                      imageUrl={artwork.imageUrl}
+                      likes={artwork.likes}
+                      views={artwork.views}
+                      price={artwork.price}
+                      category={artwork.category}
+                      audioUrl={artwork.audioUrl}
+                      videoUrl={artwork.videoUrl}
+                    />
                   ))}
                 </div>
 
-                {/* Enhanced Pagination */}
+                {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="mt-12 flex justify-center">
-                    <div className="bg-white rounded-xl shadow-md p-4">
-                      <Pagination>
-                        <PaginationContent>
-                          <PaginationItem>
-                            <PaginationPrevious 
-                              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                              className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:bg-gray-100'}
-                            />
-                          </PaginationItem>
-                          
-                          {[...Array(Math.min(5, totalPages))].map((_, i) => {
-                            const pageNum = i + 1;
-                            return (
-                              <PaginationItem key={pageNum}>
-                                <PaginationLink
-                                  onClick={() => setCurrentPage(pageNum)}
-                                  isActive={currentPage === pageNum}
-                                  className="cursor-pointer hover:bg-gray-100"
-                                >
-                                  {pageNum}
-                                </PaginationLink>
-                              </PaginationItem>
-                            );
-                          })}
-                          
-                          <PaginationItem>
-                            <PaginationNext 
-                              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                              className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:bg-gray-100'}
-                            />
-                          </PaginationItem>
-                        </PaginationContent>
-                      </Pagination>
-                    </div>
+                  <div className="mt-8 flex justify-center">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                            className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                        
+                        {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                          const pageNum = i + 1;
+                          return (
+                            <PaginationItem key={pageNum}>
+                              <PaginationLink
+                                onClick={() => setCurrentPage(pageNum)}
+                                isActive={currentPage === pageNum}
+                                className="cursor-pointer"
+                              >
+                                {pageNum}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        })}
+                        
+                        <PaginationItem>
+                          <PaginationNext 
+                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                            className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
                   </div>
                 )}
               </>
             ) : (
-              <div className="text-center py-20 bg-white rounded-xl shadow-md">
-                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Search className="w-12 h-12 text-gray-400" />
-                </div>
-                <h3 className="text-2xl font-semibold text-gray-900 mb-4">No artworks found</h3>
-                <p className="text-gray-500 text-lg">Try adjusting your filters or search terms to discover more artworks.</p>
+              <div className="text-center py-12">
+                <p className="text-gray-500 text-lg">No artworks found matching your criteria.</p>
+                <p className="text-gray-400 text-sm mt-2">Try adjusting your filters or search terms.</p>
               </div>
             )}
           </div>
