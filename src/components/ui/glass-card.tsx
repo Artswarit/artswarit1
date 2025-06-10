@@ -7,13 +7,19 @@ interface GlassCardProps {
   className?: string;
   blur?: 'sm' | 'md' | 'lg';
   opacity?: 'low' | 'medium' | 'high';
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+  onClick?: () => void;
 }
 
 export const GlassCard: React.FC<GlassCardProps> = ({ 
   children, 
   className, 
   blur = 'md',
-  opacity = 'medium'
+  opacity = 'medium',
+  onMouseEnter,
+  onMouseLeave,
+  onClick
 }) => {
   const blurClasses = {
     sm: 'backdrop-blur-sm',
@@ -28,12 +34,17 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   };
 
   return (
-    <div className={cn(
-      'rounded-2xl border shadow-lg transition-all duration-300',
-      blurClasses[blur],
-      opacityClasses[opacity],
-      className
-    )}>
+    <div 
+      className={cn(
+        'rounded-2xl border shadow-lg transition-all duration-300',
+        blurClasses[blur],
+        opacityClasses[opacity],
+        className
+      )}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      onClick={onClick}
+    >
       {children}
     </div>
   );
