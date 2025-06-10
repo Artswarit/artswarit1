@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { useArtworks } from '@/hooks/useArtworks';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ArtworkCard from '@/components/artwork/ArtworkCard';
-import ExploreFilters from '@/components/explore/ExploreFilters';
-import { Button } from '@/components/ui/button';
+import TopFilters from '@/components/explore/TopFilters';
+import GlassCard from '@/components/ui/glass-card';
 import { 
   Pagination,
   PaginationContent,
@@ -14,16 +13,12 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Grid, List, Filter } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 const Explore = () => {
   const { artworks, loading, error } = useArtworks();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filteredArtworks, setFilteredArtworks] = useState(artworks || []);
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const isMobile = useIsMobile();
   const itemsPerPage = 12;
 
   // Pagination logic
@@ -144,154 +139,124 @@ const Explore = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
+          <GlassCard className="p-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+            <p className="mt-4 text-muted-foreground text-center">Loading artworks...</p>
+          </GlassCard>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
       <Navbar />
       
-      <main className="flex-1 container mx-auto px-4 py-8 pt-24">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Explore Artworks</h1>
-          <p className="text-gray-600">Discover amazing artworks from talented artists around the world</p>
+      {/* Hero Section */}
+      <div className="pt-16 pb-8 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-600/10">
+        <div className="container mx-auto px-4 py-12 text-center">
+          <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            Explore Artworks
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Discover amazing artworks from talented artists around the world
+          </p>
         </div>
+      </div>
 
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Desktop Filters Sidebar */}
-          {!isMobile && (
-            <div className="lg:w-80 flex-shrink-0">
-              <ExploreFilters onFiltersChange={handleFiltersChange} />
-            </div>
-          )}
+      {/* Filters */}
+      <TopFilters
+        onFiltersChange={handleFiltersChange}
+        onViewModeChange={setViewMode}
+        viewMode={viewMode}
+        resultsCount={filteredArtworks?.length || 0}
+      />
 
-          {/* Main Content */}
-          <div className="flex-1">
-            {/* Mobile Filter Toggle & View Controls */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
-                {isMobile && (
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowMobileFilters(!showMobileFilters)}
-                    className="flex items-center gap-2"
-                  >
-                    <Filter className="h-4 w-4" />
-                    Filters
-                  </Button>
-                )}
-                <p className="text-sm text-gray-600">
-                  {filteredArtworks?.length || 0} artwork{(filteredArtworks?.length || 0) !== 1 ? 's' : ''} found
-                </p>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant={viewMode === 'grid' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('grid')}
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        {currentArtworks && currentArtworks.length > 0 ? (
+          <>
+            {/* Artworks Grid */}
+            <div className={`mb-8 ${
+              viewMode === 'grid'
+                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+                : 'space-y-4'
+            }`}>
+              {currentArtworks.map((artwork) => (
+                <div 
+                  key={artwork.id}
+                  className="group"
                 >
-                  <Grid className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewMode === 'list' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Mobile Filters Drawer */}
-            {isMobile && showMobileFilters && (
-              <div className="mb-6">
-                <ExploreFilters 
-                  onFiltersChange={handleFiltersChange}
-                  onClose={() => setShowMobileFilters(false)}
-                />
-              </div>
-            )}
-
-            {/* Artworks Grid/List */}
-            {currentArtworks && currentArtworks.length > 0 ? (
-              <>
-                <div className={
-                  viewMode === 'grid'
-                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
-                    : 'space-y-4'
-                }>
-                  {currentArtworks.map((artwork) => (
-                    <ArtworkCard
-                      key={artwork.id}
-                      id={artwork.id}
-                      title={artwork.title}
-                      artist={artwork.artist}
-                      artistId={artwork.artistId}
-                      type={artwork.type}
-                      imageUrl={artwork.imageUrl}
-                      likes={artwork.likes}
-                      views={artwork.views}
-                      price={artwork.price}
-                      category={artwork.category}
-                      audioUrl={artwork.audioUrl}
-                      videoUrl={artwork.videoUrl}
-                    />
-                  ))}
+                  <ArtworkCard
+                    id={artwork.id}
+                    title={artwork.title}
+                    artist={artwork.artist}
+                    artistId={artwork.artistId}
+                    type={artwork.type}
+                    imageUrl={artwork.imageUrl}
+                    likes={artwork.likes}
+                    views={artwork.views}
+                    price={artwork.price}
+                    category={artwork.category}
+                    audioUrl={artwork.audioUrl}
+                    videoUrl={artwork.videoUrl}
+                  />
                 </div>
+              ))}
+            </div>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="mt-8 flex justify-center">
-                    <Pagination>
-                      <PaginationContent>
-                        <PaginationItem>
-                          <PaginationPrevious 
-                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                            className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                          />
-                        </PaginationItem>
-                        
-                        {[...Array(Math.min(5, totalPages))].map((_, i) => {
-                          const pageNum = i + 1;
-                          return (
-                            <PaginationItem key={pageNum}>
-                              <PaginationLink
-                                onClick={() => setCurrentPage(pageNum)}
-                                isActive={currentPage === pageNum}
-                                className="cursor-pointer"
-                              >
-                                {pageNum}
-                              </PaginationLink>
-                            </PaginationItem>
-                          );
-                        })}
-                        
-                        <PaginationItem>
-                          <PaginationNext 
-                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                            className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                          />
-                        </PaginationItem>
-                      </PaginationContent>
-                    </Pagination>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">No artworks found matching your criteria.</p>
-                <p className="text-gray-400 text-sm mt-2">Try adjusting your filters or search terms.</p>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center">
+                <GlassCard className="p-4">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                          className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:bg-white/20'}
+                        />
+                      </PaginationItem>
+                      
+                      {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                        const pageNum = i + 1;
+                        return (
+                          <PaginationItem key={pageNum}>
+                            <PaginationLink
+                              onClick={() => setCurrentPage(pageNum)}
+                              isActive={currentPage === pageNum}
+                              className="cursor-pointer hover:bg-white/20"
+                            >
+                              {pageNum}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      })}
+                      
+                      <PaginationItem>
+                        <PaginationNext 
+                          onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                          className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:bg-white/20'}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </GlassCard>
               </div>
             )}
+          </>
+        ) : (
+          <div className="text-center py-16">
+            <GlassCard className="p-12 max-w-md mx-auto">
+              <div className="text-6xl mb-4">🎨</div>
+              <h3 className="text-xl font-semibold mb-2">No artworks found</h3>
+              <p className="text-gray-500">Try adjusting your filters or search terms to discover amazing artworks.</p>
+            </GlassCard>
           </div>
-        </div>
+        )}
       </main>
 
       <Footer />
