@@ -1,312 +1,263 @@
 
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Heart, Eye, Share2, Pin, User, ExternalLink } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-
-interface Artwork {
-  id: string;
-  title: string;
-  description?: string;
-  image_url: string;
-  category: string;
-  tags: string[];
-  price?: number;
-  is_for_sale: boolean;
-  is_pinned: boolean;
-  views_count: number;
-  likes_count: number;
-  profiles?: {
-    full_name: string;
-    avatar_url?: string;
-    is_verified: boolean;
-  };
-}
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Heart, Eye, Play, Music, Video, Image as ImageIcon, User } from "lucide-react";
 
 interface ArtworkCardProps {
-  artwork: Artwork;
-  onLike?: (artworkId: string) => void;
-  onView?: (artworkId: string) => void;
-  viewMode?: 'grid' | 'list';
+  id: string;
+  title: string;
+  artist: string;
+  artistId: string;
+  type: string;
+  imageUrl: string;
+  likes: number;
+  views: number;
+  price: number;
+  category: string;
+  audioUrl?: string;
+  videoUrl?: string;
 }
 
-const ArtworkCard = ({ artwork, onLike, onView, viewMode = 'grid' }: ArtworkCardProps) => {
-  const { user } = useAuth();
+const ArtworkCard = ({
+  id,
+  title,
+  artist,
+  artistId,
+  type,
+  imageUrl,
+  likes,
+  views,
+  price,
+  category,
+  audioUrl,
+  videoUrl,
+}: ArtworkCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const handleLike = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsLiked(!isLiked);
-    onLike?.(artwork.id);
   };
 
-  const handleShare = (e: React.MouseEvent) => {
+  const handlePlay = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (navigator.share) {
-      navigator.share({
-        title: artwork.title,
-        text: artwork.description,
-        url: window.location.href,
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
+    setIsPlaying(!isPlaying);
+    console.log(`${isPlaying ? 'Pausing' : 'Playing'} ${title}`);
+  };
+
+  const getTypeIcon = () => {
+    switch (type) {
+      case 'music':
+        return <Music className="w-4 h-4" />;
+      case 'video':
+        return <Video className="w-4 h-4" />;
+      case 'image':
+        return <ImageIcon className="w-4 h-4" />;
+      default:
+        return <ImageIcon className="w-4 h-4" />;
     }
   };
 
-  const handleView = () => {
-    onView?.(artwork.id);
-  };
-
-  if (viewMode === 'list') {
-    return (
-      <Card className="group hover:shadow-lg transition-all duration-300">
-        <CardContent className="p-4">
-          <div className="flex gap-4">
-            {/* Artwork Image */}
-            <div className="relative flex-shrink-0">
-              {artwork.is_pinned && (
-                <div className="absolute top-2 left-2 z-10">
-                  <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                    <Pin className="h-3 w-3 mr-1" />
-                    Pinned
-                  </Badge>
-                </div>
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer bg-white">
+          <div className="relative aspect-square overflow-hidden">
+            <img
+              src={imageUrl}
+              alt={title}
+              className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
+              loading="lazy"
+            />
+            
+            {/* Overlay with play button for media */}
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+              {(type === 'music' || type === 'video') && (
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  className="bg-white/90 text-black hover:bg-white shadow-lg"
+                  onClick={handlePlay}
+                >
+                  <Play className="w-5 h-5 mr-2" />
+                  {isPlaying ? 'Pause' : 'Play'}
+                </Button>
               )}
-              <img
-                src={artwork.image_url}
-                alt={artwork.title}
-                className="w-32 h-32 object-cover rounded-lg cursor-pointer group-hover:scale-105 transition-transform duration-300"
-                onClick={handleView}
+            </div>
+
+            {/* Type badge */}
+            <div className="absolute top-3 left-3">
+              <Badge variant="secondary" className="flex items-center gap-1 bg-white/90 text-black">
+                {getTypeIcon()}
+                {type}
+              </Badge>
+            </div>
+
+            {/* Like button */}
+            <div className="absolute top-3 right-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="bg-white/90 hover:bg-white text-black rounded-full p-2"
+                onClick={handleLike}
+              >
+                <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+              </Button>
+            </div>
+
+            {/* Price tag */}
+            <div className="absolute bottom-3 right-3">
+              <Badge className="bg-green-600 text-white">
+                ${price}
+              </Badge>
+            </div>
+          </div>
+
+          <CardContent className="p-4">
+            <div className="space-y-3">
+              <div>
+                <h3 className="font-semibold text-lg line-clamp-1 group-hover:text-purple-600 transition-colors">
+                  {title}
+                </h3>
+                <p className="text-sm text-muted-foreground">{category}</p>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Link 
+                  to={`/artist/${artistId}`}
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-purple-600 transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <User className="w-4 h-4" />
+                  <span className="line-clamp-1">{artist}</span>
+                </Link>
+              </div>
+
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <div className="flex items-center gap-4">
+                  <span className="flex items-center gap-1">
+                    <Heart className="w-4 h-4" />
+                    {likes.toLocaleString()}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Eye className="w-4 h-4" />
+                    {views.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </DialogTrigger>
+
+      <DialogContent className="max-w-4xl">
+        <DialogHeader>
+          <DialogTitle className="text-2xl">{title}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-6">
+          {/* Media content */}
+          <div className="space-y-4">
+            {type === 'music' && audioUrl && (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <audio controls className="w-full">
+                  <source src={audioUrl} type="audio/mpeg" />
+                  Your browser does not support the audio element.
+                </audio>
+              </div>
+            )}
+            
+            {type === 'video' && videoUrl && (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <video controls className="w-full max-h-96 rounded-lg">
+                  <source src={videoUrl} type="video/mp4" />
+                  Your browser does not support the video element.
+                </video>
+              </div>
+            )}
+            
+            <div className="relative">
+              <img 
+                src={imageUrl} 
+                alt={title} 
+                className="w-full max-h-96 object-contain rounded-lg bg-gray-50"
               />
             </div>
+          </div>
 
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg line-clamp-1 cursor-pointer hover:text-purple-600" onClick={handleView}>
-                    {artwork.title}
-                  </h3>
-                  {artwork.profiles && (
-                    <Link 
-                      to={`/artist/${artwork.profiles.full_name}`}
-                      className="flex items-center mt-1 hover:text-purple-600 transition-colors"
-                    >
-                      <User className="h-4 w-4 mr-1" />
-                      <span className="text-sm font-medium">{artwork.profiles.full_name}</span>
-                      <Badge variant="outline" className="ml-2 text-xs">
-                        {artwork.category}
-                      </Badge>
-                    </Link>
-                  )}
+          {/* Artwork info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Artwork Details</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Category:</span>
+                    <span>{category}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Type:</span>
+                    <span className="capitalize">{type}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Price:</span>
+                    <span className="font-semibold text-green-600">${price}</span>
+                  </div>
                 </div>
-                {artwork.is_for_sale && artwork.price && (
-                  <Badge variant="outline" className="text-green-600 border-green-600">
-                    ${artwork.price}
-                  </Badge>
-                )}
               </div>
 
-              {artwork.description && (
-                <p className="text-gray-600 text-sm mb-3 line-clamp-2">{artwork.description}</p>
-              )}
-
-              {/* Tags */}
-              {artwork.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mb-3">
-                  {artwork.tags.slice(0, 3).map((tag, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                  {artwork.tags.length > 3 && (
-                    <Badge variant="secondary" className="text-xs">
-                      +{artwork.tags.length - 3}
-                    </Badge>
-                  )}
-                </div>
-              )}
-
-              {/* Stats and Actions */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4 text-sm text-gray-500">
-                  <div className="flex items-center">
-                    <Eye className="h-4 w-4 mr-1" />
-                    {artwork.views_count}
-                  </div>
-                  <div className="flex items-center">
-                    <Heart className={`h-4 w-4 mr-1 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
-                    {artwork.likes_count}
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleShare}
-                  >
-                    <Share2 className="h-4 w-4" />
-                  </Button>
-                  {user && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={handleLike}
-                      className={`hover:bg-red-50 ${isLiked ? 'text-red-500' : ''}`}
-                    >
-                      <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
-                    </Button>
-                  )}
-                  <Link to={`/artist/${artwork.profiles?.full_name}`}>
-                    <Button size="sm" variant="default">
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      View Artist
-                    </Button>
-                  </Link>
+                <div className="flex items-center gap-4">
+                  <span className="flex items-center gap-2">
+                    <Heart className="w-5 h-5 text-red-500" />
+                    {likes.toLocaleString()} likes
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <Eye className="w-5 h-5 text-blue-500" />
+                    {views.toLocaleString()} views
+                  </span>
                 </div>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
-  // Grid view (default)
-  return (
-    <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300">
-      <div className="relative">
-        {artwork.is_pinned && (
-          <div className="absolute top-2 left-2 z-10">
-            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-              <Pin className="h-3 w-3 mr-1" />
-              Pinned
-            </Badge>
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Artist</h3>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                    <User className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium">{artist}</p>
+                    <p className="text-sm text-muted-foreground">Professional Artist</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <Link to={`/artist/${artistId}`}>
+                  <Button className="w-full" variant="outline">
+                    Visit Artist Profile
+                  </Button>
+                </Link>
+                <Button className="w-full">
+                  Purchase for ${price}
+                </Button>
+                <Button className="w-full" variant="secondary">
+                  Message Artist
+                </Button>
+              </div>
+            </div>
           </div>
-        )}
-        <img
-          src={artwork.image_url}
-          alt={artwork.title}
-          className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300 cursor-pointer"
-          onClick={handleView}
-        />
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
-        
-        {/* Action buttons overlay */}
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 space-y-2">
-          <Button
-            size="sm"
-            variant="secondary"
-            className="h-8 w-8 p-0 bg-white/90 hover:bg-white"
-            onClick={handleShare}
-          >
-            <Share2 className="h-4 w-4" />
-          </Button>
         </div>
-      </div>
-
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between mb-2">
-          <h3 className="font-semibold text-lg line-clamp-1 cursor-pointer hover:text-purple-600" onClick={handleView}>
-            {artwork.title}
-          </h3>
-          {artwork.is_for_sale && artwork.price && (
-            <Badge variant="outline" className="text-green-600 border-green-600">
-              ${artwork.price}
-            </Badge>
-          )}
-        </div>
-
-        {artwork.description && (
-          <p className="text-gray-600 text-sm mb-3 line-clamp-2">{artwork.description}</p>
-        )}
-
-        {/* Artist info */}
-        {artwork.profiles && (
-          <Link 
-            to={`/artist/${artwork.profiles.full_name}`}
-            className="flex items-center mb-3 hover:text-purple-600 transition-colors group/artist"
-          >
-            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mr-2">
-              {artwork.profiles.avatar_url ? (
-                <img
-                  src={artwork.profiles.avatar_url}
-                  alt={artwork.profiles.full_name}
-                  className="w-8 h-8 rounded-full object-cover"
-                />
-              ) : (
-                <span className="text-xs font-semibold">
-                  {artwork.profiles.full_name.charAt(0).toUpperCase()}
-                </span>
-              )}
-            </div>
-            <div>
-              <p className="text-sm font-medium group-hover/artist:text-purple-600 transition-colors">
-                {artwork.profiles.full_name}
-              </p>
-              <Badge variant="outline" className="text-xs">
-                {artwork.category}
-              </Badge>
-            </div>
-          </Link>
-        )}
-
-        {/* Tags */}
-        {artwork.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-3">
-            {artwork.tags.slice(0, 3).map((tag, index) => (
-              <Badge key={index} variant="secondary" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-            {artwork.tags.length > 3 && (
-              <Badge variant="secondary" className="text-xs">
-                +{artwork.tags.length - 3}
-              </Badge>
-            )}
-          </div>
-        )}
-
-        {/* Stats and actions */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4 text-sm text-gray-500">
-            <div className="flex items-center">
-              <Eye className="h-4 w-4 mr-1" />
-              {artwork.views_count}
-            </div>
-            <div className="flex items-center">
-              <Heart className={`h-4 w-4 mr-1 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
-              {artwork.likes_count}
-            </div>
-          </div>
-          
-          {user && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={handleLike}
-              className={`hover:bg-red-50 ${isLiked ? 'text-red-500' : ''}`}
-            >
-              <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
-            </Button>
-          )}
-        </div>
-
-        {/* View Artist Button */}
-        <Link to={`/artist/${artwork.profiles?.full_name}`} className="block mt-3">
-          <Button variant="outline" className="w-full">
-            <User className="h-4 w-4 mr-1" />
-            View Artist Profile
-          </Button>
-        </Link>
-      </CardContent>
-    </Card>
+      </DialogContent>
+    </Dialog>
   );
 };
 
