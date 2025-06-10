@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Heart, Eye, Play, Music, Video, Image as ImageIcon, User } from "lucide-react";
-
 interface ArtworkCardProps {
   id: string;
   title: string;
@@ -21,7 +19,6 @@ interface ArtworkCardProps {
   audioUrl?: string;
   videoUrl?: string;
 }
-
 const ArtworkCard = ({
   id,
   title,
@@ -34,24 +31,21 @@ const ArtworkCard = ({
   price,
   category,
   audioUrl,
-  videoUrl,
+  videoUrl
 }: ArtworkCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-
   const handleLike = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsLiked(!isLiked);
   };
-
   const handlePlay = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsPlaying(!isPlaying);
     console.log(`${isPlaying ? 'Pausing' : 'Playing'} ${title}`);
   };
-
   const getTypeIcon = () => {
     switch (type) {
       case 'music':
@@ -64,32 +58,18 @@ const ArtworkCard = ({
         return <ImageIcon className="w-4 h-4" />;
     }
   };
-
-  return (
-    <Dialog>
+  return <Dialog>
       <DialogTrigger asChild>
         <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer bg-white">
           <div className="relative aspect-square overflow-hidden">
-            <img
-              src={imageUrl}
-              alt={title}
-              className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
-              loading="lazy"
-            />
+            <img src={imageUrl} alt={title} className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110" loading="lazy" />
             
             {/* Overlay with play button for media */}
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-              {(type === 'music' || type === 'video') && (
-                <Button
-                  variant="secondary"
-                  size="lg"
-                  className="bg-white/90 text-black hover:bg-white shadow-lg"
-                  onClick={handlePlay}
-                >
+              {(type === 'music' || type === 'video') && <Button variant="secondary" size="lg" className="bg-white/90 text-black hover:bg-white shadow-lg" onClick={handlePlay}>
                   <Play className="w-5 h-5 mr-2" />
                   {isPlaying ? 'Pause' : 'Play'}
-                </Button>
-              )}
+                </Button>}
             </div>
 
             {/* Type badge */}
@@ -102,12 +82,7 @@ const ArtworkCard = ({
 
             {/* Like button */}
             <div className="absolute top-3 right-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="bg-white/90 hover:bg-white text-black rounded-full p-2"
-                onClick={handleLike}
-              >
+              <Button variant="ghost" size="sm" className="bg-white/90 hover:bg-white text-black rounded-full p-2" onClick={handleLike}>
                 <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
               </Button>
             </div>
@@ -130,11 +105,7 @@ const ArtworkCard = ({
               </div>
 
               <div className="flex items-center justify-between">
-                <Link 
-                  to={`/artist/${artistId}`}
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-purple-600 transition-colors"
-                  onClick={(e) => e.stopPropagation()}
-                >
+                <Link to={`/artist/${artistId}`} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-purple-600 transition-colors" onClick={e => e.stopPropagation()}>
                   <User className="w-4 h-4" />
                   <span className="line-clamp-1">{artist}</span>
                 </Link>
@@ -164,30 +135,22 @@ const ArtworkCard = ({
         <div className="space-y-6">
           {/* Media content */}
           <div className="space-y-4">
-            {type === 'music' && audioUrl && (
-              <div className="bg-gray-50 p-4 rounded-lg">
+            {type === 'music' && audioUrl && <div className="bg-gray-50 p-4 rounded-lg">
                 <audio controls className="w-full">
                   <source src={audioUrl} type="audio/mpeg" />
                   Your browser does not support the audio element.
                 </audio>
-              </div>
-            )}
+              </div>}
             
-            {type === 'video' && videoUrl && (
-              <div className="bg-gray-50 p-4 rounded-lg">
+            {type === 'video' && videoUrl && <div className="bg-gray-50 p-4 rounded-lg mx-[37px] my-[3px]">
                 <video controls className="w-full max-h-96 rounded-lg">
                   <source src={videoUrl} type="video/mp4" />
                   Your browser does not support the video element.
                 </video>
-              </div>
-            )}
+              </div>}
             
             <div className="relative">
-              <img 
-                src={imageUrl} 
-                alt={title} 
-                className="w-full max-h-96 object-contain rounded-lg bg-gray-50"
-              />
+              
             </div>
           </div>
 
@@ -257,8 +220,6 @@ const ArtworkCard = ({
           </div>
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
-
 export default ArtworkCard;
