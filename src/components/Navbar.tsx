@@ -49,17 +49,21 @@ const Navbar = () => {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-8">
-          <Link to="/" className="text-gray-700 hover:text-purple-600 transition-colors">
+          <Link 
+            to="/" 
+            className={`text-gray-700 hover:text-purple-600 transition-colors font-medium ${
+              location.pathname === '/' ? 'text-purple-600 border-b-2 border-purple-600' : ''
+            }`}
+          >
             Home
           </Link>
-          <Link to="/explore" className="text-gray-700 hover:text-purple-600 transition-colors">
-            Explore Artworks
-          </Link>
-          <Link to="/explore-artists" className="text-gray-700 hover:text-purple-600 transition-colors">
-            Explore Artists
-          </Link>
-          <Link to="/categories" className="text-gray-700 hover:text-purple-600 transition-colors">
-            Categories
+          <Link 
+            to="/explore" 
+            className={`text-gray-700 hover:text-purple-600 transition-colors font-medium ${
+              location.pathname === '/explore' ? 'text-purple-600 border-b-2 border-purple-600' : ''
+            }`}
+          >
+            Explore
           </Link>
           
           {user ? (
@@ -84,10 +88,10 @@ const Navbar = () => {
             </DropdownMenu>
           ) : (
             <>
-              <Link to="/login" className="text-gray-700 hover:text-purple-600 transition-colors">
+              <Link to="/login" className="text-gray-700 hover:text-purple-600 transition-colors font-medium">
                 Login
               </Link>
-              <Link to="/signup" className="bg-purple-600 text-white rounded-md px-4 py-2 hover:bg-purple-700 transition-colors">
+              <Link to="/signup" className="bg-purple-600 text-white rounded-md px-4 py-2 hover:bg-purple-700 transition-colors font-medium">
                 Sign Up
               </Link>
             </>
@@ -97,10 +101,18 @@ const Navbar = () => {
 
         {/* Mobile menu button */}
         {isMobile && (
-          <Button variant="ghost" onClick={toggleMenu}>
-            {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            <span className="sr-only">Toggle Menu</span>
-          </Button>
+          <div className="flex items-center space-x-2">
+            {user && (
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user.user_metadata?.avatar_url} alt={user.user_metadata?.full_name || user.email} />
+                <AvatarFallback>{user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0)}</AvatarFallback>
+              </Avatar>
+            )}
+            <Button variant="ghost" onClick={toggleMenu}>
+              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              <span className="sr-only">Toggle Menu</span>
+            </Button>
+          </div>
         )}
         </div>
 
@@ -110,43 +122,33 @@ const Navbar = () => {
             <div className="px-4 py-2 space-y-1">
               <Link
                 to="/"
-                className="block px-3 py-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-md transition-colors"
+                className={`block px-3 py-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-md transition-colors font-medium ${
+                  location.pathname === '/' ? 'text-purple-600 bg-purple-50' : ''
+                }`}
                 onClick={closeMenu}
               >
                 Home
               </Link>
               <Link
                 to="/explore"
-                className="block px-3 py-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-md transition-colors"
+                className={`block px-3 py-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-md transition-colors font-medium ${
+                  location.pathname === '/explore' ? 'text-purple-600 bg-purple-50' : ''
+                }`}
                 onClick={closeMenu}
               >
-                Explore Artworks
-              </Link>
-              <Link
-                to="/explore-artists"
-                className="block px-3 py-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-md transition-colors"
-                onClick={closeMenu}
-              >
-                Explore Artists
-              </Link>
-              <Link
-                to="/categories"
-                className="block px-3 py-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-md transition-colors"
-                onClick={closeMenu}
-              >
-                Categories
+                Explore
               </Link>
               
               {user ? (
                 <>
                   <Link
                     to={user.user_metadata?.role === 'artist' ? "/artist-dashboard" : "/client-dashboard"}
-                    className="block px-3 py-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-md transition-colors"
+                    className="block px-3 py-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-md transition-colors font-medium"
                     onClick={closeMenu}
                   >
                     Dashboard
                   </Link>
-                  <Button variant="ghost" className="w-full justify-start" onClick={() => { signOut(); closeMenu(); }}>
+                  <Button variant="ghost" className="w-full justify-start font-medium" onClick={() => { signOut(); closeMenu(); }}>
                     Logout
                   </Button>
                 </>
@@ -154,14 +156,14 @@ const Navbar = () => {
                 <>
                   <Link
                     to="/login"
-                    className="block px-3 py-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-md transition-colors"
+                    className="block px-3 py-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-md transition-colors font-medium"
                     onClick={closeMenu}
                   >
                     Login
                   </Link>
                   <Link
                     to="/signup"
-                    className="block px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                    className="block px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors font-medium"
                     onClick={closeMenu}
                   >
                     Sign Up

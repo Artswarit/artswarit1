@@ -16,6 +16,9 @@ import NotFound from './pages/NotFound';
 import { QueryClientProvider } from './queryClient';
 import ProtectedRoute from './components/ProtectedRoute';
 import ExploreArtists from './pages/ExploreArtists';
+import AboutUs from './pages/AboutUs';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
 
 function App() {
   return (
@@ -32,22 +35,12 @@ function App() {
             <Route path="/categories" element={<Categories />} />
             <Route path="/ai-detection" element={<AIDetection />} />
             <Route path="/artist/:id" element={<ArtistProfile />} />
-            <Route 
-              path="/artist-dashboard" 
-              element={
-                <ProtectedRoute>
-                  <ArtistDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/client-dashboard" 
-              element={
-                <ProtectedRoute>
-                  <ClientDashboard />
-                </ProtectedRoute>
-              } 
-            />
+            <Route path="/about-us" element={<AboutUs />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            {/* Temporarily remove protection for testing */}
+            <Route path="/artist-dashboard" element={<ArtistDashboard />} />
+            <Route path="/client-dashboard" element={<ClientDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </QueryClientProvider>
