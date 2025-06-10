@@ -1,7 +1,8 @@
 
+import { useState } from 'react';
+
 export const useArtworks = () => {
-  // Mock data for artworks with different types and better images
-  const artworks = [
+  const [artworks] = useState([
     {
       id: "1",
       title: "Midnight Symphony",
@@ -77,12 +78,52 @@ export const useArtworks = () => {
       price: 30,
       category: "Conscious Rap",
       audioUrl: "https://www.soundjay.com/misc/sounds/magic-chime-02.wav"
+    },
+    {
+      id: "7",
+      title: "Ocean Waves",
+      artist: "Serena Blue",
+      artistId: "4",
+      type: "image",
+      imageUrl: "https://images.unsplash.com/photo-1439066615861-d1af74d74000?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80",
+      likes: 2800,
+      views: 35000,
+      price: 180,
+      category: "Landscape"
+    },
+    {
+      id: "8",
+      title: "City Lights",
+      artist: "Marcus Tech",
+      artistId: "5",
+      type: "video",
+      imageUrl: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80",
+      likes: 1900,
+      views: 28000,
+      price: 300,
+      category: "Urban",
+      videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4"
     }
-  ];
+  ]);
+
+  const toggleLike = (artworkId: string) => {
+    console.log(`Toggling like for artwork: ${artworkId}`);
+  };
+
+  const fetchArtworks = () => {
+    console.log('Fetching artworks...');
+  };
+
+  const uploadArtwork = (artwork: any) => {
+    console.log('Uploading artwork:', artwork);
+  };
 
   return {
-    data: artworks,
-    isLoading: false,
-    error: null
+    artworks,
+    loading: false,
+    error: null,
+    fetchArtworks,
+    toggleLike,
+    uploadArtwork
   };
 };

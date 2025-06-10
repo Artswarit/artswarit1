@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useArtworks } from '@/hooks/useArtworks';
 import Navbar from '@/components/Navbar';
@@ -18,19 +17,19 @@ import { Grid, List, Filter } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Explore = () => {
-  const { artworks, loading, fetchArtworks, toggleLike } = useArtworks();
+  const { data: artworks, isLoading: loading, error } = useArtworks();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [filteredArtworks, setFilteredArtworks] = useState(artworks);
+  const [filteredArtworks, setFilteredArtworks] = useState(artworks || []);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const isMobile = useIsMobile();
   const itemsPerPage = 12;
 
   // Pagination logic
-  const totalPages = Math.ceil(filteredArtworks.length / itemsPerPage);
+  const totalPages = Math.ceil((filteredArtworks?.length || 0) / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentArtworks = filteredArtworks.slice(startIndex, endIndex);
+  const currentArtworks = (filteredArtworks || []).slice(startIndex, endIndex);
 
   const handleFiltersChange = (filters: {
     search: string;
@@ -41,22 +40,20 @@ const Explore = () => {
     sortBy: string;
     location: string;
   }) => {
-    let filtered = [...artworks];
+    let filtered = [...(artworks || [])];
 
     // Search filter - prioritize artist name matches
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase();
       filtered = filtered.filter(artwork => {
-        const artistName = artwork.profiles?.full_name?.toLowerCase() || '';
+        const artistName = artwork.artist?.toLowerCase() || '';
         const title = artwork.title.toLowerCase();
-        const description = artwork.description?.toLowerCase() || '';
-        const tags = artwork.tags.join(' ').toLowerCase();
+        const category = artwork.category?.toLowerCase() || '';
         
         // Prioritize artist name matches
         return artistName.includes(searchTerm) || 
                title.includes(searchTerm) || 
-               description.includes(searchTerm) ||
-               tags.includes(searchTerm);
+               category.includes(searchTerm);
       });
     }
 
@@ -67,37 +64,7 @@ const Explore = () => {
 
     // Artwork type filter
     if (filters.artworkType && filters.artworkType !== 'all') {
-      filtered = filtered.filter(artwork => {
-        const imageUrl = artwork.image_url.toLowerCase();
-        switch (filters.artworkType) {
-          case 'image':
-            return imageUrl.includes('.jpg') || imageUrl.includes('.jpeg') || 
-                   imageUrl.includes('.png') || imageUrl.includes('.gif') ||
-                   imageUrl.includes('.webp');
-          case 'video':
-            return imageUrl.includes('.mp4') || imageUrl.includes('.mov') || 
-                   imageUrl.includes('.avi') || imageUrl.includes('.wmv');
-          case 'audio':
-            return imageUrl.includes('.mp3') || imageUrl.includes('.wav') || 
-                   imageUrl.includes('.flac') || imageUrl.includes('.aac');
-          case 'document':
-            return imageUrl.includes('.pdf') || imageUrl.includes('.doc') || 
-                   imageUrl.includes('.txt') || imageUrl.includes('.docx');
-          default:
-            return true;
-        }
-      });
-    }
-
-    // Tags filter
-    if (filters.tags.length > 0) {
-      filtered = filtered.filter(artwork =>
-        filters.tags.some(tag =>
-          artwork.tags.some(artworkTag =>
-            artworkTag.toLowerCase().includes(tag.toLowerCase())
-          )
-        )
-      );
+      filtered = filtered.filter(artwork => artwork.type === filters.artworkType);
     }
 
     // Price range filter
@@ -123,23 +90,34 @@ const Explore = () => {
       });
     }
 
+    // Tags filter
+    if (filters.tags.length > 0) {
+      filtered = filtered.filter(artwork =>
+        filters.tags.some(tag =>
+          artwork.tags && artwork.tags.some(artworkTag =>
+            artworkTag.toLowerCase().includes(tag.toLowerCase())
+          )
+        )
+      );
+    }
+
     // Sort filter
     switch (filters.sortBy) {
       case 'artist_name':
         filtered.sort((a, b) => {
-          const nameA = a.profiles?.full_name || '';
-          const nameB = b.profiles?.full_name || '';
+          const nameA = a.artist || '';
+          const nameB = b.artist || '';
           return nameA.localeCompare(nameB);
         });
         break;
       case 'most_viewed':
-        filtered.sort((a, b) => b.views_count - a.views_count);
+        filtered.sort((a, b) => b.views - a.views);
         break;
       case 'most_liked':
-        filtered.sort((a, b) => b.likes_count - a.likes_count);
+        filtered.sort((a, b) => b.likes - a.likes);
         break;
       case 'top_rated':
-        filtered.sort((a, b) => (b.views_count + b.likes_count) - (a.views_count + a.likes_count));
+        filtered.sort((a, b) => (b.views + b.likes) - (a.views + a.likes));
         break;
       case 'price_low':
         filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
@@ -149,7 +127,7 @@ const Explore = () => {
         break;
       case 'most_recent':
       default:
-        filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        // Keep original order for mock data
         break;
     }
 
@@ -158,7 +136,9 @@ const Explore = () => {
   };
 
   useEffect(() => {
-    setFilteredArtworks(artworks);
+    if (artworks) {
+      setFilteredArtworks(artworks);
+    }
   }, [artworks]);
 
   if (loading) {
@@ -206,7 +186,7 @@ const Explore = () => {
                   </Button>
                 )}
                 <p className="text-sm text-gray-600">
-                  {filteredArtworks.length} artwork{filteredArtworks.length !== 1 ? 's' : ''} found
+                  {filteredArtworks?.length || 0} artwork{(filteredArtworks?.length || 0) !== 1 ? 's' : ''} found
                 </p>
               </div>
               
@@ -239,7 +219,7 @@ const Explore = () => {
             )}
 
             {/* Artworks Grid/List */}
-            {currentArtworks.length > 0 ? (
+            {currentArtworks && currentArtworks.length > 0 ? (
               <>
                 <div className={
                   viewMode === 'grid'
@@ -249,9 +229,18 @@ const Explore = () => {
                   {currentArtworks.map((artwork) => (
                     <ArtworkCard
                       key={artwork.id}
-                      artwork={artwork}
-                      onLike={toggleLike}
-                      viewMode={viewMode}
+                      id={artwork.id}
+                      title={artwork.title}
+                      artist={artwork.artist}
+                      artistId={artwork.artistId}
+                      type={artwork.type}
+                      imageUrl={artwork.imageUrl}
+                      likes={artwork.likes}
+                      views={artwork.views}
+                      price={artwork.price}
+                      category={artwork.category}
+                      audioUrl={artwork.audioUrl}
+                      videoUrl={artwork.videoUrl}
                     />
                   ))}
                 </div>
