@@ -31,7 +31,9 @@ const ChatbotBubble = () => {
     setIsLoading(true);
 
     try {
-      const res = await fetch("/functions/v1/artist-gpt-chat", {
+      const supabaseProjectRef = "sqdzemlcqesgjsybbhte";
+      const functionUrl = `https://${supabaseProjectRef}.functions.supabase.co/artist-gpt-chat`;
+      const res = await fetch(functionUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: input.trim() })
@@ -40,7 +42,6 @@ const ChatbotBubble = () => {
       if (data.error) {
         setMessages(msgs => [...msgs, { sender: "bot", text: "Sorry, I couldn't process your request." }]);
       } else if (Array.isArray(data.artists) && data.artists.length > 0) {
-        // Return formatted artist list
         const reply =
           `Here are some matching artists for you:\n` +
           data.artists.map((a: any, i: number) =>
