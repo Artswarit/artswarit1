@@ -13,6 +13,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import ChatbotBubble from "@/components/explore/ChatbotBubble";
 
 const Explore = () => {
   const { artworks, loading, error } = useArtworks();
@@ -260,6 +261,9 @@ const Explore = () => {
       </main>
 
       <Footer />
+
+      {/* Floating Chatbot Bubble */}
+      <ChatbotBubble />
     </div>
   );
 };
