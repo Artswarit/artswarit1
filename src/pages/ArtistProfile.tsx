@@ -9,10 +9,6 @@ import ArtistHeader from "@/components/artist-profile/ArtistHeader";
 import ArtistTabs from "@/components/artist-profile/ArtistTabs";
 import TagDisplay from "@/components/artist-profile/TagDisplay";
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useFollowArtist } from "@/hooks/useFollowArtist";
-import { useIsFollowingArtist } from "@/hooks/useIsFollowingArtist";
-import { useArtistFollowersCount } from "@/hooks/useArtistFollowersCount";
 
 // Mock data remains the same for demonstration
 const artistsData = {
@@ -66,15 +62,7 @@ const artistsData = {
 export default function ArtistProfile() {
   const { id } = useParams();
   const artist = artistsData[id as keyof typeof artistsData];
-
-  // Supabase follow system
-  const { user } = useAuth();
-  const artistId = artist?.id;
-  const isViewingOwn = user && user.id === artistId;
-
-  const { data: isFollowing = false, refetch: refetchIsFollowing } = useIsFollowingArtist(artistId);
-  const { data: followersCount = artist?.followers || 0, refetch: refetchFollowers } = useArtistFollowersCount(artistId);
-  const { follow, unfollow, isLoading } = useFollowArtist();
+  const [isFollowing, setIsFollowing] = useState(false);
 
   // New handlers for demo
   const handleMessage = () => alert("Message feature coming soon!");
@@ -117,22 +105,6 @@ export default function ArtistProfile() {
   const premiumArt = portfolio.filter((p) => p.isPremium);
   const exclusiveArt = portfolio.filter((p) => p.isExclusive);
 
-  const handleFollow = () => {
-    if (!user) {
-      alert("Please log in to follow artists.");
-      return;
-    }
-    if (isFollowing) {
-      unfollow({ artistId: artistId! });
-    } else {
-      follow({ artistId: artistId! });
-    }
-    setTimeout(() => {
-      refetchIsFollowing();
-      refetchFollowers();
-    }, 400);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-gray-100 flex flex-col">
       <Navbar />
@@ -145,10 +117,9 @@ export default function ArtistProfile() {
             tags: [artist.category, ...(artist.specialties || [])],
             views: portfolio.reduce((acc, a) => acc + (a.views || 0), 0),
             tagline: artist.bio ?? "",
-            followers: followersCount,
           }}
           isFollowing={isFollowing}
-          onFollow={handleFollow}
+          onFollow={() => setIsFollowing((f) => !f)}
           onMessage={handleMessage}
           onSave={handleSave}
           onRequest={handleRequestProject}
@@ -168,10 +139,7 @@ export default function ArtistProfile() {
             exclusiveArt={exclusiveArt}
             pinnedIds={pinnedIds}
             aboutDetails={{
-              artist: {
-                ...artist,
-                followers: followersCount,
-              },
+              artist,
               projectsCount: 19,
               avgRating: 4.7,
               reviewCount: 12,
