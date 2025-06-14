@@ -150,78 +150,80 @@ const Navbar = () => {
 
       {/* Minimal Mobile Menu */}
       {isMobile && isOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-white/90 z-50 border-b border-gray-200 shadow transition-all animate-fade-in backdrop-blur">
-          <div className="px-4 py-2 space-y-1">
-            {menuItems.map((item) => (
-              <Link
-                to={item.path}
-                key={item.name}
-                className={`flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors font-medium text-base
-                  ${location.pathname === item.path ? "text-purple-600 bg-purple-100" : ""}`}
-                onClick={closeMenu}
-              >
-                {item.icon}
-                <span>{item.name}</span>
-              </Link>
-            ))}
-            <div className="mt-2">
-              {user ? (
-                <>
-                  <Link
-                    to={user.user_metadata?.role === "artist" ? "/artist-dashboard" : "/client-dashboard"}
-                    className="block px-3 py-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-md transition-colors font-medium"
-                    onClick={closeMenu}
-                  >
-                    Dashboard
-                  </Link>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start font-medium mt-1"
-                    onClick={() => {
-                      signOut();
-                      closeMenu();
-                    }}
-                  >
-                    Logout
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    className="block px-3 py-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-md transition-colors font-medium"
-                    onClick={closeMenu}
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    to="/signup"
-                    className="block px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-all font-medium mt-1"
-                    onClick={closeMenu}
-                  >
-                    Sign Up
-                  </Link>
-                </>
-              )}
-            </div>
-            {/* Minimal Mobile Search */}
-            <div className="mt-2">
-              <div className="flex items-center relative">
-                <SearchIcon className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <input
-                  type="text"
-                  placeholder="Search…"
-                  className="pl-9 pr-4 py-1 rounded-full border border-gray-200 bg-white/70 focus:outline-none focus:ring-artswarit-purple focus:ring-2 text-sm w-full transition"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
+        <>
+          <div className="md:hidden absolute top-full left-0 right-0 bg-white/90 z-50 border-b border-gray-200 shadow transition-all animate-fade-in backdrop-blur">
+            <div className="px-4 py-2 space-y-1">
+              {menuItems.map((item) => (
+                <Link
+                  to={item.path}
+                  key={item.name}
+                  className={`flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition-colors font-medium text-base
+                    ${location.pathname === item.path ? "text-purple-600 bg-purple-100" : ""}`}
+                  onClick={closeMenu}
+                >
+                  {item.icon}
+                  <span>{item.name}</span>
+                </Link>
+              ))}
+              <div className="mt-2">
+                {user ? (
+                  <>
+                    <Link
+                      to={user.user_metadata?.role === "artist" ? "/artist-dashboard" : "/client-dashboard"}
+                      className="block px-3 py-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                      onClick={closeMenu}
+                    >
+                      Dashboard
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start font-medium mt-1"
+                      onClick={() => {
+                        signOut();
+                        closeMenu();
+                      }}
+                    >
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      className="block px-3 py-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                      onClick={closeMenu}
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      to="/signup"
+                      className="block px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-all font-medium mt-1"
+                      onClick={closeMenu}
+                    >
+                      Sign Up
+                    </Link>
+                  </>
+                )}
+              </div>
+              {/* Minimal Mobile Search */}
+              <div className="mt-2">
+                <div className="flex items-center relative">
+                  <SearchIcon className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    type="text"
+                    placeholder="Search…"
+                    className="pl-9 pr-4 py-1 rounded-full border border-gray-200 bg-white/70 focus:outline-none focus:ring-artswarit-purple focus:ring-2 text-sm w-full transition"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="px-3 py-2 mt-2">
+                <ModeToggle />
               </div>
             </div>
-            <div className="px-3 py-2 mt-2">
-              <ModeToggle />
-            </div>
           </div>
-        </div>
+        </>
       )}
     </nav>
   );
