@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -11,6 +10,15 @@ const AboutUs = () => {
       
       <main className="flex-1 container mx-auto px-4 py-8 pt-24">
         <div className="max-w-4xl mx-auto">
+          {/* Logo and name */}
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <img
+              src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png"
+              alt="Artswarit Logo"
+              className="h-14 w-14 md:h-20 md:w-20 rounded-full object-cover shadow"
+            />
+            <span className="font-bold text-2xl md:text-3xl text-purple-700 tracking-tight font-heading">Artswarit</span>
+          </div>
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">About Artswarit</h1>
             <p className="text-xl text-gray-600">Empowering artists to showcase their talent and connect with the world</p>
