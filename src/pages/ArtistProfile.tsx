@@ -14,12 +14,10 @@ import { useFollowArtist } from "@/hooks/useFollowArtist";
 import { useIsFollowingArtist } from "@/hooks/useIsFollowingArtist";
 import { useArtistFollowersCount } from "@/hooks/useArtistFollowersCount";
 
-// Replace the string IDs with valid UUIDs for testing.
-// You should replace these UUIDs with real profile IDs from your Supabase dashboard ("profiles" table)!
+// Mock data remains the same for demonstration
 const artistsData = {
-  // Example UUIDs; replace with your own!
-  "04c3baed-2aaf-42ca-8c7f-d09ce220b7ee": {
-    id: "04c3baed-2aaf-42ca-8c7f-d09ce220b7ee",
+  "1": {
+    id: "1",
     name: "Alex Rivera",
     category: "Musician",
     avatar: "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80",
@@ -43,8 +41,8 @@ const artistsData = {
       },
     ]
   },
-  "2f3f283e-48f9-474b-baf2-6f49fb044830": {
-    id: "2f3f283e-48f9-474b-baf2-6f49fb044830",
+  "2": {
+    id: "2",
     name: "Maya Johnson",
     category: "Writer",
     avatar: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=200&q=80",
@@ -65,13 +63,8 @@ const artistsData = {
   }
 };
 
-// To test: 
-// 1. Log in to your Supabase dashboard and open your "profiles" table.
-// 2. Replace the UUIDs above with real ids (copy the "id" field of any artist/user you'd like to test with).
-
 export default function ArtistProfile() {
   const { id } = useParams();
-  // Use the path param as the artist id: /artist/:id
   const artist = artistsData[id as keyof typeof artistsData];
 
   // Supabase follow system
