@@ -63,9 +63,13 @@ const artistsData = {
 export default function ArtistProfile() {
   const { id } = useParams();
   const artist = artistsData[id as keyof typeof artistsData];
-
-  // Follow state logic (for demo)
   const [isFollowing, setIsFollowing] = useState(false);
+
+  // New handlers for demo
+  const handleMessage = () => alert("Message feature coming soon!");
+  const handleSave = () => alert("Artist saved!");
+  const handleRequestProject = () =>
+    alert("Project request feature coming soon!");
 
   if (!artist) {
     return (
@@ -102,18 +106,21 @@ export default function ArtistProfile() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-gray-100 flex flex-col">
       <Navbar />
-      {/* Top: Glasmorphism Banner & Artist */}
       <div className="pt-16 w-full">
+        {/* Updated: pass enriched actions to ArtistHeader */}
         <ArtistHeader
           artist={{
             ...artist,
             premium: true,
             tags: [artist.category, ...(artist.specialties || [])],
             views: portfolio.reduce((acc, a) => acc + (a.views || 0), 0),
+            tagline: artist.bio ?? "",
           }}
           isFollowing={isFollowing}
           onFollow={() => setIsFollowing((f) => !f)}
-          // onMessage={() => alert("Message feature soon")}
+          onMessage={handleMessage}
+          onSave={handleSave}
+          onRequest={handleRequestProject}
         />
       </div>
 
