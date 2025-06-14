@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -64,7 +63,6 @@ const Navbar = () => {
             alt="Artswarit Logo"
             className="h-10 w-10 md:h-12 md:w-12 rounded-full object-cover transition-transform duration-300 hover:scale-110"
           />
-          <span>Artswarit</span>
         </Link>
 
         {/* Minimal desktop nav */}
@@ -234,4 +232,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
