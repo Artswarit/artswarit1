@@ -1,4 +1,3 @@
-
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -14,19 +13,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 // --- Demo Data for fallback ---
+const ARTIST_UUID_1 = "11111111-1111-1111-1111-111111111111";
+const ARTIST_UUID_2 = "22222222-2222-2222-2222-222222222222";
+
 const artistsData = {
-  "1": {
-    id: "1",
+  [ARTIST_UUID_1]: {
+    id: ARTIST_UUID_1,
     name: "Alex Rivera",
     category: "Musician",
-    avatar: "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-4.0.0&auto=format&fit=crop&w=200&q=80",
+    avatar:
+      "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-4.0.0&auto=format&fit=crop&w=200&q=80",
     bio: "Multi-platinum musician passionate about creating moving music and telling stories.",
     followers: 12035,
     likes: 3204,
     isVerified: true,
     specialties: ["Pop", "Rock", "Electronic"],
     location: "Los Angeles, CA",
-    cover: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80",
+    cover:
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80",
     artworks: [
       {
         id: "a1",
@@ -38,32 +42,43 @@ const artistsData = {
         title: "Live Concert 2024",
         img: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=400&q=80",
       },
-    ]
+    ],
   },
-  "2": {
-    id: "2",
+  [ARTIST_UUID_2]: {
+    id: ARTIST_UUID_2,
     name: "Maya Johnson",
     category: "Writer",
-    avatar: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=200&q=80",
+    avatar:
+      "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=200&q=80",
     bio: "Award-winning author, creative in fantasy and science fiction novels.",
     followers: 8621,
     likes: 1945,
     isVerified: true,
     specialties: ["Fantasy", "Sci-Fi", "Short Stories"],
     location: "New York, NY",
-    cover: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=800&q=80",
+    cover:
+      "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=800&q=80",
     artworks: [
       {
         id: "b1",
         title: "Crystal Realm",
         img: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=400&q=80",
-      }
-    ]
-  }
+      },
+    ],
+  },
 };
 
+// Route adaptation: If /artist/1 or /artist/2, map to demo UUIDs
+function toDemoUUID(id: string | undefined): string | undefined {
+  if (id === "1") return ARTIST_UUID_1;
+  if (id === "2") return ARTIST_UUID_2;
+  return id;
+}
+
 export default function ArtistProfile() {
-  const { id } = useParams();
+  const { id: routeId } = useParams();
+  const id = toDemoUUID(routeId);
+
   const [profileState, setProfileState] = useState(() => {
     // fallback demo data for local dev: artistData
     const demoArtist = artistsData[id as keyof typeof artistsData];
@@ -90,7 +105,8 @@ export default function ArtistProfile() {
   // Fetch actual followers count & user following state 
   useEffect(() => {
     async function fetchFollowersData() {
-      if (!id) return;
+      // skip for demo profiles
+      if (!id || id === ARTIST_UUID_1 || id === ARTIST_UUID_2) return;
 
       // total followers for this artist
       const { data: followers, error: countErr } = await supabase
@@ -116,7 +132,7 @@ export default function ArtistProfile() {
     // re-run when id or userId changes
   }, [id, userId]);
 
-  // Handle follow/unfollow logic
+  // Handle follow: demo fallback for demo artists, supabase for real
   const handleFollow = async () => {
     if (!id || !userId) {
       toast({
@@ -125,9 +141,32 @@ export default function ArtistProfile() {
       });
       return;
     }
+
+    // Demo profiles: local state only!
+    if (id === ARTIST_UUID_1 || id === ARTIST_UUID_2) {
+      setLoadingFollow(true);
+      if (!isFollowing) {
+        setIsFollowing(true);
+        setFollowersCount((cnt) => cnt + 1);
+        toast({
+          title: "Followed (Demo)",
+          description: "You are now following this artist! (Demo artist profile)",
+        });
+      } else {
+        setIsFollowing(false);
+        setFollowersCount((cnt) => Math.max(cnt - 1, 0));
+        toast({
+          title: "Unfollowed (Demo)",
+          description: "You have unfollowed this artist. (Demo artist profile)",
+        });
+      }
+      setLoadingFollow(false);
+      return;
+    }
+
     setLoadingFollow(true);
     if (!isFollowing) {
-      // follow
+      // follow in supabase
       const { error } = await supabase.from("follows").insert({
         artist_id: id,
         client_id: userId,
@@ -147,7 +186,7 @@ export default function ArtistProfile() {
         });
       }
     } else {
-      // unfollow
+      // unfollow in supabase
       const { error } = await supabase
         .from("follows")
         .delete()
