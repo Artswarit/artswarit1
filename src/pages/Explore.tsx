@@ -14,6 +14,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import ChatbotBubble from "@/components/explore/ChatbotBubble";
+import ExploreFilters from "@/components/explore/ExploreFilters";
 
 const Explore = () => {
   const { artworks, loading, error } = useArtworks();
@@ -36,6 +37,12 @@ const Explore = () => {
     tags: string[];
     sortBy: string;
     location: string;
+    approvalStatus?: string;
+    minLikes?: number;
+    minViews?: number;
+    hasAudio?: boolean;
+    hasVideo?: boolean;
+    forSaleOnly?: boolean;
   }) => {
     let filtered = [...(artworks || [])];
 
@@ -96,6 +103,39 @@ const Explore = () => {
           )
         )
       );
+    }
+
+    // Approval Status filter (NEW)
+    if (filters.approvalStatus && filters.approvalStatus !== "all") {
+      filtered = filtered.filter(
+        artwork =>
+          (artwork.approval_status || "").toLowerCase() === filters.approvalStatus
+      );
+    }
+
+    // Minimum Likes filter (NEW)
+    if (typeof filters.minLikes === "number" && filters.minLikes > 0) {
+      filtered = filtered.filter(artwork => (artwork.likes || 0) >= filters.minLikes);
+    }
+
+    // Minimum Views filter (NEW)
+    if (typeof filters.minViews === "number" && filters.minViews > 0) {
+      filtered = filtered.filter(artwork => (artwork.views || 0) >= filters.minViews);
+    }
+
+    // Has Audio filter (NEW)
+    if (filters.hasAudio) {
+      filtered = filtered.filter(artwork => !!artwork.audioUrl);
+    }
+
+    // Has Video filter (NEW)
+    if (filters.hasVideo) {
+      filtered = filtered.filter(artwork => !!artwork.videoUrl);
+    }
+
+    // For Sale Only filter (NEW)
+    if (filters.forSaleOnly) {
+      filtered = filtered.filter(artwork => artwork.is_for_sale === true);
     }
 
     // Sort filter

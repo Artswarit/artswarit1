@@ -1,11 +1,11 @@
-
 import React, { useState, useRef } from "react";
-import { Bot, X, SendHorizonal } from "lucide-react";
+import { Bot, X, SendHorizonal, Loader2 } from "lucide-react";
 import ChatMessages from "./ChatMessages";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 
+// New: Helper types and quick actions
 type Message = {
   sender: "user" | "bot";
   text: string;
@@ -13,8 +13,17 @@ type Message = {
 
 const initialBotMsg: Message = {
   sender: "bot",
-  text: "Hi! 👋 I’m your AI assistant. Tell me what kind of artist you’re looking for (e.g., 'Painter in Mumbai under ₹5000')."
+  text: "Hi! 👋 I’m your AI assistant. Tell me what kind of artist or artwork you’re looking for. Or try a quick action below.",
 };
+
+// Custom: Quick Action list
+const quickActions = [
+  { label: "Find Digital Artists", prompt: "Show me digital artists" },
+  { label: "Show Free Artworks", prompt: "Show free artworks" },
+  { label: "Photography in Mumbai", prompt: "Photographers in Mumbai" },
+  { label: "Artworks with Audio", prompt: "Show artworks with audio previews" },
+  { label: "Most Liked Artworks", prompt: "Most liked artworks" },
+];
 
 const ChatbotBubble = () => {
   const [open, setOpen] = useState(false);
@@ -23,9 +32,10 @@ const ChatbotBubble = () => {
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
-    const userMsg: Message = { sender: "user", text: input.trim() };
+  const handleSend = async (customPrompt?: string) => {
+    const sendText = typeof customPrompt === "string" ? customPrompt : input.trim();
+    if (!sendText) return;
+    const userMsg: Message = { sender: "user", text: sendText };
     setMessages(msgs => [...msgs, userMsg]);
     setInput("");
     setIsLoading(true);
@@ -36,7 +46,7 @@ const ChatbotBubble = () => {
       const res = await fetch(functionUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: input.trim() })
+        body: JSON.stringify({ prompt: sendText })
       });
       const data = await res.json();
       if (data.error) {
@@ -62,6 +72,11 @@ const ChatbotBubble = () => {
   // Send on Enter
   const handleInputKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") handleSend();
+  };
+
+  // New: Quick Action Button click
+  const handleQuickAction = (prompt: string) => {
+    handleSend(prompt);
   };
 
   return (
@@ -90,6 +105,21 @@ const ChatbotBubble = () => {
                 <X className="h-5 w-5 text-gray-400 hover:text-blue-900" />
               </button>
             </div>
+            {/* Quick Actions */}
+            <div className="flex flex-wrap gap-2 p-3 pt-2">
+              {quickActions.map(action => (
+                <Button
+                  key={action.label}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleQuickAction(action.prompt)}
+                  className="text-xs rounded-full px-3 py-1"
+                  disabled={isLoading}
+                >
+                  {action.label}
+                </Button>
+              ))}
+            </div>
             <ChatMessages messages={messages} />
             <div className="flex items-center gap-2 px-3 py-2 border-t bg-blue-50">
               <Input
@@ -105,11 +135,11 @@ const ChatbotBubble = () => {
               <Button
                 size="icon"
                 className="h-9 w-9"
-                onClick={handleSend}
+                onClick={() => handleSend()}
                 disabled={isLoading || !input.trim()}
                 aria-label="Send message"
               >
-                <SendHorizonal className="h-4 w-4" />
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendHorizonal className="h-4 w-4" />}
               </Button>
             </div>
           </Card>

@@ -1,10 +1,11 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
 import { Search, Filter, X } from 'lucide-react';
 
 interface FiltersProps {
@@ -16,6 +17,12 @@ interface FiltersProps {
     tags: string[];
     sortBy: string;
     location: string;
+    approvalStatus: string;
+    minLikes: number;
+    minViews: number;
+    hasAudio: boolean;
+    hasVideo: boolean;
+    forSaleOnly: boolean;
   }) => void;
   onClose?: () => void;
 }
@@ -69,6 +76,13 @@ const priceRanges = [
   { value: '500+', label: '$500+' },
 ];
 
+const approvalStatuses = [
+  { value: 'all', label: 'All Statuses' },
+  { value: 'approved', label: 'Approved' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'rejected', label: 'Rejected' },
+];
+
 const ExploreFilters = ({ onFiltersChange, onClose }: FiltersProps) => {
   const [filters, setFilters] = useState({
     search: '',
@@ -78,6 +92,12 @@ const ExploreFilters = ({ onFiltersChange, onClose }: FiltersProps) => {
     tags: [] as string[],
     sortBy: 'artist_name',
     location: '',
+    approvalStatus: 'all',
+    minLikes: 0,
+    minViews: 0,
+    hasAudio: false,
+    hasVideo: false,
+    forSaleOnly: false,
   });
   const [tagInput, setTagInput] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -118,6 +138,12 @@ const ExploreFilters = ({ onFiltersChange, onClose }: FiltersProps) => {
       tags: [],
       sortBy: 'artist_name',
       location: '',
+      approvalStatus: 'all',
+      minLikes: 0,
+      minViews: 0,
+      hasAudio: false,
+      hasVideo: false,
+      forSaleOnly: false,
     };
     updateFilters(clearedFilters);
     setTagInput('');
@@ -264,6 +290,83 @@ const ExploreFilters = ({ onFiltersChange, onClose }: FiltersProps) => {
             placeholder="City, Country..."
             value={filters.location}
             onChange={(e) => updateFilters({ ...filters, location: e.target.value })}
+          />
+        </div>
+
+        {/* Approval Status */}
+        <div>
+          <label className="text-sm font-medium mb-2 block">Approval Status</label>
+          <Select
+            value={filters.approvalStatus}
+            onValueChange={(value) => updateFilters({ ...filters, approvalStatus: value })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {approvalStatuses.map((status) => (
+                <SelectItem key={status.value} value={status.value}>
+                  {status.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Minimum Likes */}
+        <div>
+          <label className="text-sm font-medium mb-2 block">Minimum Likes</label>
+          <Slider
+            min={0}
+            max={5000}
+            step={10}
+            value={[filters.minLikes]}
+            onValueChange={([val]) => updateFilters({ ...filters, minLikes: val })}
+          />
+          <span className="text-xs text-gray-600 mt-1 block">
+            {filters.minLikes}+
+          </span>
+        </div>
+
+        {/* Minimum Views */}
+        <div>
+          <label className="text-sm font-medium mb-2 block">Minimum Views</label>
+          <Slider
+            min={0}
+            max={100000}
+            step={100}
+            value={[filters.minViews]}
+            onValueChange={([val]) => updateFilters({ ...filters, minViews: val })}
+          />
+          <span className="text-xs text-gray-600 mt-1 block">
+            {filters.minViews}+
+          </span>
+        </div>
+
+        {/* Has Audio / Has Video */}
+        <div className="flex gap-4">
+          <div>
+            <label className="text-xs font-medium block mb-2">With Audio</label>
+            <Switch
+              checked={filters.hasAudio}
+              onCheckedChange={(checked) => updateFilters({ ...filters, hasAudio: checked as boolean })}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium block mb-2">With Video</label>
+            <Switch
+              checked={filters.hasVideo}
+              onCheckedChange={(checked) => updateFilters({ ...filters, hasVideo: checked as boolean })}
+            />
+          </div>
+        </div>
+
+        {/* For Sale Only */}
+        <div>
+          <label className="text-xs font-medium block mb-2">For Sale Only</label>
+          <Switch
+            checked={filters.forSaleOnly}
+            onCheckedChange={(checked) => updateFilters({ ...filters, forSaleOnly: checked as boolean })}
           />
         </div>
 
