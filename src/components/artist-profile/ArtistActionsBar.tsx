@@ -1,6 +1,6 @@
-import React from "react";
-import { MessageCircle, Save, FilePlus, UserPlus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+
+import React, { useState } from "react";
+import { MessageSquare, Bookmark } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ArtistActionsBarProps {
@@ -20,73 +20,93 @@ const ArtistActionsBar: React.FC<ArtistActionsBarProps> = ({
   onRequest,
   canRequest = true,
 }) => {
+  const [isSaved, setIsSaved] = useState(false);
+
+  const handleSave = () => {
+    setIsSaved((prev) => !prev);
+    onSave();
+  };
   return (
     <TooltipProvider>
       <div className="flex flex-col gap-2 w-full max-w-xs">
-        {/* Follow button with icon and subtle animation */}
+        {/* Follow button */}
         <Tooltip>
           <TooltipTrigger asChild>
             <button
               onClick={onFollow}
-              className={`w-full flex items-center justify-center relative font-semibold shadow-glass transition-all duration-200 rounded-md py-2
-                ${isFollowing
-                  ? "bg-green-200 text-green-900 hover:bg-green-300"
-                  : "bg-gradient-to-r from-violet-600 to-indigo-500 text-white hover:from-violet-700 hover:to-indigo-600"}
-                hover:scale-[1.035] active:scale-100
-              `}
+              className={
+                `w-full flex items-center justify-center font-semibold rounded-lg py-2.5 transition-all duration-150 text-base
+                ${isFollowing ? "bg-green-100 text-green-700 ring-1 ring-green-300 hover:bg-green-200" : "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700"}
+                hover:scale-105 active:scale-100`
+              }
+              style={{ minHeight: 44 }}
             >
               {isFollowing ? (
                 <>
-                  <span className="text-lg mr-1">✅</span>
+                  <span className="text-lg mr-2">✅</span>
                   Following
                 </>
               ) : (
                 <>
-                  <span className="text-lg mr-1">➕</span>
+                  <span className="text-lg mr-2">➕</span>
                   Follow
                 </>
               )}
             </button>
           </TooltipTrigger>
-          <TooltipContent>{isFollowing ? "Unfollow this artist" : "Follow this artist"}</TooltipContent>
+          <TooltipContent>
+            {isFollowing ? "Unfollow this artist" : "Follow this artist"}
+          </TooltipContent>
         </Tooltip>
-
         {/* Message */}
-        <button
-          onClick={onMessage}
-          className="w-full rounded-md border border-blue-400 text-blue-700 hover:bg-blue-200/60 hover:text-blue-900 shadow-md transition-all duration-150 py-2 flex items-center justify-center"
-        >
-          <span className="mr-1">💬</span> Message Artist
-        </button>
-
-        {/* Save + Request split */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={onMessage}
+              className="w-full flex items-center justify-center rounded-lg border border-blue-400 text-blue-800 bg-white hover:bg-blue-50 transition-all py-2"
+              style={{ minHeight: 44 }}
+            >
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Message Artist
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Direct message the artist</TooltipContent>
+        </Tooltip>
+        {/* Save & Request */}
         <div className="flex gap-2">
-          {/* Save artist w/ hover text */}
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                onClick={onSave}
-                className="flex-1 rounded-md border border-pink-400 text-pink-700 hover:bg-pink-100/60 hover:text-pink-900 shadow-md transition-all duration-150 py-2 flex items-center justify-center"
+                onClick={handleSave}
+                className={
+                  `flex-1 rounded-lg border border-pink-400 text-pink-700 bg-white hover:bg-pink-50 transition-all flex items-center justify-center py-2` +
+                  (isSaved ? " bg-pink-100 text-pink-900 border-2 border-pink-500 font-bold" : "")
+                }
+                style={{ minHeight: 44 }}
               >
-                <span className="mr-1">💾</span>
-                Save Artist
+                <Bookmark className="w-4 h-4 mr-1" />
+                {isSaved ? "Saved" : "Save Artist"}
               </button>
             </TooltipTrigger>
-            <TooltipContent>Save this artist to your favorites</TooltipContent>
+            <TooltipContent>
+              {isSaved ? "Artist is in your favorites" : "Save this artist to your favorites"}
+            </TooltipContent>
           </Tooltip>
-          {/* Request Project logic */}
           {canRequest && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   onClick={onRequest}
-                  className="flex-1 rounded-md border border-yellow-400 text-amber-800 hover:bg-amber-100/70 hover:text-amber-900 shadow-md transition-all duration-150 py-2 flex items-center justify-center"
+                  className="flex-1 rounded-lg border border-yellow-400 text-amber-800 bg-white hover:bg-amber-50 transition-all flex items-center justify-center py-2"
+                  style={{ minHeight: 44 }}
                 >
                   <span className="mr-1">📝</span>
                   Request Project
                 </button>
               </TooltipTrigger>
-              <TooltipContent>Request a commission from this artist</TooltipContent>
+              <TooltipContent>
+                Request a commission/project from this artist
+              </TooltipContent>
             </Tooltip>
           )}
         </div>
@@ -94,4 +114,5 @@ const ArtistActionsBar: React.FC<ArtistActionsBarProps> = ({
     </TooltipProvider>
   );
 };
+
 export default ArtistActionsBar;

@@ -1,22 +1,18 @@
-import React from "react";
+
+import React, { useState } from "react";
 import ArtworkCardModern from "./ArtworkCardModern";
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useState } from "react";
 
 interface PinnedArtworksBarProps {
   artworks: any[];
   onArtworkClick?: (artwork: any) => void;
 }
 
-/**
- * Responsive, glass-styled pinned artworks bar with scroll and consistent spacing.
- */
 const PinnedArtworksBar: React.FC<PinnedArtworksBarProps> = ({
   artworks,
   onArtworkClick,
 }) => {
   if (!artworks || artworks.length === 0) return null;
-  // Optional: manage which card is hovered for mobile/keyboard
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   return (
@@ -30,36 +26,40 @@ const PinnedArtworksBar: React.FC<PinnedArtworksBarProps> = ({
             {artworks.map((art, i) => (
               <div
                 key={art.id}
-                className={"min-w-[210px] max-w-[330px] snap-start flex-1 transition-transform hover:scale-105 relative group " + (hoveredId === art.id ? "z-20" : "")}
+                className={`min-w-[215px] max-w-[320px] snap-start flex-1 transition-transform ${hoveredId === art.id ? "scale-105 z-30" : ""
+                  } group relative`}
                 style={{ flex: "0 0 auto" }}
                 onMouseEnter={() => setHoveredId(art.id)}
                 onMouseLeave={() => setHoveredId(null)}
               >
                 <div className="relative">
+                  {/* Artwork Thumbnail */}
                   <img
                     src={art.img || art.imageUrl}
                     alt={art.title}
-                    className="rounded-xl w-full aspect-[4/3] object-cover border border-white/60 shadow-md"
+                    className="rounded-2xl w-full aspect-[4/3] object-cover border border-white/60 shadow-md"
                   />
                   {/* Premium badge/lock */}
                   {art.isPremium && (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="absolute top-2 right-2 bg-yellow-200 rounded-full px-2 py-1 flex items-center text-yellow-900 shadow-md text-xs font-semibold gap-1">
-                          <span className="text-lg">🔒</span> Premium
+                        <div className="absolute top-2 right-2 bg-yellow-300/90 rounded-full px-2 py-1 flex items-center text-yellow-900 shadow font-bold text-xs gap-1 border border-yellow-400">
+                          <span className="text-base">🔒</span> Premium
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent>This is a premium artwork. Subscribe to view.</TooltipContent>
+                      <TooltipContent>
+                        This is a premium artwork. Subscribe to view.
+                      </TooltipContent>
                     </Tooltip>
                   )}
-                  {/* Hover overlay */}
-                  <div className={`absolute inset-0 flex flex-col justify-between rounded-xl transition-opacity duration-200 ${hoveredId === art.id ? "opacity-95 bg-black/60" : "opacity-0 pointer-events-none"} z-10`}>
+                  {/* Hover overlay for stats & view button */}
+                  <div className={`absolute inset-0 flex flex-col justify-between rounded-2xl transition-opacity duration-150 ${hoveredId === art.id ? "opacity-100 bg-black/50" : "opacity-0 pointer-events-none"} z-10`}>
                     <div className="flex justify-end p-2 gap-1">
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button
                             onClick={() => onArtworkClick?.(art)}
-                            className="rounded-full p-1.5 bg-white/80 hover:bg-white text-blue-700 transition shadow"
+                            className="rounded-full p-2 bg-white/90 hover:bg-white text-blue-700 transition shadow"
                             title="View full"
                           >
                             <span className="text-lg">🔍</span>
@@ -70,19 +70,14 @@ const PinnedArtworksBar: React.FC<PinnedArtworksBarProps> = ({
                     </div>
                     <div className="flex flex-col items-start gap-2 p-3">
                       <div className="flex items-center gap-2 text-xs text-white font-medium drop-shadow mb-1">
-                        <span className="flex items-center gap-1">
-                          <span>👁</span> {art.views ?? "--"}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <span>♥</span> {art.likes ?? "--"}
-                        </span>
+                        <span className="flex items-center gap-1"><span>👁</span>{art.views ?? "--"}</span>
+                        <span className="flex items-center gap-1"><span>♥</span>{art.likes ?? "--"}</span>
                       </div>
-                      {/* Tags */}
                       <div className="flex flex-wrap gap-1">
                         {(art.tags || []).map((tag: string) => (
                           <span
                             key={tag}
-                            className="bg-white/25 text-white px-2 py-0.5 rounded-full text-xs shadow border border-white/30 backdrop-blur-sm"
+                            className="bg-white/25 text-white px-2 py-0.5 rounded-full text-xs border border-white/30 backdrop-blur-sm shadow"
                           >
                             {tag}
                           </span>
@@ -91,7 +86,7 @@ const PinnedArtworksBar: React.FC<PinnedArtworksBarProps> = ({
                     </div>
                   </div>
                 </div>
-                {/* ArtworkCardModern below image. Removed overlay stats for de-duplication */}
+                {/* Card below image */}
                 <div className="mt-2">
                   <ArtworkCardModern
                     {...art}
