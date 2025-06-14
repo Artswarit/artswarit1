@@ -57,12 +57,12 @@ const Navbar = () => {
         {/* Logo */}
         <Link
           to="/"
-          className="flex items-center gap-3 font-bold text-lg text-purple-600 mr-12 tracking-tight hover:opacity-80 transition-opacity"
+          className="flex items-center gap-4 font-bold text-lg text-purple-600 mr-12 tracking-tight hover:opacity-80 transition-opacity"
         >
           <img
             src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png"
             alt="Artswarit Logo"
-            className="h-8 w-8 rounded-full object-cover"
+            className="h-10 w-10 md:h-12 md:w-12 rounded-full object-cover transition-transform duration-300 hover:scale-110"
           />
           <span>Artswarit</span>
         </Link>
