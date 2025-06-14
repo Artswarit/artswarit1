@@ -58,6 +58,6 @@ export function useFollowArtist() {
     followStatus: followMutation.status,
     unfollow: unfollowMutation.mutate,
     unfollowStatus: unfollowMutation.status,
-    isLoading: followMutation.isLoading || unfollowMutation.isLoading,
+    isLoading: followMutation.isPending || unfollowMutation.isPending,
   };
 }
