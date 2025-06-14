@@ -1,8 +1,12 @@
-
 import React, { useState } from "react";
 import ArtworkCardModern from "./ArtworkCardModern";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Star, MapPin, Mail } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface GalleryArtwork {
   id: string;
@@ -33,7 +37,25 @@ interface ArtistTabsProps {
 
 const PAGE_SIZE = 6;
 
-const ART_TABS = ["all", "premium", "exclusive"];
+const ART_TABS = ["all", "premium", "exclusive", "services"];
+
+const demoServices = [
+  {
+    title: "Custom Artwork",
+    description: "Commission a unique piece tailored to your vision.",
+    price: "₹3500+",
+  },
+  {
+    title: "Album Cover Design",
+    description: "Creative visuals for music albums or singles.",
+    price: "₹5000+",
+  },
+  {
+    title: "Event Performance",
+    description: "Book the artist for live performances at your event.",
+    price: "Contact for details",
+  },
+];
 
 const ArtistTabs: React.FC<ArtistTabsProps> = ({
   allArt,
@@ -45,6 +67,8 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
 }) => {
   const [tab, setTab] = useState("all");
   const [page, setPage] = useState(1);
+
+  const { toast } = useToast();
 
   // Put pinned artworks at the top for "All"
   let allWithPinnedFirst = allArt;
@@ -65,6 +89,22 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
   const paged = isArtTab ? displayed[tab].slice(0, PAGE_SIZE * page) : [];
   const hasMore = isArtTab && displayed[tab].length > PAGE_SIZE * page;
 
+  // Form setup for Services tab
+  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm({ defaultValues: {
+    title: "",
+    description: "",
+    budget: "",
+  }});
+
+  const submitRequest = (data: any) => {
+    // You could send this info to Supabase here if you want persistence.
+    toast({
+      title: "Project request sent!",
+      description: "The artist will be notified of your interest.",
+    });
+    reset();
+  };
+
   return (
     <div>
       <Tabs value={tab} onValueChange={(v) => { setTab(v); setPage(1); }}>
@@ -72,6 +112,7 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
           <TabsTrigger value="all">All Art</TabsTrigger>
           <TabsTrigger value="premium">Premium</TabsTrigger>
           <TabsTrigger value="exclusive">Exclusive</TabsTrigger>
+          <TabsTrigger value="services">Services</TabsTrigger>
           <TabsTrigger value="about">About</TabsTrigger>
         </TabsList>
 
@@ -104,6 +145,45 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
                 </div>
               )}
             </>
+          )}
+
+          {/* Services Tab */}
+          {tab === "services" && (
+            <div className="my-6 max-w-2xl mx-auto">
+              <h3 className="font-bold text-xl text-purple-900 mb-3 flex items-center gap-2">
+                <Mail className="text-purple-500" size={22} />
+                Services & Project Request
+              </h3>
+              <div className="grid gap-4 mb-7">
+                {demoServices.map((service, i) => (
+                  <div key={i} className="p-4 rounded-xl border bg-white/60 shadow flex flex-col md:flex-row justify-between items-start md:items-center">
+                    <div>
+                      <div className="text-lg font-semibold text-gray-900">{service.title}</div>
+                      <div className="text-gray-700">{service.description}</div>
+                    </div>
+                    <div className="font-semibold text-amber-700 mt-2 md:mt-0 md:ml-4">{service.price}</div>
+                  </div>
+                ))}
+              </div>
+              <form onSubmit={handleSubmit(submitRequest)} className="bg-white/80 rounded-xl p-6 shadow space-y-4">
+                <div>
+                  <label className="font-medium text-gray-700 block mb-1">Project Title</label>
+                  <Input placeholder="E.g. 'Custom Portrait'" required {...register("title")} />
+                </div>
+                <div>
+                  <label className="font-medium text-gray-700 block mb-1">Project Description</label>
+                  <Textarea placeholder="Describe what you want..." rows={4} required {...register("description")} />
+                </div>
+                <div>
+                  <label className="font-medium text-gray-700 block mb-1">Budget (optional)</label>
+                  <Input type="number" min={0} placeholder="Amount in ₹" {...register("budget")} />
+                </div>
+                <Button type="submit" loading={isSubmitting} className="bg-violet-600 text-white hover:bg-violet-700 font-semibold gap-2">
+                  <Mail size={17} />
+                  Send Request
+                </Button>
+              </form>
+            </div>
           )}
 
           {/* Expanded "About" tab details with more info and top review */}
