@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
@@ -20,36 +19,8 @@ const PremiumMembership = () => {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { toast } = useToast();
-  const [subscription, setSubscription] = useState<PremiumSubscription | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (user) {
-      fetchSubscription();
-    }
-  }, [user]);
-
-  const fetchSubscription = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('premium_subscriptions')
-        .select('*')
-        .eq('user_id', user?.id)
-        .eq('is_active', true)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching subscription:', error);
-        return;
-      }
-
-      setSubscription(data);
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [loading] = useState(false);
+  const subscription = null; // No premium subscription for now
 
   const handleUpgrade = async (planType: string) => {
     try {
@@ -105,121 +76,78 @@ const PremiumMembership = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Premium Membership</h2>
-        {subscription?.is_active && (
-          <Badge variant="secondary" className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white">
-            <Crown className="h-4 w-4 mr-1" />
-            Premium Active
-          </Badge>
-        )}
       </div>
-
-      {subscription?.is_active ? (
-        <Card className="border-2 border-gradient-to-r from-yellow-400 to-orange-500">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Premium Plan */}
+        <Card className="relative overflow-hidden">
+          <div className="absolute top-0 right-0 bg-gradient-to-l from-yellow-400 to-orange-500 text-white px-3 py-1 text-xs font-medium">
+            POPULAR
+          </div>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Crown className="h-5 w-5 text-yellow-500" />
-              Your Premium Membership
+              Premium Plan
             </CardTitle>
             <CardDescription>
-              Plan: {subscription.subscription_type} | 
-              {subscription.subscription_end && ` Expires: ${new Date(subscription.subscription_end).toLocaleDateString()}`}
+              <span className="text-3xl font-bold">₹999</span>
+              <span className="text-sm text-gray-500">/month</span>
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {premiumFeatures.map((feature, index) => (
-                <div key={index} className="flex items-center gap-2 text-green-600">
-                  <Check className="h-4 w-4" />
-                  {feature.icon}
-                  <span className="text-sm">{feature.text}</span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-6">
-              <Button 
-                onClick={() => handleUpgrade('manage')}
-                variant="outline"
-                className="w-full"
-              >
-                Manage Subscription
-              </Button>
-            </div>
+          <CardContent className="space-y-4">
+            {premiumFeatures.map((feature, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-green-600" />
+                {feature.icon}
+                <span className="text-sm">{feature.text}</span>
+              </div>
+            ))}
+            <Button 
+              onClick={() => handleUpgrade('premium')}
+              className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600"
+              disabled={loading}
+            >
+              {loading ? 'Processing...' : 'Upgrade to Premium'}
+            </Button>
           </CardContent>
         </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Premium Plan */}
-          <Card className="relative overflow-hidden">
-            <div className="absolute top-0 right-0 bg-gradient-to-l from-yellow-400 to-orange-500 text-white px-3 py-1 text-xs font-medium">
-              POPULAR
+        {/* Enterprise Plan */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Star className="h-5 w-5 text-purple-500" />
+              Enterprise Plan
+            </CardTitle>
+            <CardDescription>
+              <span className="text-3xl font-bold">₹2999</span>
+              <span className="text-sm text-gray-500">/month</span>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {premiumFeatures.map((feature, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-green-600" />
+                {feature.icon}
+                <span className="text-sm">{feature.text}</span>
+              </div>
+            ))}
+            <div className="flex items-center gap-2 text-purple-600">
+              <Check className="h-4 w-4" />
+              <span className="text-sm">Dedicated Account Manager</span>
             </div>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Crown className="h-5 w-5 text-yellow-500" />
-                Premium Plan
-              </CardTitle>
-              <CardDescription>
-                <span className="text-3xl font-bold">₹999</span>
-                <span className="text-sm text-gray-500">/month</span>
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {premiumFeatures.map((feature, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-600" />
-                  {feature.icon}
-                  <span className="text-sm">{feature.text}</span>
-                </div>
-              ))}
-              <Button 
-                onClick={() => handleUpgrade('premium')}
-                className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600"
-                disabled={loading}
-              >
-                {loading ? 'Processing...' : 'Upgrade to Premium'}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Enterprise Plan */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Star className="h-5 w-5 text-purple-500" />
-                Enterprise Plan
-              </CardTitle>
-              <CardDescription>
-                <span className="text-3xl font-bold">₹2999</span>
-                <span className="text-sm text-gray-500">/month</span>
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {premiumFeatures.map((feature, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-600" />
-                  {feature.icon}
-                  <span className="text-sm">{feature.text}</span>
-                </div>
-              ))}
-              <div className="flex items-center gap-2 text-purple-600">
-                <Check className="h-4 w-4" />
-                <span className="text-sm">Dedicated Account Manager</span>
-              </div>
-              <div className="flex items-center gap-2 text-purple-600">
-                <Check className="h-4 w-4" />
-                <span className="text-sm">Custom Branding Options</span>
-              </div>
-              <Button 
-                onClick={() => handleUpgrade('enterprise')}
-                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-                disabled={loading}
-              >
-                {loading ? 'Processing...' : 'Upgrade to Enterprise'}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            <div className="flex items-center gap-2 text-purple-600">
+              <Check className="h-4 w-4" />
+              <span className="text-sm">Custom Branding Options</span>
+            </div>
+            <Button 
+              onClick={() => handleUpgrade('enterprise')}
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+              disabled={loading}
+            >
+              {loading ? 'Processing...' : 'Upgrade to Enterprise'}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,17 +41,16 @@ const ArtistDashboard = () => {
   }
 
   // Show approval pending screen if account is not approved
-  if (profile?.account_status !== 'approved' && profile?.role === 'artist') {
-    return <ApprovalPending />;
-  }
+  // if (profile?.account_status !== 'approved' && profile?.role === 'artist') {
+  //   return <ApprovalPending />;
+  // }
 
-  const isAdmin = profile?.admin_role === 'admin' || profile?.admin_role === 'moderator';
+  // const isAdmin = profile?.admin_role === 'admin' || profile?.admin_role === 'moderator';
 
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
         <Navbar />
-        
         <main className="container mx-auto px-4 py-8 pt-24">
           <DashboardHeader 
             user={user} 
@@ -62,7 +60,7 @@ const ArtistDashboard = () => {
           />
 
           <Tabs defaultValue={defaultTab} className="w-full">
-            <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-7' : 'grid-cols-6'} mb-8`}>
+            <TabsList className="grid w-full grid-cols-6 mb-8">
               <TabsTrigger value="artworks" className="flex items-center gap-2">
                 <Palette className="h-4 w-4" />
                 <span className="hidden sm:inline">Artworks</span>
@@ -87,12 +85,6 @@ const ArtistDashboard = () => {
                 <Bell className="h-4 w-4" />
                 <span className="hidden sm:inline">Notifications</span>
               </TabsTrigger>
-              {isAdmin && (
-                <TabsTrigger value="admin" className="flex items-center gap-2">
-                  <Shield className="h-4 w-4" />
-                  <span className="hidden sm:inline">Admin</span>
-                </TabsTrigger>
-              )}
               <TabsTrigger value="settings" className="flex items-center gap-2">
                 <Settings className="h-4 w-4" />
                 <span className="hidden sm:inline">Settings</span>
@@ -102,33 +94,21 @@ const ArtistDashboard = () => {
             <TabsContent value="artworks" className="space-y-6">
               <ArtworkManagement />
             </TabsContent>
-
             <TabsContent value="profile" className="space-y-6">
               <ArtistProfile isLoading={profileLoading} />
             </TabsContent>
-
             <TabsContent value="premium" className="space-y-6">
               <PremiumMembership />
             </TabsContent>
-
             <TabsContent value="earnings" className="space-y-6">
               <ArtistEarnings isLoading={profileLoading} />
             </TabsContent>
-
             <TabsContent value="messages" className="space-y-6">
               <MessagingModule />
             </TabsContent>
-
             <TabsContent value="notifications" className="space-y-6">
               <NotificationCenter />
             </TabsContent>
-
-            {isAdmin && (
-              <TabsContent value="admin" className="space-y-6">
-                <AdminDashboard />
-              </TabsContent>
-            )}
-
             <TabsContent value="settings" className="space-y-6">
               <ArtistSettings isLoading={profileLoading} />
             </TabsContent>

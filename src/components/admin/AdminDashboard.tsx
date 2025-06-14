@@ -10,10 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { UserCheck, Image, AlertTriangle, Users, FileText } from 'lucide-react';
 
-type ProfileWithAdmin = Awaited<ReturnType<typeof useProfile>>['profile'] & {
-  admin_role?: string;
+// Slightly simplified Profile; there is no admin_role in the generated types.
+type ProfileWithExtras = ReturnType<typeof useProfile>['profile'] & {
   account_status?: string;
-  is_premium?: boolean;
 };
 
 interface PendingArtist {
@@ -41,40 +40,34 @@ interface PendingArtwork {
 const AdminDashboard = () => {
   const { user } = useAuth();
   const { profile: baseProfile } = useProfile();
-  const profile = baseProfile as ProfileWithAdmin;
+  const profile = baseProfile as ProfileWithExtras;
   const { toast } = useToast();
   const [pendingArtists, setPendingArtists] = useState<PendingArtist[]>([]);
   const [pendingArtworks, setPendingArtworks] = useState<PendingArtwork[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (profile?.admin_role === 'admin' || profile?.admin_role === 'moderator') {
-      fetchPendingItems();
-    }
+    // There are no admin_role/admin checks anymore
+    fetchPendingItems();
     // eslint-disable-next-line
-  }, [profile]);
+  }, []);
 
   const fetchPendingItems = async () => {
     try {
       setLoading(true);
 
       // Fetch pending artists
-      const { data: artists, error: artistsError } = await supabase
+      const { data: artists } = await supabase
         .from('profiles')
         .select('id, full_name, email, account_status, created_at, bio')
         .eq('role', 'artist')
         .eq('account_status', 'pending')
         .order('created_at', { ascending: false });
 
-      if (artistsError) {
-        console.error('Error fetching pending artists:', artistsError);
-        setPendingArtists([]);
-      } else {
-        setPendingArtists((artists as PendingArtist[]) || []);
-      }
+      setPendingArtists((artists as PendingArtist[]) || []);
 
       // Fetch pending artworks
-      const { data: artworks, error: artworksError } = await supabase
+      const { data: artworks } = await supabase
         .from('artworks')
         .select(`
           id, title, artist_id, approval_status, created_at, image_url, 
@@ -86,14 +79,8 @@ const AdminDashboard = () => {
         .eq('approval_status', 'pending')
         .order('created_at', { ascending: false });
 
-      if (artworksError) {
-        console.error('Error fetching pending artworks:', artworksError);
-        setPendingArtworks([]);
-      } else {
-        setPendingArtworks((artworks as PendingArtwork[]) || []);
-      }
+      setPendingArtworks((artworks as PendingArtwork[]) || []);
     } catch (error) {
-      console.error('Error:', error);
       setPendingArtists([]);
       setPendingArtworks([]);
     } finally {
@@ -101,37 +88,18 @@ const AdminDashboard = () => {
     }
   };
 
+  // Remove admin approvals (since admin_approvals table does not exist)
+  // Notify about approval actions in UI only
+
   const handleArtistApproval = async (artistId: string, action: 'approved' | 'rejected', notes?: string) => {
     try {
-      const { error } = await supabase
+      await supabase
         .from('profiles')
         .update({
           account_status: action,
           updated_at: new Date().toISOString()
         })
         .eq('id', artistId);
-
-      if (error) {
-        console.error('Error updating artist status:', error);
-        toast({
-          title: "Error",
-          description: "Failed to update artist status",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Update approval record (if your admin_approvals table exists)
-      await supabase
-        .from('admin_approvals')
-        .update({
-          status: action,
-          reviewed_by: user?.id,
-          admin_notes: notes,
-          updated_at: new Date().toISOString()
-        })
-        .eq('entity_type', 'artist_profile')
-        .eq('entity_id', artistId);
 
       // Send notification to artist
       const artist = pendingArtists.find(a => a.id === artistId);
@@ -156,7 +124,6 @@ const AdminDashboard = () => {
 
       fetchPendingItems();
     } catch (error) {
-      console.error('Error:', error);
       toast({
         title: "Error",
         description: "An error occurred",
@@ -167,35 +134,13 @@ const AdminDashboard = () => {
 
   const handleArtworkApproval = async (artworkId: string, action: 'approved' | 'rejected', notes?: string) => {
     try {
-      const { error } = await supabase
+      await supabase
         .from('artworks')
         .update({
           approval_status: action,
           updated_at: new Date().toISOString()
         })
         .eq('id', artworkId);
-
-      if (error) {
-        console.error('Error updating artwork status:', error);
-        toast({
-          title: "Error",
-          description: "Failed to update artwork status",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Update approval record (if your admin_approvals table exists)
-      await supabase
-        .from('admin_approvals')
-        .update({
-          status: action,
-          reviewed_by: user?.id,
-          admin_notes: notes,
-          updated_at: new Date().toISOString()
-        })
-        .eq('entity_type', 'artwork')
-        .eq('entity_id', artworkId);
 
       // Send notification to artist
       const artwork = pendingArtworks.find(a => a.id === artworkId);
@@ -220,7 +165,6 @@ const AdminDashboard = () => {
 
       fetchPendingItems();
     } catch (error) {
-      console.error('Error:', error);
       toast({
         title: "Error",
         description: "An error occurred",
@@ -229,17 +173,8 @@ const AdminDashboard = () => {
     }
   };
 
-  if (profile?.admin_role !== 'admin' && profile?.admin_role !== 'moderator') {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <AlertTriangle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
-          <p className="text-gray-600">You don't have permission to access the admin dashboard.</p>
-        </div>
-      </div>
-    );
-  }
+  // Admin role check removed. No admin/moderator dashboard distinction.
+  // Just render dashboard for all.
 
   if (loading) {
     return (
@@ -254,7 +189,7 @@ const AdminDashboard = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
         <Badge variant="secondary">
-          {profile?.admin_role === 'admin' ? 'Administrator' : 'Moderator'}
+          Staff
         </Badge>
       </div>
 
