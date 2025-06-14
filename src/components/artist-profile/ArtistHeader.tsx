@@ -48,9 +48,9 @@ const ArtistHeader: React.FC<Props> = ({
         <img
           src={artist.cover}
           alt=""
-          className="w-full h-full object-cover object-[center_30%] scale-110 blur-md opacity-70"
+          className="w-full h-full object-cover object-[center_30%] scale-105 blur-sm opacity-85 transition-all duration-300"
         />
-        <div className="absolute inset-0 bg-gradient-to-tr from-black/40 via-purple-900/30 to-blue-500/20" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-purple-900/10 to-blue-500/10" />
       </div>
       <div className="relative w-full flex flex-col md:flex-row items-end md:items-center justify-between z-10 gap-6 p-4 md:p-10 pb-4">
         {/* Avatar + Info */}
@@ -82,7 +82,7 @@ const ArtistHeader: React.FC<Props> = ({
                 </Badge>
               )}
             </div>
-            <div className="text-[0.9rem] md:text-base text-slate-200/90 drop-shadow font-normal leading-relaxed">
+            <div className="text-[0.82rem] md:text-sm text-slate-200/90 drop-shadow font-normal leading-relaxed">
               {/* Small bio */}
               {artist.tagline || artist.category}
             </div>
@@ -112,7 +112,6 @@ const ArtistHeader: React.FC<Props> = ({
         </div>
         {/* Main Actions */}
         <div className="flex flex-col gap-2 items-stretch min-w-[230px]">
-          {/* Actions Bar – pass all required props */}
           <ArtistActionsBar
             isFollowing={isFollowing}
             onFollow={onFollow}
@@ -146,3 +145,4 @@ const ArtistHeader: React.FC<Props> = ({
 };
 
 export default ArtistHeader;
+
