@@ -1,12 +1,12 @@
-
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
 import GlassCard from "@/components/ui/glass-card";
 import GlassButton from "@/components/ui/glass-button";
+import { Verified, MapPin, Users, Heart } from "lucide-react";
 
-// OLD MOCK DATA - simple and easy to modify/extend.
+// Mock data remains the same for demonstration
 const artistsData = {
   "1": {
     id: "1",
@@ -72,81 +72,102 @@ export default function ArtistProfile() {
             </GlassButton>
           </GlassCard>
         </div>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-tr from-blue-50 via-purple-50 to-slate-100 flex flex-col">
       <Navbar />
-      <main className="flex-1">
-        {/* Cover Banner */}
-        <div className="relative h-52 md:h-72 bg-gray-200">
-          <img
-            src={artist.cover}
-            alt={`${artist.name} cover`}
-            className="w-full h-full object-cover object-center"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-          <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 md:-translate-x-0 md:left-20">
+      {/* Cover and Profile */}
+      <div className="relative w-full h-56 md:h-72 mb-24">
+        <img
+          src={artist.cover}
+          alt={`${artist.name} cover`}
+          className="absolute w-full h-full object-cover object-bottom"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+        {/* Avatar card */}
+        <div className="absolute left-1/2 -bottom-20 transform -translate-x-1/2 md:left-20 md:translate-x-0">
+          <GlassCard className="p-3 flex flex-col items-center shadow-2xl glass-effect border-2 border-white/30">
             <img
               src={artist.avatar}
               alt={artist.name}
-              className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white shadow-xl object-cover bg-white"
+              className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white object-cover shadow-lg"
             />
-          </div>
+          </GlassCard>
         </div>
-        {/* Profile Info */}
-        <section className="container mx-auto px-4 pt-24 pb-12">
-          <div className="flex flex-col md:flex-row gap-8">
-            {/* Main artist info */}
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
-                {artist.name}
+      </div>
+      {/* Main Info and Portfolio */}
+      <main className="container mx-auto px-4 flex flex-col md:flex-row gap-8">
+        {/* Profile section */}
+        <section className="w-full md:w-[320px] md:pt-12">
+          <GlassCard className="p-7 md:p-8 mb-4 shadow-lg bg-white/60">
+            <div className="flex flex-col items-center text-center">
+              <div className="flex items-center gap-2 mb-2">
+                <h1 className="font-heading text-2xl md:text-3xl font-bold text-gray-900">{artist.name}</h1>
                 {artist.isVerified && (
-                  <Badge className="ml-2 bg-blue-500/80 text-white border-blue-400/50 text-xs">Verified</Badge>
+                  <Badge className="bg-blue-500 text-white flex items-center gap-1">
+                    <Verified size={14} /> Verified
+                  </Badge>
                 )}
-              </h1>
-              <div className="mb-2">
-                <Badge variant="secondary">{artist.category}</Badge>
               </div>
-              <div className="flex flex-wrap gap-2 mb-3">
+              <div className="mb-2">
+                <Badge variant="secondary" className="capitalize">{artist.category}</Badge>
+              </div>
+              <div className="flex flex-wrap gap-2 justify-center mb-3">
                 {artist.specialties.map(spec => (
-                  <span key={spec} className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm">{spec}</span>
+                  <span key={spec} className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs">{spec}</span>
                 ))}
               </div>
-              <p className="text-muted-foreground mb-5">{artist.bio}</p>
-              <div className="flex gap-6 mb-5">
-                <div>
-                  <span className="font-bold">{artist.followers.toLocaleString()}</span>{" "}
-                  <span className="text-muted-foreground text-sm">Followers</span>
+              {artist.location && (
+                <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
+                  <MapPin size={16} className="opacity-80" />
+                  <span>{artist.location}</span>
                 </div>
-                <div>
-                  <span className="font-bold">{artist.likes.toLocaleString()}</span>{" "}
-                  <span className="text-muted-foreground text-sm">Likes</span>
+              )}
+              <p className="text-muted-foreground text-base line-clamp-4 mb-4">{artist.bio}</p>
+              <div className="flex justify-center gap-6 my-4">
+                <div className="flex flex-col items-center text-gray-800">
+                  <Users size={18} />
+                  <span className="font-bold">{artist.followers.toLocaleString()}</span>
+                  <span className="text-xs text-gray-500">Followers</span>
                 </div>
-                <div>
-                  <span className="font-bold">{artist.location}</span>
+                <div className="flex flex-col items-center text-gray-800">
+                  <Heart size={18} />
+                  <span className="font-bold">{artist.likes.toLocaleString()}</span>
+                  <span className="text-xs text-gray-500">Likes</span>
                 </div>
               </div>
-              <GlassButton variant="primary" className="!px-8 !py-2">Follow</GlassButton>
+              <GlassButton className="w-full !py-2 mt-2">Follow</GlassButton>
             </div>
-            {/* Portfolio simple */}
-            <div className="w-full md:max-w-xs space-y-5">
-              <GlassCard className="p-5">
-                <div>
-                  <h3 className="font-bold mb-2 text-lg">Artworks</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {artist.artworks.map((art) => (
-                      <div key={art.id} className="rounded overflow-hidden border bg-gray-100">
-                        <img src={art.img} alt={art.title} className="object-cover w-full h-20" />
-                        <div className="px-2 py-1 text-xs truncate">{art.title}</div>
-                      </div>
-                    ))}
+          </GlassCard>
+        </section>
+        {/* Portfolio section */}
+        <section className="flex-1 min-w-0 md:pt-12 pb-12">
+          <div className="mb-3 flex items-center gap-2">
+            <h2 className="font-bold text-lg md:text-xl text-gray-900">Portfolio</h2>
+            <span className="text-xs text-gray-500">{artist.artworks.length} Artworks</span>
+          </div>
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
+            {artist.artworks.map((art) => (
+              <GlassCard
+                key={art.id}
+                className="overflow-hidden p-0 hover:scale-[1.03] transition-transform duration-200 shadow-md cursor-pointer group"
+              >
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  <img
+                    src={art.img}
+                    alt={art.title}
+                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-transparent to-transparent p-3">
+                    <h3 className="text-white font-semibold text-base truncate drop-shadow">{art.title}</h3>
                   </div>
                 </div>
               </GlassCard>
-            </div>
+            ))}
           </div>
         </section>
       </main>
