@@ -63,7 +63,6 @@ const Navbar = () => {
             alt="Artswarit Logo"
             className="h-12 w-12 md:h-16 md:w-16 object-contain transition-transform duration-300 hover:scale-110"
             style={{
-              // Remove rounded, shadow etc for transparent look
               background: "none"
             }}
           />
@@ -92,20 +91,7 @@ const Navbar = () => {
 
         {/* Right side controls */}
         <div className="flex items-center ml-auto gap-2">
-          {/* Dashboard replacement for dark mode toggle */}
-          <Link
-            to={user
-              ? user.user_metadata?.role === "artist"
-                ? "/artist-dashboard"
-                : "/client-dashboard"
-              : "/login"
-            }
-            className="text-gray-700 hover:text-purple-600 font-medium px-2 py-1 rounded-lg text-sm transition-colors"
-            style={{ marginRight: "0.6rem" }}
-          >
-            Dashboard
-          </Link>
-
+          {/* Dashboard link removed as requested */}
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -200,18 +186,7 @@ const Navbar = () => {
               </Link>
             ))}
             <div className="mt-2">
-              <Link
-                to={user
-                  ? user.user_metadata?.role === "artist"
-                    ? "/artist-dashboard"
-                    : "/client-dashboard"
-                  : "/login"
-                }
-                className="block px-3 py-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-md transition-colors font-medium"
-                onClick={closeMenu}
-              >
-                Dashboard
-              </Link>
+              {/* Dashboard button removed as requested */}
               {user ? (
                 <>
                   <Link
