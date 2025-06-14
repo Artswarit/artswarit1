@@ -1,3 +1,4 @@
+
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -8,15 +9,17 @@ import { Verified, MapPin, Users, Heart } from "lucide-react";
 import ArtistHeader from "@/components/artist-profile/ArtistHeader";
 import ArtistTabs from "@/components/artist-profile/ArtistTabs";
 import TagDisplay from "@/components/artist-profile/TagDisplay";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-// Mock data remains the same for demonstration
+// --- Demo Data for fallback ---
 const artistsData = {
   "1": {
     id: "1",
     name: "Alex Rivera",
     category: "Musician",
-    avatar: "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80",
+    avatar: "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-4.0.0&auto=format&fit=crop&w=200&q=80",
     bio: "Multi-platinum musician passionate about creating moving music and telling stories.",
     followers: 12035,
     likes: 3204,
@@ -61,16 +64,124 @@ const artistsData = {
 
 export default function ArtistProfile() {
   const { id } = useParams();
-  const artist = artistsData[id as keyof typeof artistsData];
+  const [profileState, setProfileState] = useState(() => {
+    // fallback demo data for local dev: artistData
+    const demoArtist = artistsData[id as keyof typeof artistsData];
+    return demoArtist;
+  });
+
   const [isFollowing, setIsFollowing] = useState(false);
+  const [followersCount, setFollowersCount] = useState<number>(
+    profileState?.followers || 0
+  );
+  const { toast } = useToast();
+  const [loadingFollow, setLoadingFollow] = useState(false);
 
-  // New handlers for demo
-  const handleMessage = () => alert("Message feature coming soon!");
-  const handleSave = () => alert("Artist saved!");
+  // Get supabase user (async)
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUserId(user?.id ?? null);
+    })();
+  }, []);
+
+  // Fetch actual followers count & user following state 
+  useEffect(() => {
+    async function fetchFollowersData() {
+      if (!id) return;
+
+      // total followers for this artist
+      const { data: followers, error: countErr } = await supabase
+        .from("follows")
+        .select("id", { count: "exact", head: false })
+        .eq("artist_id", id);
+
+      if (!countErr && followers) {
+        setFollowersCount(followers.length);
+      }
+      // check if this user is following the artist
+      if (userId) {
+        const { data: following, error: followErr } = await supabase
+          .from("follows")
+          .select("id")
+          .eq("artist_id", id)
+          .eq("client_id", userId)
+          .maybeSingle();
+        setIsFollowing(!!following);
+      }
+    }
+    fetchFollowersData();
+    // re-run when id or userId changes
+  }, [id, userId]);
+
+  // Handle follow/unfollow logic
+  const handleFollow = async () => {
+    if (!id || !userId) {
+      toast({
+        title: "Not logged in",
+        description: "Please sign in to follow artists.",
+      });
+      return;
+    }
+    setLoadingFollow(true);
+    if (!isFollowing) {
+      // follow
+      const { error } = await supabase.from("follows").insert({
+        artist_id: id,
+        client_id: userId,
+      });
+      if (!error) {
+        setIsFollowing(true);
+        setFollowersCount((cnt) => cnt + 1);
+        toast({
+          title: "Followed",
+          description: "You are now following this artist!",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Something went wrong while following.",
+        });
+      }
+    } else {
+      // unfollow
+      const { error } = await supabase
+        .from("follows")
+        .delete()
+        .eq("artist_id", id)
+        .eq("client_id", userId);
+      if (!error) {
+        setIsFollowing(false);
+        setFollowersCount((cnt) => Math.max(cnt - 1, 0));
+        toast({
+          title: "Unfollowed",
+          description: "You have unfollowed this artist.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not unfollow artist.",
+        });
+      }
+    }
+    setLoadingFollow(false);
+  };
+
+  // These are demo-only, provide instant feedback via toast
+  const handleMessage = () =>
+    toast({ title: "Coming soon!", description: "Messaging will be available in a future update.", variant: "default" });
+
+  const handleSave = () =>
+    toast({ title: "Artist saved!", description: "Artist added to your saved list. (Demo only)", variant: "default" });
+
   const handleRequestProject = () =>
-    alert("Project request feature coming soon!");
+    toast({ title: "Coming soon!", description: "Request projects feature coming soon.", variant: "default" });
 
-  if (!artist) {
+  if (!profileState) {
     return (
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
         <Navbar />
@@ -88,8 +199,8 @@ export default function ArtistProfile() {
     );
   }
 
-  // Derive premium and pinned artworks from mock for demo
-  const portfolio = artist.artworks.map((a, ix) => ({
+  // Demo logic: show enriched data with new followersCount from DB, not from static mock
+  const portfolio = profileState.artworks.map((a, ix) => ({
     ...a,
     likes: 100 + ix * 11,
     views: 500 + ix * 30,
@@ -98,7 +209,6 @@ export default function ArtistProfile() {
     isExclusive: ix === 2,
   }));
 
-  // FAKE: assume only first artwork is pinned
   const pinnedArtworks = [portfolio[0]].filter(Boolean);
   const pinnedIds = pinnedArtworks.map((a) => a.id);
 
@@ -109,24 +219,25 @@ export default function ArtistProfile() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-gray-100 flex flex-col">
       <Navbar />
       <div className="pt-16 w-full">
-        {/* Updated: pass enriched actions to ArtistHeader */}
         <ArtistHeader
           artist={{
-            ...artist,
+            ...profileState,
+            followers: followersCount,
             premium: true,
-            tags: [artist.category, ...(artist.specialties || [])],
+            tags: [profileState.category, ...(profileState.specialties || [])],
             views: portfolio.reduce((acc, a) => acc + (a.views || 0), 0),
-            tagline: artist.bio ?? "",
+            tagline: profileState.bio ?? "",
           }}
           isFollowing={isFollowing}
-          onFollow={() => setIsFollowing((f) => !f)}
+          onFollow={handleFollow}
           onMessage={handleMessage}
           onSave={handleSave}
           onRequest={handleRequestProject}
+          loadingFollow={loadingFollow}
         />
       </div>
       <main className="container max-w-screen-xl mx-auto flex-1 px-2 sm:px-6 pb-8 mt-6">
-        <TagDisplay tags={[artist.category, ...(artist.specialties || [])]} />
+        <TagDisplay tags={[profileState.category, ...(profileState.specialties || [])]} />
         <GlassCard className="p-7 md:p-8 mt-4 shadow-lg">
           <div className="flex items-center gap-3 mb-2">
             <h2 className="font-heading text-lg md:text-xl font-bold text-gray-900">
@@ -139,12 +250,11 @@ export default function ArtistProfile() {
             exclusiveArt={exclusiveArt}
             pinnedIds={pinnedIds}
             aboutDetails={{
-              artist,
+              artist: profileState,
               projectsCount: 19,
               avgRating: 4.7,
               reviewCount: 12,
             }}
-            // ...other props
           />
         </GlassCard>
       </main>
