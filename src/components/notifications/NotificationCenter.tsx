@@ -26,11 +26,11 @@ const NotificationCenter = () => {
     if (user) {
       fetchNotifications();
     }
+    // eslint-disable-next-line
   }, [user]);
 
   const fetchNotifications = async () => {
     try {
-      // @ts-expect-error notifications table not in types yet
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
@@ -40,12 +40,14 @@ const NotificationCenter = () => {
 
       if (error) {
         console.error('Error fetching notifications:', error);
+        setNotifications([]);
         return;
       }
 
-      setNotifications(data || []);
+      setNotifications(data as Notification[] || []);
     } catch (error) {
       console.error('Error:', error);
+      setNotifications([]);
     } finally {
       setLoading(false);
     }

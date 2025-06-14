@@ -40,7 +40,6 @@ interface PendingArtwork {
 
 const AdminDashboard = () => {
   const { user } = useAuth();
-  // Patch the profile with extra fields for admin_role etc.
   const { profile: baseProfile } = useProfile();
   const profile = baseProfile as ProfileWithAdmin;
   const { toast } = useToast();
@@ -52,13 +51,14 @@ const AdminDashboard = () => {
     if (profile?.admin_role === 'admin' || profile?.admin_role === 'moderator') {
       fetchPendingItems();
     }
+    // eslint-disable-next-line
   }, [profile]);
 
   const fetchPendingItems = async () => {
     try {
       setLoading(true);
 
-      // Cast data to PendingArtist[] and ensure account_status is present
+      // Fetch pending artists
       const { data: artists, error: artistsError } = await supabase
         .from('profiles')
         .select('id, full_name, email, account_status, created_at, bio')
@@ -68,11 +68,12 @@ const AdminDashboard = () => {
 
       if (artistsError) {
         console.error('Error fetching pending artists:', artistsError);
+        setPendingArtists([]);
       } else {
-        setPendingArtists(artists as PendingArtist[] || []);
+        setPendingArtists((artists as PendingArtist[]) || []);
       }
 
-      // Cast data to PendingArtwork[] and ensure approval_status is present
+      // Fetch pending artworks
       const { data: artworks, error: artworksError } = await supabase
         .from('artworks')
         .select(`
@@ -87,11 +88,14 @@ const AdminDashboard = () => {
 
       if (artworksError) {
         console.error('Error fetching pending artworks:', artworksError);
+        setPendingArtworks([]);
       } else {
-        setPendingArtworks(artworks as PendingArtwork[] || []);
+        setPendingArtworks((artworks as PendingArtwork[]) || []);
       }
     } catch (error) {
       console.error('Error:', error);
+      setPendingArtists([]);
+      setPendingArtworks([]);
     } finally {
       setLoading(false);
     }
@@ -117,9 +121,8 @@ const AdminDashboard = () => {
         return;
       }
 
-      // Update approval record
+      // Update approval record (if your admin_approvals table exists)
       await supabase
-        // @ts-expect-error: admin_approvals won't be in generated types yet
         .from('admin_approvals')
         .update({
           status: action,
@@ -133,7 +136,6 @@ const AdminDashboard = () => {
       // Send notification to artist
       const artist = pendingArtists.find(a => a.id === artistId);
       if (artist) {
-        // @ts-expect-error: notifications table may not be in generated types yet
         await supabase
           .from('notifications')
           .insert({
@@ -183,9 +185,8 @@ const AdminDashboard = () => {
         return;
       }
 
-      // Update approval record
+      // Update approval record (if your admin_approvals table exists)
       await supabase
-        // @ts-expect-error: admin_approvals table may not exist in type definitions yet
         .from('admin_approvals')
         .update({
           status: action,
@@ -199,7 +200,6 @@ const AdminDashboard = () => {
       // Send notification to artist
       const artwork = pendingArtworks.find(a => a.id === artworkId);
       if (artwork) {
-        // @ts-expect-error: notifications table may not exist in type definitions yet
         await supabase
           .from('notifications')
           .insert({

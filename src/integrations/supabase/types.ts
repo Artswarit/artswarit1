@@ -47,6 +47,7 @@ export type Database = {
       }
       artworks: {
         Row: {
+          approval_status: string | null
           artist_id: string | null
           category: string
           created_at: string
@@ -65,6 +66,7 @@ export type Database = {
           views_count: number | null
         }
         Insert: {
+          approval_status?: string | null
           artist_id?: string | null
           category: string
           created_at?: string
@@ -83,6 +85,7 @@ export type Database = {
           views_count?: number | null
         }
         Update: {
+          approval_status?: string | null
           artist_id?: string | null
           category?: string
           created_at?: string
@@ -200,8 +203,47 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
+          account_status: string | null
           avatar_url: string | null
           bio: string | null
           created_at: string
@@ -216,6 +258,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          account_status?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
@@ -230,6 +273,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          account_status?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
