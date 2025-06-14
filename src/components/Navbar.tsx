@@ -56,9 +56,14 @@ const Navbar = () => {
         {/* Logo */}
         <Link
           to="/"
-          className="font-bold text-lg text-purple-600 mr-12 tracking-tight hover:opacity-80 transition-opacity"
+          className="flex items-center gap-3 font-bold text-lg text-purple-600 mr-12 tracking-tight hover:opacity-80 transition-opacity"
         >
-          Artswarit
+          <img
+            src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=40&h=40&fit=facearea&facepad=2"
+            alt="Artswarit Logo"
+            className="h-8 w-8 rounded-full object-cover"
+          />
+          <span>Artswarit</span>
         </Link>
 
         {/* Minimal desktop nav */}
