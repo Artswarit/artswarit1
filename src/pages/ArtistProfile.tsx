@@ -123,13 +123,9 @@ export default function ArtistProfile() {
           onRequest={handleRequestProject}
         />
       </div>
-
       <main className="container max-w-screen-xl mx-auto flex-1 px-2 sm:px-6 pb-8 mt-6">
-        {/* Tags/Category */}
         <TagDisplay tags={[artist.category, ...(artist.specialties || [])]} />
-        {/* Premium Features: Pinned Artworks */}
         <PinnedArtworksBar artworks={pinnedArt} />
-        {/* Portfolio Tabs */}
         <GlassCard className="p-7 md:p-8 mt-4 shadow-lg">
           <div className="flex items-center gap-3 mb-2">
             <h2 className="font-heading text-lg md:text-xl font-bold text-gray-900">
