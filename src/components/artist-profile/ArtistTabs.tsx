@@ -33,6 +33,8 @@ interface ArtistTabsProps {
 
 const PAGE_SIZE = 6;
 
+const ART_TABS = ["all", "premium", "exclusive"];
+
 const ArtistTabs: React.FC<ArtistTabsProps> = ({
   allArt,
   premiumArt,
@@ -46,23 +48,22 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
 
   // Put pinned artworks at the top for "All"
   let allWithPinnedFirst = allArt;
-  if (pinnedIds.length > 0) {
+  if (pinnedIds.length > 0 && allArt) {
     const pinned = allArt.filter((a) => pinnedIds.includes(a.id));
     const unpinned = allArt.filter((a) => !pinnedIds.includes(a.id));
     allWithPinnedFirst = [...pinned, ...unpinned];
   }
 
   const displayed = {
-    all: allWithPinnedFirst,
-    premium: premiumArt,
-    exclusive: exclusiveArt,
+    all: allWithPinnedFirst || [],
+    premium: premiumArt || [],
+    exclusive: exclusiveArt || [],
   };
 
-  const paged = tab === "all"
-    ? displayed[tab].slice(0, PAGE_SIZE * page)
-    : displayed[tab].slice(0, PAGE_SIZE * page);
-
-  const hasMore = displayed[tab].length > PAGE_SIZE * page;
+  // Only compute paged and hasMore for artworks tabs
+  const isArtTab = ART_TABS.includes(tab);
+  const paged = isArtTab ? displayed[tab].slice(0, PAGE_SIZE * page) : [];
+  const hasMore = isArtTab && displayed[tab].length > PAGE_SIZE * page;
 
   return (
     <div>
@@ -76,7 +77,7 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
 
         {/* "All Art", "Premium", "Exclusive" tabs */}
         <TabsContent value={tab} forceMount>
-          {(tab === "all" || tab === "premium" || tab === "exclusive") && (
+          {isArtTab && (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 my-4">
                 {paged.map((art) => (
@@ -147,4 +148,6 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
     </div>
   );
 };
+
 export default ArtistTabs;
+
