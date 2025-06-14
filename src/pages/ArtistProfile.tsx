@@ -5,6 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import GlassCard from "@/components/ui/glass-card";
 import GlassButton from "@/components/ui/glass-button";
 import { Verified, MapPin, Users, Heart } from "lucide-react";
+import ArtistHeader from "@/components/artist-profile/ArtistHeader";
+import ArtistTabs from "@/components/artist-profile/ArtistTabs";
+import TagDisplay from "@/components/artist-profile/TagDisplay";
+import PinnedArtworksBar from "@/components/artist-profile/PinnedArtworksBar";
+import { useState } from "react";
 
 // Mock data remains the same for demonstration
 const artistsData = {
@@ -59,6 +64,9 @@ export default function ArtistProfile() {
   const { id } = useParams();
   const artist = artistsData[id as keyof typeof artistsData];
 
+  // Follow state logic (for demo)
+  const [isFollowing, setIsFollowing] = useState(false);
+
   if (!artist) {
     return (
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
@@ -77,99 +85,57 @@ export default function ArtistProfile() {
     );
   }
 
+  // Derive premium and pinned artworks from mock for demo
+  const portfolio = artist.artworks.map((a, ix) => ({
+    ...a,
+    likes: 100 + ix * 11,
+    views: 500 + ix * 30,
+    price: ix === 0 ? 0 : 499 + 100 * ix,
+    isPremium: ix === 1,
+    isExclusive: ix === 2,
+  }));
+
+  const premiumArt = portfolio.filter((p) => p.isPremium);
+  const exclusiveArt = portfolio.filter((p) => p.isExclusive);
+  const pinnedArt = portfolio.slice(0, 3);
+
   return (
-    <div className="min-h-screen bg-gradient-to-tr from-blue-50 via-purple-50 to-slate-100 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-gray-100 flex flex-col">
       <Navbar />
-      {/* Cover and Profile */}
-      <div className="relative w-full h-56 md:h-72 mb-24">
-        <img
-          src={artist.cover}
-          alt={`${artist.name} cover`}
-          className="absolute w-full h-full object-cover object-bottom"
+      {/* Top: Glasmorphism Banner & Artist */}
+      <div className="pt-16 w-full">
+        <ArtistHeader
+          artist={{
+            ...artist,
+            premium: true,
+            tags: [artist.category, ...(artist.specialties || [])],
+            views: portfolio.reduce((acc, a) => acc + (a.views || 0), 0),
+          }}
+          isFollowing={isFollowing}
+          onFollow={() => setIsFollowing((f) => !f)}
+          // onMessage={() => alert("Message feature soon")}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-        {/* Avatar card */}
-        <div className="absolute left-1/2 -bottom-20 transform -translate-x-1/2 md:left-20 md:translate-x-0">
-          <GlassCard className="p-3 flex flex-col items-center shadow-2xl glass-effect border-2 border-white/30">
-            <img
-              src={artist.avatar}
-              alt={artist.name}
-              className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white object-cover shadow-lg"
-            />
-          </GlassCard>
-        </div>
       </div>
-      {/* Main Info and Portfolio */}
-      <main className="container mx-auto px-4 flex flex-col md:flex-row gap-8">
-        {/* Profile section */}
-        <section className="w-full md:w-[320px] md:pt-12">
-          <GlassCard className="p-7 md:p-8 mb-4 shadow-lg bg-white/60">
-            <div className="flex flex-col items-center text-center">
-              <div className="flex items-center gap-2 mb-2">
-                <h1 className="font-heading text-2xl md:text-3xl font-bold text-gray-900">{artist.name}</h1>
-                {artist.isVerified && (
-                  <Badge className="bg-blue-500 text-white flex items-center gap-1">
-                    <Verified size={14} /> Verified
-                  </Badge>
-                )}
-              </div>
-              <div className="mb-2">
-                <Badge variant="secondary" className="capitalize">{artist.category}</Badge>
-              </div>
-              <div className="flex flex-wrap gap-2 justify-center mb-3">
-                {artist.specialties.map(spec => (
-                  <span key={spec} className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs">{spec}</span>
-                ))}
-              </div>
-              {artist.location && (
-                <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
-                  <MapPin size={16} className="opacity-80" />
-                  <span>{artist.location}</span>
-                </div>
-              )}
-              <p className="text-muted-foreground text-base line-clamp-4 mb-4">{artist.bio}</p>
-              <div className="flex justify-center gap-6 my-4">
-                <div className="flex flex-col items-center text-gray-800">
-                  <Users size={18} />
-                  <span className="font-bold">{artist.followers.toLocaleString()}</span>
-                  <span className="text-xs text-gray-500">Followers</span>
-                </div>
-                <div className="flex flex-col items-center text-gray-800">
-                  <Heart size={18} />
-                  <span className="font-bold">{artist.likes.toLocaleString()}</span>
-                  <span className="text-xs text-gray-500">Likes</span>
-                </div>
-              </div>
-              <GlassButton className="w-full !py-2 mt-2">Follow</GlassButton>
-            </div>
-          </GlassCard>
-        </section>
-        {/* Portfolio section */}
-        <section className="flex-1 min-w-0 md:pt-12 pb-12">
-          <div className="mb-3 flex items-center gap-2">
-            <h2 className="font-bold text-lg md:text-xl text-gray-900">Portfolio</h2>
-            <span className="text-xs text-gray-500">{artist.artworks.length} Artworks</span>
+
+      <main className="container max-w-screen-xl mx-auto flex-1 px-2 sm:px-6 pb-8 mt-6">
+        {/* Tags/Category */}
+        <TagDisplay tags={[artist.category, ...(artist.specialties || [])]} />
+        {/* Premium Features: Pinned Artworks */}
+        <PinnedArtworksBar artworks={pinnedArt} />
+        {/* Portfolio Tabs */}
+        <GlassCard className="p-7 md:p-8 mt-4 shadow-lg">
+          <div className="flex items-center gap-3 mb-2">
+            <h2 className="font-heading text-lg md:text-xl font-bold text-gray-900">
+              Portfolio
+            </h2>
           </div>
-          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
-            {artist.artworks.map((art) => (
-              <GlassCard
-                key={art.id}
-                className="overflow-hidden p-0 hover:scale-[1.03] transition-transform duration-200 shadow-md cursor-pointer group"
-              >
-                <div className="relative aspect-[4/3] overflow-hidden">
-                  <img
-                    src={art.img}
-                    alt={art.title}
-                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-transparent to-transparent p-3">
-                    <h3 className="text-white font-semibold text-base truncate drop-shadow">{art.title}</h3>
-                  </div>
-                </div>
-              </GlassCard>
-            ))}
-          </div>
-        </section>
+          <ArtistTabs
+            allArt={portfolio}
+            premiumArt={premiumArt}
+            exclusiveArt={exclusiveArt}
+            // ...other props
+          />
+        </GlassCard>
       </main>
       <Footer />
     </div>
