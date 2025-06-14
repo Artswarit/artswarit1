@@ -1,7 +1,7 @@
-
 import React from "react";
 import { MessageCircle, Save, FilePlus, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ArtistActionsBarProps {
   isFollowing: boolean;
@@ -21,48 +21,77 @@ const ArtistActionsBar: React.FC<ArtistActionsBarProps> = ({
   canRequest = true,
 }) => {
   return (
-    <div className="flex flex-col gap-2 w-full max-w-xs">
-      <Button
-        onClick={onFollow}
-        variant={isFollowing ? "secondary" : "default"}
-        className={`w-full relative font-semibold shadow-lg transition-all ${
-          isFollowing
-            ? "bg-green-200 text-green-900"
-            : "bg-gradient-to-r from-violet-600 to-indigo-500 text-white shadow-xl"
-        } hover:scale-105 hover:shadow-2xl`}
-      >
-        <UserPlus className="mr-1" size={17} />
-        {isFollowing ? "Unfollow" : "Follow"}
-      </Button>
-      <Button
-        onClick={onMessage}
-        variant="outline"
-        className="w-full border-blue-400 text-blue-700 hover:bg-blue-200/60 hover:text-blue-900 shadow-md"
-      >
-        <MessageCircle size={17} className="mr-1" />
-        Message Artist
-      </Button>
-      <div className="flex gap-2">
-        <Button
-          onClick={onSave}
-          variant="outline"
-          className="flex-1 border-pink-400 text-pink-700 hover:bg-pink-200/50 hover:text-pink-900 shadow-md"
+    <TooltipProvider>
+      <div className="flex flex-col gap-2 w-full max-w-xs">
+        {/* Follow button with icon and subtle animation */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={onFollow}
+              className={`w-full flex items-center justify-center relative font-semibold shadow-glass transition-all duration-200 rounded-md py-2
+                ${isFollowing
+                  ? "bg-green-200 text-green-900 hover:bg-green-300"
+                  : "bg-gradient-to-r from-violet-600 to-indigo-500 text-white hover:from-violet-700 hover:to-indigo-600"}
+                hover:scale-[1.035] active:scale-100
+              `}
+            >
+              {isFollowing ? (
+                <>
+                  <span className="text-lg mr-1">✅</span>
+                  Following
+                </>
+              ) : (
+                <>
+                  <span className="text-lg mr-1">➕</span>
+                  Follow
+                </>
+              )}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>{isFollowing ? "Unfollow this artist" : "Follow this artist"}</TooltipContent>
+        </Tooltip>
+
+        {/* Message */}
+        <button
+          onClick={onMessage}
+          className="w-full rounded-md border border-blue-400 text-blue-700 hover:bg-blue-200/60 hover:text-blue-900 shadow-md transition-all duration-150 py-2 flex items-center justify-center"
         >
-          <Save size={17} className="mr-1" />
-          Save Artist
-        </Button>
-        {canRequest && (
-          <Button
-            onClick={onRequest}
-            variant="outline"
-            className="flex-1 border-yellow-400 text-amber-800 hover:bg-amber-100/70 hover:text-amber-900 shadow-md"
-          >
-            <FilePlus size={17} className="mr-1" />
-            Request Project
-          </Button>
-        )}
+          <span className="mr-1">💬</span> Message Artist
+        </button>
+
+        {/* Save + Request split */}
+        <div className="flex gap-2">
+          {/* Save artist w/ hover text */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={onSave}
+                className="flex-1 rounded-md border border-pink-400 text-pink-700 hover:bg-pink-100/60 hover:text-pink-900 shadow-md transition-all duration-150 py-2 flex items-center justify-center"
+              >
+                <span className="mr-1">💾</span>
+                Save Artist
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Save this artist to your favorites</TooltipContent>
+          </Tooltip>
+          {/* Request Project logic */}
+          {canRequest && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={onRequest}
+                  className="flex-1 rounded-md border border-yellow-400 text-amber-800 hover:bg-amber-100/70 hover:text-amber-900 shadow-md transition-all duration-150 py-2 flex items-center justify-center"
+                >
+                  <span className="mr-1">📝</span>
+                  Request Project
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Request a commission from this artist</TooltipContent>
+            </Tooltip>
+          )}
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 };
 export default ArtistActionsBar;

@@ -1,11 +1,10 @@
 
 import React from "react";
-import { Heart, Eye, Users } from "lucide-react";
-
+// Use check and star icons (lucide-react allowed icons)
 const ICONS: Record<string, React.ReactNode> = {
-  likes: <Heart size={18} className="text-pink-500 animate-pulse" />,
-  views: <Eye size={18} className="text-blue-400 animate-bounce" />,
-  followers: <Users size={18} className="text-green-500 animate-pulse" />,
+  likes: <span className="text-pink-500">♥</span>,
+  views: <span className="text-blue-400">👁</span>,
+  followers: <span className="text-green-600">👤</span>,
 };
 
 const COLORS: Record<string, string> = {
@@ -19,22 +18,25 @@ interface StatCardProps {
   value: number;
   label?: string;
 }
+
 const StatCard: React.FC<StatCardProps> = ({ type, value, label }) => (
   <div
-    className="flex flex-col items-center justify-center min-w-[52px] rounded-lg px-2 py-1.5 bg-white/40 backdrop-blur shadow-sm"
-    style={{ background: "rgba(255,255,255,0.38)" }}
+    className="flex flex-col items-center justify-center min-w-[52px] px-2 py-1.5 rounded-lg
+      bg-white/70 shadow backdrop-blur border border-white/40
+      "
+    style={{ backdropFilter: "blur(3px)" }}
   >
     <div className="flex items-center gap-1.5">
-      <span className={`${COLORS[type]}`}>{ICONS[type]}</span>
+      <span className={`${COLORS[type]} text-lg`}>{ICONS[type]}</span>
       <span
-        className={`text-base font-bold ${COLORS[type]} drop-shadow-sm animate-[pulse_1.5s_ease-in-out]`}
+        className={`text-base font-bold ${COLORS[type]} drop-shadow-sm`}
         style={{
           textShadow:
             type === "likes"
-              ? "0 1px 4px #f472b6, 0 0px 6px #be185d80"
+              ? "0 1px 3px #f472b6, 0 0px 2px #be185d80"
               : type === "views"
-              ? "0 1px 4px #38bdf8, 0 0px 6px #1e3a8a70"
-              : "0 1px 4px #22c55e, 0 0px 6px #16653490",
+              ? "0 1px 3px #38bdf8, 0 0px 2px #1e3a8a70"
+              : "0 1px 3px #22c55e, 0 0px 2px #16653490",
         }}
       >
         {value}
