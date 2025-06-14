@@ -42,13 +42,13 @@ const Navbar = () => {
   const toggleMenu = () => setIsOpen(!isOpen);
   const closeMenu = () => setIsOpen(false);
 
-  // Underline effect for nav links
+  // Underline effect for nav links (no background)
   const linkBaseClass =
-    "relative flex items-center gap-1 px-3 py-1.5 font-medium text-sm rounded transition-all before:absolute before:inset-x-2 before:bottom-1 before:h-0.5 before:bg-purple-600 before:scale-x-0 hover:before:scale-x-100 before:transition-transform before:duration-300";
+    "relative flex items-center gap-1 px-3 py-1.5 font-medium text-sm rounded transition-all before:absolute before:inset-x-2 before:bottom-0 before:h-0.5 before:bg-purple-600 before:scale-x-0 hover:before:scale-x-100 before:transition-transform before:duration-300";
   const linkActiveClass =
-    "text-purple-600 bg-purple-50 before:scale-x-100";
+    "text-purple-600 before:scale-x-100";
   const linkInactiveClass =
-    "text-gray-700 before:bg-gray-400 hover:text-purple-600 hover:bg-purple-50";
+    "text-gray-700 before:bg-gray-300 hover:text-purple-600";
 
   // Minimal search bar
   const renderSearchBar = (
@@ -70,13 +70,13 @@ const Navbar = () => {
         {/* Logo */}
         <Link
           to="/"
-          className="font-bold text-lg text-purple-600 mr-8 tracking-tight hover:opacity-80 transition-opacity" // increased mr-8 for spacing
+          className="font-bold text-lg text-purple-600 mr-12 tracking-tight hover:opacity-80 transition-opacity" // Increased spacing further
         >
           Artswarit
         </Link>
 
         {/* Minimal desktop nav */}
-        <div className="hidden md:flex items-center space-x-2">
+        <div className="hidden md:flex items-center space-x-4"> {/* Increased space-x for more separation */}
           {menuItems.map((item) => (
             <Link
               key={item.name}
@@ -88,7 +88,7 @@ const Navbar = () => {
                   ? linkActiveClass
                   : linkInactiveClass)
               }
-              style={{ marginLeft: "0.6rem", marginRight: "0.6rem" }} // slight extra spacing between items
+              style={{ marginLeft: "0.8rem", marginRight: "0.8rem" }} // more space between items
             >
               {item.icon}
               <span>{item.name}</span>
@@ -193,11 +193,11 @@ const Navbar = () => {
                 className={
                   "relative flex items-center gap-2 px-3 py-2 text-base font-medium rounded-lg transition-colors " +
                   (location.pathname === item.path
-                    ? "text-purple-600 bg-purple-100 after:absolute after:left-3 after:right-3 after:bottom-1 after:h-0.5 after:bg-purple-600 after:rounded-full after:scale-x-100 after:transition-transform after:duration-300"
-                    : "text-gray-700 hover:text-purple-600 hover:bg-gray-50 after:absolute after:left-3 after:right-3 after:bottom-1 after:h-0.5 after:bg-gray-300 after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300")
+                    ? "text-purple-600 after:absolute after:left-3 after:right-3 after:bottom-0 after:h-0.5 after:bg-purple-600 after:rounded-full after:scale-x-100 after:transition-transform after:duration-300"
+                    : "text-gray-700 after:bg-gray-300 hover:text-purple-600 after:absolute after:left-3 after:right-3 after:bottom-0 after:h-0.5 after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300")
                 }
                 onClick={closeMenu}
-                style={{ marginLeft: "0.4rem", marginRight: "0.4rem" }}
+                style={{ marginLeft: "0.6rem", marginRight: "0.6rem" }}
               >
                 {item.icon}
                 <span>{item.name}</span>
