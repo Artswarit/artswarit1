@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,7 +17,10 @@ import PremiumMembership from '@/components/premium/PremiumMembership';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import AdminDashboard from '@/components/admin/AdminDashboard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Palette, User, DollarSign, MessageSquare, Settings, Crown, Bell, Shield } from 'lucide-react';
+import { Palette, User, DollarSign, MessageSquare, Settings, Crown, Bell, FolderUp, Briefcase } from 'lucide-react';
+import ArtworkUpload from '@/components/artwork/ArtworkUpload';
+import ProjectManagement from '@/components/dashboard/projects/ProjectManagement';
+import ArtistNotifications from '@/components/dashboard/ArtistNotifications';
 
 const ArtistDashboard = () => {
   const { tab } = useParams();
@@ -40,13 +44,6 @@ const ArtistDashboard = () => {
     );
   }
 
-  // Show approval pending screen if account is not approved
-  // if (profile?.account_status !== 'approved' && profile?.role === 'artist') {
-  //   return <ApprovalPending />;
-  // }
-
-  // const isAdmin = profile?.admin_role === 'admin' || profile?.admin_role === 'moderator';
-
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
@@ -56,14 +53,22 @@ const ArtistDashboard = () => {
             user={user} 
             profile={profile}
             title="Artist Dashboard"
-            subtitle="Manage your artworks, profile, and earnings"
+            subtitle="Manage your artworks, projects, profile, and earnings"
           />
 
           <Tabs defaultValue={defaultTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-6 mb-8">
+            <TabsList className="grid w-full grid-cols-9 mb-8 overflow-auto">
               <TabsTrigger value="artworks" className="flex items-center gap-2">
                 <Palette className="h-4 w-4" />
                 <span className="hidden sm:inline">Artworks</span>
+              </TabsTrigger>
+              <TabsTrigger value="upload" className="flex items-center gap-2">
+                <FolderUp className="h-4 w-4" />
+                <span className="hidden sm:inline">Upload</span>
+              </TabsTrigger>
+              <TabsTrigger value="projects" className="flex items-center gap-2">
+                <Briefcase className="h-4 w-4" />
+                <span className="hidden sm:inline">Projects</span>
               </TabsTrigger>
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
@@ -94,6 +99,12 @@ const ArtistDashboard = () => {
             <TabsContent value="artworks" className="space-y-6">
               <ArtworkManagement />
             </TabsContent>
+            <TabsContent value="upload" className="space-y-6">
+              <ArtworkUpload />
+            </TabsContent>
+            <TabsContent value="projects" className="space-y-6">
+              <ProjectManagement />
+            </TabsContent>
             <TabsContent value="profile" className="space-y-6">
               <ArtistProfile isLoading={profileLoading} />
             </TabsContent>
@@ -107,14 +118,13 @@ const ArtistDashboard = () => {
               <MessagingModule />
             </TabsContent>
             <TabsContent value="notifications" className="space-y-6">
-              <NotificationCenter />
+              <ArtistNotifications isLoading={profileLoading} />
             </TabsContent>
             <TabsContent value="settings" className="space-y-6">
               <ArtistSettings isLoading={profileLoading} />
             </TabsContent>
           </Tabs>
         </main>
-
         <Footer />
       </div>
     </ProtectedRoute>
@@ -122,3 +132,4 @@ const ArtistDashboard = () => {
 };
 
 export default ArtistDashboard;
+
