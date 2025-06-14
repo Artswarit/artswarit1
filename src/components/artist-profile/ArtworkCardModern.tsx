@@ -33,13 +33,28 @@ const ArtworkCardModern: React.FC<ArtworkCardProps> = ({
   onDownload,
 }) => {
   const [hovered, setHovered] = useState(false);
+  // Make entire artwork image area clickable for full view
   return (
     <GlassCard
       className="glass-effect relative p-0 overflow-hidden cursor-pointer hover:scale-[1.03] transition-transform group"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      // Do not attach onClick at GlassCard level to avoid accidental opens
     >
-      <div className="relative aspect-[4/3] overflow-hidden w-full">
+      <div
+        className="relative aspect-[4/3] overflow-hidden w-full"
+        style={{ cursor: "pointer" }}
+        onClick={onViewFull}
+        tabIndex={0}
+        role="button"
+        aria-label={`View details for ${title}`}
+        onKeyDown={(e) => {
+          if ((e.key === 'Enter' || e.key === ' ') && onViewFull) {
+            e.preventDefault();
+            onViewFull();
+          }
+        }}
+      >
         <img
           src={img}
           alt={title}
@@ -59,7 +74,7 @@ const ArtworkCardModern: React.FC<ArtworkCardProps> = ({
             {/* Quick actions */}
             <div className="flex justify-end p-2 gap-2">
               <button
-                onClick={onLike}
+                onClick={(e) => { e.stopPropagation(); if (onLike) onLike(); }}
                 className={`rounded-full backdrop-blur px-2 py-1 bg-white/30 hover:bg-pink-200/70 text-pink-600 shadow-lg border-none transition flex items-center gap-1 ${isLiked ? "font-bold" : ""}`}
               >
                 <Heart size={16} className={isLiked ? "fill-current" : ""} />
@@ -67,14 +82,14 @@ const ArtworkCardModern: React.FC<ArtworkCardProps> = ({
               </button>
               {downloadable && (
                 <button
-                  onClick={onDownload}
+                  onClick={(e) => { e.stopPropagation(); if (onDownload) onDownload(); }}
                   className="rounded-full px-2 py-1 bg-white/40 hover:bg-white/70 text-blue-600 backdrop-blur transition shadow"
                 >
                   <Download size={16} />
                 </button>
               )}
               <button
-                onClick={onViewFull}
+                onClick={(e) => { e.stopPropagation(); if (onViewFull) onViewFull(); }}
                 className="rounded-full px-2 py-1 bg-white/30 hover:bg-blue-300/80 text-blue-800 transition backdrop-blur shadow"
               >
                 <Eye size={16} />
@@ -105,3 +120,4 @@ const ArtworkCardModern: React.FC<ArtworkCardProps> = ({
 };
 
 export default ArtworkCardModern;
+
