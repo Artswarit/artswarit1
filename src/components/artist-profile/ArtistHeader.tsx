@@ -1,3 +1,4 @@
+
 import React from "react";
 import GlassCard from "@/components/ui/glass-card";
 import { Badge } from "@/components/ui/badge";
@@ -54,15 +55,14 @@ const ArtistHeader: React.FC<Props> = ({
       <div className="relative w-full flex flex-col md:flex-row items-end md:items-center justify-between z-10 gap-6 p-4 md:p-10 pb-4">
         {/* Avatar + Info */}
         <div className="flex items-end md:items-center gap-7">
-          <GlassCard className="p-3 flex flex-col items-center justify-center shadow-xl border-white/30">
+          <GlassCard className="p-3 flex flex-col items-center justify-center shadow-xl border-white/30 bg-transparent">
             <img
               src={artist.avatar}
               alt={artist.name}
               className="w-28 h-28 md:w-36 md:h-36 rounded-full border-4 border-white object-cover shadow-md"
               style={{
-                background: "white",
                 aspectRatio: "1/1",
-                objectFit: "cover",
+                background: "white",
               }}
             />
           </GlassCard>
@@ -82,11 +82,11 @@ const ArtistHeader: React.FC<Props> = ({
                 </Badge>
               )}
             </div>
-            <div className="text-[0.98rem] md:text-lg font-medium text-slate-200/90 drop-shadow">
-              {/* smaller bio */}
+            <div className="text-[0.9rem] md:text-base text-slate-200/90 drop-shadow font-normal leading-relaxed">
+              {/* Small bio */}
               {artist.tagline || artist.category}
             </div>
-            <div className="flex flex-wrap gap-2 items-center my-2">
+            <div className="flex flex-wrap gap-2 items-center my-1">
               {artist.tags &&
                 artist.tags.map((t: string) => (
                   <span
@@ -98,7 +98,7 @@ const ArtistHeader: React.FC<Props> = ({
                 ))}
             </div>
             {/* Dopamine trigger stats */}
-            <div className="flex gap-6 mt-3">
+            <div className="flex gap-6 mt-2">
               {stats.map((stat) => (
                 <StatCard
                   key={stat.type}
@@ -111,14 +111,17 @@ const ArtistHeader: React.FC<Props> = ({
           </div>
         </div>
         {/* Main Actions */}
-        <div className="flex flex-col gap-3 items-stretch min-w-[230px]">
+        <div className="flex flex-col gap-2 items-stretch min-w-[230px]">
+          {/* Actions Bar – pass all required props */}
           <ArtistActionsBar
             isFollowing={isFollowing}
             onFollow={onFollow}
             onMessage={onMessage}
+            onSave={onSave}
+            onRequest={onRequest}
           />
-          {/* New: Save Artist and Request Project as separate CTA buttons */}
-          <div className="flex gap-2 mt-2 flex-wrap">
+          {/* Save & Request relocated, only as fallback for tiny screens */}
+          <div className="flex gap-2 mt-2 flex-wrap md:hidden">
             <Button
               onClick={onSave}
               variant="outline"
