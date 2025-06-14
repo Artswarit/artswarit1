@@ -2,7 +2,7 @@ import React from "react";
 
 const LogoWithName = ({
   className = "",
-  logoSize = { base: 56, md: 80 }, // default to 56px (h-14 w-14), 80px for md
+  logoSize = { base: 96, md: 140 }, // much bigger default
 }: {
   className?: string;
   logoSize?: { base: number; md: number };
@@ -14,20 +14,19 @@ const LogoWithName = ({
     <img
       src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png"
       alt="Artswarit Logo"
-      className="rounded-full object-cover shadow mb-2"
+      // Remove any background, keep as actual image only (rounded, no shadow, no border)
+      className="object-contain mb-2"
       style={{
         height: logoSize.base,
         width: logoSize.base,
-        // scale up for md+ screens
-        ...(logoSize && {
-          ["@media (min-width: 768px)" as any]: {
-            height: logoSize.md,
-            width: logoSize.md,
-          },
-        }),
+        // Responsive for medium screens
+        ["@media (min-width: 768px)" as any]: {
+          height: logoSize.md,
+          width: logoSize.md,
+        },
       }}
     />
-    <span className="font-bold text-2xl md:text-3xl text-purple-700 tracking-tight font-heading text-center">
+    <span className="font-semibold text-base md:text-lg text-purple-700 tracking-tight font-heading text-center">
       Artswarit
     </span>
   </div>

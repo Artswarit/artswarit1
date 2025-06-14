@@ -61,7 +61,11 @@ const Navbar = () => {
           <img
             src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png"
             alt="Artswarit Logo"
-            className="h-12 w-12 md:h-16 md:w-16 rounded-full object-cover transition-transform duration-300 hover:scale-110"
+            className="h-12 w-12 md:h-16 md:w-16 object-contain transition-transform duration-300 hover:scale-110"
+            style={{
+              // Remove rounded, shadow etc for transparent look
+              background: "none"
+            }}
           />
         </Link>
 
@@ -86,8 +90,22 @@ const Navbar = () => {
           ))}
         </div>
 
-        {/* User/auth buttons (right side) */}
+        {/* Right side controls */}
         <div className="flex items-center ml-auto gap-2">
+          {/* Dashboard replacement for dark mode toggle */}
+          <Link
+            to={user
+              ? user.user_metadata?.role === "artist"
+                ? "/artist-dashboard"
+                : "/client-dashboard"
+              : "/login"
+            }
+            className="text-gray-700 hover:text-purple-600 font-medium px-2 py-1 rounded-lg text-sm transition-colors"
+            style={{ marginRight: "0.6rem" }}
+          >
+            Dashboard
+          </Link>
+
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -124,7 +142,7 @@ const Navbar = () => {
               </Link>
             </>
           )}
-          <ModeToggle />
+          {/* Remove ModeToggle component */}
         </div>
 
         {/* Mobile menu button */}
@@ -182,6 +200,18 @@ const Navbar = () => {
               </Link>
             ))}
             <div className="mt-2">
+              <Link
+                to={user
+                  ? user.user_metadata?.role === "artist"
+                    ? "/artist-dashboard"
+                    : "/client-dashboard"
+                  : "/login"
+                }
+                className="block px-3 py-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                onClick={closeMenu}
+              >
+                Dashboard
+              </Link>
               {user ? (
                 <>
                   <Link
@@ -189,7 +219,7 @@ const Navbar = () => {
                     className="block px-3 py-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-md transition-colors font-medium"
                     onClick={closeMenu}
                   >
-                    Dashboard
+                    Profile
                   </Link>
                   <Button
                     variant="ghost"
@@ -221,9 +251,7 @@ const Navbar = () => {
                 </>
               )}
             </div>
-            <div className="px-3 py-2 mt-2">
-              <ModeToggle />
-            </div>
+            {/* Dashboard button replaces dark mode toggle */}
           </div>
         </div>
       )}
