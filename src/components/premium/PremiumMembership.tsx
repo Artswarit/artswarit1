@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
@@ -19,7 +20,7 @@ const PremiumMembership = () => {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { toast } = useToast();
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(false); // <-- FIXED: now destructures setLoading
   const subscription = null; // No premium subscription for now
 
   const handleUpgrade = async (planType: string) => {
