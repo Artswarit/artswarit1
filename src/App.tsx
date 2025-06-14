@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -19,6 +18,7 @@ import ExploreArtists from './pages/ExploreArtists';
 import AboutUs from './pages/AboutUs';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
+import ArtworkDetails from './pages/ArtworkDetails';
 
 function App() {
   return (
@@ -35,6 +35,7 @@ function App() {
             <Route path="/categories" element={<Categories />} />
             <Route path="/ai-detection" element={<AIDetection />} />
             <Route path="/artist/:id" element={<ArtistProfile />} />
+            <Route path="/artwork/:id" element={<ArtworkDetails />} />
             <Route path="/about-us" element={<AboutUs />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
