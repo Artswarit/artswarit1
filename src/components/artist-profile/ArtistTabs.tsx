@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import ArtworkCardModern from "./ArtworkCardModern";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -37,7 +38,8 @@ interface ArtistTabsProps {
 
 const PAGE_SIZE = 6;
 
-const ART_TABS = ["all", "premium", "exclusive", "services"];
+const ART_TABS = ["all", "premium", "exclusive"];
+const NAV_TABS = [...ART_TABS, "services", "about"];
 
 const demoServices = [
   {
@@ -86,8 +88,8 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
 
   // Only compute paged and hasMore for artworks tabs
   const isArtTab = ART_TABS.includes(tab);
-  const paged = isArtTab ? displayed[tab].slice(0, PAGE_SIZE * page) : [];
-  const hasMore = isArtTab && displayed[tab].length > PAGE_SIZE * page;
+  const paged = isArtTab && displayed[tab] ? displayed[tab].slice(0, PAGE_SIZE * page) : [];
+  const hasMore = isArtTab && displayed[tab] && displayed[tab].length > PAGE_SIZE * page;
 
   // Form setup for Services tab
   const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm({ defaultValues: {
@@ -97,7 +99,6 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
   }});
 
   const submitRequest = (data: any) => {
-    // You could send this info to Supabase here if you want persistence.
     toast({
       title: "Project request sent!",
       description: "The artist will be notified of your interest.",
@@ -178,9 +179,13 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
                   <label className="font-medium text-gray-700 block mb-1">Budget (optional)</label>
                   <Input type="number" min={0} placeholder="Amount in ₹" {...register("budget")} />
                 </div>
-                <Button type="submit" loading={isSubmitting} className="bg-violet-600 text-white hover:bg-violet-700 font-semibold gap-2">
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="bg-violet-600 text-white hover:bg-violet-700 font-semibold gap-2 flex items-center"
+                >
                   <Mail size={17} />
-                  Send Request
+                  {isSubmitting ? "Sending..." : "Send Request"}
                 </Button>
               </form>
             </div>
@@ -295,3 +300,4 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
 };
 
 export default ArtistTabs;
+
