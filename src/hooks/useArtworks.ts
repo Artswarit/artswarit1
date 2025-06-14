@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 
 export const useArtworks = () => {
@@ -18,7 +17,8 @@ export const useArtworks = () => {
       audioUrl: "https://www.soundjay.com/misc/sounds/magic-chime-02.wav",
       is_pinned: false,
       is_for_sale: true,
-      tags: ["ambient", "electronic", "chill"]
+      tags: ["ambient", "electronic", "chill"],
+      approval_status: "approved"
     },
     {
       id: "2",
@@ -34,7 +34,8 @@ export const useArtworks = () => {
       category: "Digital Art",
       is_pinned: true,
       is_for_sale: true,
-      tags: ["digital", "surreal", "colorful"]
+      tags: ["digital", "surreal", "colorful"],
+      approval_status: "pending"
     },
     {
       id: "3",
@@ -51,7 +52,8 @@ export const useArtworks = () => {
       audioUrl: "https://www.soundjay.com/misc/sounds/magic-chime-02.wav",
       is_pinned: false,
       is_for_sale: true,
-      tags: ["hip-hop", "conscious", "urban"]
+      tags: ["hip-hop", "conscious", "urban"],
+      approval_status: "rejected"
     },
     {
       id: "4",

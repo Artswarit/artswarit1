@@ -6,14 +6,18 @@ import { useProfile } from '@/hooks/useProfile';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import ApprovalPending from '@/components/auth/ApprovalPending';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import ArtworkManagement from '@/components/dashboard/ArtworkManagement';
 import ArtistProfile from '@/components/dashboard/ArtistProfile';
 import ArtistEarnings from '@/components/dashboard/ArtistEarnings';
 import MessagingModule from '@/components/dashboard/messages/MessagingModule';
 import ArtistSettings from '@/components/dashboard/ArtistSettings';
+import PremiumMembership from '@/components/premium/PremiumMembership';
+import NotificationCenter from '@/components/notifications/NotificationCenter';
+import AdminDashboard from '@/components/admin/AdminDashboard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Palette, User, DollarSign, MessageSquare, Settings, Upload } from 'lucide-react';
+import { Palette, User, DollarSign, MessageSquare, Settings, Crown, Bell, Shield } from 'lucide-react';
 
 const ArtistDashboard = () => {
   const { tab } = useParams();
@@ -37,6 +41,13 @@ const ArtistDashboard = () => {
     );
   }
 
+  // Show approval pending screen if account is not approved
+  if (profile?.account_status !== 'approved' && profile?.role === 'artist') {
+    return <ApprovalPending />;
+  }
+
+  const isAdmin = profile?.admin_role === 'admin' || profile?.admin_role === 'moderator';
+
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
@@ -51,7 +62,7 @@ const ArtistDashboard = () => {
           />
 
           <Tabs defaultValue={defaultTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-5 mb-8">
+            <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-7' : 'grid-cols-6'} mb-8`}>
               <TabsTrigger value="artworks" className="flex items-center gap-2">
                 <Palette className="h-4 w-4" />
                 <span className="hidden sm:inline">Artworks</span>
@@ -59,6 +70,10 @@ const ArtistDashboard = () => {
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
                 <span className="hidden sm:inline">Profile</span>
+              </TabsTrigger>
+              <TabsTrigger value="premium" className="flex items-center gap-2">
+                <Crown className="h-4 w-4" />
+                <span className="hidden sm:inline">Premium</span>
               </TabsTrigger>
               <TabsTrigger value="earnings" className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4" />
@@ -68,6 +83,16 @@ const ArtistDashboard = () => {
                 <MessageSquare className="h-4 w-4" />
                 <span className="hidden sm:inline">Messages</span>
               </TabsTrigger>
+              <TabsTrigger value="notifications" className="flex items-center gap-2">
+                <Bell className="h-4 w-4" />
+                <span className="hidden sm:inline">Notifications</span>
+              </TabsTrigger>
+              {isAdmin && (
+                <TabsTrigger value="admin" className="flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  <span className="hidden sm:inline">Admin</span>
+                </TabsTrigger>
+              )}
               <TabsTrigger value="settings" className="flex items-center gap-2">
                 <Settings className="h-4 w-4" />
                 <span className="hidden sm:inline">Settings</span>
@@ -82,6 +107,10 @@ const ArtistDashboard = () => {
               <ArtistProfile isLoading={profileLoading} />
             </TabsContent>
 
+            <TabsContent value="premium" className="space-y-6">
+              <PremiumMembership />
+            </TabsContent>
+
             <TabsContent value="earnings" className="space-y-6">
               <ArtistEarnings isLoading={profileLoading} />
             </TabsContent>
@@ -89,6 +118,16 @@ const ArtistDashboard = () => {
             <TabsContent value="messages" className="space-y-6">
               <MessagingModule />
             </TabsContent>
+
+            <TabsContent value="notifications" className="space-y-6">
+              <NotificationCenter />
+            </TabsContent>
+
+            {isAdmin && (
+              <TabsContent value="admin" className="space-y-6">
+                <AdminDashboard />
+              </TabsContent>
+            )}
 
             <TabsContent value="settings" className="space-y-6">
               <ArtistSettings isLoading={profileLoading} />
