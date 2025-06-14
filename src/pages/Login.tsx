@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import LogoWithName from "@/components/LogoWithName";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -37,6 +37,10 @@ const Login = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
+      {/* Add logo and name below navbar */}
+      <div className="w-full flex flex-col items-center mt-4">
+        <LogoWithName />
+      </div>
       <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
