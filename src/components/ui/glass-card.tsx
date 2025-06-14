@@ -12,34 +12,33 @@ interface GlassCardProps {
   onClick?: () => void;
 }
 
-export const GlassCard: React.FC<GlassCardProps> = ({
-  children,
-  className,
-  blur = 'lg', // Stronger default blur
-  opacity = 'high', // Stronger default opacity
+export const GlassCard: React.FC<GlassCardProps> = ({ 
+  children, 
+  className, 
+  blur = 'md',
+  opacity = 'medium',
   onMouseEnter,
   onMouseLeave,
-  onClick,
+  onClick
 }) => {
   const blurClasses = {
     sm: 'backdrop-blur-sm',
     md: 'backdrop-blur-md',
-    lg: 'backdrop-blur-lg',
+    lg: 'backdrop-blur-lg'
   };
 
   const opacityClasses = {
     low: 'bg-white/10 border-white/20',
     medium: 'bg-white/20 border-white/30',
-    high: 'bg-white/40 border-white/50', // Strongest by default
+    high: 'bg-white/30 border-white/40'
   };
 
   return (
-    <div
+    <div 
       className={cn(
         'rounded-2xl border shadow-lg transition-all duration-300',
         blurClasses[blur],
         opacityClasses[opacity],
-        'backdrop-saturate-150', // More vivid glass
         className
       )}
       onMouseEnter={onMouseEnter}

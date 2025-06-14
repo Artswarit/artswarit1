@@ -51,7 +51,7 @@ const Navbar = () => {
     "text-gray-700 before:bg-gray-300 hover:text-purple-600";
 
   return (
-    <nav className="bg-white/30 glass-effect shadow-lg border-b border-gray-100 fixed w-full top-0 z-50 backdrop-blur-lg transition-all">
+    <nav className="bg-white/70 glass-effect shadow-lg border-b border-gray-100 fixed w-full top-0 z-50 backdrop-blur-md transition-all">
       <div className="container max-w-screen-xl mx-auto px-2 md:px-4 h-12 flex items-center">
         {/* Logo */}
         <Link
