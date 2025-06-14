@@ -13,6 +13,7 @@ type Props = {
   onMessage: () => void;
   onSave: () => void;
   onRequest: () => void;
+  loadingFollow: boolean;
 };
 
 // Helper component to render stars visually
@@ -41,6 +42,7 @@ const ArtistHeader: React.FC<Props> = ({
   onMessage,
   onSave,
   onRequest,
+  loadingFollow,
 }) => {
   // Stats for dopamine effect - add mock rating
   const stats = [
