@@ -48,14 +48,15 @@ const ArtistHeader: React.FC<Props> = ({
         <img
           src={artist.cover}
           alt=""
-          className="w-full h-full object-cover object-[center_30%] scale-105 blur-sm opacity-85 transition-all duration-300"
+          className="w-full h-full object-cover object-[center_30%] scale-105 blur-sm opacity-80 transition-all duration-300"
         />
-        <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-purple-900/10 to-blue-500/10" />
+        {/* Strengthen overlay for clarity */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
       </div>
       <div className="relative w-full flex flex-col md:flex-row items-end md:items-center justify-between z-10 gap-6 p-4 md:p-10 pb-4">
-        {/* Avatar + Info */}
+        {/* Avatar + Info glass box */}
         <div className="flex items-end md:items-center gap-7">
-          <GlassCard className="p-3 flex flex-col items-center justify-center shadow-xl border-white/30 bg-transparent">
+          <GlassCard className="p-2 flex flex-col items-center justify-center shadow-xl border-white/30 bg-white/40 backdrop-blur-md">
             <img
               src={artist.avatar}
               alt={artist.name}
@@ -66,39 +67,43 @@ const ArtistHeader: React.FC<Props> = ({
               }}
             />
           </GlassCard>
-          <div className="flex flex-col gap-2 text-white md:text-left min-w-[220px]">
-            <div className="flex items-center gap-2">
-              <h1 className="text-3xl md:text-5xl font-bold font-heading drop-shadow">
+          {/* Info block with better visibility */}
+          <div className="flex flex-col gap-3 text-white md:text-left min-w-[220px]">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-3xl md:text-5xl font-bold font-heading drop-shadow-lg">
                 {artist.name}
               </h1>
               {artist.isVerified && (
-                <Badge className="glass-effect bg-blue-600/90 text-white flex items-center gap-1 px-3 py-1 text-[0.82rem] font-semibold shadow-inner shadow-blue-400 animate-pulse border-2 border-white/70 drop-shadow-md">
+                <Badge className="glass-effect bg-blue-600/90 text-white flex items-center gap-1 px-3 py-1 text-[0.82rem] font-semibold shadow-inner shadow-blue-400 border-2 border-white/70 drop-shadow-md">
                   <Verified size={16} /> Verified
                 </Badge>
               )}
               {artist.premium && (
-                <Badge className="glass-effect bg-gradient-to-r from-amber-400 to-yellow-300 text-yellow-900 flex items-center gap-1 px-3 py-1 text-[0.82rem] font-semibold shadow-inner shadow-amber-300 animate-pulse border-2 border-yellow-100/60 drop-shadow-md">
+                <Badge className="glass-effect bg-gradient-to-r from-amber-400 to-yellow-300 text-yellow-900 flex items-center gap-1 px-3 py-1 text-[0.82rem] font-semibold shadow-inner shadow-amber-300 border-2 border-yellow-100/60 drop-shadow-md">
                   <Star size={16} /> Premium
                 </Badge>
               )}
             </div>
-            <div className="text-[0.82rem] md:text-sm text-slate-200/90 drop-shadow font-normal leading-relaxed">
-              {/* Small bio */}
-              {artist.tagline || artist.category}
+            {/* Bio in more visible card */}
+            <div className="text-[0.95rem] md:text-base text-slate-100 font-normal leading-relaxed max-w-md">
+              <GlassCard className="bg-black/40 text-white px-4 py-2 shadow-md border-transparent">
+                <span className="">{artist.tagline || artist.category}</span>
+              </GlassCard>
             </div>
-            <div className="flex flex-wrap gap-2 items-center my-1">
+            {/* Tags with card style and better spacing */}
+            <div className="flex flex-wrap gap-2 items-center mt-1">
               {artist.tags &&
                 artist.tags.map((t: string) => (
                   <span
                     key={t}
-                    className="bg-purple-300/30 text-purple-100 px-3 py-0.5 rounded-full text-xs shadow-lg cursor-pointer hover:bg-purple-400/60"
+                    className="bg-gradient-to-r from-purple-700/50 to-blue-700/40 text-[#e1dfff] px-3 py-1 rounded-full text-xs shadow hover:bg-purple-400/60 border border-white/10 backdrop-blur-lg"
                   >
                     {t}
                   </span>
                 ))}
             </div>
-            {/* Dopamine trigger stats */}
-            <div className="flex gap-6 mt-2">
+            {/* Dopamine trigger stats, now in glass card for visibility */}
+            <GlassCard className="flex gap-4 mt-3 px-2 py-2 bg-white/20 backdrop-blur-md max-w-md border-white/20 shadow-lg">
               {stats.map((stat) => (
                 <StatCard
                   key={stat.type}
@@ -107,7 +112,7 @@ const ArtistHeader: React.FC<Props> = ({
                   label={stat.label}
                 />
               ))}
-            </div>
+            </GlassCard>
           </div>
         </div>
         {/* Main Actions */}
@@ -119,7 +124,7 @@ const ArtistHeader: React.FC<Props> = ({
             onSave={onSave}
             onRequest={onRequest}
           />
-          {/* Save & Request relocated, only as fallback for tiny screens */}
+          {/* Save & Request for tiny screens */}
           <div className="flex gap-2 mt-2 flex-wrap md:hidden">
             <Button
               onClick={onSave}
@@ -145,4 +150,3 @@ const ArtistHeader: React.FC<Props> = ({
 };
 
 export default ArtistHeader;
-
