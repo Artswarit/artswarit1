@@ -220,6 +220,17 @@ export default function ArtistProfile() {
   const handleRequestProject = () =>
     toast({ title: "Coming soon!", description: "Request projects feature coming soon.", variant: "default" });
 
+  // Add state for the modal and selected artwork
+  const [selectedArtwork, setSelectedArtwork] = useState<any | null>(null);
+
+  // Function to handle artwork click and show modal
+  const handleArtworkClick = (art: any) => {
+    setSelectedArtwork(art);
+  };
+
+  // Function to close modal
+  const closeModal = () => setSelectedArtwork(null);
+
   if (!profileState) {
     return (
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
@@ -294,8 +305,60 @@ export default function ArtistProfile() {
               avgRating: 4.7,
               reviewCount: 12,
             }}
+            // Pass handler to show modal
+            onArtworkClick={handleArtworkClick}
           />
         </GlassCard>
+        {/* Artwork Details Modal */}
+        {selectedArtwork && (
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            onClick={closeModal}
+          >
+            <div
+              className="bg-white rounded-2xl shadow-2xl max-w-xl w-full relative p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className="absolute top-3 right-3 text-gray-500 hover:text-red-500 text-xl font-bold"
+                onClick={closeModal}
+                aria-label="Close"
+              >
+                ×
+              </button>
+              <img
+                src={selectedArtwork.img}
+                alt={selectedArtwork.title}
+                className="w-full rounded-lg mb-4 object-cover max-h-64"
+              />
+              <h3 className="text-xl font-bold mb-2">{selectedArtwork.title}</h3>
+              <div className="flex gap-4 text-gray-600 text-sm mb-2">
+                <span>❤️ {selectedArtwork.likes}</span>
+                <span>👁 {selectedArtwork.views}</span>
+                {selectedArtwork.price !== undefined && (
+                  <span>
+                    {selectedArtwork.price === 0 ? "Free" : `₹${selectedArtwork.price}`}
+                  </span>
+                )}
+                {selectedArtwork.isPremium && (
+                  <span className="bg-yellow-200 rounded px-2 py-0.5 text-yellow-900 font-medium">
+                    Premium
+                  </span>
+                )}
+                {selectedArtwork.isExclusive && (
+                  <span className="bg-purple-200 rounded px-2 py-0.5 text-purple-800 font-medium">
+                    Exclusive
+                  </span>
+                )}
+              </div>
+              {/* You can add more details about the artwork here */}
+              <p className="text-gray-700">
+                {/* If you have a description, show it. Else, a placeholder. */}
+                {selectedArtwork.description || "No description for this artwork."}
+              </p>
+            </div>
+          </div>
+        )}
       </main>
       <Footer />
     </div>
