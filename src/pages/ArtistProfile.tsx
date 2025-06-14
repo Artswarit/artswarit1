@@ -8,7 +8,6 @@ import { Verified, MapPin, Users, Heart } from "lucide-react";
 import ArtistHeader from "@/components/artist-profile/ArtistHeader";
 import ArtistTabs from "@/components/artist-profile/ArtistTabs";
 import TagDisplay from "@/components/artist-profile/TagDisplay";
-import PinnedArtworksBar from "@/components/artist-profile/PinnedArtworksBar";
 import { useState } from "react";
 
 // Mock data remains the same for demonstration
@@ -99,9 +98,12 @@ export default function ArtistProfile() {
     isExclusive: ix === 2,
   }));
 
+  // FAKE: assume only first artwork is pinned
+  const pinnedArtworks = [portfolio[0]].filter(Boolean);
+  const pinnedIds = pinnedArtworks.map((a) => a.id);
+
   const premiumArt = portfolio.filter((p) => p.isPremium);
   const exclusiveArt = portfolio.filter((p) => p.isExclusive);
-  const pinnedArt = portfolio.slice(0, 3);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-gray-100 flex flex-col">
@@ -125,7 +127,6 @@ export default function ArtistProfile() {
       </div>
       <main className="container max-w-screen-xl mx-auto flex-1 px-2 sm:px-6 pb-8 mt-6">
         <TagDisplay tags={[artist.category, ...(artist.specialties || [])]} />
-        <PinnedArtworksBar artworks={pinnedArt} />
         <GlassCard className="p-7 md:p-8 mt-4 shadow-lg">
           <div className="flex items-center gap-3 mb-2">
             <h2 className="font-heading text-lg md:text-xl font-bold text-gray-900">
@@ -136,6 +137,13 @@ export default function ArtistProfile() {
             allArt={portfolio}
             premiumArt={premiumArt}
             exclusiveArt={exclusiveArt}
+            pinnedIds={pinnedIds}
+            aboutDetails={{
+              artist,
+              projectsCount: 19,
+              avgRating: 4.7,
+              reviewCount: 12,
+            }}
             // ...other props
           />
         </GlassCard>
