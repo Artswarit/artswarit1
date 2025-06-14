@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -57,14 +56,10 @@ const ArtistDashboard = () => {
           />
 
           <Tabs defaultValue={defaultTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-9 mb-8 overflow-auto">
+            <TabsList className="grid w-full grid-cols-8 mb-8 overflow-auto">
               <TabsTrigger value="artworks" className="flex items-center gap-2">
                 <Palette className="h-4 w-4" />
                 <span className="hidden sm:inline">Artworks</span>
-              </TabsTrigger>
-              <TabsTrigger value="upload" className="flex items-center gap-2">
-                <FolderUp className="h-4 w-4" />
-                <span className="hidden sm:inline">Upload</span>
               </TabsTrigger>
               <TabsTrigger value="projects" className="flex items-center gap-2">
                 <Briefcase className="h-4 w-4" />
@@ -99,9 +94,6 @@ const ArtistDashboard = () => {
             <TabsContent value="artworks" className="space-y-6">
               <ArtworkManagement />
             </TabsContent>
-            <TabsContent value="upload" className="space-y-6">
-              <ArtworkUpload />
-            </TabsContent>
             <TabsContent value="projects" className="space-y-6">
               <ProjectManagement />
             </TabsContent>
@@ -132,4 +124,3 @@ const ArtistDashboard = () => {
 };
 
 export default ArtistDashboard;
-
