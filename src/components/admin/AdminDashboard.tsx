@@ -10,6 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { UserCheck, Image, AlertTriangle, Users, FileText } from 'lucide-react';
 
+type ProfileWithAdmin = Awaited<ReturnType<typeof useProfile>>['profile'] & {
+  admin_role?: string;
+  account_status?: string;
+  is_premium?: boolean;
+};
+
 interface PendingArtist {
   id: string;
   full_name: string;
@@ -32,18 +38,11 @@ interface PendingArtwork {
   };
 }
 
-interface AdminApproval {
-  id: string;
-  entity_type: string;
-  entity_id: string;
-  status: string;
-  admin_notes: string;
-  created_at: string;
-}
-
 const AdminDashboard = () => {
   const { user } = useAuth();
-  const { profile } = useProfile();
+  // Patch the profile with extra fields for admin_role etc.
+  const { profile: baseProfile } = useProfile();
+  const profile = baseProfile as ProfileWithAdmin;
   const { toast } = useToast();
   const [pendingArtists, setPendingArtists] = useState<PendingArtist[]>([]);
   const [pendingArtworks, setPendingArtworks] = useState<PendingArtwork[]>([]);
@@ -58,11 +57,11 @@ const AdminDashboard = () => {
   const fetchPendingItems = async () => {
     try {
       setLoading(true);
-      
-      // Fetch pending artists
+
+      // Cast data to PendingArtist[] and ensure account_status is present
       const { data: artists, error: artistsError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, full_name, email, account_status, created_at, bio')
         .eq('role', 'artist')
         .eq('account_status', 'pending')
         .order('created_at', { ascending: false });
@@ -70,14 +69,14 @@ const AdminDashboard = () => {
       if (artistsError) {
         console.error('Error fetching pending artists:', artistsError);
       } else {
-        setPendingArtists(artists || []);
+        setPendingArtists(artists as PendingArtist[] || []);
       }
 
-      // Fetch pending artworks
+      // Cast data to PendingArtwork[] and ensure approval_status is present
       const { data: artworks, error: artworksError } = await supabase
         .from('artworks')
         .select(`
-          *,
+          id, title, artist_id, approval_status, created_at, image_url, 
           profiles:artist_id (
             full_name,
             email
@@ -89,7 +88,7 @@ const AdminDashboard = () => {
       if (artworksError) {
         console.error('Error fetching pending artworks:', artworksError);
       } else {
-        setPendingArtworks(artworks || []);
+        setPendingArtworks(artworks as PendingArtwork[] || []);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -102,7 +101,7 @@ const AdminDashboard = () => {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ 
+        .update({
           account_status: action,
           updated_at: new Date().toISOString()
         })
@@ -120,6 +119,7 @@ const AdminDashboard = () => {
 
       // Update approval record
       await supabase
+        // @ts-expect-error: admin_approvals won't be in generated types yet
         .from('admin_approvals')
         .update({
           status: action,
@@ -133,12 +133,13 @@ const AdminDashboard = () => {
       // Send notification to artist
       const artist = pendingArtists.find(a => a.id === artistId);
       if (artist) {
+        // @ts-expect-error: notifications table may not be in generated types yet
         await supabase
           .from('notifications')
           .insert({
             user_id: artistId,
             title: `Profile ${action === 'approved' ? 'Approved' : 'Rejected'}`,
-            message: action === 'approved' 
+            message: action === 'approved'
               ? 'Congratulations! Your artist profile has been approved. You can now access all features.'
               : `Your artist profile was not approved. ${notes || 'Please update your profile and try again.'}`,
             type: action === 'approved' ? 'success' : 'error'
@@ -166,7 +167,7 @@ const AdminDashboard = () => {
     try {
       const { error } = await supabase
         .from('artworks')
-        .update({ 
+        .update({
           approval_status: action,
           updated_at: new Date().toISOString()
         })
@@ -184,6 +185,7 @@ const AdminDashboard = () => {
 
       // Update approval record
       await supabase
+        // @ts-expect-error: admin_approvals table may not exist in type definitions yet
         .from('admin_approvals')
         .update({
           status: action,
@@ -197,12 +199,13 @@ const AdminDashboard = () => {
       // Send notification to artist
       const artwork = pendingArtworks.find(a => a.id === artworkId);
       if (artwork) {
+        // @ts-expect-error: notifications table may not exist in type definitions yet
         await supabase
           .from('notifications')
           .insert({
             user_id: artwork.artist_id,
             title: `Artwork ${action === 'approved' ? 'Approved' : 'Rejected'}`,
-            message: action === 'approved' 
+            message: action === 'approved'
               ? `Your artwork "${artwork.title}" has been approved and is now live.`
               : `Your artwork "${artwork.title}" was not approved. ${notes || 'Please review and resubmit.'}`,
             type: action === 'approved' ? 'success' : 'error'

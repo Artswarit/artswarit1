@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,6 +30,7 @@ const NotificationCenter = () => {
 
   const fetchNotifications = async () => {
     try {
+      // @ts-expect-error notifications table not in types yet
       const { data, error } = await supabase
         .from('notifications')
         .select('*')

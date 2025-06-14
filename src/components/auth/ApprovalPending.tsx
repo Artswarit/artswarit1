@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Clock, Mail, CheckCircle, AlertCircle } from 'lucide-react';
@@ -7,10 +6,11 @@ import { useProfile } from '@/hooks/useProfile';
 
 const ApprovalPending = () => {
   const { signOut } = useAuth();
-  const { profile } = useProfile();
+  const { profile: baseProfile } = useProfile();
+  const profile = baseProfile as typeof baseProfile & { account_status?: string };
 
   const getStatusInfo = () => {
-    switch (profile?.account_status) {
+    switch (profile?.account_status || "pending") {
       case 'pending':
         return {
           icon: <Clock className="h-12 w-12 text-yellow-500" />,
@@ -57,7 +57,7 @@ const ApprovalPending = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {profile?.account_status === 'pending' && (
+          {(profile?.account_status || "pending") === "pending" && (
             <div className="bg-white p-4 rounded-lg border">
               <div className="flex items-center gap-2 mb-2">
                 <Mail className="h-4 w-4 text-blue-500" />
@@ -71,7 +71,7 @@ const ApprovalPending = () => {
             </div>
           )}
 
-          {profile?.account_status === 'needs_update' && (
+          {(profile?.account_status || "pending") === "needs_update" && (
             <div className="bg-white p-4 rounded-lg border">
               <div className="flex items-center gap-2 mb-2">
                 <AlertCircle className="h-4 w-4 text-orange-500" />
@@ -89,7 +89,7 @@ const ApprovalPending = () => {
             </div>
           )}
 
-          {profile?.account_status === 'rejected' && (
+          {(profile?.account_status || "pending") === "rejected" && (
             <div className="bg-white p-4 rounded-lg border">
               <div className="flex items-center gap-2 mb-2">
                 <AlertCircle className="h-4 w-4 text-red-500" />
