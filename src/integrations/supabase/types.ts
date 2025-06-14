@@ -158,6 +158,42 @@ export type Database = {
           },
         ]
       }
+      follows: {
+        Row: {
+          artist_id: string
+          client_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          artist_id: string
+          client_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          artist_id?: string
+          client_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follows_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           attachments: Json | null
