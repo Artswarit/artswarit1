@@ -1,4 +1,3 @@
-
 import React from "react";
 
 const LogoWithName = ({
@@ -9,13 +8,13 @@ const LogoWithName = ({
   logoSize?: { base: number; md: number };
 }) => (
   <div
-    className={`flex items-center justify-center gap-4 mb-8 ${className}`}
+    className={`flex flex-col items-center justify-center mb-8 ${className}`}
     data-testid="logo-with-name"
   >
     <img
       src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png"
       alt="Artswarit Logo"
-      className={`rounded-full object-cover shadow`}
+      className="rounded-full object-cover shadow mb-2"
       style={{
         height: logoSize.base,
         width: logoSize.base,
@@ -28,7 +27,7 @@ const LogoWithName = ({
         }),
       }}
     />
-    <span className="font-bold text-2xl md:text-3xl text-purple-700 tracking-tight font-heading">
+    <span className="font-bold text-2xl md:text-3xl text-purple-700 tracking-tight font-heading text-center">
       Artswarit
     </span>
   </div>

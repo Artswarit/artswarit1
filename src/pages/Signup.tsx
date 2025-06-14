@@ -85,15 +85,11 @@ const Signup = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      <div className="w-full flex flex-col items-center mt-4">
-        <LogoWithName />
-      </div>
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 bg-gray-50 my-0 lg:px-0 py-[52px]">
         <div className="w-full max-w-md space-y-8">
+          <LogoWithName />
           <SignupHeader />
-          
           <SocialLoginButtons onSocialSignup={handleSocialSignup} />
-          
           <SignupForm
             formData={formData}
             handleChange={handleChange}
@@ -102,8 +98,6 @@ const Signup = () => {
             handleSubmit={handleSubmit}
             loading={loading}
           />
-          
-          {/* For testing purposes - direct links to dashboards */}
           <TestLinks />
         </div>
       </div>
