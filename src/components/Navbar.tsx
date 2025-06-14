@@ -61,7 +61,7 @@ const Navbar = () => {
           <img
             src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png"
             alt="Artswarit Logo"
-            className="h-10 w-10 md:h-12 md:w-12 rounded-full object-cover transition-transform duration-300 hover:scale-110"
+            className="h-12 w-12 md:h-16 md:w-16 rounded-full object-cover transition-transform duration-300 hover:scale-110"
           />
         </Link>
 
