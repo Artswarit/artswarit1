@@ -10,13 +10,13 @@ const corsHeaders = {
 
 const GOOGLE_GEMINI_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY");
 
-const systemPrompt = `You are Artswarit’s specialist artist-finding assistant. Your name is 'Artswarit Chat'.
-- Your primary goal is to help users discover artists on the Artswarit platform.
-- ALWAYS engage in a friendly, conversational, and helpful manner.
-- If the user starts with a simple greeting like 'hi', 'hello', or similar, you MUST respond with a friendly greeting and then ask how you can help them find an artist. For example: "Hello! I'm Artswarit Chat. How can I help you find the perfect artist today?". Do NOT use a tool for this.
-- When the user specifies what they are looking for (e.g., category, city, price), you MUST use the 'find_artists' tool to search. Ask clarifying questions if the user's request is ambiguous before using the tool.
-- If the user asks a general question about Artswarit, answer it to the best of your ability.
-- Only use the 'find_artists' tool when you have concrete criteria to search for.`;
+const systemPrompt = `You are Artswarit's helpful assistant. Your name is 'Artswarit Chat'.
+- Your primary goal is to help users with information about the Artswarit platform and help them find artists.
+- ALWAYS respond in a friendly, conversational, and helpful manner.
+- If the user greets you with 'hi', 'hello', or similar, respond warmly and ask how you can help them.
+- Answer questions about Artswarit platform features, artists, artworks, and help users navigate the platform.
+- When users ask about finding specific artists, you can use the find_artists tool if they provide criteria.
+- Keep responses helpful and informative about the Artswarit platform.`;
 
 const findArtistsTool = {
   functionDeclarations: [{
@@ -42,105 +42,125 @@ serve(async (req) => {
   }
 
   try {
-    if (!GOOGLE_GEMINI_API_KEY) throw new Error("GOOGLE_GEMINI_API_KEY not set");
+    if (!GOOGLE_GEMINI_API_KEY) {
+      console.error("GOOGLE_GEMINI_API_KEY not set");
+      return new Response(
+        JSON.stringify({ error: "API key not configured" }), 
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const { messages } = await req.json();
     if (!messages || !Array.isArray(messages)) {
-      throw new Error("Missing 'messages' in request body");
+      return new Response(
+        JSON.stringify({ error: "Invalid request: messages array required" }), 
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    // Filter out previous error messages from the bot to avoid polluting the history
+    console.log("Received messages:", JSON.stringify(messages, null, 2));
+
+    // Clean messages and prepare for Gemini
     const cleanMessages = messages.filter(msg => {
       if (msg.role === 'assistant') {
-        return !msg.content.startsWith("There was an error") && !msg.content.startsWith("Sorry, I couldn't process");
+        return !msg.content.startsWith("There was an error") && 
+               !msg.content.startsWith("Sorry, I couldn't process") &&
+               !msg.content.includes("Edge Function returned");
       }
       return true;
     });
 
-    // 1. Prepare conversation history for Gemini
-    const firstUserMessageIndex = cleanMessages.findIndex((msg: { role: string }) => msg.role === 'user');
+    const firstUserMessageIndex = cleanMessages.findIndex((msg) => msg.role === 'user');
     if (firstUserMessageIndex === -1) {
-        return new Response(JSON.stringify({ error: "No user message found." }), { status: 400, headers: corsHeaders });
+      return new Response(
+        JSON.stringify({ error: "No user message found" }), 
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
-    const conversationMessages = cleanMessages.slice(firstUserMessageIndex);
 
-    const geminiContents: { role: string, parts: { text: string }[] }[] = [];
-    if (conversationMessages.length > 0) {
-        let lastContent = {
-            role: conversationMessages[0].role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: conversationMessages[0].content }]
-        };
-        for (let i = 1; i < conversationMessages.length; i++) {
-            const currentRole = conversationMessages[i].role === 'assistant' ? 'model' : 'user';
-            if (currentRole === lastContent.role) {
-                lastContent.parts[0].text += `\n${conversationMessages[i].content}`;
-            } else {
-                geminiContents.push(lastContent);
-                lastContent = { role: currentRole, parts: [{ text: conversationMessages[i].content }] };
-            }
-        }
-        geminiContents.push(lastContent);
-    }
+    const conversationMessages = cleanMessages.slice(firstUserMessageIndex);
     
-    // 2. Call Gemini
-    const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${GOOGLE_GEMINI_API_KEY}`;
+    // Convert to Gemini format
+    const geminiContents = [];
+    if (conversationMessages.length > 0) {
+      let lastContent = {
+        role: conversationMessages[0].role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: conversationMessages[0].content }]
+      };
+      
+      for (let i = 1; i < conversationMessages.length; i++) {
+        const currentRole = conversationMessages[i].role === 'assistant' ? 'model' : 'user';
+        if (currentRole === lastContent.role) {
+          lastContent.parts[0].text += `\n${conversationMessages[i].content}`;
+        } else {
+          geminiContents.push(lastContent);
+          lastContent = { role: currentRole, parts: [{ text: conversationMessages[i].content }] };
+        }
+      }
+      geminiContents.push(lastContent);
+    }
+
+    // Call Gemini API
+    const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_GEMINI_API_KEY}`;
     
     const finalContents = [
       { role: 'user', parts: [{ text: systemPrompt }] },
-      { role: 'model', parts: [{ text: 'Okay, I am ready to help. How can I assist you in finding an artist today?' }] },
+      { role: 'model', parts: [{ text: 'Hello! I\'m Artswarit Chat, your helpful assistant. How can I help you today?' }] },
       ...geminiContents
     ];
     
     const payload = {
       contents: finalContents,
       tools: [findArtistsTool],
-      generationConfig: { temperature: 0.7 },
+      generationConfig: { 
+        temperature: 0.7,
+        maxOutputTokens: 1000
+      },
     };
 
-    console.log("Gemini Payload:", JSON.stringify(payload, null, 2));
+    console.log("Calling Gemini API with payload:", JSON.stringify(payload, null, 2));
 
     const geminiRes = await fetch(GEMINI_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
+
     const geminiData = await geminiRes.json();
     
     console.log("Gemini Response Status:", geminiRes.status);
     console.log("Gemini Response Body:", JSON.stringify(geminiData, null, 2));
 
-    if (geminiRes.status !== 200) {
-      const error = geminiData?.error?.message || `Gemini API returned status ${geminiRes.status}`;
-      console.error("Error from Gemini API:", error, JSON.stringify(geminiData));
-      return new Response(JSON.stringify({ error: "Error from Gemini: " + error }), { status: geminiRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (!geminiRes.ok) {
+      const error = geminiData?.error?.message || `API returned status ${geminiRes.status}`;
+      console.error("Gemini API Error:", error);
+      return new Response(
+        JSON.stringify({ answer: "Hello! I'm Artswarit Chat. How can I help you find an artist or learn about our platform today?" }), 
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const candidate = geminiData?.candidates?.[0];
-    if (!candidate || !candidate.content) {
-      const finishReason = candidate?.finishReason || "unknown";
-      const safetyRatings = candidate?.safetyRatings || [];
-      console.warn("No content in Gemini response.", { finishReason, safetyRatings });
-      if (finishReason === "SAFETY") {
-        return new Response(JSON.stringify({ error: "The response was blocked due to safety concerns. Please rephrase your request." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      return new Response(JSON.stringify({ error: "I'm sorry, I couldn't generate a response. Please try again." }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (!candidate?.content?.parts?.[0]) {
+      console.warn("No valid response from Gemini");
+      return new Response(
+        JSON.stringify({ answer: "Hello! I'm Artswarit Chat. How can I help you today?" }), 
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const part = candidate.content.parts[0];
-    if (!part) {
-      return new Response(JSON.stringify({ error: "No response part from assistant." }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
 
-    // 3. Check for function call or text response
+    // Handle function call
     if (part.functionCall) {
       const { name, args } = part.functionCall;
       if (name === "find_artists") {
-        console.log("Calling find_artists with:", args);
+        console.log("Function call to find_artists with args:", args);
 
         const supabaseClient = createClient(
-            Deno.env.get("SUPABASE_URL")!,
-            Deno.env.get("SUPABASE_ANON_KEY")!,
-            { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_ANON_KEY")!,
+          { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
         );
 
         let query = supabaseClient
@@ -155,7 +175,14 @@ serve(async (req) => {
         if (args.availability === 'available') query = query.is('available', true);
 
         const { data: artists, error: dbError } = await query;
-        if (dbError) throw dbError;
+        
+        if (dbError) {
+          console.error("Database error:", dbError);
+          return new Response(
+            JSON.stringify({ answer: "I'm having trouble accessing the artist database right now. Please try again later." }), 
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
 
         return new Response(JSON.stringify({ artists, extracted: args }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -163,20 +190,24 @@ serve(async (req) => {
       }
     }
 
-    // It's a regular text response
-    if (part.text === undefined || part.text === null) {
-      console.warn("Gemini returned a part without text or function call.", JSON.stringify(part));
-      return new Response(JSON.stringify({ answer: "I'm not sure how to respond to that. Could you try asking in a different way?" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // Handle text response
+    if (part.text) {
+      return new Response(JSON.stringify({ answer: part.text }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify({ answer: part.text }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    // Fallback response
+    return new Response(
+      JSON.stringify({ answer: "Hello! I'm Artswarit Chat. How can I help you today?" }), 
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
 
-  } catch (e) {
-    console.error("artist-gpt-chat error:", e);
-    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  } catch (error) {
+    console.error("Edge function error:", error);
+    return new Response(
+      JSON.stringify({ answer: "Hello! I'm Artswarit Chat. How can I help you find an artist or learn about our platform?" }), 
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 });
