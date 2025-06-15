@@ -47,12 +47,20 @@ serve(async (req) => {
       throw new Error("Missing 'messages' in request body");
     }
 
+    // Filter out previous error messages from the bot to avoid polluting the history
+    const cleanMessages = messages.filter(msg => {
+      if (msg.role === 'assistant') {
+        return !msg.content.startsWith("There was an error") && !msg.content.startsWith("Sorry, I couldn't process");
+      }
+      return true;
+    });
+
     // 1. Prepare conversation history for Gemini
-    const firstUserMessageIndex = messages.findIndex((msg: { role: string }) => msg.role === 'user');
+    const firstUserMessageIndex = cleanMessages.findIndex((msg: { role: string }) => msg.role === 'user');
     if (firstUserMessageIndex === -1) {
         return new Response(JSON.stringify({ error: "No user message found." }), { status: 400, headers: corsHeaders });
     }
-    const conversationMessages = messages.slice(firstUserMessageIndex);
+    const conversationMessages = cleanMessages.slice(firstUserMessageIndex);
 
     const geminiContents: { role: string, parts: { text: string }[] }[] = [];
     if (conversationMessages.length > 0) {
@@ -73,7 +81,7 @@ serve(async (req) => {
     }
     
     // 2. Call Gemini
-    const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GOOGLE_GEMINI_API_KEY}`;
+    const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${GOOGLE_GEMINI_API_KEY}`;
     
     const finalContents = [
       { role: 'user', parts: [{ text: systemPrompt }] },
@@ -152,4 +160,3 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
-
