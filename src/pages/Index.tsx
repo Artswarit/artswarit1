@@ -401,7 +401,8 @@ const Index = () => {
             <p className="text-lg sm:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto text-white/90 px-4">
               Join thousands of creative professionals who are building their careers with Artswarit.
             </p>
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 px-4 w-full">
+            {/* Updated: removed px-4 and set bg-transparent and shadow-none on flex container */}
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 w-full bg-transparent shadow-none">
               {/* Gradient main action */}
               <Button
                 asChild
@@ -428,16 +429,16 @@ const Index = () => {
                   Join as Artist
                 </Link>
               </Button>
-              {/* Subtle glass secondary */}
+              {/* Glass secondary */}
               <Button
                 asChild
                 size="lg"
                 variant="outline"
                 className="
-                  bg-white/20
-                  border-white/40
+                  bg-white/10
+                  border-white/30
                   text-blue-100
-                  hover:bg-white/30
+                  hover:bg-white/20
                   hover:text-blue-800
                   font-bold
                   w-full sm:w-auto
