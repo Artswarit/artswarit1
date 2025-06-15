@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, XCircle, Clock, Plus, Users, Palette, Music, Video, MessageSquare, CreditCard, Star, Shield, Crown, Search, Bell, Settings, BarChart3, FileText, Camera, Headphones, Play, Download, Share, Heart, Eye, TrendingUp, Award, Gift } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Plus, Users, Palette, Music, Video, MessageSquare, CreditCard, Star, Shield, Crown, Search, Bell, Settings, BarChart3, FileText, Camera, Headphones, Play, Download, Share, Heart, Eye, TrendingUp, Award, Gift, FolderOpen } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -27,21 +27,23 @@ const FeatureAudit = () => {
     
     // Content Management
     { name: 'Artwork Upload & Management', description: 'Upload, organize, and manage artworks', status: 'implemented', category: 'content', priority: 'high', icon: Palette, location: 'Artist Dashboard' },
-    { name: 'Music Upload & Streaming', description: 'Audio content upload and playback', status: 'partial', category: 'content', priority: 'high', icon: Music, location: 'Artwork Upload' },
-    { name: 'Video Upload & Streaming', description: 'Video content upload and playback', status: 'partial', category: 'content', priority: 'high', icon: Video, location: 'Artwork Upload' },
+    { name: 'Music Upload & Streaming', description: 'Audio content upload and playback', status: 'implemented', category: 'content', priority: 'high', icon: Music, location: 'Advanced Audio Player' },
+    { name: 'Video Upload & Streaming', description: 'Video content upload and playback', status: 'implemented', category: 'content', priority: 'high', icon: Video, location: 'Advanced Video Player' },
     { name: 'Content Approval System', description: 'Moderation workflow for uploaded content', status: 'implemented', category: 'content', priority: 'high', icon: CheckCircle, location: 'Admin Dashboard' },
     { name: 'AI Content Detection', description: 'Detect AI-generated content automatically', status: 'implemented', category: 'content', priority: 'medium', icon: Shield, location: 'Artwork Upload' },
+    { name: 'Live Streaming', description: 'Real-time streaming for performances', status: 'implemented', category: 'content', priority: 'medium', icon: Play, location: '/live-streaming' },
+    { name: 'Content Collections/Playlists', description: 'Organize content into collections', status: 'implemented', category: 'content', priority: 'medium', icon: FolderOpen, location: '/collections' },
     
     // Discovery & Search
     { name: 'Artist Discovery', description: 'Browse and discover artists by category', status: 'implemented', category: 'discovery', priority: 'high', icon: Search, location: 'Explore Artists' },
     { name: 'Advanced Search & Filters', description: 'Comprehensive search with multiple filters', status: 'implemented', category: 'discovery', priority: 'high', icon: Search, location: 'Explore & Categories' },
-    { name: 'Trending Content', description: 'Showcase popular and trending artworks', status: 'implemented', category: 'discovery', priority: 'medium', icon: TrendingUp, location: 'Explore Page' },
-    { name: 'Recommendations Engine', description: 'Personalized content recommendations', status: 'partial', category: 'discovery', priority: 'medium', icon: Star },
+    { name: 'Trending Content Algorithm', description: 'Dynamic trending system with real-time updates', status: 'implemented', category: 'discovery', priority: 'medium', icon: TrendingUp, location: '/trending' },
+    { name: 'Personalized Recommendations', description: 'AI-powered content suggestions', status: 'implemented', category: 'discovery', priority: 'medium', icon: Star, location: '/recommendations' },
     
     // Social Features
     { name: 'Artist Following', description: 'Follow favorite artists for updates', status: 'implemented', category: 'social', priority: 'high', icon: Heart, location: 'Artist Profiles' },
     { name: 'Artwork Likes & Views', description: 'Engagement metrics for content', status: 'implemented', category: 'social', priority: 'high', icon: Heart, location: 'Artwork Cards' },
-    { name: 'Comments & Reviews', description: 'User feedback on artworks', status: 'implemented', category: 'social', priority: 'medium', icon: MessageSquare, location: 'Artwork Details Page' },
+    { name: 'Comments & Reviews', description: 'User feedback on artworks with ratings', status: 'implemented', category: 'social', priority: 'medium', icon: MessageSquare, location: 'Artwork Details Page' },
     { name: 'Social Sharing', description: 'Share artworks on social platforms', status: 'implemented', category: 'social', priority: 'medium', icon: Share, location: 'Artwork Details Page' },
     
     // Communication
@@ -51,9 +53,10 @@ const FeatureAudit = () => {
     
     // Commerce
     { name: 'Artwork Sales', description: 'Buy and sell artwork directly', status: 'implemented', category: 'commerce', priority: 'high', icon: CreditCard, location: 'Artwork Cards' },
-    { name: 'Commission System', description: 'Custom artwork commissions', status: 'partial', category: 'commerce', priority: 'high', icon: FileText },
+    { name: 'Advanced Commission System', description: 'Milestone-based commission management with escrow', status: 'implemented', category: 'commerce', priority: 'high', icon: FileText, location: '/commissions' },
     { name: 'Payment Processing', description: 'Secure payment handling', status: 'implemented', category: 'commerce', priority: 'high', icon: CreditCard, location: 'Payments Tab' },
     { name: 'Earnings Dashboard', description: 'Track income and analytics', status: 'implemented', category: 'commerce', priority: 'high', icon: BarChart3, location: 'Earnings Tab' },
+    { name: 'Escrow/Payment Protection', description: 'Secure payment holding system', status: 'implemented', category: 'commerce', priority: 'high', icon: Shield, location: 'Commission System' },
     
     // Premium Features
     { name: 'Premium Memberships', description: 'Subscription-based premium features', status: 'implemented', category: 'premium', priority: 'medium', icon: Crown, location: 'Premium Tab' },
@@ -62,16 +65,17 @@ const FeatureAudit = () => {
     
     // Technical Features
     { name: 'Mobile Responsive Design', description: 'Optimized for mobile devices', status: 'implemented', category: 'technical', priority: 'high', icon: Settings, location: 'All Pages' },
-    { name: 'Content Delivery Network', description: 'Fast global content delivery', status: 'partial', category: 'technical', priority: 'medium', icon: TrendingUp },
-    { name: 'Offline Capabilities', description: 'Offline browsing and caching', status: 'missing', category: 'technical', priority: 'low', icon: Download },
+    { name: 'Advanced Media Players', description: 'Professional audio/video playback controls', status: 'implemented', category: 'technical', priority: 'medium', icon: Play, location: 'Media Components' },
     
-    // Missing Core Features
-    { name: 'Live Streaming', description: 'Real-time streaming for performances', status: 'missing', category: 'content', priority: 'medium', icon: Play },
+    // Missing/Partial Features
     { name: 'Portfolio Websites', description: 'Dedicated artist website creation', status: 'missing', category: 'content', priority: 'medium', icon: Camera },
     { name: 'Event Management', description: 'Create and manage artistic events', status: 'missing', category: 'social', priority: 'medium', icon: Award },
     { name: 'Contests & Challenges', description: 'Community art contests', status: 'missing', category: 'social', priority: 'low', icon: Award },
     { name: 'Merchandise Store', description: 'Physical merchandise sales', status: 'missing', category: 'commerce', priority: 'low', icon: Gift },
     { name: 'NFT Integration', description: 'Blockchain-based digital ownership', status: 'missing', category: 'commerce', priority: 'low', icon: Shield },
+    { name: 'Bulk Licensing', description: 'Enterprise licensing options', status: 'missing', category: 'commerce', priority: 'low', icon: FileText },
+    { name: 'Content Delivery Network', description: 'Fast global content delivery', status: 'partial', category: 'technical', priority: 'medium', icon: TrendingUp },
+    { name: 'Offline Capabilities', description: 'Offline browsing and caching', status: 'missing', category: 'technical', priority: 'low', icon: Download },
   ];
 
   const categories = [
