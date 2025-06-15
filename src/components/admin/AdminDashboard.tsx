@@ -33,6 +33,7 @@ interface PendingArtwork {
   approval_status: string;
   created_at: string;
   image_url: string;
+  description?: string;
   profiles: {
     full_name: string;
     email: string;
