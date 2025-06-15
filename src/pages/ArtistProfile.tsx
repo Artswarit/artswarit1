@@ -11,6 +11,13 @@ import TagDisplay from "@/components/artist-profile/TagDisplay";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useMutation } from "@tanstack/react-query";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
 // --- Demo Data for fallback ---
 const ARTIST_UUID_1 = "11111111-1111-1111-1111-111111111111";
@@ -79,6 +86,8 @@ export default function ArtistProfile() {
   const { id: routeId } = useParams();
   const id = toDemoUUID(routeId);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   const [profileState, setProfileState] = useState(() => {
     // fallback demo data for local dev: artistData
@@ -90,22 +99,22 @@ export default function ArtistProfile() {
   const [followersCount, setFollowersCount] = useState<number>(
     profileState?.followers || 0
   );
-  const { toast } = useToast();
   const [loadingFollow, setLoadingFollow] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [loadingSave, setLoadingSave] = useState(false);
 
-  // Get supabase user (async)
-  const [userId, setUserId] = useState<string | null>(null);
+  // State for project request dialog
+  const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
+  const [projectRequest, setProjectRequest] = useState({
+    title: "",
+    description: "",
+    budget: "",
+    deadline: "",
+  });
 
-  useEffect(() => {
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUserId(user?.id ?? null);
-    })();
-  }, []);
+  // Get supabase user is now handled by useAuth
 
-  // Fetch actual followers count & user following state 
+  // Fetch actual followers count & user following state
   useEffect(() => {
     async function fetchFollowersData() {
       // skip for demo profiles
@@ -121,30 +130,30 @@ export default function ArtistProfile() {
         setFollowersCount(followers.length);
       }
       // check if this user is following the artist
-      if (userId) {
+      if (user?.id) {
         const { data: following, error: followErr } = await supabase
           .from("follows")
           .select("id")
           .eq("artist_id", id)
-          .eq("client_id", userId)
+          .eq("client_id", user.id)
           .maybeSingle();
         setIsFollowing(!!following);
       }
     }
     fetchFollowersData();
     // re-run when id or userId changes
-  }, [id, userId]);
+  }, [id, user?.id]);
 
   // Fetch saved artist status
   useEffect(() => {
     async function checkSavedStatus() {
-      if (!id || !userId || id === ARTIST_UUID_1 || id === ARTIST_UUID_2) return;
+      if (!id || !user?.id || id === ARTIST_UUID_1 || id === ARTIST_UUID_2) return;
 
       const { data, error } = await supabase
         .from('saved_artists')
         .select('id')
         .eq('artist_id', id)
-        .eq('client_id', userId)
+        .eq('client_id', user.id)
         .maybeSingle();
       
       if (!error) {
@@ -152,14 +161,14 @@ export default function ArtistProfile() {
       }
     }
 
-    if (userId) {
+    if (user?.id) {
       checkSavedStatus();
     }
-  }, [id, userId]);
+  }, [id, user?.id]);
 
   // Handle follow: demo fallback for demo artists, supabase for real
   const handleFollow = async () => {
-    if (!id || !userId) {
+    if (!id || !user?.id) {
       toast({
         title: "Not logged in",
         description: "Please sign in to follow artists.",
@@ -194,7 +203,7 @@ export default function ArtistProfile() {
       // follow in supabase
       const { error } = await supabase.from("follows").insert({
         artist_id: id,
-        client_id: userId,
+        client_id: user.id,
       });
       if (!error) {
         setIsFollowing(true);
@@ -216,7 +225,7 @@ export default function ArtistProfile() {
         .from("follows")
         .delete()
         .eq("artist_id", id)
-        .eq("client_id", userId);
+        .eq("client_id", user.id);
       if (!error) {
         setIsFollowing(false);
         setFollowersCount((cnt) => Math.max(cnt - 1, 0));
@@ -240,7 +249,7 @@ export default function ArtistProfile() {
     toast({ title: "Coming soon!", description: "Messaging will be available in a future update.", variant: "default" });
 
   const handleToggleSave = async () => {
-    if (!id || !userId) {
+    if (!id || !user?.id) {
       toast({
         title: "Not logged in",
         description: "Please sign in to save artists.",
@@ -263,7 +272,7 @@ export default function ArtistProfile() {
         .from("saved_artists")
         .delete()
         .eq("artist_id", id)
-        .eq("client_id", userId);
+        .eq("client_id", user.id);
       
       if (!error) {
         setIsSaved(false);
@@ -275,7 +284,7 @@ export default function ArtistProfile() {
       // Save logic
       const { error } = await supabase
         .from("saved_artists")
-        .insert({ artist_id: id, client_id: userId });
+        .insert({ artist_id: id, client_id: user.id });
 
       if (!error) {
         setIsSaved(true);
@@ -287,19 +296,47 @@ export default function ArtistProfile() {
     setLoadingSave(false);
   };
 
+  const sendProjectRequestMutation = useMutation({
+    mutationFn: async (newProject: { title: string; description: string; budget: string; deadline: string; artist_id: string }) => {
+        if (!user) throw new Error("User not logged in");
+        if (!newProject.artist_id) throw new Error("Artist not found");
+        
+        const { error } = await supabase.from('projects').insert([{
+            client_id: user.id,
+            artist_id: newProject.artist_id,
+            title: newProject.title,
+            description: newProject.description,
+            budget: newProject.budget ? parseFloat(newProject.budget) : null,
+            deadline: newProject.deadline || null,
+            status: 'pending'
+        }]);
+
+        if (error) throw error;
+    },
+    onSuccess: () => {
+        toast({ title: "Project request sent!" });
+        setProjectRequest({ title: "", description: "", budget: "", deadline: "" });
+        setIsRequestDialogOpen(false);
+    },
+    onError: (error) => {
+        toast({ variant: "destructive", title: "Error sending request", description: error.message });
+    }
+  });
+
+  const handleSendProjectRequest = () => {
+    if (!id) return;
+    sendProjectRequestMutation.mutate({ ...projectRequest, artist_id: id });
+  };
+
   const handleRequestProject = () => {
-    if (!userId) {
+    if (!user) {
       toast({
         title: "Not logged in",
         description: "Please sign in to request a project.",
       });
       return;
     }
-    navigate('/client-dashboard');
-    toast({
-        title: "Redirecting...",
-        description: "Taking you to your dashboard to create a new project.",
-    });
+    setIsRequestDialogOpen(true);
   };
 
   // Add state for the modal and selected artwork
@@ -443,7 +480,44 @@ export default function ArtistProfile() {
             </div>
           </div>
         )}
-      </main>
+
+      {/* Project Request Modal */}
+      <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
+        <DialogContent className="max-w-md">
+            <DialogHeader>
+                <DialogTitle>Send Project Request</DialogTitle>
+                <DialogDescription>
+                    Send a project request to {profileState?.name}
+                </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="req-title">Project Title</Label>
+                <Input id="req-title" value={projectRequest.title} onChange={(e) => setProjectRequest({...projectRequest, title: e.target.value})} placeholder="e.g., Album Cover Design" />
+              </div>
+              <div>
+                <Label htmlFor="req-budget">Budget (₹)</Label>
+                <Input id="req-budget" type="number" value={projectRequest.budget} onChange={(e) => setProjectRequest({...projectRequest, budget: e.target.value})} placeholder="e.g., 15000" />
+              </div>
+              <div>
+                <Label htmlFor="req-deadline">Deadline</Label>
+                <Input id="req-deadline" type="date" value={projectRequest.deadline} onChange={(e) => setProjectRequest({...projectRequest, deadline: e.target.value})} />
+              </div>
+              <div>
+                <Label htmlFor="req-description">Project Description</Label>
+                <Textarea id="req-description" value={projectRequest.description} onChange={(e) => setProjectRequest({...projectRequest, description: e.target.value})} placeholder="Describe your project requirements..." rows={3} />
+              </div>
+            </div>
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setIsRequestDialogOpen(false)}>
+                    Cancel
+                </Button>
+                <Button onClick={handleSendProjectRequest} disabled={sendProjectRequestMutation.isPending}>
+                    {sendProjectRequestMutation.isPending ? 'Sending...' : 'Send Request'}
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Footer />
     </div>
   );
