@@ -250,7 +250,8 @@ const Index = () => {
 
     return () => clearInterval(timer);
   }, []);
-  return <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+  return (
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Navbar />
       
       <AnimatedHeroSlider />
@@ -272,11 +273,13 @@ const Index = () => {
           loop: true
         }} className="w-full">
             <CarouselContent className="-ml-2 md:-ml-4">
-              {featuredArtists.map(artist => <CarouselItem key={artist.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
+              {featuredArtists.map(artist => (
+                <CarouselItem key={artist.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
                   <div className="h-full">
                     <FeaturedArtistCard {...artist} />
                   </div>
-                </CarouselItem>)}
+                </CarouselItem>
+              ))}
             </CarouselContent>
             <CarouselPrevious className="hidden sm:flex left-2 bg-white/80 backdrop-blur-md border border-white/30 text-primary hover:bg-white/90" />
             <CarouselNext className="hidden sm:flex right-2 bg-white/80 backdrop-blur-md border border-white/30 text-primary hover:bg-white/90" />
@@ -303,7 +306,9 @@ const Index = () => {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {categories.slice(0, 6).map((category, index) => <CategoryCard key={index} {...category} />)}
+            {categories.slice(0, 6).map((category, index) => (
+              <CategoryCard key={index} {...category} />
+            ))}
           </div>
           <div className="text-center mt-8">
             <p className="text-base sm:text-lg italic text-muted-foreground mb-4 px-4">
@@ -374,25 +379,26 @@ const Index = () => {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-            {testimonials.map((testimonial, index) => <div key={index} className="bg-white/60 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-sm border border-blue-100 hover:shadow-md transition-all">
+            {testimonials.map((testimonial, index) => (
+              <div key={index} className="bg-white/60 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-sm border border-blue-100 hover:shadow-md transition-all">
                 <div className="mb-4">
-                  {[...Array(5)].map((_, i) => <span key={i} className="text-yellow-400">★</span>)}
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className="text-yellow-400">★</span>
+                  ))}
                 </div>
                 <p className="text-gray-700 mb-4 text-sm sm:text-base">"{testimonial.content}"</p>
                 <div>
                   <p className="font-heading font-semibold text-sm sm:text-base">{testimonial.author}</p>
                   <p className="text-xs sm:text-sm text-muted-foreground">{testimonial.role}</p>
                 </div>
-              </div>)}
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Enhanced CTA Section */}
       <section className="bg-gradient-to-r from-artswarit-purple to-blue-500 text-white py-12 sm:py-16 relative overflow-hidden">
-        {/* Background decoration */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"></div>
-        
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <div className="max-w-3xl mx-auto">
             <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
@@ -409,7 +415,6 @@ const Index = () => {
                   <User className="w-4 h-4 transition-transform group-hover:scale-110" />
                   <span>Join as Artist</span>
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                  {/* Subtle glow effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-100/50 to-purple-100/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-md"></div>
                 </Link>
               </Button>
@@ -419,7 +424,6 @@ const Index = () => {
                   <Briefcase className="w-4 h-4 transition-transform group-hover:scale-110" />
                   <span>Join as Client</span>
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                  {/* Subtle glow effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-100/50 to-purple-100/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-md"></div>
                 </Link>
               </Button>
@@ -429,6 +433,8 @@ const Index = () => {
       </section>
 
       <Footer />
-    </div>;
+    </div>
+  );
 };
+
 export default Index;
