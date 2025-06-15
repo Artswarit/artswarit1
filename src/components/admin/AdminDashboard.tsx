@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
@@ -8,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { UserCheck, Image, Users, FileText } from 'lucide-react';
+import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 
 // Slightly simplified Profile; there is no admin_role in the generated types.
 type ProfileWithExtras = ReturnType<typeof useProfile>['profile'] & {
@@ -196,6 +196,7 @@ const AdminDashboard = () => {
     }
   };
 
+  // Only show pendingArtworks with their artist info in a carousel
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -207,24 +208,12 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Admin Moderation Panel</h1>
-        <Badge variant="secondary">
-          Staff
-        </Badge>
+        <h1 className="text-3xl font-bold">Artwork Moderation Panel</h1>
+        <Badge variant="secondary">Staff</Badge>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Artists</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{pendingArtists.length}</div>
-          </CardContent>
-        </Card>
-        
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending Artworks</CardTitle>
@@ -234,113 +223,117 @@ const AdminDashboard = () => {
             <div className="text-2xl font-bold">{pendingArtworks.length}</div>
           </CardContent>
         </Card>
-        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Pending Artists</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{pendingArtists.length}</div>
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Pending</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pendingArtists.length + pendingArtworks.length}</div>
+            <div className="text-2xl font-bold">{pendingArtworks.length + pendingArtists.length}</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Combined Moderation List */}
-      <div className="space-y-6">
-        {moderationList.length === 0 ? (
+      {/* Carousel Moderation - Show only pending artworks, one by one */}
+      <div className="mt-8">
+        {pendingArtworks.length === 0 ? (
           <Card>
             <CardContent className="text-center py-8">
               <Image className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No pending moderation items</p>
+              <p className="text-gray-500">No pending artworks for moderation</p>
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 gap-6">
-            {moderationList.map(item =>
-              item.type === "artist" ? (
-                <Card key={"artist-" + item.id} className="flex flex-col md:flex-row items-stretch p-4 gap-4 border shadow-md bg-white/70">
-                  {/* Artist info */}
-                  <div className="flex-1 flex flex-col gap-2 justify-between py-2">
-                    <div className="flex flex-col md:flex-row md:items-center gap-2">
-                      <span className="font-bold text-lg text-gray-900">{item.full_name}</span>
-                      <Badge variant="outline" className="ml-0 md:ml-4">Artist Profile</Badge>
-                      <span className="ml-0 md:ml-auto text-xs text-gray-400 select-all">{item.id}</span>
+          <Carousel className="w-full max-w-2xl mx-auto">
+            <CarouselContent>
+              {pendingArtworks.map((item, idx) => (
+                <CarouselItem key={item.id} className="flex flex-col w-full">
+                  <Card className="w-full bg-white/70 border shadow-md flex flex-col md:flex-row p-6 gap-8 items-stretch">
+                    {/* Artwork Image */}
+                    <div className="md:w-72 flex items-center justify-center flex-shrink-0">
+                      <img
+                        src={item.image_url}
+                        alt={item.title}
+                        className="w-60 h-60 object-cover rounded-xl border"
+                      />
                     </div>
-                    <span className="text-xs text-gray-500">{item.email}</span>
-                    <div className="mt-1 max-w-2xl text-sm text-gray-800">
-                      {item.bio ? item.bio : <span className="italic text-muted-foreground">No bio provided</span>}
-                    </div>
-                    <div className="mt-4 flex gap-3">
-                      <Button
-                        size="sm"
-                        onClick={() => handleArtistApproval(item.id, 'approved')}
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        Approve
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => handleArtistApproval(item.id, 'rejected', "Your info is insufficient or needs corrections.")}
-                        variant="destructive"
-                      >
-                        Reject
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              ) : (
-                <Card key={"artwork-" + item.id} className="flex flex-col md:flex-row items-stretch p-4 gap-4 border shadow-md bg-white/70">
-                  {/* Artwork image */}
-                  <div className="w-full md:w-40 flex-shrink-0 flex items-center justify-center">
-                    <img
-                      src={item.image_url}
-                      alt={item.title}
-                      className="w-36 h-36 object-cover rounded-lg border shadow-md"
-                    />
-                  </div>
-                  {/* Artwork Info & Actions */}
-                  <div className="flex-1 flex flex-col justify-between py-2">
-                    <div className="flex flex-col gap-2">
-                      <div className="flex flex-col md:flex-row md:items-center gap-2">
-                        <span className="font-bold text-lg text-gray-900">{item.title}</span>
-                        <Badge variant="outline" className="ml-0 md:ml-4">
-                          Submitted: {new Date(item.created_at).toLocaleDateString()}
-                        </Badge>
-                        <span className="ml-0 md:ml-auto text-xs text-gray-400 select-all">{item.id}</span>
+                    {/* Artwork and Artist Info */}
+                    <div className="flex-1 flex flex-col justify-between">
+                      <div className="flex flex-col gap-2">
+                        <div className="flex flex-col md:flex-row md:items-center gap-2">
+                          <span className="font-bold text-lg text-gray-900">
+                            {item.title}
+                          </span>
+                          <Badge variant="outline" className="ml-0 md:ml-4">
+                            Submitted: {new Date(item.created_at).toLocaleDateString()}
+                          </Badge>
+                          <span className="ml-0 md:ml-auto text-xs text-gray-400 select-all">{item.id}</span>
+                        </div>
+                        <div className="mt-1 max-w-2xl text-sm text-gray-800">
+                          {item.description || (
+                            <span className="italic text-muted-foreground">No description</span>
+                          )}
+                        </div>
+                        <div className="mt-4 flex items-center gap-4">
+                          <div className="flex flex-col">
+                            <span className="font-medium text-gray-700">
+                              Artist: {item.profiles?.full_name || "Unknown"}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {item.profiles?.email}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex flex-row items-center gap-2">
-                        <span className="font-medium text-gray-700">{item.profiles?.full_name}</span>
-                        <span className="text-xs text-gray-500">{item.profiles?.email}</span>
-                      </div>
-                      <div className="mt-1 max-w-2xl text-sm text-gray-800">
-                        {item.description
-                          ? item.description
-                          : <span className="italic text-muted-foreground">No description</span>
-                        }
+                      {/* Moderation Actions */}
+                      <div className="mt-6 flex gap-3">
+                        <Button
+                          size="sm"
+                          onClick={() => handleArtworkApproval(item.id, 'approved')}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() =>
+                            handleArtworkApproval(
+                              item.id,
+                              'rejected',
+                              "Content does not meet guidelines"
+                            )
+                          }
+                          variant="destructive"
+                        >
+                          Reject
+                        </Button>
                       </div>
                     </div>
-                    <div className="mt-4 flex gap-3">
-                      <Button
-                        size="sm"
-                        onClick={() => handleArtworkApproval(item.id, 'approved')}
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        Approve
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => handleArtworkApproval(item.id, 'rejected', "Content does not meet guidelines")}
-                        variant="destructive"
-                      >
-                        Reject
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              )
-            )}
-          </div>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <div className="flex justify-center gap-3 mt-8">
+              <CarouselPrevious />
+              <CarouselNext />
+            </div>
+            <div className="flex justify-center mt-2">
+              <span className="text-xs text-gray-500">
+                {pendingArtworks.length > 1
+                  ? `Slide through to review all ${pendingArtworks.length} pending artworks`
+                  : ""}
+              </span>
+            </div>
+          </Carousel>
         )}
       </div>
     </div>
