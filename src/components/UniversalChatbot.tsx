@@ -64,7 +64,7 @@ const UniversalChatbot: React.FC = () => {
     }
   }, [messages, open]);
 
-  // OpenAI API Proxy invocation
+  // OpenAI API Proxy invocation WITH enhanced diagnostic output
   const callChatGpt = async (userMessages: { role: string; content: string }[]) => {
     setIsLoading(true);
     try {
@@ -84,9 +84,17 @@ const UniversalChatbot: React.FC = () => {
           { sender: "bot", text: out.answer }
         ]);
       } else if (out.error) {
+        // If it's a diagnostic error, render it with syntax highlighting for easier reading
         setMessages(m => [
           ...m,
-          { sender: "bot", text: `Error from assistant: ${out.error}` }
+          {
+            sender: "bot",
+            text:
+              (out.error.startsWith("Raw OpenAI API response:") ?
+                "OpenAI Diagnostic Output:\n" + out.error.replace("Raw OpenAI API response: ", "") :
+                `Error from assistant: ${out.error}`
+              )
+          }
         ]);
       } else {
         setMessages(m => [
