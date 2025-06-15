@@ -1,10 +1,8 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Badge } from "@/components/ui/badge";
 import GlassCard from "@/components/ui/glass-card";
 import GlassButton from "@/components/ui/glass-button";
-import { Verified, MapPin, Users, Heart } from "lucide-react";
 import ArtistHeader from "@/components/artist-profile/ArtistHeader";
 import ArtistTabs from "@/components/artist-profile/ArtistTabs";
 import TagDisplay from "@/components/artist-profile/TagDisplay";
@@ -89,6 +87,9 @@ export default function ArtistProfile() {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  // DIAGNOSTIC: Show login state and preview context
+  console.log("[ARTIST PROFILE] Rendered. RouteID:", routeId, "Mapped ID:", id, "User:", user);
+
   const [profileState, setProfileState] = useState(() => {
     // fallback demo data for local dev: artistData
     const demoArtist = artistsData[id as keyof typeof artistsData];
@@ -112,13 +113,27 @@ export default function ArtistProfile() {
     deadline: "",
   });
 
+  // Add a flag to show diagnostic banner for NOT logged in state
+  const [showDiagnosticBanner, setShowDiagnosticBanner] = useState(false);
+  useEffect(() => {
+    // Show this banner if NOT logged in, only for preview/new tab
+    if (!user) {
+      setShowDiagnosticBanner(true);
+    } else {
+      setShowDiagnosticBanner(false);
+    }
+  }, [user]);
+
   // Get supabase user is now handled by useAuth
 
   // Fetch actual followers count & user following state
   useEffect(() => {
     async function fetchFollowersData() {
       // skip for demo profiles
-      if (!id || id === ARTIST_UUID_1 || id === ARTIST_UUID_2) return;
+      if (!id || id === ARTIST_UUID_1 || id === ARTIST_UUID_2) {
+        console.log("[ARTIST PROFILE] Demo/fallback profile - skipping real DB fetch");
+        return;
+      }
 
       // total followers for this artist
       const { data: followers, error: countErr } = await supabase
@@ -244,10 +259,8 @@ export default function ArtistProfile() {
     setLoadingFollow(false);
   };
 
-  // Fixed message handler - now shows proper demo feedback
+  // Message handler
   const handleMessage = () => {
-    console.log("Message button clicked"); // Debug log
-    
     if (!user?.id) {
       toast({
         title: "Not logged in",
@@ -255,7 +268,6 @@ export default function ArtistProfile() {
       });
       return;
     }
-
     if (id === ARTIST_UUID_1 || id === ARTIST_UUID_2) {
       toast({
         title: "Demo Message",
@@ -269,10 +281,8 @@ export default function ArtistProfile() {
     }
   };
 
-  // Fixed save handler - now works for demo artists too
+  // Save handler
   const handleToggleSave = async () => {
-    console.log("Save button clicked"); // Debug log
-    
     if (!id || !user?.id) {
       toast({
         title: "Not logged in",
@@ -280,11 +290,9 @@ export default function ArtistProfile() {
       });
       return;
     }
-
-    // For demo artists, simulate save/unsave
+    // Demo state
     if (id === ARTIST_UUID_1 || id === ARTIST_UUID_2) {
       setLoadingSave(true);
-      // Simulate loading delay
       setTimeout(() => {
         setIsSaved(!isSaved);
         toast({
@@ -295,7 +303,6 @@ export default function ArtistProfile() {
       }, 500);
       return;
     }
-
     setLoadingSave(true);
     if (isSaved) {
       // Unsave logic
@@ -381,6 +388,15 @@ export default function ArtistProfile() {
   // Function to close modal
   const closeModal = () => setSelectedArtwork(null);
 
+  // Extra robust: always show demo data for /artist/1 and /artist/2, regardless of login
+  useEffect(() => {
+    if (id === ARTIST_UUID_1 || id === ARTIST_UUID_2) {
+      setProfileState(artistsData[id]);
+      setFollowersCount(artistsData[id].followers);
+      console.log("[ARTIST PROFILE] Loaded demo artist profile, ignoring auth state");
+    }
+  }, [id]);
+
   if (!profileState) {
     return (
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
@@ -418,6 +434,15 @@ export default function ArtistProfile() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-gray-100 flex flex-col">
       <Navbar />
+      {/* Diagnostic login banner */}
+      {showDiagnosticBanner && (
+        <div className="w-full bg-orange-200 py-2 text-center text-orange-900 font-semibold">
+          <span>
+            Not logged in! Some actions (follow, save, message, project request) are disabled. 
+            <span className="ml-2 text-sm">[Preview mode diagnostic 💡]</span>
+          </span>
+        </div>
+      )}
       <div className="pt-16 w-full">
         <ArtistHeader
           artist={{
@@ -564,7 +589,7 @@ export default function ArtistProfile() {
             <Button variant="outline" onClick={() => setIsRequestDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSendProjectRequest} disabled={sendProjectRequestMutation.isPending}>
+            <Button onClick={handleSendProjectRequest} disabled={sendProjectRequestMutation.isPending || !user}>
               {sendProjectRequestMutation.isPending ? 'Sending...' : 'Send Request'}
             </Button>
           </DialogFooter>
