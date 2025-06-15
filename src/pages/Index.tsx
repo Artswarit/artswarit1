@@ -407,49 +407,49 @@ const Index = () => {
               Join thousands of creative professionals who are building their careers with Artswarit.
             </p>
             
-            {/* Enhanced Buttons Container */}
-            <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 px-4 max-w-2xl mx-auto">
-              {/* Join as Artist Button */}
+            {/* Enhanced Buttons Container - Made Smaller */}
+            <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 px-4 max-w-lg mx-auto">
+              {/* Join as Artist Button - Smaller */}
               <div className="group relative">
-                <div className="absolute -inset-1 bg-gradient-to-r from-white/20 to-white/10 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-300"></div>
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-white/20 to-white/10 rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-300"></div>
                 <Button
                   asChild
-                  size="lg"
-                  className="relative bg-white text-gray-900 hover:bg-gray-50 w-full sm:w-auto font-bold min-w-[220px] h-16 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border-0"
+                  size="default"
+                  className="relative bg-white text-gray-900 hover:bg-gray-50 w-full sm:w-auto font-semibold min-w-[180px] h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 border-0"
                 >
-                  <Link to="/signup" className="flex items-center justify-center gap-3 text-lg">
-                    <div className="bg-gradient-to-r from-artswarit-purple to-blue-500 p-2 rounded-lg">
-                      <User className="w-5 h-5 text-white" />
+                  <Link to="/signup" className="flex items-center justify-center gap-2 text-base">
+                    <div className="bg-gradient-to-r from-artswarit-purple to-blue-500 p-1.5 rounded-md">
+                      <User className="w-4 h-4 text-white" />
                     </div>
                     <span>Join as Artist</span>
-                    <ArrowRight className="w-5 h-5 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                    <ArrowRight className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
                   </Link>
                 </Button>
               </div>
 
-              {/* Join as Client Button */}
+              {/* Join as Client Button - Smaller */}
               <div className="group relative">
-                <div className="absolute -inset-1 bg-gradient-to-r from-white/20 to-white/10 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-300"></div>
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-white/20 to-white/10 rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-300"></div>
                 <Button
                   asChild
-                  size="lg"
+                  size="default"
                   variant="outline"
-                  className="relative bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 w-full sm:w-auto font-bold min-w-[220px] h-16 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+                  className="relative bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 w-full sm:w-auto font-semibold min-w-[180px] h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5"
                 >
-                  <Link to="/client-dashboard" className="flex items-center justify-center gap-3 text-lg">
-                    <div className="bg-white/20 p-2 rounded-lg group-hover:bg-gradient-to-r group-hover:from-artswarit-purple group-hover:to-blue-500 transition-all">
-                      <Briefcase className="w-5 h-5" />
+                  <Link to="/client-dashboard" className="flex items-center justify-center gap-2 text-base">
+                    <div className="bg-white/20 p-1.5 rounded-md group-hover:bg-gradient-to-r group-hover:from-artswarit-purple group-hover:to-blue-500 transition-all">
+                      <Briefcase className="w-4 h-4" />
                     </div>
                     <span>Join as Client</span>
-                    <ArrowRight className="w-5 h-5 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                    <ArrowRight className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
                   </Link>
                 </Button>
               </div>
             </div>
 
             {/* Additional info */}
-            <div className="mt-8 sm:mt-10 text-center">
-              <p className="text-white/70 text-sm sm:text-base">
+            <div className="mt-6 sm:mt-8 text-center">
+              <p className="text-white/70 text-sm">
                 Free to join • No setup fees • Start earning immediately
               </p>
             </div>
