@@ -7,11 +7,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+const GOOGLE_GEMINI_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY");
 
-// Update: Also extract rating, availability
 const extractSystemPrompt = `
-You are Artswarit’s assistant. Extract the following details from the user's request as JSON:
+You are Artswarit’s assistant. Extract the following details from the user's request and return ONLY a valid JSON object.
 {
   "category": "[artist type (e.g., singer, painter, dancer)]",
   "city": "[city or region, e.g., Delhi, Mumbai, Jaipur]",
@@ -19,7 +18,7 @@ You are Artswarit’s assistant. Extract the following details from the user's r
   "min_rating": [number or null],
   "availability": "[available|busy|null]"
 }
-- Only extract; do not explain or add info. Price/rating is null if not present. Availability is available or busy (if user said 'available' or 'now').
+- Do not explain or add any text other than the JSON object. Price/rating is null if not present. Availability is 'available' if user mentions 'available' or 'now'.
 `;
 
 serve(async (req) => {
@@ -27,36 +26,58 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
   try {
-    if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY not set");
+    if (!GOOGLE_GEMINI_API_KEY) throw new Error("GOOGLE_GEMINI_API_KEY not set");
     const { prompt } = await req.json();
 
-    // 1. Call OpenAI to extract details
-    const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
+    // 1. Call Google Gemini to extract details
+    const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GOOGLE_GEMINI_API_KEY}`;
+    
+    const payload = {
+      contents: [{
+          role: "user",
+          parts: [{ text: prompt }]
+      }],
+      systemInstruction: {
+          parts: [{ text: extractSystemPrompt }]
       },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: extractSystemPrompt },
-          { role: "user", content: prompt }
-        ]
-      }),
+      generationConfig: {
+          responseMimeType: "application/json",
+          temperature: 0,
+          maxOutputTokens: 300,
+      },
+    };
+
+    const geminiRes = await fetch(GEMINI_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
-    const aiData = await aiRes.json();
-    const content = aiData?.choices?.[0]?.message?.content?.trim();
+
+    const geminiData = await geminiRes.json();
+    
+    if (geminiRes.status !== 200) {
+      const errorMessage = geminiData?.error?.message || JSON.stringify(geminiData);
+      console.error("[artist-gpt-chat] Error from Gemini:", errorMessage);
+      return new Response(JSON.stringify({ error: "Error from Gemini assistant: " + errorMessage }), { status: geminiRes.status, headers: corsHeaders });
+    }
+    
+    const content = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+
+    if (!content) {
+      const errorMessage = geminiData?.error?.message || JSON.stringify(geminiData);
+      console.error("[artist-gpt-chat] No content returned from Gemini.", errorMessage);
+      return new Response(JSON.stringify({ error: "Assistant returned no content. " + errorMessage }), { status: 502, headers: corsHeaders });
+    }
 
     let extracted;
     try {
       extracted = JSON.parse(content);
     } catch (e) {
-      console.error("Could not parse AI response", content);
+      console.error("Could not parse AI response as JSON", content);
       return new Response(JSON.stringify({ error: "Could not parse AI response", ai_content: content }), { status: 500, headers: corsHeaders });
     }
 
-    // DEBUG: Log what was extracted by OpenAI
+    // DEBUG: Log what was extracted by Gemini
     console.log("Extracted filters:", extracted);
 
     // 2. Query Supabase DB, build up filters
