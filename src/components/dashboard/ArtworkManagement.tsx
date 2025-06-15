@@ -114,17 +114,6 @@ const ArtworkManagement = () => {
               </Badge>
             )}
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 text-xs"
-            onClick={() => {
-              // This will be handled by the ArtworkActions component
-            }}
-          >
-            <Edit className="h-3 w-3 mr-1" />
-            
-          </Button>
         </div>
 
         <div className="flex items-center justify-between text-sm text-gray-500">
