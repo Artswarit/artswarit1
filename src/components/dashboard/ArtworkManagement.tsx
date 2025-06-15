@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
@@ -124,7 +123,7 @@ const ArtworkManagement = () => {
             }}
           >
             <Edit className="h-3 w-3 mr-1" />
-            Quick Edit
+            
           </Button>
         </div>
 
