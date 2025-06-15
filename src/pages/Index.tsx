@@ -404,19 +404,19 @@ const Index = () => {
             <div className="flex flex-col sm:flex-row justify-center gap-4 px-4">
               <Button
                 size="lg"
-                variant="default"
-                className="bg-white text-artswarit-purple hover:bg-gray-100 w-full sm:w-auto font-bold min-w-[200px] h-14"
+                variant="outline"
+                className="bg-white text-black border border-gray-300 hover:bg-gray-100 hover:text-black font-bold min-w-[200px] h-14 shadow-md rounded-md transition"
               >
-                <Link to="/signup" className="block w-full">
+                <Link to="/signup" className="block w-full h-full">
                   Join as Artist
                 </Link>
               </Button>
               <Button
                 size="lg"
                 variant="outline"
-                className="border-white hover:bg-white w-full sm:w-auto text-violet-600 font-bold rounded-sm py-0 px-0 min-w-[200px] h-14"
+                className="bg-white text-black border border-gray-300 hover:bg-gray-100 hover:text-black font-bold min-w-[200px] h-14 shadow-md rounded-md transition"
               >
-                <Link to="/client-dashboard" className="block w-full">
+                <Link to="/client-dashboard" className="block w-full h-full">
                   Join as Client
                 </Link>
               </Button>
