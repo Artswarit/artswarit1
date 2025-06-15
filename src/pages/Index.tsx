@@ -401,45 +401,15 @@ const Index = () => {
             <p className="text-lg sm:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto text-white/90 px-4">
               Join thousands of creative professionals who are building their careers with Artswarit.
             </p>
-            {/* Updated: removed px-4 and set bg-transparent and shadow-none on flex container */}
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4 w-full bg-transparent shadow-none">
-              {/* Gradient main action */}
-              <Button
-                asChild
-                size="lg"
-                variant="default"
-                className="
-                  bg-gradient-to-r from-artswarit-purple to-blue-500
-                  text-white
-                  font-bold
-                  w-full sm:w-auto
-                  h-14
-                  rounded-xl
-                  flex items-center justify-center
-                  text-base sm:text-lg
-                  transition-all
-                  shadow-lg
-                  hover:from-purple-700 hover:to-blue-700
-                  hover:scale-[1.03]
-                  focus-visible:ring-4
-                  ring-artswarit-purple/60
-                  border-none"
-              >
-                <Link to="/signup" className="w-full h-full flex items-center justify-center">
-                  Join as Artist
-                </Link>
-              </Button>
-              {/* Glass secondary */}
+              {/* Both buttons white background, black text */}
               <Button
                 asChild
                 size="lg"
                 variant="outline"
                 className="
-                  bg-white/10
-                  border-white/30
-                  text-blue-100
-                  hover:bg-white/20
-                  hover:text-blue-800
+                  bg-white
+                  text-black
                   font-bold
                   w-full sm:w-auto
                   h-14
@@ -448,10 +418,38 @@ const Index = () => {
                   text-base sm:text-lg
                   transition-all
                   shadow-md
-                  backdrop-blur
+                  border border-white/80
+                  hover:bg-white
+                  hover:text-black
                   focus-visible:ring-4
-                  ring-white/30
-                  "
+                  ring-artswarit-purple/60
+                "
+              >
+                <Link to="/signup" className="w-full h-full flex items-center justify-center">
+                  Join as Artist
+                </Link>
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="
+                  bg-white
+                  text-black
+                  font-bold
+                  w-full sm:w-auto
+                  h-14
+                  rounded-xl
+                  flex items-center justify-center
+                  text-base sm:text-lg
+                  transition-all
+                  shadow-md
+                  border border-white/80
+                  hover:bg-white
+                  hover:text-black
+                  focus-visible:ring-4
+                  ring-artswarit-purple/60
+                "
               >
                 <Link to="/client-dashboard" className="w-full h-full flex items-center justify-center">
                   Join as Client
