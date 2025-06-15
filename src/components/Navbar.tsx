@@ -55,14 +55,14 @@ const Navbar = () => {
 
   return (
     <nav className="bg-white/70 glass-effect shadow-lg border-b border-gray-100 fixed w-full top-0 z-50 backdrop-blur-md transition-all">
-      <div className="w-full flex items-center h-12 pl-0 pr-2 md:pr-4">
-        {/* Left: logo + desktop menu grouped */}
-        <div className="flex items-center gap-x-6">
+      <div className="w-full flex items-center h-12 px-0 md:px-0">
+        {/* Left: logo + desktop menu grouped, reduce gap for tighter alignment */}
+        <div className="flex items-center gap-x-2">
           {/* Logo */}
           <Link
             to="/"
-            className="flex items-center gap-4 font-bold text-lg text-purple-600 tracking-tight hover:opacity-80 transition-opacity"
-            style={{ marginLeft: 0 }}
+            className="flex items-center font-bold text-lg text-purple-600 tracking-tight hover:opacity-80 transition-opacity"
+            style={{ marginLeft: 0, marginRight: 0, padding: 0 }}
           >
             <img
               src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png"
@@ -75,7 +75,7 @@ const Navbar = () => {
           </Link>
 
           {/* Minimal desktop nav */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center">
             {menuItems.map((item) => (
               <Link
                 key={item.name}
@@ -87,7 +87,7 @@ const Navbar = () => {
                     ? linkActiveClass
                     : linkInactiveClass)
                 }
-                style={{ marginLeft: "0.8rem", marginRight: "0.8rem" }}
+                style={{ marginLeft: "0.5rem" }}
               >
                 {item.icon}
                 <span>{item.name}</span>
@@ -243,4 +243,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
