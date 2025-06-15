@@ -29,7 +29,7 @@ const ArtistDashboard = () => {
 
   // Redirect non-artists
   useEffect(() => {
-    if (profile && profile.role !== 'artist') {
+    if (profile && profile.role !== 'artist' && profile.role !== 'premium') {
       window.location.href = '/client-dashboard';
     }
   }, [profile]);
