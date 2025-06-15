@@ -55,41 +55,45 @@ const Navbar = () => {
   return (
     <nav className="bg-white/70 glass-effect shadow-lg border-b border-gray-100 fixed w-full top-0 z-50 backdrop-blur-md transition-all">
       <div className="container max-w-screen-xl mx-auto px-2 md:px-4 h-12 flex items-center">
-        {/* Logo */}
-        <Link
-          to="/"
-          className="flex items-center gap-4 font-bold text-lg text-purple-600 mr-12 tracking-tight hover:opacity-80 transition-opacity"
-        >
-          <img
-            src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png"
-            alt="Artswarit Logo"
-            className="h-12 w-12 md:h-16 md:w-16 object-contain transition-transform duration-300 hover:scale-110"
-            style={{
-              background: "none"
-            }}
-          />
-        </Link>
+        {/* Left: logo + desktop menu grouped */}
+        <div className="flex items-center gap-x-6">
+          {/* Logo */}
+          <Link
+            to="/"
+            className="flex items-center gap-4 font-bold text-lg text-purple-600 tracking-tight hover:opacity-80 transition-opacity"
+          >
+            <img
+              src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png"
+              alt="Artswarit Logo"
+              className="h-12 w-12 md:h-16 md:w-16 object-contain transition-transform duration-300 hover:scale-110"
+              style={{
+                background: "none"
+              }}
+            />
+          </Link>
 
-        {/* Minimal desktop nav */}
-        <div className="hidden md:flex items-center space-x-4">
-          {menuItems.map((item) => (
-            <Link
-              key={item.name}
-              to={item.path}
-              className={
-                linkBaseClass +
-                " " +
-                (location.pathname === item.path
-                  ? linkActiveClass
-                  : linkInactiveClass)
-              }
-              style={{ marginLeft: "0.8rem", marginRight: "0.8rem" }}
-            >
-              {item.icon}
-              <span>{item.name}</span>
-            </Link>
-          ))}
+          {/* Minimal desktop nav */}
+          <div className="hidden md:flex items-center space-x-4">
+            {menuItems.map((item) => (
+              <Link
+                key={item.name}
+                to={item.path}
+                className={
+                  linkBaseClass +
+                  " " +
+                  (location.pathname === item.path
+                    ? linkActiveClass
+                    : linkInactiveClass)
+                }
+                style={{ marginLeft: "0.8rem", marginRight: "0.8rem" }}
+              >
+                {item.icon}
+                <span>{item.name}</span>
+              </Link>
+            ))}
+          </div>
         </div>
+        {/* End Left section */}
 
         {/* Right side controls */}
         <div className="flex items-center ml-auto gap-2">
