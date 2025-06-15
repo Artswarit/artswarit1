@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FeaturedArtistCard from "@/components/FeaturedArtistCard";
 import CategoryCard from "@/components/CategoryCard";
-import { Music, BookOpen, Edit, Pencil, User, Briefcase, ArrowRight } from "lucide-react";
+import { Music, BookOpen, Edit, Pencil, User, Briefcase, ArrowRight, Sparkles, Star } from "lucide-react";
 import AnimatedHeroSlider from "@/components/AnimatedHeroSlider";
 import ArtworkCarousel from "@/components/ArtworkCarousel";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
@@ -390,12 +390,13 @@ const Index = () => {
 
       {/* Enhanced CTA Section */}
       <section className="bg-gradient-to-r from-artswarit-purple to-blue-500 text-white py-16 sm:py-20 relative overflow-hidden">
-        {/* Background decorative elements */}
+        {/* Enhanced Background decorative elements */}
         <div className="absolute inset-0">
-          <div className="absolute -top-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
-          <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
-          <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-white/5 rounded-full blur-lg"></div>
-          <div className="absolute top-1/4 right-1/4 w-20 h-20 bg-white/5 rounded-full blur-lg"></div>
+          <div className="absolute -top-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-xl animate-pulse-glow"></div>
+          <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-xl animate-pulse-glow delay-1000"></div>
+          <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-white/5 rounded-full blur-lg animate-pulse-glow delay-500"></div>
+          <div className="absolute top-1/4 right-1/4 w-20 h-20 bg-white/5 rounded-full blur-lg animate-pulse-glow delay-1500"></div>
+          <div className="absolute top-3/4 left-3/4 w-12 h-12 bg-white/5 rounded-full blur-lg animate-pulse-glow delay-2000"></div>
         </div>
         
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
@@ -407,51 +408,68 @@ const Index = () => {
               Join thousands of creative professionals who are building their careers with Artswarit.
             </p>
             
-            {/* Enhanced Buttons Container - Made Smaller */}
-            <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 px-4 max-w-lg mx-auto">
-              {/* Join as Artist Button - Smaller */}
+            {/* Enhanced Premium Buttons Container */}
+            <div className="flex flex-col sm:flex-row justify-center gap-4 px-4 max-w-md mx-auto">
+              {/* Premium Join as Artist Button */}
               <div className="group relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-white/30 via-yellow-300/40 to-white/30 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition duration-500 animate-pulse-glow"></div>
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-white/20 to-white/10 rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-300"></div>
-                <Button
-                  asChild
-                  size="default"
-                  className="relative bg-white text-gray-900 hover:bg-gray-50 w-full sm:w-auto font-semibold min-w-[180px] h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 border-0"
-                >
-                  <Link to="/signup" className="flex items-center justify-center gap-2 text-base">
-                    <div className="bg-gradient-to-r from-artswarit-purple to-blue-500 p-1.5 rounded-md">
-                      <User className="w-4 h-4 text-white" />
+                <button className="relative bg-gradient-to-r from-white via-gray-50 to-white text-gray-900 hover:from-yellow-50 hover:via-white hover:to-yellow-50 w-full font-semibold px-5 py-2.5 text-sm rounded-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-white/20 backdrop-blur-sm">
+                  <Link to="/signup" className="flex items-center justify-center gap-2">
+                    <div className="bg-gradient-to-r from-artswarit-purple to-blue-500 p-1 rounded-md group-hover:scale-110 transition-transform duration-300">
+                      <User className="w-3.5 h-3.5 text-white" />
                     </div>
-                    <span>Join as Artist</span>
-                    <ArrowRight className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                    <span className="bg-gradient-to-r from-artswarit-purple to-blue-500 bg-clip-text text-transparent font-bold">Join as Artist</span>
+                    <div className="flex">
+                      <Sparkles className="w-3 h-3 text-yellow-500 animate-pulse" />
+                      <Star className="w-3 h-3 text-yellow-400 animate-pulse delay-100" />
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-artswarit-purple" />
                   </Link>
-                </Button>
+                </button>
               </div>
 
-              {/* Join as Client Button - Smaller */}
+              {/* Premium Join as Client Button */}
               <div className="group relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-white/30 via-blue-300/40 to-white/30 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition duration-500 animate-pulse-glow"></div>
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-white/20 to-white/10 rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-300"></div>
-                <Button
-                  asChild
-                  size="default"
-                  variant="outline"
-                  className="relative bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 w-full sm:w-auto font-semibold min-w-[180px] h-12 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5"
-                >
-                  <Link to="/client-dashboard" className="flex items-center justify-center gap-2 text-base">
-                    <div className="bg-white/20 p-1.5 rounded-md group-hover:bg-gradient-to-r group-hover:from-artswarit-purple group-hover:to-blue-500 transition-all">
-                      <Briefcase className="w-4 h-4" />
+                <button className="relative bg-white/10 hover:bg-white/20 border-2 border-white/30 hover:border-white/50 text-white w-full font-semibold px-5 py-2.5 text-sm rounded-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-sm">
+                  <Link to="/client-dashboard" className="flex items-center justify-center gap-2">
+                    <div className="bg-white/20 group-hover:bg-white/30 p-1 rounded-md group-hover:scale-110 transition-all duration-300">
+                      <Briefcase className="w-3.5 h-3.5" />
                     </div>
-                    <span>Join as Client</span>
-                    <ArrowRight className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                    <span className="font-bold">Join as Client</span>
+                    <div className="flex">
+                      <Star className="w-3 h-3 text-blue-300 animate-pulse" />
+                      <Sparkles className="w-3 h-3 text-blue-200 animate-pulse delay-200" />
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                   </Link>
-                </Button>
+                </button>
               </div>
             </div>
 
-            {/* Additional info */}
+            {/* Enhanced info section */}
             <div className="mt-6 sm:mt-8 text-center">
-              <p className="text-white/70 text-sm">
-                Free to join • No setup fees • Start earning immediately
-              </p>
+              <div className="flex items-center justify-center gap-2 text-white/80 text-sm mb-2">
+                <Star className="w-4 h-4 text-yellow-300" />
+                <span>Free to join • No setup fees • Start earning immediately</span>
+                <Star className="w-4 h-4 text-yellow-300" />
+              </div>
+              <div className="flex items-center justify-center gap-4 text-white/60 text-xs">
+                <span className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  10k+ Active Artists
+                </span>
+                <span className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse delay-300"></div>
+                  5k+ Happy Clients
+                </span>
+                <span className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse delay-600"></div>
+                  $2M+ Earned
+                </span>
+              </div>
             </div>
           </div>
         </div>
