@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
@@ -9,6 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { UserCheck, Image, AlertTriangle, Users, FileText } from 'lucide-react';
+import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Eye } from "lucide-react";
 
 // Slightly simplified Profile; there is no admin_role in the generated types.
 type ProfileWithExtras = ReturnType<typeof useProfile>['profile'] & {
@@ -45,6 +47,9 @@ const AdminDashboard = () => {
   const [pendingArtists, setPendingArtists] = useState<PendingArtist[]>([]);
   const [pendingArtworks, setPendingArtworks] = useState<PendingArtwork[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Add modal state for artwork preview
+  const [previewArtwork, setPreviewArtwork] = useState<PendingArtwork | null>(null);
 
   useEffect(() => {
     // There are no admin_role/admin checks anymore
@@ -185,9 +190,9 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <h1 className="text-3xl font-bold">Admin Moderation Panel</h1>
         <Badge variant="secondary">
           Staff
         </Badge>
@@ -232,6 +237,7 @@ const AdminDashboard = () => {
           <TabsTrigger value="artworks">Pending Artworks ({pendingArtworks.length})</TabsTrigger>
         </TabsList>
 
+        {/* Pending Artists Table */}
         <TabsContent value="artists" className="space-y-4">
           {pendingArtists.length === 0 ? (
             <Card>
@@ -241,43 +247,57 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
           ) : (
-            pendingArtists.map((artist) => (
-              <Card key={artist.id}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>{artist.full_name}</CardTitle>
-                      <CardDescription>{artist.email}</CardDescription>
-                    </div>
-                    <Badge variant="outline">
-                      {new Date(artist.created_at).toLocaleDateString()}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {artist.bio && (
-                    <p className="text-sm text-gray-600 mb-4">{artist.bio}</p>
-                  )}
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => handleArtistApproval(artist.id, 'approved')}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      Approve
-                    </Button>
-                    <Button
-                      onClick={() => handleArtistApproval(artist.id, 'rejected', 'Profile needs improvement')}
-                      variant="destructive"
-                    >
-                      Reject
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Bio</TableHead>
+                    <TableHead>Submitted</TableHead>
+                    <TableHead className="text-center">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pendingArtists.map((artist) => (
+                    <TableRow key={artist.id}>
+                      <TableCell>
+                        <div className="font-semibold">{artist.full_name}</div>
+                      </TableCell>
+                      <TableCell>{artist.email}</TableCell>
+                      <TableCell>
+                        <span className="line-clamp-3 max-w-xs text-xs text-gray-600">{artist.bio}</span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {new Date(artist.created_at).toLocaleDateString()}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center space-x-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleArtistApproval(artist.id, 'approved')}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleArtistApproval(artist.id, 'rejected', 'Profile needs improvement')}
+                          variant="destructive"
+                        >
+                          Reject
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </TabsContent>
 
+        {/* Pending Artworks Table */}
         <TabsContent value="artworks" className="space-y-4">
           {pendingArtworks.length === 0 ? (
             <Card>
@@ -287,48 +307,121 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
           ) : (
-            pendingArtworks.map((artwork) => (
-              <Card key={artwork.id}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>{artwork.title}</CardTitle>
-                      <CardDescription>
-                        by {artwork.profiles?.full_name} ({artwork.profiles?.email})
-                      </CardDescription>
-                    </div>
-                    <Badge variant="outline">
-                      {new Date(artwork.created_at).toLocaleDateString()}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex gap-4">
-                    <img
-                      src={artwork.image_url}
-                      alt={artwork.title}
-                      className="w-24 h-24 object-cover rounded-lg"
-                    />
-                    <div className="flex-1">
-                      <div className="flex gap-2 mt-4">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Preview</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Artist</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Submitted</TableHead>
+                    <TableHead className="text-center">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pendingArtworks.map((artwork) => (
+                    <TableRow key={artwork.id}>
+                      <TableCell>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              className="hover:scale-110 transition-transform"
+                              onClick={() => setPreviewArtwork(artwork)}
+                            >
+                              <img
+                                src={artwork.image_url}
+                                alt={artwork.title}
+                                className="w-12 h-12 rounded-md object-cover border"
+                              />
+                              <Eye className="w-4 h-4 text-gray-500 absolute top-1 left-1 bg-white/80 rounded-full" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent onOpenAutoFocus={e => e.preventDefault()}>
+                            <DialogHeader>
+                              <DialogTitle>{artwork.title}</DialogTitle>
+                              <DialogDescription>
+                                by {artwork.profiles?.full_name} ({artwork.profiles?.email})
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="flex flex-col gap-4 items-center py-2">
+                              <img
+                                src={artwork.image_url}
+                                alt={artwork.title}
+                                className="max-h-[400px] rounded-lg shadow mb-2"
+                              />
+                              <div className="w-full">
+                                <div className="font-bold mb-1">Description:</div>
+                                <div className="text-sm text-gray-700">{artwork.title}</div>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-semibold">{artwork.title}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">{artwork.profiles?.full_name}</div>
+                        <div className="text-xs text-gray-500">{artwork.profiles?.email}</div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="block line-clamp-2 max-w-xs text-xs text-gray-600"></span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {new Date(artwork.created_at).toLocaleDateString()}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center space-x-2">
                         <Button
+                          size="sm"
                           onClick={() => handleArtworkApproval(artwork.id, 'approved')}
                           className="bg-green-600 hover:bg-green-700"
                         >
                           Approve
                         </Button>
                         <Button
+                          size="sm"
                           onClick={() => handleArtworkApproval(artwork.id, 'rejected', 'Content does not meet guidelines')}
                           variant="destructive"
                         >
                           Reject
                         </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {/* Modal for full artwork preview */}
+              {previewArtwork && (
+                <Dialog open={!!previewArtwork} onOpenChange={() => setPreviewArtwork(null)}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>{previewArtwork.title}</DialogTitle>
+                      <DialogDescription>
+                        by {previewArtwork.profiles?.full_name} ({previewArtwork.profiles?.email})
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex flex-col items-center py-2">
+                      <img
+                        src={previewArtwork.image_url}
+                        alt={previewArtwork.title}
+                        className="max-h-[400px] rounded-lg shadow mb-2"
+                      />
+                      <div className="w-full max-w-md/2 mt-2">
+                        <div className="font-bold">Description:</div>
+                        <span className="text-sm text-gray-700"></span>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
           )}
         </TabsContent>
       </Tabs>
