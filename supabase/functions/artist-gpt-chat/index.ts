@@ -47,12 +47,17 @@ serve(async (req) => {
     });
     const aiData = await aiRes.json();
     const content = aiData?.choices?.[0]?.message?.content?.trim();
+
     let extracted;
     try {
       extracted = JSON.parse(content);
     } catch (e) {
+      console.error("Could not parse AI response", content);
       return new Response(JSON.stringify({ error: "Could not parse AI response", ai_content: content }), { status: 500, headers: corsHeaders });
     }
+
+    // DEBUG: Log what was extracted by OpenAI
+    console.log("Extracted filters:", extracted);
 
     // 2. Query Supabase DB, build up filters
     const { category, city, max_price, min_rating, availability } = extracted;
@@ -61,7 +66,6 @@ serve(async (req) => {
     if (category) query.push(`category=eq.${encodeURIComponent(category)}`);
     if (city) query.push(`city=eq.${encodeURIComponent(city)}`);
     if (max_price !== null && max_price !== undefined) query.push(`price=lte.${max_price}`);
-    // Optional rating and availability columns need to exist in artists table
     if (min_rating !== null && min_rating !== undefined) query.push(`rating=gte.${min_rating}`);
     if (availability === "available") query.push(`available=is.true`);
     if (availability === "busy") query.push(`available=is.false`);
@@ -75,6 +79,9 @@ serve(async (req) => {
     if (query.length) url += "&" + query.join("&");
     url += "&limit=3";
 
+    // DEBUG: Log the API query URL
+    console.log("Supabase API request URL:", url);
+
     const dbRes = await fetch(url, {
       method: "GET",
       headers: {
@@ -83,7 +90,11 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
     });
+
     const artists = await dbRes.json();
+
+    // DEBUG: Log the artists received from DB
+    console.log("Artists response from Supabase:", artists);
 
     return new Response(JSON.stringify({ extracted, artists }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
