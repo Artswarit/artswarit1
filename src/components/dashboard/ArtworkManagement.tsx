@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -177,6 +176,14 @@ const ArtworkManagement = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
+  const handleArtworkUpdate = (updatedArtwork: any) => {
+    console.log('Updating artwork:', updatedArtwork);
+    toast({
+      title: "Artwork Updated",
+      description: "Your artwork has been updated successfully.",
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -296,7 +303,7 @@ const ArtworkManagement = () => {
                     <div className="mt-3">
                       <ArtworkActions
                         artwork={artwork}
-                        onEdit={() => setEditingArtwork(artwork)}
+                        onUpdate={handleArtworkUpdate}
                       />
                     </div>
                   </CardContent>
@@ -328,7 +335,7 @@ const ArtworkManagement = () => {
                       {getStatusBadge(artwork.approval_status)}
                       <ArtworkActions
                         artwork={artwork}
-                        onEdit={() => setEditingArtwork(artwork)}
+                        onUpdate={handleArtworkUpdate}
                       />
                     </div>
                   </div>
@@ -358,7 +365,7 @@ const ArtworkManagement = () => {
                 ×
               </Button>
             </div>
-            <ArtworkUploadForm onClose={() => setShowUploadForm(false)} />
+            <ArtworkUploadForm />
           </div>
         </div>
       )}
@@ -367,9 +374,10 @@ const ArtworkManagement = () => {
       {editingArtwork && (
         <ArtworkEditModal
           artwork={editingArtwork}
+          isOpen={!!editingArtwork}
           onClose={() => setEditingArtwork(null)}
           onSave={(updatedArtwork) => {
-            console.log('Saving updated artwork:', updatedArtwork);
+            handleArtworkUpdate(updatedArtwork);
             setEditingArtwork(null);
           }}
         />
