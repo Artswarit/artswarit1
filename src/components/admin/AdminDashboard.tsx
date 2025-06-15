@@ -42,6 +42,52 @@ interface PendingArtwork {
 // For combined moderation list
 type ModerationItem = PendingArtist | PendingArtwork;
 
+// MOCK DATA for artworks demonstration
+const mockArtworks: PendingArtwork[] = [
+  {
+    id: "mock-artwork-1",
+    title: "Celestial Dream",
+    artist_id: "mock-artist-1",
+    approval_status: "pending",
+    created_at: new Date().toISOString(),
+    image_url: "https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=800&q=60",
+    description: "A dreamy landscape from a world beyond ours. Features vibrant colors and surreal cloud formations.",
+    profiles: {
+      full_name: "Isabella Chen",
+      email: "isabella.chen@example.com",
+    },
+    type: "artwork",
+  },
+  {
+    id: "mock-artwork-2",
+    title: "Urban Echoes",
+    artist_id: "mock-artist-2",
+    approval_status: "pending",
+    created_at: new Date(Date.now() - 86400000).toISOString(), // Yesterday
+    image_url: "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?auto=format&fit=crop&w=800&q=60",
+    description: "A digital painting capturing the energy and chaos of city life at night.",
+    profiles: {
+      full_name: "Liam Rodriguez",
+      email: "liam.rodriguez@example.com",
+    },
+    type: "artwork",
+  },
+  {
+    id: "mock-artwork-3",
+    title: "Forgotten Melody",
+    artist_id: "mock-artist-3",
+    approval_status: "pending",
+    created_at: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+    image_url: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=800&q=60",
+    description: "An abstract piece representing a half-remembered tune. Uses a mix of sharp lines and soft gradients.",
+    profiles: {
+      full_name: "Aria Williams",
+      email: "aria.williams@example.com",
+    },
+    type: "artwork",
+  },
+];
+
 const AdminDashboard = () => {
   const { user } = useAuth();
   const { profile: baseProfile } = useProfile();
@@ -91,24 +137,30 @@ const AdminDashboard = () => {
         .eq('approval_status', 'pending')
         .order('created_at', { ascending: false });
 
-      const pendingArtworks: PendingArtwork[] = (artworks as any[] || []).map(a => ({
+      let fetchedPendingArtworks: PendingArtwork[] = (artworks as any[] || []).map(a => ({
         ...a,
         type: "artwork"
       }));
 
-      setPendingArtworks(pendingArtworks);
+      // If no real pending artworks, use mock data for demonstration
+      if (fetchedPendingArtworks.length === 0) {
+        fetchedPendingArtworks = mockArtworks;
+      }
+
+      setPendingArtworks(fetchedPendingArtworks);
 
       // Merge all pending items into one moderation list (sorted by date, newest first)
       const combined: ModerationItem[] = [
         ...pendingArtists,
-        ...pendingArtworks
+        ...fetchedPendingArtworks
       ].sort((a, b) => (b.created_at > a.created_at ? 1 : -1));
       setModerationList(combined);
 
     } catch (error) {
+      console.error("Error fetching pending items:", error);
       setPendingArtists([]);
-      setPendingArtworks([]);
-      setModerationList([]);
+      setPendingArtworks(mockArtworks); // Show mock data on error too
+      setModerationList(mockArtworks);
     } finally {
       setLoading(false);
     }
@@ -156,6 +208,19 @@ const AdminDashboard = () => {
   };
 
   const handleArtworkApproval = async (artworkId: string, action: 'approved' | 'rejected', notes?: string) => {
+    // If it's a mock artwork, just remove it from the list and show a toast
+    if (artworkId.startsWith('mock-')) {
+      const artwork = pendingArtworks.find(a => a.id === artworkId);
+      setPendingArtworks(prev => prev.filter(a => a.id !== artworkId));
+      setModerationList(prev => prev.filter(item => item.id !== artworkId));
+      toast({
+        title: "Demo Action",
+        description: `Artwork "${artwork?.title || 'Item'}" has been ${action} (demo).`,
+        variant: action === 'approved' ? 'default' : 'destructive'
+      });
+      return;
+    }
+
     try {
       await supabase
         .from('artworks')
