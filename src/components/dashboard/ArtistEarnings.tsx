@@ -1,37 +1,18 @@
 
-import { useState } from "react";
-import { 
-  Card, CardContent, CardDescription, CardFooter,
-  CardHeader, CardTitle 
-} from "@/components/ui/card";
+import { useState, lazy, Suspense, useMemo } from "react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TrendingUp, Download, Calendar } from "lucide-react";
-import { 
-  AreaChart, 
-  Area, 
-  BarChart, 
-  LineChart, 
-  PieChart, 
-  Pie,
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend,
-  ResponsiveContainer
-} from "recharts";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { Download } from "lucide-react";
+
+// Lazy load heavy chart components
+const LazyEarningsChart = lazy(() => import("./earnings/EarningsChart"));
+const LazyPieChart = lazy(() => import("./earnings/LazyPieChart"));
 
 interface ArtistEarningsProps {
   isLoading: boolean;
 }
 
-// Sample data for charts
+// Sample data
 const monthlyData = [
   { name: "Jan", earnings: 12000 },
   { name: "Feb", earnings: 15000 },
@@ -47,14 +28,6 @@ const monthlyData = [
   { name: "Dec", earnings: 35000 },
 ];
 
-const categoryData = [
-  { name: "Images", value: 45000 },
-  { name: "Audio", value: 28000 },
-  { name: "Video", value: 18000 },
-  { name: "Text", value: 9000 },
-];
-
-// Sample transaction data
 const transactionData = [
   {
     id: "1",
@@ -103,43 +76,23 @@ const transactionData = [
   },
 ];
 
-// Top performing artwork data
-const topArtworksData = [
-  {
-    id: "1",
-    title: "Mystic Mountains",
-    thumbnail: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05",
-    earnings: 24500,
-    sales: 12
-  },
-  {
-    id: "2",
-    title: "Ocean Dreams",
-    thumbnail: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21",
-    earnings: 18700,
-    sales: 9
-  },
-  {
-    id: "3",
-    title: "Urban Thoughts",
-    thumbnail: "https://images.unsplash.com/photo-1581092795360-fd1ca04f0952",
-    earnings: 15200,
-    sales: 7
-  }
-];
-
 const ArtistEarnings = ({ isLoading }: ArtistEarningsProps) => {
   const [period, setPeriod] = useState("year");
   
-  // Calculate total earnings
-  const totalEarnings = transactionData.reduce(
-    (sum, transaction) => sum + transaction.amount, 
-    0
-  );
-  
-  const pendingEarnings = transactionData
-    .filter(transaction => transaction.status === "pending")
-    .reduce((sum, transaction) => sum + transaction.amount, 0);
+  // Memoize expensive calculations
+  const { totalEarnings, pendingEarnings, avgPerSale } = useMemo(() => {
+    const total = transactionData.reduce((sum, transaction) => sum + transaction.amount, 0);
+    const pending = transactionData
+      .filter(transaction => transaction.status === "pending")
+      .reduce((sum, transaction) => sum + transaction.amount, 0);
+    const avg = Math.round(total / transactionData.length);
+    
+    return {
+      totalEarnings: total,
+      pendingEarnings: pending,
+      avgPerSale: avg
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -199,111 +152,19 @@ const ArtistEarnings = ({ isLoading }: ArtistEarningsProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">₹{Math.round(totalEarnings / transactionData.length).toLocaleString()}</div>
+            <div className="text-3xl font-bold">₹{avgPerSale.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground mt-1">From {transactionData.length} sales</p>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="overflow-hidden">
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>Revenue Over Time</CardTitle>
-            <Tabs defaultValue="year" value={period} onValueChange={setPeriod}>
-              <TabsList>
-                <TabsTrigger value="week">Week</TabsTrigger>
-                <TabsTrigger value="month">Month</TabsTrigger>
-                <TabsTrigger value="year">Year</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={monthlyData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-              >
-                <defs>
-                  <linearGradient id="colorEarnings" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.1} />
-                  </linearGradient>
-                </defs>
-                <Area
-                  type="monotone"
-                  dataKey="earnings"
-                  stroke="#8b5cf6"
-                  fill="url(#colorEarnings)"
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip formatter={(value) => `₹${value}`} />
-                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="overflow-hidden">
-          <CardHeader>
-            <CardTitle>Earnings by Category</CardTitle>
-            <CardDescription>Distribution of revenue across art types</CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    dataKey="value"
-                    nameKey="name"
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    fill="#8b5cf6"
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  />
-                  <Tooltip formatter={(value) => `₹${value}`} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Performing Artworks</CardTitle>
-            <CardDescription>Your best selling pieces</CardDescription>
-          </CardHeader>
-          <CardContent className="px-0">
-            <ul className="space-y-4">
-              {topArtworksData.map((artwork) => (
-                <li key={artwork.id} className="flex items-center gap-3 px-6">
-                  <div className="h-12 w-12 rounded overflow-hidden">
-                    <img
-                      src={artwork.thumbnail}
-                      alt={artwork.title}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">{artwork.title}</p>
-                    <p className="text-xs text-muted-foreground">{artwork.sales} sales</p>
-                  </div>
-                  <p className="text-right font-semibold">₹{artwork.earnings.toLocaleString()}</p>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      </div>
+      <Suspense fallback={<div className="h-[350px] bg-gray-100 animate-pulse rounded-lg flex items-center justify-center">Loading chart...</div>}>
+        <LazyEarningsChart
+          data={monthlyData}
+          period={period}
+          onPeriodChange={setPeriod}
+        />
+      </Suspense>
 
       <Card>
         <CardHeader>
