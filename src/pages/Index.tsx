@@ -401,14 +401,27 @@ const Index = () => {
             <p className="text-lg sm:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto text-white/90 px-4">
               Join thousands of creative professionals who are building their careers with Artswarit.
             </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4 px-4">
+            {/* Improved buttons: full width mobile, side-by-side desktop, consistent styling */}
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 px-4 w-full">
               <Button
                 asChild
                 size="lg"
                 variant="default"
-                className="bg-white text-artswarit-purple hover:bg-gray-100 font-bold min-w-[200px] h-14 w-full sm:w-auto"
+                className="
+                  bg-white 
+                  text-artswarit-purple 
+                  hover:bg-gray-100
+                  font-bold
+                  w-full sm:w-64
+                  h-14
+                  rounded-lg
+                  flex items-center justify-center
+                  text-base sm:text-lg
+                  transition-all
+                  shadow-md
+                  border-none"
               >
-                <Link to="/signup" className="flex items-center justify-center w-full h-full">
+                <Link to="/signup" className="w-full h-full flex items-center justify-center">
                   Join as Artist
                 </Link>
               </Button>
@@ -416,9 +429,20 @@ const Index = () => {
                 asChild
                 size="lg"
                 variant="outline"
-                className="border-white hover:bg-white text-violet-600 font-bold rounded-sm py-0 px-0 min-w-[200px] h-14 w-full sm:w-auto"
+                className="
+                  border-white
+                  hover:bg-white
+                  text-violet-600
+                  font-bold
+                  w-full sm:w-64
+                  h-14
+                  rounded-lg
+                  flex items-center justify-center
+                  text-base sm:text-lg
+                  transition-all
+                  shadow-md"
               >
-                <Link to="/client-dashboard" className="flex items-center justify-center w-full h-full">
+                <Link to="/client-dashboard" className="w-full h-full flex items-center justify-center">
                   Join as Client
                 </Link>
               </Button>
