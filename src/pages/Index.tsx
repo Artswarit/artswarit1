@@ -401,22 +401,57 @@ const Index = () => {
             <p className="text-lg sm:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto text-white/90 px-4">
               Join thousands of creative professionals who are building their careers with Artswarit.
             </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4 px-4">
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 w-full bg-transparent shadow-none">
+              {/* Both buttons white background, black text */}
               <Button
+                asChild
                 size="lg"
                 variant="outline"
-                className="bg-white text-black border border-gray-300 hover:bg-gray-100 hover:text-black font-bold min-w-[200px] h-14 shadow-md rounded-md transition"
+                className="
+                  bg-white
+                  text-black
+                  font-bold
+                  w-full sm:w-auto
+                  h-14
+                  rounded-xl
+                  flex items-center justify-center
+                  text-base sm:text-lg
+                  transition-all
+                  shadow-md
+                  border border-white/80
+                  hover:bg-white
+                  hover:text-black
+                  focus-visible:ring-4
+                  ring-artswarit-purple/60
+                "
               >
-                <Link to="/signup" className="block w-full h-full">
+                <Link to="/signup" className="w-full h-full flex items-center justify-center">
                   Join as Artist
                 </Link>
               </Button>
               <Button
+                asChild
                 size="lg"
                 variant="outline"
-                className="bg-white text-black border border-gray-300 hover:bg-gray-100 hover:text-black font-bold min-w-[200px] h-14 shadow-md rounded-md transition"
+                className="
+                  bg-white
+                  text-black
+                  font-bold
+                  w-full sm:w-auto
+                  h-14
+                  rounded-xl
+                  flex items-center justify-center
+                  text-base sm:text-lg
+                  transition-all
+                  shadow-md
+                  border border-white/80
+                  hover:bg-white
+                  hover:text-black
+                  focus-visible:ring-4
+                  ring-artswarit-purple/60
+                "
               >
-                <Link to="/client-dashboard" className="block w-full h-full">
+                <Link to="/client-dashboard" className="w-full h-full flex items-center justify-center">
                   Join as Client
                 </Link>
               </Button>
