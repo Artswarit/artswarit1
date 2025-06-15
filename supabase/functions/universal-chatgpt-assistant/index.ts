@@ -10,6 +10,8 @@ const corsHeaders = {
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 async function fetchOpenAI(payload: any) {
+  // Diagnostic logging of payload
+  console.log("[edge] Sending payload to OpenAI:", JSON.stringify(payload));
   const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -19,6 +21,8 @@ async function fetchOpenAI(payload: any) {
     body: JSON.stringify(payload),
   });
   const data = await openaiRes.json();
+  // Diagnostic logging of response
+  console.log("[edge] OpenAI response:", JSON.stringify(data));
   return { status: openaiRes.status, data };
 }
 
@@ -55,23 +59,24 @@ serve(async (req) => {
     // Issue the request (with one fallback retry)
     let openaiResult = await fetchOpenAI(payload);
     if (!openaiResult.data?.choices?.[0]?.message?.content && openaiResult.status !== 200) {
-      // Retry once if output not present or error status
       console.warn("[edge] OpenAI primary call failed, retrying once...");
       openaiResult = await fetchOpenAI(payload);
     }
     const { data } = openaiResult;
 
-    // Diagnostic log for "hello" test prompt (informative, not returned to user unless error)
+    // Diagnostic log for "hello" test prompt
     if (messages?.length === 1 && messages[0]?.content?.toLowerCase().trim() === "hello") {
       console.log("[edge] Test 'hello' prompt detected.");
     }
 
-    // Response handling
+    // Response handling: show OpenAI output/diagnostics by default if any error or no answer
     const answer = data?.choices?.[0]?.message?.content?.trim();
     if (!answer) {
-      console.error("[edge] No answer returned from OpenAI.", data);
+      console.error("[edge] No answer returned from OpenAI. (Full data follows)", JSON.stringify(data));
       return new Response(
-        JSON.stringify({ error: "Raw OpenAI API response: " + JSON.stringify(data) }),
+        JSON.stringify({ 
+          error: "OpenAI Diagnostic Output: " + JSON.stringify(data)
+        }),
         { status: 502, headers: corsHeaders }
       );
     }
