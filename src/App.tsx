@@ -22,11 +22,6 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 import AIDetection from "./pages/AIDetection";
 import FeatureAudit from "./pages/FeatureAudit";
-import LiveStreaming from "./pages/LiveStreaming";
-import Collections from "./pages/Collections";
-import Trending from "./pages/Trending";
-import Recommendations from "./pages/Recommendations";
-import Commissions from "./pages/Commissions";
 
 const queryClient = new QueryClient();
 
@@ -50,11 +45,6 @@ const App = () => (
             <Route path="/artist-dashboard/:tab" element={<ArtistDashboard />} />
             <Route path="/client-dashboard" element={<ClientDashboard />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
-            <Route path="/live-streaming" element={<LiveStreaming />} />
-            <Route path="/collections" element={<Collections />} />
-            <Route path="/trending" element={<Trending />} />
-            <Route path="/recommendations" element={<Recommendations />} />
-            <Route path="/commissions" element={<Commissions />} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
