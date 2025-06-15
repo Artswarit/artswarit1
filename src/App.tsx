@@ -19,6 +19,7 @@ import AboutUs from './pages/AboutUs';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import ArtworkDetails from './pages/ArtworkDetails';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
             {/* Temporarily remove protection for testing */}
             <Route path="/artist-dashboard" element={<ArtistDashboard />} />
             <Route path="/client-dashboard" element={<ClientDashboard />} />
+            <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </QueryClientProvider>
