@@ -82,7 +82,7 @@ const ChatbotBubble = () => {
           }
         ]);
       } else if (data.error) {
-        setMessages(msgs => [...msgs, { sender: "bot", text: "Sorry, I couldn't process your request." }]);
+        setMessages(msgs => [...msgs, { sender: "bot", text: `Sorry, I couldn't process your request. The assistant returned an error: ${typeof data.error === 'object' ? JSON.stringify(data.error) : data.error}` }]);
       } else {
         setMessages(msgs => [...msgs, { sender: "bot", text: "No matches found. Would you like to post a custom request?" }]);
       }

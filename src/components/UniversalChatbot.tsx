@@ -90,8 +90,8 @@ const UniversalChatbot: React.FC = () => {
           {
             sender: "bot",
             text:
-              (out.error.startsWith("Raw OpenAI API response:") ?
-                "OpenAI Diagnostic Output:\n" + out.error.replace("Raw OpenAI API response: ", "") :
+              (out.error.startsWith("OpenAI Diagnostic Output:") ?
+                "OpenAI Diagnostic Output:\n" + out.error.replace("OpenAI Diagnostic Output: ", "") :
                 `Error from assistant: ${out.error}`
               )
           }
