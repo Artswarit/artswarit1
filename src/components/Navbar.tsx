@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -54,13 +55,14 @@ const Navbar = () => {
 
   return (
     <nav className="bg-white/70 glass-effect shadow-lg border-b border-gray-100 fixed w-full top-0 z-50 backdrop-blur-md transition-all">
-      <div className="container max-w-screen-xl mx-auto px-2 md:px-4 h-12 flex items-center">
+      <div className="w-full flex items-center h-12 pl-0 pr-2 md:pr-4">
         {/* Left: logo + desktop menu grouped */}
         <div className="flex items-center gap-x-6">
           {/* Logo */}
           <Link
             to="/"
             className="flex items-center gap-4 font-bold text-lg text-purple-600 tracking-tight hover:opacity-80 transition-opacity"
+            style={{ marginLeft: 0 }}
           >
             <img
               src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png"
@@ -241,3 +243,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
