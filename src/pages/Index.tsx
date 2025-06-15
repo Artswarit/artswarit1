@@ -395,16 +395,30 @@ const Index = () => {
             <div className="absolute -top-10 -left-10 w-20 h-20 bg-white/10 rounded-full blur-xl hidden sm:block"></div>
             <div className="absolute -bottom-10 -right-10 w-20 h-20 bg-white/10 rounded-full blur-xl hidden sm:block"></div>
             
-            <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-4 px-4">Ready to Showcase Your Talent?</h2>
+            <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-4 px-4">
+              Ready to Showcase Your Talent?
+            </h2>
             <p className="text-lg sm:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto text-white/90 px-4">
               Join thousands of creative professionals who are building their careers with Artswarit.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4 px-4">
-              <Button size="lg" variant="default" className="bg-white text-artswarit-purple hover:bg-gray-100 w-full sm:w-auto">
-                <Link to="/signup" className="block w-full">Join as Artist</Link>
+              <Button
+                size="lg"
+                variant="default"
+                className="bg-white text-artswarit-purple hover:bg-gray-100 w-full sm:w-auto"
+              >
+                <Link to="/signup" className="block w-full">
+                  Join as Artist
+                </Link>
               </Button>
-              <Button size="lg" variant="outline" className="border-white hover:bg-white w-full sm:w-auto text-violet-600 font-medium rounded-sm py-0 px-0 my-0 mx-[210px]">
-                <Link to="/client-dashboard" className="block w-full">Join as Client</Link>
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-white hover:bg-white w-full sm:w-auto text-violet-600 font-medium rounded-sm py-0 px-0"
+              >
+                <Link to="/client-dashboard" className="block w-full">
+                  Join as Client
+                </Link>
               </Button>
             </div>
           </div>
