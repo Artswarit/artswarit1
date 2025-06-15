@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -8,6 +7,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import UniversalChatbot from "@/components/UniversalChatbot";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -258,6 +258,7 @@ export default function AdminDashboard() {
           </div>
         </TabsContent>
       </Tabs>
+      <UniversalChatbot />
     </div>
   );
 }

@@ -20,6 +20,7 @@ import { Palette, User, DollarSign, MessageSquare, Settings, Crown, Bell, Folder
 import ArtworkUpload from '@/components/artwork/ArtworkUpload';
 import ProjectManagement from '@/components/dashboard/projects/ProjectManagement';
 import ArtistNotifications from '@/components/dashboard/ArtistNotifications';
+import UniversalChatbot from '@/components/UniversalChatbot';
 
 const ArtistDashboard = () => {
   const { tab } = useParams();
@@ -118,6 +119,7 @@ const ArtistDashboard = () => {
           </Tabs>
         </main>
         <Footer />
+        <UniversalChatbot />
       </div>
     </ProtectedRoute>
   );

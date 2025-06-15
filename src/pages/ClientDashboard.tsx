@@ -8,6 +8,7 @@ import SavedArtists from "@/components/dashboard/SavedArtists";
 import ClientMessages from "@/components/dashboard/ClientMessages";
 import ProjectRating from "@/components/dashboard/ProjectRating";
 import ClientPayments from "@/components/dashboard/ClientPayments";
+import UniversalChatbot from '@/components/UniversalChatbot';
 
 // Mock data for projects
 const activeProjects = [{
@@ -332,6 +333,7 @@ const ClientDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+      <UniversalChatbot />
     </div>;
 };
 export default ClientDashboard;
