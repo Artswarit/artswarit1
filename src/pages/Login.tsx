@@ -14,7 +14,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const { signIn, signInWithGoogle, loading } = useAuth();
+  const { user, signIn, signInWithGoogle, loading } = useAuth();
   const navigate = useNavigate();
   const { isAdmin, loading: adminLoading } = useIsAdmin();
 
@@ -24,7 +24,6 @@ const Login = () => {
     const { error } = await signIn(email, password);
     
     if (!error) {
-      // Wait for isAdmin to check the role then redirect
       setTimeout(() => {
         if (isAdmin) {
           navigate("/admin-dashboard");
@@ -64,7 +63,6 @@ const Login = () => {
               </Link>
             </p>
           </div>
-
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
@@ -108,17 +106,14 @@ const Login = () => {
                 <Label htmlFor="rememberMe" className="text-sm">Remember me</Label>
               </div>
             </div>
-
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in..." : "Log in"}
             </Button>
-
             <div className="flex items-center my-4">
               <div className="flex-1 border-t border-gray-300"></div>
               <div className="px-3 text-sm text-gray-500">Or continue with</div>
               <div className="flex-1 border-t border-gray-300"></div>
             </div>
-
             <div className="grid grid-cols-2 gap-3">
               <Button 
                 variant="outline" 
