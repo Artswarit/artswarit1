@@ -405,7 +405,7 @@ const Index = () => {
               <Button
                 size="lg"
                 variant="default"
-                className="bg-white text-artswarit-purple hover:bg-gray-100 w-full sm:w-auto"
+                className="bg-white text-artswarit-purple hover:bg-gray-100 w-full sm:w-auto font-bold min-w-[200px] h-14"
               >
                 <Link to="/signup" className="block w-full">
                   Join as Artist
@@ -414,7 +414,7 @@ const Index = () => {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-white hover:bg-white w-full sm:w-auto text-violet-600 font-medium rounded-sm py-0 px-0"
+                className="border-white hover:bg-white w-full sm:w-auto text-violet-600 font-bold rounded-sm py-0 px-0 min-w-[200px] h-14"
               >
                 <Link to="/client-dashboard" className="block w-full">
                   Join as Client
