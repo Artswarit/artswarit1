@@ -5,9 +5,10 @@ import { useProfile } from '@/hooks/useProfile';
 import { usePremiumSubscription } from '@/hooks/usePremiumSubscription';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Crown, CheckCircle, Star } from 'lucide-react';
+import { Crown, CheckCircle, Star, Sparkles } from 'lucide-react';
 import PremiumPanel from './PremiumPanel';
 import SubscriptionManagement from '@/components/settings/SubscriptionManagement';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const PremiumMembership = () => {
   const { user } = useAuth();
@@ -59,59 +60,79 @@ const PremiumMembership = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold flex items-center gap-2">
-          <Crown className="h-6 w-6 text-yellow-500" />
-          Premium Membership
-        </h2>
+    <div className="space-y-8 max-w-7xl mx-auto">
+      {/* Header Section */}
+      <div className="text-center space-y-4">
+        <div className="flex items-center justify-center gap-3">
+          <div className="relative">
+            <Crown className="h-8 w-8 text-yellow-500" />
+            <Sparkles className="h-4 w-4 text-yellow-400 absolute -top-1 -right-1 animate-pulse" />
+          </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+            Premium Membership
+          </h1>
+        </div>
+        
         {isActive && (
-          <div className="flex items-center gap-2">
+          <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-4 py-2">
             <CheckCircle className="h-5 w-5 text-green-600" />
-            <span className="text-green-600 font-semibold">Active Premium</span>
+            <span className="text-green-700 font-semibold">Premium Active</span>
           </div>
         )}
       </div>
 
       {isActive ? (
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Premium Status Card */}
-          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <Crown className="h-8 w-8 text-yellow-500" />
-              <div>
-                <h3 className="text-xl font-bold text-gray-800">Premium Member</h3>
-                <p className="text-gray-600 capitalize">
-                  {subscriptionTier} Plan • All premium features unlocked
-                </p>
-              </div>
-            </div>
+          <Card className="relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-yellow-50 via-orange-50 to-amber-50 opacity-60"></div>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-yellow-200/30 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <Star className="h-6 w-6 text-yellow-500 mx-auto mb-1" />
-                <div className="text-sm font-semibold">Premium Badge</div>
+            <CardHeader className="relative z-10">
+              <CardTitle className="flex items-center gap-3 text-xl">
+                <div className="p-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg">
+                  <Crown className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-gray-800">Premium Member</h2>
+                  <p className="text-sm text-gray-600 font-normal capitalize">
+                    {subscriptionTier} Plan • All premium features unlocked
+                  </p>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            
+            <CardContent className="relative z-10">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { icon: Star, label: "Premium Badge", color: "text-yellow-500" },
+                  { icon: CheckCircle, label: "Boosted Visibility", color: "text-green-600" },
+                  { icon: CheckCircle, label: "Direct Messaging", color: "text-blue-600" },
+                  { icon: CheckCircle, label: "Advanced Analytics", color: "text-purple-600" }
+                ].map((feature, index) => (
+                  <div key={index} className="text-center p-4 bg-white/60 backdrop-blur-sm rounded-lg border border-white/40">
+                    <feature.icon className={`h-6 w-6 ${feature.color} mx-auto mb-2`} />
+                    <div className="text-sm font-medium text-gray-800">{feature.label}</div>
+                  </div>
+                ))}
               </div>
-              <div className="text-center">
-                <CheckCircle className="h-6 w-6 text-green-600 mx-auto mb-1" />
-                <div className="text-sm font-semibold">Boosted Visibility</div>
-              </div>
-              <div className="text-center">
-                <CheckCircle className="h-6 w-6 text-green-600 mx-auto mb-1" />
-                <div className="text-sm font-semibold">Direct Messaging</div>
-              </div>
-              <div className="text-center">
-                <CheckCircle className="h-6 w-6 text-green-600 mx-auto mb-1" />
-                <div className="text-sm font-semibold">Advanced Analytics</div>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Subscription Management */}
-          <SubscriptionManagement />
+          <Card>
+            <CardHeader>
+              <CardTitle>Manage Subscription</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SubscriptionManagement />
+            </CardContent>
+          </Card>
         </div>
       ) : (
-        <PremiumPanel onUpgrade={handleUpgrade} />
+        <div className="space-y-6">
+          <PremiumPanel onUpgrade={handleUpgrade} />
+        </div>
       )}
     </div>
   );
