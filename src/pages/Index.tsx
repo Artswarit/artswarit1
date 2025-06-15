@@ -412,7 +412,7 @@ const Index = () => {
               <Button asChild variant="outline" className="border-white/30 text-white hover:bg-white/10 font-medium px-4 py-2 text-sm">
                 <Link to="/client-dashboard" className="flex items-center justify-center gap-2">
                   <Briefcase className="w-4 h-4" />
-                  <span>Join as Client</span>
+                  <span className="text-violet-600">Join as Client</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </Button>
