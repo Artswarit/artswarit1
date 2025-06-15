@@ -18,7 +18,7 @@ type Message = {
 
 const initialBotMsg: Message = {
   sender: "bot",
-  text: "Hi! 👋 I’m your AI assistant. Tell me what kind of artist you’re looking for (category, city, price, rating, available). Try a quick action:",
+  text: "Hi! 👋 I'm your AI assistant. Tell me what kind of artist you're looking for (category, city, price, rating, available). Try a quick action:",
 };
 
 const defaultQuickActions = [
@@ -158,8 +158,8 @@ const ChatbotBubble = () => {
             </div>
             {/* Chat messages + artist cards */}
             <div className="flex flex-col gap-1 px-2 py-2 overflow-y-auto max-h-60">
-              {messages.map((msg, i) =>
-                <React.Fragment key={i}>
+              {messages.map((msg, i) => (
+                <div key={i}>
                   <div className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
                     <div className={`rounded-lg px-4 py-2 text-sm max-w-[70%] whitespace-pre-line ${msg.sender === "user"
                       ? "bg-blue-100 text-blue-900"
@@ -169,16 +169,16 @@ const ChatbotBubble = () => {
                     </div>
                   </div>
                   {/* Show artist cards if present */}
-                  {msg.artists && Array.isArray(msg.artists) && msg.artists.map(artist =>
+                  {msg.artists && Array.isArray(msg.artists) && msg.artists.map(artist => (
                     <ChatbotArtistCard
                       artist={artist}
                       key={artist.id}
                       onFollow={followArtist}
                       onMessage={messageArtist}
                     />
-                  )}
-                </React.Fragment>
-              )}
+                  ))}
+                </div>
+              ))}
             </div>
             <div className="flex items-center gap-2 px-3 py-2 border-t bg-blue-50">
               <Input
