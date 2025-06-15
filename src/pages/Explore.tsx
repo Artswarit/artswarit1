@@ -16,11 +16,15 @@ import {
 import ChatbotBubble from '@/components/explore/ChatbotBubble';
 
 const Explore = () => {
+  console.log('Explore page rendering');
+  
   const { artworks, loading, error } = useArtworks();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filteredArtworks, setFilteredArtworks] = useState(artworks || []);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
+
+  console.log('Explore state:', { artworks: artworks?.length, loading, error, filteredArtworks: filteredArtworks?.length });
 
   // Pagination logic
   const totalPages = Math.ceil((filteredArtworks?.length || 0) / itemsPerPage);
@@ -43,6 +47,7 @@ const Explore = () => {
     hasVideo?: boolean;
     forSaleOnly?: boolean;
   }) => {
+    console.log('Filters changed:', filters);
     let filtered = [...(artworks || [])];
 
     // Search filter - prioritize artist name matches
@@ -167,17 +172,20 @@ const Explore = () => {
         break;
     }
 
+    console.log('Filtered artworks:', filtered.length);
     setFilteredArtworks(filtered);
     setCurrentPage(1); // Reset to first page when filters change
   };
 
   useEffect(() => {
+    console.log('Artworks data updated:', artworks?.length);
     if (artworks) {
       setFilteredArtworks(artworks);
     }
   }, [artworks]);
 
   if (loading) {
+    console.log('Explore showing loading state');
     return (
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
         <Navbar />
@@ -190,6 +198,12 @@ const Explore = () => {
       </div>
     );
   }
+
+  if (error) {
+    console.error('Explore error:', error);
+  }
+
+  console.log('Explore rendering main content with:', currentArtworks?.length, 'artworks');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
@@ -218,7 +232,7 @@ const Explore = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         {currentArtworks && currentArtworks.length > 0 ? (
-          <>
+          <div>
             {/* Artworks Grid */}
             <div className={`mb-8 ${
               viewMode === 'grid'
@@ -287,7 +301,7 @@ const Explore = () => {
                 </GlassCard>
               </div>
             )}
-          </>
+          </div>
         ) : (
           <div className="text-center py-16">
             <GlassCard className="p-12 max-w-md mx-auto">

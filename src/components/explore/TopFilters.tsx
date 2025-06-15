@@ -22,6 +22,8 @@ interface TopFiltersProps {
 }
 
 const TopFilters = ({ onFiltersChange, onViewModeChange, viewMode, resultsCount }: TopFiltersProps) => {
+  console.log('TopFilters rendering with resultsCount:', resultsCount);
+  
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     category: 'all',
@@ -33,12 +35,14 @@ const TopFilters = ({ onFiltersChange, onViewModeChange, viewMode, resultsCount 
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const handleFilterChange = (key: keyof FilterState, value: string) => {
+    console.log('Filter change:', key, value);
     const newFilters = { ...filters, [key]: value };
     setFilters(newFilters);
     onFiltersChange({ ...newFilters, tags: [], location: '' });
   };
 
   const resetFilters = () => {
+    console.log('Resetting filters');
     const resetFilters = {
       search: '',
       category: 'all',
