@@ -4,6 +4,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLocation, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 type Message = {
   sender: "user" | "bot";
@@ -64,48 +65,47 @@ const UniversalChatbot: React.FC = () => {
     }
   }, [messages, open]);
 
-  // OpenAI API Proxy invocation WITH enhanced diagnostic output
+  // Universal assistant invocation
   const callChatGpt = async (userMessages: { role: string; content: string }[]) => {
     setIsLoading(true);
     try {
-      const res = await fetch("https://sqdzemlcqesgjsybbhte.functions.supabase.co/universal-chatgpt-assistant", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const { data: out, error } = await supabase.functions.invoke("universal-chatgpt-assistant", {
+        body: {
           messages: userMessages,
           userRole: panel,
           location: location.pathname + location.search
-        })
+        }
       });
-      const out = await res.json();
+
+      if (error) {
+        throw error;
+      }
+
       if (out.answer) {
         setMessages(m => [
           ...m,
           { sender: "bot", text: out.answer }
         ]);
       } else if (out.error) {
-        // If it's a diagnostic error, render it with syntax highlighting for easier reading
+        // The edge function might still return an error in the JSON payload
+        const errorMessage = typeof out.error === 'object' ? JSON.stringify(out.error) : out.error;
         setMessages(m => [
           ...m,
           {
             sender: "bot",
-            text:
-              (out.error.startsWith("OpenAI Diagnostic Output:") ?
-                "OpenAI Diagnostic Output:\n" + out.error.replace("OpenAI Diagnostic Output: ", "") :
-                `Error from assistant: ${out.error}`
-              )
+            text: `Error from assistant: ${errorMessage}`
           }
         ]);
       } else {
         setMessages(m => [
           ...m,
-          { sender: "bot", text: "Sorry, I couldn't get an answer from ChatGPT." }
+          { sender: "bot", text: "Sorry, I couldn't get an answer from the assistant." }
         ]);
       }
     } catch (err: any) {
       setMessages(m => [
         ...m,
-        { sender: "bot", text: "Error contacting assistant service." }
+        { sender: "bot", text: `Error contacting assistant service: ${err.message}` }
       ]);
     } finally {
       setIsLoading(false);
@@ -118,7 +118,7 @@ const UniversalChatbot: React.FC = () => {
     if (!text) return;
     setMessages(m => [...m, { sender: "user", text }]);
     setInput("");
-    // build all conversation history for chatgpt
+    // build all conversation history for the assistant
     const mapped = [
       ...messages.map(msg => ({
         role: msg.sender === "user" ? "user" : "assistant",

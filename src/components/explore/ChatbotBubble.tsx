@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Bot, X, SendHorizonal, Loader2 } from "lucide-react";
 import ChatMessages from "./ChatMessages";
@@ -7,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import ChatbotArtistCard from "./ChatbotArtistCard";
 import { useChatbotPreferences } from "@/hooks/useChatbotPreferences";
+import { supabase } from "@/integrations/supabase/client";
 
 // Helper types
 type Message = {
@@ -59,14 +59,11 @@ const ChatbotBubble = () => {
     setIsLoading(true);
 
     try {
-      const supabaseProjectRef = "sqdzemlcqesgjsybbhte";
-      const functionUrl = `https://${supabaseProjectRef}.functions.supabase.co/artist-gpt-chat`;
-      const res = await fetch(functionUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: sendText })
+      const { data, error } = await supabase.functions.invoke("artist-gpt-chat", {
+        body: { prompt: sendText },
       });
-      const data = await res.json();
+
+      if (error) throw error;
 
       // Save extracted preferences
       if (data.extracted) update(data.extracted);
@@ -86,8 +83,8 @@ const ChatbotBubble = () => {
       } else {
         setMessages(msgs => [...msgs, { sender: "bot", text: "No matches found. Would you like to post a custom request?" }]);
       }
-    } catch {
-      setMessages(msgs => [...msgs, { sender: "bot", text: "There was an error contacting the assistant." }]);
+    } catch (err: any) {
+      setMessages(msgs => [...msgs, { sender: "bot", text: `There was an error contacting the assistant: ${err.message}` }]);
     } finally {
       setIsLoading(false);
       setTimeout(() => inputRef.current?.focus(), 100);
