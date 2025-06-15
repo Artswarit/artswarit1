@@ -117,9 +117,28 @@ const ArtistHeader: React.FC<Props> = ({
                 </Badge>
               )}
               {artist.premium && (
-                <Badge className="bg-gradient-to-r from-amber-400 to-yellow-300 text-yellow-900 flex items-center gap-1 px-3 py-1 text-[0.82rem] font-semibold border-2 border-yellow-100/40">
-                  <Star size={16} /> Premium
-                </Badge>
+                <span className="relative isolate inline-block">
+                  <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-yellow-900 flex items-center gap-1 px-3 py-1 text-[0.82rem] font-semibold border-2 border-yellow-100/40 overflow-hidden relative border-0">
+                    <Star size={16} /> Premium
+                    {/* Animated shine */}
+                    <span
+                      className="pointer-events-none absolute left-0 top-0 h-full w-full z-10"
+                      style={{}}
+                      aria-hidden="true"
+                    >
+                      <span className="absolute left-[-60%] top-0 h-full w-[80%] bg-gradient-to-r from-transparent via-white/60 to-transparent blur-[2px] opacity-60 animate-[shine-move_1.5s_linear_infinite]" />
+                    </span>
+                  </Badge>
+                  {/* Tailwind custom keyframe shine */}
+                  <style>
+                    {`
+@keyframes shine-move {
+  0% { left: -60%; }
+  100% { left: 110%; }
+}
+                    `}
+                  </style>
+                </span>
               )}
             </div>
             {/* Bio with solid, non-glass background */}
