@@ -7,23 +7,22 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+const GOOGLE_GEMINI_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY");
 
-async function fetchOpenAI(payload: any) {
-  // Diagnostic logging of payload
-  console.log("[edge] Sending payload to OpenAI:", JSON.stringify(payload));
-  const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+async function fetchGemini(payload: any) {
+  const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GOOGLE_GEMINI_API_KEY}`;
+  
+  console.log("[edge] Sending payload to Gemini:", JSON.stringify(payload));
+  const geminiRes = await fetch(GEMINI_API_URL, {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${OPENAI_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
   });
-  const data = await openaiRes.json();
-  // Diagnostic logging of response
-  console.log("[edge] OpenAI response:", JSON.stringify(data));
-  return { status: openaiRes.status, data };
+  const data = await geminiRes.json();
+  console.log("[edge] Gemini response:", JSON.stringify(data));
+  return { status: geminiRes.status, data };
 }
 
 serve(async (req) => {
@@ -31,9 +30,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  if (!OPENAI_API_KEY) {
-    console.error("[edge] OPENAI_API_KEY not set.");
-    return new Response(JSON.stringify({ error: "OPENAI_API_KEY not set" }), { status: 500, headers: corsHeaders });
+  if (!GOOGLE_GEMINI_API_KEY) {
+    console.error("[edge] GOOGLE_GEMINI_API_KEY not set.");
+    return new Response(JSON.stringify({ error: "GOOGLE_GEMINI_API_KEY not set" }), { status: 500, headers: corsHeaders });
   }
 
   try {
@@ -45,37 +44,65 @@ serve(async (req) => {
       general: "You are the Artswarit universal assistant. You help users across different tasks, features, and sections of the Artswarit platform."
     };
     const contextPrompt = rolePrompts[userRole] || rolePrompts.general;
+    const fullSystemPrompt = contextPrompt + ` User is currently at: ${location}.`;
 
+    // Gemini requires conversation history to start with a user message and have alternating roles.
+    // 1. Find the first user message.
+    const firstUserMessageIndex = messages.findIndex((msg: { role: string }) => msg.role === 'user');
+    
+    if (firstUserMessageIndex === -1) {
+      return new Response(JSON.stringify({ error: "No user message found in the history." }), { status: 400, headers: corsHeaders });
+    }
+
+    // 2. Take only the part of conversation starting from the first user.
+    const conversationMessages = messages.slice(firstUserMessageIndex);
+
+    // 3. Merge consecutive messages from the same role.
+    const geminiContents: { role: string, parts: { text: string }[] }[] = [];
+    if (conversationMessages.length > 0) {
+        let lastContent = {
+            role: conversationMessages[0].role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: conversationMessages[0].content }]
+        };
+
+        for (let i = 1; i < conversationMessages.length; i++) {
+            const currentRole = conversationMessages[i].role === 'assistant' ? 'model' : 'user';
+            if (currentRole === lastContent.role) {
+                lastContent.parts[0].text += `\n${conversationMessages[i].content}`;
+            } else {
+                geminiContents.push(lastContent);
+                lastContent = { role: currentRole, parts: [{ text: conversationMessages[i].content }] };
+            }
+        }
+        geminiContents.push(lastContent);
+    }
+    
     const payload = {
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: contextPrompt + ` User is currently at: ${location}.` },
-        ...messages,
-      ],
-      temperature: 0.5,
-      max_tokens: 300,
+      contents: geminiContents,
+      systemInstruction: {
+        parts: [{ text: fullSystemPrompt }]
+      },
+      generationConfig: {
+        temperature: 0.5,
+        maxOutputTokens: 300,
+      },
     };
 
     // Issue the request (with one fallback retry)
-    let openaiResult = await fetchOpenAI(payload);
-    if (!openaiResult.data?.choices?.[0]?.message?.content && openaiResult.status !== 200) {
-      console.warn("[edge] OpenAI primary call failed, retrying once...");
-      openaiResult = await fetchOpenAI(payload);
+    let geminiResult = await fetchGemini(payload);
+    if (geminiResult.status !== 200) {
+      console.warn("[edge] Gemini primary call failed, retrying once...");
+      geminiResult = await fetchGemini(payload);
     }
-    const { data } = openaiResult;
+    const { data } = geminiResult;
 
-    // Diagnostic log for "hello" test prompt
-    if (messages?.length === 1 && messages[0]?.content?.toLowerCase().trim() === "hello") {
-      console.log("[edge] Test 'hello' prompt detected.");
-    }
-
-    // Response handling: show OpenAI output/diagnostics by default if any error or no answer
-    const answer = data?.choices?.[0]?.message?.content?.trim();
+    const answer = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
     if (!answer) {
-      console.error("[edge] No answer returned from OpenAI. (Full data follows)", JSON.stringify(data));
+      const errorMessage = data?.error?.message || JSON.stringify(data);
+      console.error("[edge] No answer returned from Gemini. (Full data follows)", errorMessage);
       return new Response(
         JSON.stringify({ 
-          error: "OpenAI Diagnostic Output: " + JSON.stringify(data)
+          error: "Gemini Diagnostic Output: " + errorMessage
         }),
         { status: 502, headers: corsHeaders }
       );
