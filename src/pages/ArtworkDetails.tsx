@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Image, FileAudio, FileVideo } from "lucide-react";
 import { useArtworks } from "@/hooks/useArtworks";
 import ArtworkFeedback from "@/components/artwork/ArtworkFeedback";
+import SocialShareButtons from "@/components/artwork/SocialShareButtons";
 
 export default function ArtworkDetails() {
   const { id } = useParams();
@@ -81,9 +82,16 @@ export default function ArtworkDetails() {
                 {artwork.artist}
               </Link>
             </div>
-            <Button asChild className="mt-2">
-              <Link to="/explore">Back to Explore</Link>
-            </Button>
+            <div className="flex items-center justify-between mt-6">
+              <SocialShareButtons
+                url={window.location.href}
+                title={artwork.title}
+                imageUrl={artwork.imageUrl}
+              />
+              <Button asChild>
+                <Link to="/explore">Back to Explore</Link>
+              </Button>
+            </div>
           </GlassCard>
           
           {id && <ArtworkFeedback artworkId={id} />}

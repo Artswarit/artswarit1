@@ -24,6 +24,10 @@ const Explore = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
+  const trendingArtworks = [...(artworks || [])]
+    .sort((a, b) => ((b.views || 0) + (b.likes || 0) * 5) - ((a.views || 0) + (a.likes || 0) * 5))
+    .slice(0, 4);
+
   console.log('Explore state:', { artworks: artworks?.length, loading, error, filteredArtworks: filteredArtworks?.length });
 
   // Pagination logic
@@ -220,6 +224,37 @@ const Explore = () => {
           </p>
         </div>
       </div>
+
+      {/* Trending Section */}
+      {trendingArtworks.length > 0 && !loading && (
+        <div className="container mx-auto px-4 pt-8">
+          <h2 className="text-3xl font-bold mb-6 text-gray-800">Trending Now</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {trendingArtworks.map((artwork) => (
+              <div 
+                key={`trending-${artwork.id}`}
+                className="group"
+              >
+                <ArtworkCard
+                  id={artwork.id}
+                  title={artwork.title}
+                  artist={artwork.artist}
+                  artistId={artwork.artistId}
+                  type={artwork.type}
+                  imageUrl={artwork.imageUrl}
+                  likes={artwork.likes}
+                  views={artwork.views}
+                  price={artwork.price}
+                  category={artwork.category}
+                  audioUrl={artwork.audioUrl}
+                  videoUrl={artwork.videoUrl}
+                />
+              </div>
+            ))}
+          </div>
+          <hr className="my-12 border-gray-200" />
+        </div>
+      )}
 
       {/* Filters */}
       <TopFilters

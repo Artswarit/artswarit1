@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -36,14 +35,14 @@ const FeatureAudit = () => {
     // Discovery & Search
     { name: 'Artist Discovery', description: 'Browse and discover artists by category', status: 'implemented', category: 'discovery', priority: 'high', icon: Search, location: 'Explore Artists' },
     { name: 'Advanced Search & Filters', description: 'Comprehensive search with multiple filters', status: 'implemented', category: 'discovery', priority: 'high', icon: Search, location: 'Explore & Categories' },
-    { name: 'Trending Content', description: 'Showcase popular and trending artworks', status: 'partial', category: 'discovery', priority: 'medium', icon: TrendingUp },
+    { name: 'Trending Content', description: 'Showcase popular and trending artworks', status: 'implemented', category: 'discovery', priority: 'medium', icon: TrendingUp, location: 'Explore Page' },
     { name: 'Recommendations Engine', description: 'Personalized content recommendations', status: 'partial', category: 'discovery', priority: 'medium', icon: Star },
     
     // Social Features
     { name: 'Artist Following', description: 'Follow favorite artists for updates', status: 'implemented', category: 'social', priority: 'high', icon: Heart, location: 'Artist Profiles' },
     { name: 'Artwork Likes & Views', description: 'Engagement metrics for content', status: 'implemented', category: 'social', priority: 'high', icon: Heart, location: 'Artwork Cards' },
-    { name: 'Comments & Reviews', description: 'User feedback on artworks', status: 'missing', category: 'social', priority: 'medium', icon: MessageSquare },
-    { name: 'Social Sharing', description: 'Share artworks on social platforms', status: 'missing', category: 'social', priority: 'medium', icon: Share },
+    { name: 'Comments & Reviews', description: 'User feedback on artworks', status: 'implemented', category: 'social', priority: 'medium', icon: MessageSquare, location: 'Artwork Details Page' },
+    { name: 'Social Sharing', description: 'Share artworks on social platforms', status: 'implemented', category: 'social', priority: 'medium', icon: Share, location: 'Artwork Details Page' },
     
     // Communication
     { name: 'Direct Messaging', description: 'Private communication between users', status: 'implemented', category: 'communication', priority: 'high', icon: MessageSquare, location: 'Messages Tab' },
