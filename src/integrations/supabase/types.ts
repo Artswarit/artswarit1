@@ -379,6 +379,62 @@ export type Database = {
           },
         ]
       }
+      subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          is_active: boolean
+          renew_at: string | null
+          started_at: string
+          stripe_customer_id: string | null
+          subscription_tier:
+            | Database["public"]["Enums"]["subscription_tier"]
+            | null
+          updated_at: string
+          upgraded_role: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          is_active?: boolean
+          renew_at?: string | null
+          started_at?: string
+          stripe_customer_id?: string | null
+          subscription_tier?:
+            | Database["public"]["Enums"]["subscription_tier"]
+            | null
+          updated_at?: string
+          upgraded_role?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          is_active?: boolean
+          renew_at?: string | null
+          started_at?: string
+          stripe_customer_id?: string | null
+          subscription_tier?:
+            | Database["public"]["Enums"]["subscription_tier"]
+            | null
+          updated_at?: string
+          upgraded_role?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscribers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -420,6 +476,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "artist" | "client"
+      subscription_tier: "monthly" | "yearly" | "lifetime"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -536,6 +593,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "artist", "client"],
+      subscription_tier: ["monthly", "yearly", "lifetime"],
     },
   },
 } as const
