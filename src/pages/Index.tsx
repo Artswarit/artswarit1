@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FeaturedArtistCard from "@/components/FeaturedArtistCard";
 import CategoryCard from "@/components/CategoryCard";
-import { Music, BookOpen, Edit, Pencil } from "lucide-react";
+import { Music, BookOpen, Edit, Pencil, User, Briefcase, ArrowRight } from "lucide-react";
 import AnimatedHeroSlider from "@/components/AnimatedHeroSlider";
 import ArtworkCarousel from "@/components/ArtworkCarousel";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
@@ -388,40 +388,70 @@ const Index = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="bg-gradient-to-r from-artswarit-purple to-blue-500 text-white py-12 sm:py-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="max-w-3xl mx-auto relative">
-            <div className="absolute -top-10 -left-10 w-20 h-20 bg-white/10 rounded-full blur-xl hidden sm:block"></div>
-            <div className="absolute -bottom-10 -right-10 w-20 h-20 bg-white/10 rounded-full blur-xl hidden sm:block"></div>
-            
-            <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-4 px-4">
+      {/* Enhanced CTA Section */}
+      <section className="bg-gradient-to-r from-artswarit-purple to-blue-500 text-white py-16 sm:py-20 relative overflow-hidden">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0">
+          <div className="absolute -top-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
+          <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
+          <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-white/5 rounded-full blur-lg"></div>
+          <div className="absolute top-1/4 right-1/4 w-20 h-20 bg-white/5 rounded-full blur-lg"></div>
+        </div>
+        
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold mb-6 px-4">
               Ready to Showcase Your Talent?
             </h2>
-            <p className="text-lg sm:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto text-white/90 px-4">
+            <p className="text-lg sm:text-xl mb-8 sm:mb-12 max-w-2xl mx-auto text-white/90 px-4">
               Join thousands of creative professionals who are building their careers with Artswarit.
             </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4 px-4">
-              <Button
-                asChild
-                size="lg"
-                variant="default"
-                className="bg-white text-artswarit-purple hover:bg-gray-100 w-full sm:w-auto font-bold min-w-[200px] h-14"
-              >
-                <Link to="/signup" className="block w-full">
-                  Join as Artist
-                </Link>
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="border-white hover:bg-white w-full sm:w-auto text-violet-600 font-bold rounded-sm py-0 px-0 min-w-[200px] h-14"
-              >
-                <Link to="/client-dashboard" className="block w-full">
-                  Join as Client
-                </Link>
-              </Button>
+            
+            {/* Enhanced Buttons Container */}
+            <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 px-4 max-w-2xl mx-auto">
+              {/* Join as Artist Button */}
+              <div className="group relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-white/20 to-white/10 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-300"></div>
+                <Button
+                  asChild
+                  size="lg"
+                  className="relative bg-white text-gray-900 hover:bg-gray-50 w-full sm:w-auto font-bold min-w-[220px] h-16 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border-0"
+                >
+                  <Link to="/signup" className="flex items-center justify-center gap-3 text-lg">
+                    <div className="bg-gradient-to-r from-artswarit-purple to-blue-500 p-2 rounded-lg">
+                      <User className="w-5 h-5 text-white" />
+                    </div>
+                    <span>Join as Artist</span>
+                    <ArrowRight className="w-5 h-5 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                  </Link>
+                </Button>
+              </div>
+
+              {/* Join as Client Button */}
+              <div className="group relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-white/20 to-white/10 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-300"></div>
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="relative bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 w-full sm:w-auto font-bold min-w-[220px] h-16 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+                >
+                  <Link to="/client-dashboard" className="flex items-center justify-center gap-3 text-lg">
+                    <div className="bg-white/20 p-2 rounded-lg group-hover:bg-gradient-to-r group-hover:from-artswarit-purple group-hover:to-blue-500 transition-all">
+                      <Briefcase className="w-5 h-5" />
+                    </div>
+                    <span>Join as Client</span>
+                    <ArrowRight className="w-5 h-5 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+
+            {/* Additional info */}
+            <div className="mt-8 sm:mt-10 text-center">
+              <p className="text-white/70 text-sm sm:text-base">
+                Free to join • No setup fees • Start earning immediately
+              </p>
             </div>
           </div>
         </div>
