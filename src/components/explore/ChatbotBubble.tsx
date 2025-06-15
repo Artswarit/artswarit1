@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { Bot, X, SendHorizonal, Loader2 } from "lucide-react";
 import ChatMessages from "./ChatMessages";
@@ -53,35 +54,43 @@ const ChatbotBubble = () => {
   const handleSend = async (customPrompt?: string) => {
     const sendText = typeof customPrompt === "string" ? customPrompt : input.trim();
     if (!sendText) return;
-    const userMsg: Message = { sender: "user", text: sendText };
-    setMessages(msgs => [...msgs, userMsg]);
+    
+    const newMessages: Message[] = [...messages, { sender: "user", text: sendText }];
+    setMessages(newMessages);
+    
     setInput("");
     setIsLoading(true);
 
+    const mappedHistory = newMessages.map(msg => ({
+      role: msg.sender === "user" ? "user" : "assistant",
+      content: msg.text
+    }));
+
     try {
       const { data, error } = await supabase.functions.invoke("artist-gpt-chat", {
-        body: { prompt: sendText },
+        body: { messages: mappedHistory },
       });
 
       if (error) throw error;
 
-      // Save extracted preferences
-      if (data.extracted) update(data.extracted);
-
-      // Render artists as cards if received
-      if (Array.isArray(data.artists) && data.artists.length > 0) {
+      // The edge function can now return either artists or a text answer.
+      if (data.artists) {
+        // Save extracted preferences if any
+        if (data.extracted) update(data.extracted);
         setMessages(msgs => [
           ...msgs,
           {
             sender: "bot",
-            text: "Here are some matching artists for you:",
+            text: `I found some artists for you based on our conversation.`,
             artists: data.artists
           }
         ]);
+      } else if (data.answer) {
+        setMessages(msgs => [...msgs, { sender: "bot", text: data.answer }]);
       } else if (data.error) {
         setMessages(msgs => [...msgs, { sender: "bot", text: `Sorry, I couldn't process your request. The assistant returned an error: ${typeof data.error === 'object' ? JSON.stringify(data.error) : data.error}` }]);
       } else {
-        setMessages(msgs => [...msgs, { sender: "bot", text: "No matches found. Would you like to post a custom request?" }]);
+        setMessages(msgs => [...msgs, { sender: "bot", text: "I received an unexpected response from the assistant." }]);
       }
     } catch (err: any) {
       setMessages(msgs => [...msgs, { sender: "bot", text: `There was an error contacting the assistant: ${err.message}` }]);
