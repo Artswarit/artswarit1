@@ -339,7 +339,13 @@ const AdminDashboard = () => {
                         <div className="text-xs text-gray-500">{artwork.profiles?.email}</div>
                       </TableCell>
                       <TableCell>
-                        <div className="max-w-sm text-sm text-gray-700">{/* Description column, if you want to map actual description, assuming description field exists: artwork.description */}</div>
+                        <div className="max-w-sm text-sm text-gray-700">
+                          {/* Render artwork description if it exists */}
+                          {artwork.description
+                            ? artwork.description
+                            : <span className="italic text-muted-foreground">No description</span>
+                          }
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">
