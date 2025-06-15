@@ -13,6 +13,7 @@ import {
 import { ModeToggle } from "@/components/ModeToggle";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Home, Users, Search as SearchIcon } from "lucide-react";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 const menuItems = [
   {
@@ -34,6 +35,7 @@ const menuItems = [
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const isMobile = useIsMobile();
@@ -104,7 +106,7 @@ const Navbar = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-44 z-50 bg-white backdrop-blur-sm border border-gray-200" align="end" forceMount>
                 <DropdownMenuItem asChild>
-                  <Link to={user.user_metadata?.role === "artist" ? "/artist-dashboard" : "/client-dashboard"}>
+                  <Link to={isAdmin ? "/admin-dashboard" : (user.user_metadata?.role === "artist" ? "/artist-dashboard" : "/client-dashboard")}>
                     Dashboard
                   </Link>
                 </DropdownMenuItem>
@@ -186,11 +188,11 @@ const Navbar = () => {
               </Link>
             ))}
             <div className="mt-2">
-              {/* Dashboard button removed as requested */}
+              {/* Dashboard/Profile button for mobile, now admin-aware */}
               {user ? (
                 <>
                   <Link
-                    to={user.user_metadata?.role === "artist" ? "/artist-dashboard" : "/client-dashboard"}
+                    to={isAdmin ? "/admin-dashboard" : (user.user_metadata?.role === "artist" ? "/artist-dashboard" : "/client-dashboard")}
                     className="block px-3 py-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-md transition-colors font-medium"
                     onClick={closeMenu}
                   >

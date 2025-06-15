@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import LogoWithName from "@/components/LogoWithName";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -15,6 +16,7 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const { signIn, signInWithGoogle, loading } = useAuth();
   const navigate = useNavigate();
+  const { isAdmin, loading: adminLoading } = useIsAdmin();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -22,8 +24,19 @@ const Login = () => {
     const { error } = await signIn(email, password);
     
     if (!error) {
-      // Redirect to appropriate dashboard or home page
-      navigate("/");
+      // Wait for isAdmin to check the role then redirect
+      setTimeout(() => {
+        if (isAdmin) {
+          navigate("/admin-dashboard");
+        } else {
+          // If user is artist (profiles.role === "artist") redirect accordingly
+          if (user?.user_metadata?.role === "artist" || user?.role === "artist") {
+            navigate("/artist-dashboard");
+          } else {
+            navigate("/client-dashboard");
+          }
+        }
+      }, 250); // Small delay for isAdmin to update
     }
   };
 
