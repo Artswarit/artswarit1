@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 
 export const useArtworks = () => {
@@ -18,7 +19,8 @@ export const useArtworks = () => {
       is_pinned: false,
       is_for_sale: true,
       tags: ["ambient", "electronic", "chill"],
-      approval_status: "approved"
+      approval_status: "approved",
+      created_at: "2024-01-15T10:30:00Z"
     },
     {
       id: "2",
@@ -35,7 +37,8 @@ export const useArtworks = () => {
       is_pinned: true,
       is_for_sale: true,
       tags: ["digital", "surreal", "colorful"],
-      approval_status: "pending"
+      approval_status: "pending",
+      created_at: "2024-02-20T14:15:00Z"
     },
     {
       id: "3",
@@ -53,7 +56,8 @@ export const useArtworks = () => {
       is_pinned: false,
       is_for_sale: true,
       tags: ["hip-hop", "conscious", "urban"],
-      approval_status: "rejected"
+      approval_status: "rejected",
+      created_at: "2024-01-08T09:45:00Z"
     },
     {
       id: "4",
@@ -70,7 +74,9 @@ export const useArtworks = () => {
       videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
       is_pinned: false,
       is_for_sale: true,
-      tags: ["music video", "urban", "street"]
+      tags: ["music video", "urban", "street"],
+      approval_status: "approved",
+      created_at: "2024-03-12T16:20:00Z"
     },
     {
       id: "5",
@@ -86,7 +92,9 @@ export const useArtworks = () => {
       category: "Abstract Art",
       is_pinned: false,
       is_for_sale: true,
-      tags: ["abstract", "emotional", "expressive"]
+      tags: ["abstract", "emotional", "expressive"],
+      approval_status: "approved",
+      created_at: "2024-02-05T11:30:00Z"
     },
     {
       id: "6",
@@ -103,7 +111,9 @@ export const useArtworks = () => {
       audioUrl: "https://www.soundjay.com/misc/sounds/magic-chime-02.wav",
       is_pinned: false,
       is_for_sale: true,
-      tags: ["conscious rap", "lyrical", "meaningful"]
+      tags: ["conscious rap", "lyrical", "meaningful"],
+      approval_status: "pending",
+      created_at: "2024-01-28T13:45:00Z"
     },
     {
       id: "7",
@@ -119,7 +129,9 @@ export const useArtworks = () => {
       category: "Landscape",
       is_pinned: true,
       is_for_sale: true,
-      tags: ["nature", "ocean", "peaceful"]
+      tags: ["nature", "ocean", "peaceful"],
+      approval_status: "approved",
+      created_at: "2024-03-01T08:15:00Z"
     },
     {
       id: "8",
@@ -136,7 +148,9 @@ export const useArtworks = () => {
       videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
       is_pinned: false,
       is_for_sale: true,
-      tags: ["urban", "night", "timelapse"]
+      tags: ["urban", "night", "timelapse"],
+      approval_status: "approved",
+      created_at: "2024-02-18T19:30:00Z"
     }
   ]);
 
