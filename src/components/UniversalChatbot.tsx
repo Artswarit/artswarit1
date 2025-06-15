@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Bot, X, Loader2, MessageSquare } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
@@ -9,42 +8,24 @@ import { useLocation, useNavigate } from "react-router-dom";
 type Message = {
   sender: "user" | "bot";
   text: string;
-  actions?: { label: string; onClick: () => void }[];
-};
-
-const COMMON_HELP = [
-  { q: /update.*profile/i, a: "To update your profile, click 'Profile' in the menu, then edit your info.", button: "Go to Profile", path: "/artist-dashboard?tab=profile" },
-  { q: /upload.*artwork/i, a: "You can upload new artwork from the Artworks tab.", button: "Upload Artwork", path: "/artist-dashboard?tab=artworks" },
-  { q: /balance|earnings/i, a: "You can view your balance and earnings in the Earnings tab.", button: "View Earnings", path: "/artist-dashboard?tab=earnings" },
-  { q: /find.*artist/i, a: "To find artists, browse the Explore Artists page.", button: "Explore Artists", path: "/explore-artists" },
-  { q: /message|chat/i, a: "To send or view messages, open the Messages tab.", button: "Open Messages", path: "/client-dashboard?tab=messages" },
-  { q: /project/i, a: "Projects are managed from the Projects tab.", button: "Go to Projects", path: "/client-dashboard?tab=projects" },
-  { q: /admin/i, a: "Admin functions are available in the Admin Dashboard tabs.", button: "Admin Panel", path: "/admin-dashboard" },
-];
-
-const getPanelContext = (pathname: string, role: string) => {
-  if (pathname.includes("artist-dashboard") || role === "artist") return "artist";
-  if (pathname.includes("client-dashboard") || role === "client") return "client";
-  if (pathname.includes("admin-dashboard") || role === "admin") return "admin";
-  return "general";
 };
 
 const onboardingTips = {
   artist: [
-    "Welcome, Artist! Need help uploading artwork or updating your profile?",
-    "Ask anything like 'How do I get more clients?' or 'How to upload new art?'"
+    "Welcome, Artist! I can answer questions, help with uploads, projects, earnings, and more.",
+    "Try: 'How do I upload artwork?' or 'How to update profile?'"
   ],
   client: [
-    "Hi! Looking for artists or want to manage your projects?",
-    "Try asking: 'How do I start a project?' or 'How do I message an artist?'"
+    "Hello, looking for artists or project help? Just ask!",
+    "Try: 'How do I message an artist?' or 'Start a project.'"
   ],
   admin: [
-    "Welcome, Admin. Need help with approval workflows or user management?",
-    "Try: 'How do I view pending artists?' or 'Can I check artwork stats?'"
+    "Hi Admin! Ask me about moderation, approvals, or platform analytics.",
+    "Try: 'Who are pending artists?' or 'Show platform stats.'"
   ],
   general: [
-    "Hi! I’m your Artswarit Assistant. Ask me about any feature or task.",
-    "Example: 'How do I change my password?' or 'Where do I check notifications?'"
+    "Hi! I’m your Artswarit Assistant. Ask anything about the platform.",
+    "Example: 'How do I change my password?' or 'Where are my projects?'"
   ]
 };
 
@@ -58,9 +39,11 @@ const UniversalChatbot: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Determine user context/role
   const role = profile?.role || "client";
-  const panel = getPanelContext(location.pathname, role);
+  const panel = (location.pathname.includes("artist-dashboard") || role === "artist") ? "artist"
+    : (location.pathname.includes("client-dashboard") || role === "client") ? "client"
+    : (location.pathname.includes("admin-dashboard") || role === "admin") ? "admin"
+    : "general";
 
   // On mount or open, seed onboarding
   useEffect(() => {
@@ -81,101 +64,64 @@ const UniversalChatbot: React.FC = () => {
     }
   }, [messages, open]);
 
-  // "AI" Message handling – simple pattern matching for demo, can hook up real AI here
+  // OpenAI API Proxy invocation
+  const callChatGpt = async (userMessages: { role: string; content: string }[]) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("https://sqdzemlcqesgjsybbhte.functions.supabase.co/universal-chatgpt-assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: userMessages,
+          userRole: panel,
+          location: location.pathname + location.search
+        })
+      });
+      const out = await res.json();
+      if (out.answer) {
+        setMessages(m => [
+          ...m,
+          { sender: "bot", text: out.answer }
+        ]);
+      } else {
+        setMessages(m => [
+          ...m,
+          { sender: "bot", text: "Sorry, I couldn't get an answer from ChatGPT." }
+        ]);
+      }
+    } catch (err) {
+      setMessages(m => [
+        ...m,
+        { sender: "bot", text: "Error contacting assistant service." }
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Sending a user message
   const handleSend = async (value?: string) => {
     const text = typeof value === "string" ? value.trim() : input.trim();
     if (!text) return;
     setMessages(m => [...m, { sender: "user", text }]);
     setInput("");
-    setIsLoading(true);
-
-    // Simulate response delay
-    setTimeout(() => {
-      // Try to answer with built-in help
-      const help = COMMON_HELP.find(h => h.q.test(text));
-      if (help) {
-        setMessages(m => [
-          ...m,
-          { 
-            sender: "bot", 
-            text: help.a, 
-            actions: help.button && help.path ? [
-              {
-                label: help.button,
-                onClick: () => {
-                  setOpen(false);
-                  navigate(help.path);
-                }
-              }
-            ] : []
-          }
-        ]);
-      } else if (/balance|earning|wallet/.test(text) && panel === "artist") {
-        setMessages(m => [
-          ...m,
-          {
-            sender: "bot",
-            text: "Fetching your balance...",
-          }
-        ]);
-        // Future: Fetch real balance
-        setTimeout(() => {
-          setMessages(m => [
-            ...m,
-            {
-              sender: "bot",
-              text: "Your earnings balance is ₹12,340.",
-            }
-          ]);
-        }, 600);
-      } else if (/project/i.test(text) && panel === "client") {
-        setMessages(m => [
-          ...m,
-          {
-            sender: "bot",
-            text: "To view your projects, go to the Projects tab.",
-            actions: [{
-              label: "View Projects",
-              onClick: () => {
-                setOpen(false);
-                navigate("/client-dashboard?tab=projects");
-              }
-            }]
-          }
-        ]);
-      } else if (/pending/i.test(text) && panel === "admin") {
-        setMessages(m => [
-          ...m,
-          {
-            sender: "bot",
-            text: "Check 'Pending Artists' in the Admin Panel Overview to review and approve new artists."
-          }
-        ]);
-      } else {
-        setMessages(m => [
-          ...m,
-          {
-            sender: "bot",
-            text: 
-              panel === "artist" ? 
-                "I’m here to help with artwork uploads, earnings, and client communication." :
-              panel === "client" ?
-                "I can help you discover artists, start projects, or handle messages." :
-              panel === "admin" ?
-                "Ask about approvals, user management, or platform stats." :
-                "I’m Artswarit’s assistant—let me know how I can help!"
-          }
-        ]);
-      }
-      setIsLoading(false);
-    }, 900);
+    // build all conversation history for chatgpt
+    const mapped = [
+      ...messages.map(msg => ({
+        role: msg.sender === "user" ? "user" : "assistant",
+        content: msg.text
+      })),
+      { role: "user", content: text }
+    ];
+    await callChatGpt(mapped);
   };
 
   const handleInputKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") handleSend();
   };
 
-  const quickActions = [
+  // Quick Actions (can add more later)
+  const quickActions =
     panel === "artist"
       ? [
           { label: "Upload Artwork", onClick: () => navigate("/artist-dashboard?tab=artworks") },
@@ -191,14 +137,12 @@ const UniversalChatbot: React.FC = () => {
       : panel === "admin"
       ? [
           { label: "Pending Artists", onClick: () => navigate("/admin-dashboard") },
-          { label: "All Artworks", onClick: () => navigate("/admin-dashboard?tab=artworks") },
+          { label: "All Artworks", onClick: () => navigate("/admin-dashboard?tab=artworks") }
         ]
       : [
           { label: "Explore", onClick: () => navigate("/explore") }
-        ]
-  ].flat();
+        ];
 
-  // Minimal floating button with animation
   return (
     <>
       {!open && (
@@ -256,18 +200,6 @@ const UniversalChatbot: React.FC = () => {
                     }`}
                   >
                     {msg.text}
-                    {/* Action buttons from bot */}
-                    {msg.actions?.map((act, idx) => (
-                      <Button
-                        key={act.label + idx}
-                        variant="link"
-                        size="sm"
-                        className="ml-2 p-0 h-auto text-xs"
-                        onClick={act.onClick}
-                      >
-                        {act.label}
-                      </Button>
-                    ))}
                   </div>
                 </div>
               ))}
