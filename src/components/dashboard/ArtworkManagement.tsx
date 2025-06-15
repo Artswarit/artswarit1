@@ -80,7 +80,7 @@ const ArtworkManagement = () => {
             </Badge>
           )}
         </div>
-        <div className="absolute top-2 left-2">
+        <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm rounded-md">
           <ArtworkActions 
             artwork={artwork}
             onUpdate={handleArtworkUpdate}
@@ -109,7 +109,23 @@ const ArtworkManagement = () => {
                 Contact for Price
               </Badge>
             )}
+            {!artwork.is_for_sale && (
+              <Badge variant="outline" className="text-gray-600 border-gray-400">
+                Not for Sale
+              </Badge>
+            )}
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs"
+            onClick={() => {
+              // This will be handled by the ArtworkActions component
+            }}
+          >
+            <Edit className="h-3 w-3 mr-1" />
+            Quick Edit
+          </Button>
         </div>
 
         <div className="flex items-center justify-between text-sm text-gray-500">
