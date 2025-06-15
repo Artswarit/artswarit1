@@ -1,4 +1,5 @@
 
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -10,7 +11,7 @@ const corsHeaders = {
 const GOOGLE_GEMINI_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY");
 
 async function fetchGemini(payload: any) {
-  const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GOOGLE_GEMINI_API_KEY}`;
+  const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_GEMINI_API_KEY}`;
   
   console.log("[edge] Sending payload to Gemini:", JSON.stringify(payload));
   const geminiRes = await fetch(GEMINI_API_URL, {
@@ -113,3 +114,4 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: e.message || e.toString() }), { status: 500, headers: corsHeaders });
   }
 });
+
