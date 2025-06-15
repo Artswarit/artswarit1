@@ -1,3 +1,4 @@
+
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -426,10 +427,10 @@ export default function ArtistProfile() {
               avgRating: 4.7,
               reviewCount: 12,
             }}
-            // Pass handler to show modal
             onArtworkClick={handleArtworkClick}
           />
         </GlassCard>
+        
         {/* Artwork Details Modal */}
         {selectedArtwork && (
           <div
@@ -472,52 +473,74 @@ export default function ArtistProfile() {
                   </span>
                 )}
               </div>
-              {/* You can add more details about the artwork here */}
               <p className="text-gray-700">
-                {/* If you have a description, show it. Else, a placeholder. */}
                 {selectedArtwork.description || "No description for this artwork."}
               </p>
             </div>
           </div>
         )}
+      </main>
 
       {/* Project Request Modal */}
       <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
         <DialogContent className="max-w-md">
-            <DialogHeader>
-                <DialogTitle>Send Project Request</DialogTitle>
-                <DialogDescription>
-                    Send a project request to {profileState?.name}
-                </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div>
-                <Label htmlFor="req-title">Project Title</Label>
-                <Input id="req-title" value={projectRequest.title} onChange={(e) => setProjectRequest({...projectRequest, title: e.target.value})} placeholder="e.g., Album Cover Design" />
-              </div>
-              <div>
-                <Label htmlFor="req-budget">Budget (₹)</Label>
-                <Input id="req-budget" type="number" value={projectRequest.budget} onChange={(e) => setProjectRequest({...projectRequest, budget: e.target.value})} placeholder="e.g., 15000" />
-              </div>
-              <div>
-                <Label htmlFor="req-deadline">Deadline</Label>
-                <Input id="req-deadline" type="date" value={projectRequest.deadline} onChange={(e) => setProjectRequest({...projectRequest, deadline: e.target.value})} />
-              </div>
-              <div>
-                <Label htmlFor="req-description">Project Description</Label>
-                <Textarea id="req-description" value={projectRequest.description} onChange={(e) => setProjectRequest({...projectRequest, description: e.target.value})} placeholder="Describe your project requirements..." rows={3} />
-              </div>
+          <DialogHeader>
+            <DialogTitle>Send Project Request</DialogTitle>
+            <DialogDescription>
+              Send a project request to {profileState?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="req-title">Project Title</Label>
+              <Input 
+                id="req-title" 
+                value={projectRequest.title} 
+                onChange={(e) => setProjectRequest({...projectRequest, title: e.target.value})} 
+                placeholder="e.g., Album Cover Design" 
+              />
             </div>
-            <DialogFooter>
-                <Button variant="outline" onClick={() => setIsRequestDialogOpen(false)}>
-                    Cancel
-                </Button>
-                <Button onClick={handleSendProjectRequest} disabled={sendProjectRequestMutation.isPending}>
-                    {sendProjectRequestMutation.isPending ? 'Sending...' : 'Send Request'}
-                </Button>
-            </DialogFooter>
+            <div>
+              <Label htmlFor="req-budget">Budget (₹)</Label>
+              <Input 
+                id="req-budget" 
+                type="number" 
+                value={projectRequest.budget} 
+                onChange={(e) => setProjectRequest({...projectRequest, budget: e.target.value})} 
+                placeholder="e.g., 15000" 
+              />
+            </div>
+            <div>
+              <Label htmlFor="req-deadline">Deadline</Label>
+              <Input 
+                id="req-deadline" 
+                type="date" 
+                value={projectRequest.deadline} 
+                onChange={(e) => setProjectRequest({...projectRequest, deadline: e.target.value})} 
+              />
+            </div>
+            <div>
+              <Label htmlFor="req-description">Project Description</Label>
+              <Textarea 
+                id="req-description" 
+                value={projectRequest.description} 
+                onChange={(e) => setProjectRequest({...projectRequest, description: e.target.value})} 
+                placeholder="Describe your project requirements..." 
+                rows={3} 
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRequestDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSendProjectRequest} disabled={sendProjectRequestMutation.isPending}>
+              {sendProjectRequestMutation.isPending ? 'Sending...' : 'Send Request'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
+      
       <Footer />
     </div>
   );
