@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -14,14 +13,14 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import LogoWithName from './LogoWithName';
-import { NotificationCenter } from './notifications/NotificationCenter';
+import NotificationCenter from './notifications/NotificationCenter';
 import { useProfile } from '@/hooks/useProfile';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const { data: profile } = useProfile();
+  const { profile } = useProfile();
 
   const handleSignOut = async () => {
     await signOut();
