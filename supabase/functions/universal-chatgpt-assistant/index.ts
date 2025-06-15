@@ -9,6 +9,19 @@ const corsHeaders = {
 
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
+async function fetchOpenAI(payload: any) {
+  const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${OPENAI_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await openaiRes.json();
+  return { status: openaiRes.status, data };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -30,7 +43,7 @@ serve(async (req) => {
     const contextPrompt = rolePrompts[userRole] || rolePrompts.general;
 
     const payload = {
-      model: "gpt-4o-mini",
+      model: "gpt-3.5-turbo",
       messages: [
         { role: "system", content: contextPrompt + ` User is currently at: ${location}.` },
         ...messages,
@@ -39,31 +52,24 @@ serve(async (req) => {
       max_tokens: 300,
     };
 
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+    // Issue the request (with one fallback retry)
+    let openaiResult = await fetchOpenAI(payload);
+    if (!openaiResult.data?.choices?.[0]?.message?.content && openaiResult.status !== 200) {
+      // Retry once if output not present or error status
+      console.warn("[edge] OpenAI primary call failed, retrying once...");
+      openaiResult = await fetchOpenAI(payload);
+    }
+    const { data } = openaiResult;
 
-    if (!openaiRes.ok) {
-      const errText = await openaiRes.text();
-      console.error(`[edge] OpenAI API error: ${openaiRes.status} - ${errText}`);
-      return new Response(
-        JSON.stringify({ error: `OpenAI error: ${openaiRes.status} - ${errText}` }),
-        { status: 502, headers: corsHeaders }
-      );
+    // Diagnostic log for "hello" test prompt (informative, not returned to user unless error)
+    if (messages?.length === 1 && messages[0]?.content?.toLowerCase().trim() === "hello") {
+      console.log("[edge] Test 'hello' prompt detected.");
     }
 
-    const data = await openaiRes.json();
-    console.log(`[edge] OpenAI response: ${JSON.stringify(data)}`);
-
+    // Response handling
     const answer = data?.choices?.[0]?.message?.content?.trim();
     if (!answer) {
       console.error("[edge] No answer returned from OpenAI.", data);
-      // Instead of a generic error, return the full OpenAI API response for diagnostics
       return new Response(
         JSON.stringify({ error: "Raw OpenAI API response: " + JSON.stringify(data) }),
         { status: 502, headers: corsHeaders }
