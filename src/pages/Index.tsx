@@ -403,6 +403,7 @@ const Index = () => {
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4 px-4">
               <Button
+                asChild
                 size="lg"
                 variant="default"
                 className="bg-white text-artswarit-purple hover:bg-gray-100 w-full sm:w-auto font-bold min-w-[200px] h-14"
@@ -412,6 +413,7 @@ const Index = () => {
                 </Link>
               </Button>
               <Button
+                asChild
                 size="lg"
                 variant="outline"
                 className="border-white hover:bg-white w-full sm:w-auto text-violet-600 font-bold rounded-sm py-0 px-0 min-w-[200px] h-14"
