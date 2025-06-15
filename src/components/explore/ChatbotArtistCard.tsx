@@ -37,15 +37,15 @@ const ChatbotArtistCard: React.FC<Props> = ({ artist, onFollow, onMessage }) => 
       )}
       <div className="flex gap-2 mt-1">
         <Link to={`/artist/${artist.id}`}>
-          <Button size="xs" variant="outline">View Profile</Button>
+          <Button size="sm" variant="outline">View Profile</Button>
         </Link>
         {onFollow && (
-          <Button size="xs" variant="secondary" onClick={() => onFollow(artist.id)}>
+          <Button size="sm" variant="secondary" onClick={() => onFollow(artist.id)}>
             Follow
           </Button>
         )}
         {onMessage && (
-          <Button size="xs" variant="ghost" onClick={() => onMessage(artist.id)}>
+          <Button size="sm" variant="ghost" onClick={() => onMessage(artist.id)}>
             Message
           </Button>
         )}
