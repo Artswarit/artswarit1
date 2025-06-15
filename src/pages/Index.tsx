@@ -388,9 +388,12 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Clean CTA Section */}
-      <section className="bg-gradient-to-r from-artswarit-purple to-blue-500 text-white py-12 sm:py-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      {/* Enhanced CTA Section */}
+      <section className="bg-gradient-to-r from-artswarit-purple to-blue-500 text-white py-12 sm:py-16 relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"></div>
+        
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <div className="max-w-3xl mx-auto">
             <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
               Ready to Showcase Your Talent?
@@ -399,21 +402,25 @@ const Index = () => {
               Join thousands of creative professionals building their careers with Artswarit.
             </p>
             
-            {/* Simple Buttons Container */}
-            <div className="flex flex-col sm:flex-row justify-center gap-3 max-w-sm mx-auto">
-              <Button asChild className="bg-white text-artswarit-purple hover:bg-gray-50 font-medium px-4 py-2 text-sm">
-                <Link to="/signup" className="flex items-center justify-center gap-2">
-                  <User className="w-4 h-4" />
+            {/* Enhanced Buttons Container */}
+            <div className="flex flex-col sm:flex-row justify-center gap-4 max-w-md mx-auto">
+              <Button asChild className="group relative overflow-hidden bg-white text-artswarit-purple hover:bg-gray-50 font-medium px-6 py-3 text-sm transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                <Link to="/signup" className="flex items-center justify-center gap-2 relative z-10">
+                  <User className="w-4 h-4 transition-transform group-hover:scale-110" />
                   <span>Join as Artist</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  {/* Subtle glow effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-100/50 to-purple-100/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-md"></div>
                 </Link>
               </Button>
 
-              <Button asChild className="bg-white text-artswarit-purple hover:bg-gray-50 font-medium px-4 py-2 text-sm">
-                <Link to="/client-dashboard" className="flex items-center justify-center gap-2">
-                  <Briefcase className="w-4 h-4" />
+              <Button asChild className="group relative overflow-hidden bg-white text-artswarit-purple hover:bg-gray-50 font-medium px-6 py-3 text-sm transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                <Link to="/client-dashboard" className="flex items-center justify-center gap-2 relative z-10">
+                  <Briefcase className="w-4 h-4 transition-transform group-hover:scale-110" />
                   <span>Join as Client</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  {/* Subtle glow effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-100/50 to-purple-100/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-md"></div>
                 </Link>
               </Button>
             </div>
