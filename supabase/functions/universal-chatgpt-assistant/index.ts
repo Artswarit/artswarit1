@@ -15,13 +15,12 @@ serve(async (req) => {
   }
 
   if (!OPENAI_API_KEY) {
-    console.error("[edge] OPENAI_API_KEY not set.");  // Explicit logging
+    console.error("[edge] OPENAI_API_KEY not set.");
     return new Response(JSON.stringify({ error: "OPENAI_API_KEY not set" }), { status: 500, headers: corsHeaders });
   }
 
   try {
     const { messages, userRole, location } = await req.json();
-    // System/message prompt based on user role/context
     const rolePrompts: Record<string, string> = {
       artist: "You are the Artswarit assistant for artists. Guide users about uploading, managing artworks, updating profile, earning, projects, and answering queries about the artist dashboard.",
       client: "You are the Artswarit assistant for clients. Guide users about searching artists, starting projects, messaging, and answering queries about the client dashboard.",
@@ -64,8 +63,9 @@ serve(async (req) => {
     const answer = data?.choices?.[0]?.message?.content?.trim();
     if (!answer) {
       console.error("[edge] No answer returned from OpenAI.", data);
+      // Instead of a generic error, return the full OpenAI API response for diagnostics
       return new Response(
-        JSON.stringify({ error: "No answer returned from ChatGPT." }),
+        JSON.stringify({ error: "Raw OpenAI API response: " + JSON.stringify(data) }),
         { status: 502, headers: corsHeaders }
       );
     }
