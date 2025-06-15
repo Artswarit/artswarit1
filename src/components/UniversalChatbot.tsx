@@ -83,13 +83,18 @@ const UniversalChatbot: React.FC = () => {
           ...m,
           { sender: "bot", text: out.answer }
         ]);
+      } else if (out.error) {
+        setMessages(m => [
+          ...m,
+          { sender: "bot", text: `Error from assistant: ${out.error}` }
+        ]);
       } else {
         setMessages(m => [
           ...m,
           { sender: "bot", text: "Sorry, I couldn't get an answer from ChatGPT." }
         ]);
       }
-    } catch (err) {
+    } catch (err: any) {
       setMessages(m => [
         ...m,
         { sender: "bot", text: "Error contacting assistant service." }
