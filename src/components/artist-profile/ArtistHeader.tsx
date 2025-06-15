@@ -11,9 +11,11 @@ type Props = {
   onFollow: () => void;
   isFollowing: boolean;
   onMessage: () => void;
+  isSaved: boolean;
   onSave: () => void;
   onRequest: () => void;
   loadingFollow: boolean;
+  loadingSave: boolean;
 };
 
 // Helper component to render stars visually
@@ -40,9 +42,11 @@ const ArtistHeader: React.FC<Props> = ({
   onFollow,
   isFollowing,
   onMessage,
+  isSaved,
   onSave,
   onRequest,
   loadingFollow,
+  loadingSave,
 }) => {
   // Stats for dopamine effect - add mock rating
   const stats = [
@@ -155,18 +159,25 @@ const ArtistHeader: React.FC<Props> = ({
             isFollowing={isFollowing}
             onFollow={onFollow}
             onMessage={onMessage}
+            isSaved={isSaved}
             onSave={onSave}
             onRequest={onRequest}
+            loadingSave={loadingSave}
           />
           {/* Save & Request for tiny screens */}
           <div className="flex gap-2 mt-2 flex-wrap md:hidden">
             <Button
               onClick={onSave}
               variant="outline"
-              className="border-pink-400 text-pink-700 hover:bg-pink-200/50 hover:text-pink-900"
+              disabled={loadingSave}
+              className={`border-pink-400 hover:text-pink-900 ${
+                isSaved 
+                  ? 'bg-pink-100 text-pink-800 hover:bg-pink-200/60' 
+                  : 'text-pink-700 hover:bg-pink-200/50'
+              }`}
             >
               <Save size={17} className="mr-1" />
-              Save Artist
+              {isSaved ? "Saved" : "Save Artist"}
             </Button>
             <Button
               onClick={onRequest}

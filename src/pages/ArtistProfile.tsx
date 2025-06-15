@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
@@ -78,6 +78,7 @@ function toDemoUUID(id: string | undefined): string | undefined {
 export default function ArtistProfile() {
   const { id: routeId } = useParams();
   const id = toDemoUUID(routeId);
+  const navigate = useNavigate();
 
   const [profileState, setProfileState] = useState(() => {
     // fallback demo data for local dev: artistData
@@ -91,6 +92,8 @@ export default function ArtistProfile() {
   );
   const { toast } = useToast();
   const [loadingFollow, setLoadingFollow] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [loadingSave, setLoadingSave] = useState(false);
 
   // Get supabase user (async)
   const [userId, setUserId] = useState<string | null>(null);
@@ -130,6 +133,28 @@ export default function ArtistProfile() {
     }
     fetchFollowersData();
     // re-run when id or userId changes
+  }, [id, userId]);
+
+  // Fetch saved artist status
+  useEffect(() => {
+    async function checkSavedStatus() {
+      if (!id || !userId || id === ARTIST_UUID_1 || id === ARTIST_UUID_2) return;
+
+      const { data, error } = await supabase
+        .from('saved_artists')
+        .select('id')
+        .eq('artist_id', id)
+        .eq('client_id', userId)
+        .maybeSingle();
+      
+      if (!error) {
+        setIsSaved(!!data);
+      }
+    }
+
+    if (userId) {
+      checkSavedStatus();
+    }
   }, [id, userId]);
 
   // Handle follow: demo fallback for demo artists, supabase for real
@@ -214,11 +239,68 @@ export default function ArtistProfile() {
   const handleMessage = () =>
     toast({ title: "Coming soon!", description: "Messaging will be available in a future update.", variant: "default" });
 
-  const handleSave = () =>
-    toast({ title: "Artist saved!", description: "Artist added to your saved list. (Demo only)", variant: "default" });
+  const handleToggleSave = async () => {
+    if (!id || !userId) {
+      toast({
+        title: "Not logged in",
+        description: "Please sign in to save artists.",
+      });
+      return;
+    }
 
-  const handleRequestProject = () =>
-    toast({ title: "Coming soon!", description: "Request projects feature coming soon.", variant: "default" });
+    if (id === ARTIST_UUID_1 || id === ARTIST_UUID_2) {
+      toast({
+        title: "Demo Action",
+        description: "Save feature is for registered artists, not demo profiles.",
+      });
+      return;
+    }
+
+    setLoadingSave(true);
+    if (isSaved) {
+      // Unsave logic
+      const { error } = await supabase
+        .from("saved_artists")
+        .delete()
+        .eq("artist_id", id)
+        .eq("client_id", userId);
+      
+      if (!error) {
+        setIsSaved(false);
+        toast({ title: "Artist Unsaved" });
+      } else {
+        toast({ variant: "destructive", title: "Error", description: "Could not unsave artist." });
+      }
+    } else {
+      // Save logic
+      const { error } = await supabase
+        .from("saved_artists")
+        .insert({ artist_id: id, client_id: userId });
+
+      if (!error) {
+        setIsSaved(true);
+        toast({ title: "Artist Saved!" });
+      } else {
+        toast({ variant: "destructive", title: "Error", description: "Could not save artist." });
+      }
+    }
+    setLoadingSave(false);
+  };
+
+  const handleRequestProject = () => {
+    if (!userId) {
+      toast({
+        title: "Not logged in",
+        description: "Please sign in to request a project.",
+      });
+      return;
+    }
+    navigate('/client-dashboard');
+    toast({
+        title: "Redirecting...",
+        description: "Taking you to your dashboard to create a new project.",
+    });
+  };
 
   // Add state for the modal and selected artwork
   const [selectedArtwork, setSelectedArtwork] = useState<any | null>(null);
@@ -281,9 +363,11 @@ export default function ArtistProfile() {
           isFollowing={isFollowing}
           onFollow={handleFollow}
           onMessage={handleMessage}
-          onSave={handleSave}
+          isSaved={isSaved}
+          onSave={handleToggleSave}
           onRequest={handleRequestProject}
           loadingFollow={loadingFollow}
+          loadingSave={loadingSave}
         />
       </div>
       <main className="container max-w-screen-xl mx-auto flex-1 px-2 sm:px-6 pb-8 mt-6">

@@ -7,16 +7,20 @@ interface ArtistActionsBarProps {
   isFollowing: boolean;
   onFollow: () => void;
   onMessage: () => void;
+  isSaved: boolean;
   onSave: () => void;
   onRequest: () => void;
+  loadingSave: boolean;
 }
 
 const ArtistActionsBar: React.FC<ArtistActionsBarProps> = ({
   isFollowing,
   onFollow,
   onMessage,
+  isSaved,
   onSave,
   onRequest,
+  loadingSave,
 }) => {
   return (
     <div className="flex flex-col gap-2 w-full max-w-xs">
@@ -44,10 +48,15 @@ const ArtistActionsBar: React.FC<ArtistActionsBarProps> = ({
         <Button
           onClick={onSave}
           variant="outline"
-          className="flex-1 border-pink-400 text-pink-700 hover:bg-pink-200/50 hover:text-pink-900"
+          disabled={loadingSave}
+          className={`flex-1 border-pink-400 hover:text-pink-900 ${
+            isSaved 
+              ? 'bg-pink-100 text-pink-800 hover:bg-pink-200/60' 
+              : 'text-pink-700 hover:bg-pink-200/50'
+          }`}
         >
           <Save size={17} className="mr-1" />
-          Save Artist
+          {isSaved ? "Saved" : "Save Artist"}
         </Button>
         <Button
           onClick={onRequest}
