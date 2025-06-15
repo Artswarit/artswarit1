@@ -9,14 +9,17 @@ const corsHeaders = {
 
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
+// Update: Also extract rating, availability
 const extractSystemPrompt = `
-You are Artswarit’s assistant. Extract the following details from the user's request as a JSON:
+You are Artswarit’s assistant. Extract the following details from the user's request as JSON:
 {
   "category": "[artist type (e.g., singer, painter, dancer)]",
   "city": "[city or region, e.g., Delhi, Mumbai, Jaipur]",
-  "max_price": [number or null]
+  "max_price": [number or null],
+  "min_rating": [number or null],
+  "availability": "[available|busy|null]"
 }
-- Only extract; do not explain or add info. Price is null if not present.
+- Only extract; do not explain or add info. Price/rating is null if not present. Availability is available or busy (if user said 'available' or 'now').
 `;
 
 serve(async (req) => {
@@ -35,7 +38,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini", // use lower cost, fast model
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: extractSystemPrompt },
           { role: "user", content: prompt }
@@ -51,16 +54,26 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Could not parse AI response", ai_content: content }), { status: 500, headers: corsHeaders });
     }
 
-    // 2. Query Supabase database for artist matches
-    const { category, city, max_price } = extracted;
-    let query = `category=eq.${encodeURIComponent(category)}&city=eq.${encodeURIComponent(city)}`;
-    if (max_price !== null) {
-      query += `&price=lte.${max_price}`;
-    }
-    // TODO: If your project uses a different table or price column, update accordingly
+    // 2. Query Supabase DB, build up filters
+    const { category, city, max_price, min_rating, availability } = extracted;
+
+    let query: string[] = [];
+    if (category) query.push(`category=eq.${encodeURIComponent(category)}`);
+    if (city) query.push(`city=eq.${encodeURIComponent(city)}`);
+    if (max_price !== null && max_price !== undefined) query.push(`price=lte.${max_price}`);
+    // Optional rating and availability columns need to exist in artists table
+    if (min_rating !== null && min_rating !== undefined) query.push(`rating=gte.${min_rating}`);
+    if (availability === "available") query.push(`available=is.true`);
+    if (availability === "busy") query.push(`available=is.false`);
+
+    // Fetch only select columns for card
     const sbUrl = Deno.env.get("SUPABASE_URL");
     const sbAnon = Deno.env.get("SUPABASE_ANON_KEY");
-    const url = `${sbUrl}/rest/v1/artists?${query}&limit=3`;
+    const base = `${sbUrl}/rest/v1/artists`
+    const select = "id,name,category,city,price,image_url,profile_url,rating,available"
+    let url = `${base}?select=${encodeURIComponent(select)}`;
+    if (query.length) url += "&" + query.join("&");
+    url += "&limit=3";
 
     const dbRes = await fetch(url, {
       method: "GET",

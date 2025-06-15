@@ -1,28 +1,31 @@
+
 import React, { useState, useRef } from "react";
 import { Bot, X, SendHorizonal, Loader2 } from "lucide-react";
 import ChatMessages from "./ChatMessages";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import ChatbotArtistCard from "./ChatbotArtistCard";
+import { useChatbotPreferences } from "@/hooks/useChatbotPreferences";
 
-// New: Helper types and quick actions
+// Helper types
 type Message = {
   sender: "user" | "bot";
   text: string;
+  artists?: any[]; // array of artist objects if bot is replying with profiles
 };
 
 const initialBotMsg: Message = {
   sender: "bot",
-  text: "Hi! 👋 I’m your AI assistant. Tell me what kind of artist or artwork you’re looking for. Or try a quick action below.",
+  text: "Hi! 👋 I’m your AI assistant. Tell me what kind of artist you’re looking for (category, city, price, rating, available). Try a quick action:",
 };
 
-// Custom: Quick Action list
-const quickActions = [
+const defaultQuickActions = [
   { label: "Find Digital Artists", prompt: "Show me digital artists" },
   { label: "Show Free Artworks", prompt: "Show free artworks" },
   { label: "Photography in Mumbai", prompt: "Photographers in Mumbai" },
-  { label: "Artworks with Audio", prompt: "Show artworks with audio previews" },
-  { label: "Most Liked Artworks", prompt: "Most liked artworks" },
+  { label: "Best Rated", prompt: "Top rated artists only" },
+  { label: "Available Now", prompt: "Artists available now" }
 ];
 
 const ChatbotBubble = () => {
@@ -31,7 +34,22 @@ const ChatbotBubble = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { get, update } = useChatbotPreferences();
 
+  const [quickActions, setQuickActions] = useState(defaultQuickActions);
+
+  // Check localStorage for last preferences and set quick actions
+  React.useEffect(() => {
+    const last = get();
+    if (!last || Object.keys(last).length === 0) return;
+    const dynamic = [];
+    if (last.category) dynamic.push({ label: `More ${last.category}s`, prompt: `show me more ${last.category}s in ${last.city || ""}`.trim() });
+    if (last.city) dynamic.push({ label: `Artists in ${last.city}`, prompt: `Find artists in ${last.city}` });
+    if (last.max_price) dynamic.push({ label: `Budget ≤ ₹${last.max_price}`, prompt: `artists under ${last.max_price}` });
+    setQuickActions([...dynamic, ...defaultQuickActions]);
+  }, [open]);
+
+  // SUBMIT
   const handleSend = async (customPrompt?: string) => {
     const sendText = typeof customPrompt === "string" ? customPrompt : input.trim();
     if (!sendText) return;
@@ -49,34 +67,46 @@ const ChatbotBubble = () => {
         body: JSON.stringify({ prompt: sendText })
       });
       const data = await res.json();
-      if (data.error) {
+
+      // Save extracted preferences
+      if (data.extracted) update(data.extracted);
+
+      // Render artists as cards if received
+      if (Array.isArray(data.artists) && data.artists.length > 0) {
+        setMessages(msgs => [
+          ...msgs,
+          {
+            sender: "bot",
+            text: "Here are some matching artists for you:",
+            artists: data.artists
+          }
+        ]);
+      } else if (data.error) {
         setMessages(msgs => [...msgs, { sender: "bot", text: "Sorry, I couldn't process your request." }]);
-      } else if (Array.isArray(data.artists) && data.artists.length > 0) {
-        const reply =
-          `Here are some matching artists for you:\n` +
-          data.artists.map((a: any, i: number) =>
-            `${i + 1}. **${a.name}** – ${a.category} from ${a.city} | ₹${a.price}\n[View Profile](${a.profile_url})`
-          ).join("\n");
-        setMessages(msgs => [...msgs, { sender: "bot", text: reply }]);
       } else {
-        setMessages(msgs => [...msgs, { sender: "bot", text: "I couldn't find any exact matches. Would you like to submit a custom artist request?" }]);
+        setMessages(msgs => [...msgs, { sender: "bot", text: "No matches found. Would you like to post a custom request?" }]);
       }
     } catch {
       setMessages(msgs => [...msgs, { sender: "bot", text: "There was an error contacting the assistant." }]);
     } finally {
       setIsLoading(false);
-      inputRef.current?.focus();
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
   };
 
-  // Send on Enter
   const handleInputKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") handleSend();
   };
 
-  // New: Quick Action Button click
-  const handleQuickAction = (prompt: string) => {
-    handleSend(prompt);
+  const handleQuickAction = (prompt: string) => handleSend(prompt);
+
+  // Actions for Follow/Message on artist card
+  const followArtist = (artistId: string) => {
+    // Implement follow (could hit Supabase REST or function)
+    alert("Followed artist " + artistId);
+  };
+  const messageArtist = (artistId: string) => {
+    alert("Message sent to artist " + artistId);
   };
 
   return (
@@ -120,7 +150,30 @@ const ChatbotBubble = () => {
                 </Button>
               ))}
             </div>
-            <ChatMessages messages={messages} />
+            {/* Chat messages + artist cards */}
+            <div className="flex flex-col gap-1 px-2 py-2 overflow-y-auto max-h-60">
+              {messages.map((msg, i) =>
+                <React.Fragment key={i}>
+                  <div className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
+                    <div className={`rounded-lg px-4 py-2 text-sm max-w-[70%] whitespace-pre-line ${msg.sender === "user"
+                      ? "bg-blue-100 text-blue-900"
+                      : "bg-white border text-gray-900"
+                    }`}>
+                      {msg.text}
+                    </div>
+                  </div>
+                  {/* Show artist cards if present */}
+                  {msg.artists && Array.isArray(msg.artists) && msg.artists.map(artist =>
+                    <ChatbotArtistCard
+                      artist={artist}
+                      key={artist.id}
+                      onFollow={followArtist}
+                      onMessage={messageArtist}
+                    />
+                  )}
+                </React.Fragment>
+              )}
+            </div>
             <div className="flex items-center gap-2 px-3 py-2 border-t bg-blue-50">
               <Input
                 ref={inputRef}
