@@ -110,15 +110,6 @@ const ArtworkManagement = () => {
               </Badge>
             )}
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 text-xs"
-            onClick={() => {}} // This would open the edit modal
-          >
-            <Edit className="h-3 w-3 mr-1" />
-            Quick Edit
-          </Button>
         </div>
 
         <div className="flex items-center justify-between text-sm text-gray-500">
@@ -164,10 +155,12 @@ const ArtworkManagement = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ArtworkUploadForm
-              onUpload={uploadArtwork}
-              onCancel={() => setShowUploadForm(false)}
-            />
+            <ArtworkUploadForm />
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" onClick={() => setShowUploadForm(false)}>
+                Cancel
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
