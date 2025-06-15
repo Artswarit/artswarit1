@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -9,11 +10,13 @@ const corsHeaders = {
 
 const GOOGLE_GEMINI_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY");
 
-const systemPrompt = `You are Artswarit’s specialist artist-finding assistant.
-- Your primary goal is to help users discover artists on the platform.
-- Engage in a friendly, conversational manner. Ask clarifying questions if the user's request is ambiguous.
-- When you have enough information to search for artists (like category, city, price), use the 'find_artists' tool.
-- If the user is just chatting, respond naturally without using the tool.`;
+const systemPrompt = `You are Artswarit’s specialist artist-finding assistant. Your name is 'Artswarit Chat'.
+- Your primary goal is to help users discover artists on the Artswarit platform.
+- ALWAYS engage in a friendly, conversational, and helpful manner.
+- If the user starts with a simple greeting like 'hi', 'hello', or similar, you MUST respond with a friendly greeting and then ask how you can help them find an artist. For example: "Hello! I'm Artswarit Chat. How can I help you find the perfect artist today?". Do NOT use a tool for this.
+- When the user specifies what they are looking for (e.g., category, city, price), you MUST use the 'find_artists' tool to search. Ask clarifying questions if the user's request is ambiguous before using the tool.
+- If the user asks a general question about Artswarit, answer it to the best of your ability.
+- Only use the 'find_artists' tool when you have concrete criteria to search for.`;
 
 const findArtistsTool = {
   functionDeclarations: [{
@@ -80,7 +83,7 @@ serve(async (req) => {
     }
     
     // 2. Call Gemini
-    const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GOOGLE_GEMINI_API_KEY}`;
+    const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${GOOGLE_GEMINI_API_KEY}`;
     
     const finalContents = [
       { role: 'user', parts: [{ text: systemPrompt }] },
@@ -107,14 +110,25 @@ serve(async (req) => {
     console.log("Gemini Response Body:", JSON.stringify(geminiData, null, 2));
 
     if (geminiRes.status !== 200) {
-      const error = geminiData?.error?.message || JSON.stringify(geminiData);
+      const error = geminiData?.error?.message || `Gemini API returned status ${geminiRes.status}`;
+      console.error("Error from Gemini API:", error, JSON.stringify(geminiData));
       return new Response(JSON.stringify({ error: "Error from Gemini: " + error }), { status: geminiRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const candidate = geminiData?.candidates?.[0];
-    const part = candidate?.content?.parts?.[0];
+    if (!candidate || !candidate.content) {
+      const finishReason = candidate?.finishReason || "unknown";
+      const safetyRatings = candidate?.safetyRatings || [];
+      console.warn("No content in Gemini response.", { finishReason, safetyRatings });
+      if (finishReason === "SAFETY") {
+        return new Response(JSON.stringify({ error: "The response was blocked due to safety concerns. Please rephrase your request." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      return new Response(JSON.stringify({ error: "I'm sorry, I couldn't generate a response. Please try again." }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    const part = candidate.content.parts[0];
     if (!part) {
-      return new Response(JSON.stringify({ error: "No response from assistant." }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "No response part from assistant." }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // 3. Check for function call or text response
@@ -150,6 +164,13 @@ serve(async (req) => {
     }
 
     // It's a regular text response
+    if (part.text === undefined || part.text === null) {
+      console.warn("Gemini returned a part without text or function call.", JSON.stringify(part));
+      return new Response(JSON.stringify({ answer: "I'm not sure how to respond to that. Could you try asking in a different way?" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({ answer: part.text }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
