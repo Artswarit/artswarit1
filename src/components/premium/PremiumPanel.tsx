@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Crown, Star, CheckCircle, Zap, MessageSquare, Pin, BarChart3, Sparkles } from "lucide-react";
@@ -17,7 +16,7 @@ const plans = [
     price: "₹499", 
     key: "yearly", 
     subline: "/year",
-    popular: true,
+    popular: false,
     savings: "Save ₹89!",
     description: "Best value for committed artists"
   },
@@ -26,7 +25,7 @@ const plans = [
     price: "₹1499", 
     key: "lifetime", 
     subline: "one-time",
-    popular: false,
+    popular: true,
     description: "Never pay again, forever premium"
   }
 ];
