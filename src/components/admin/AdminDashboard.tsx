@@ -1,16 +1,13 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { UserCheck, Image, AlertTriangle, Users, FileText } from 'lucide-react';
-import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Eye } from "lucide-react";
+import { UserCheck, Image, Users, FileText } from 'lucide-react';
 
 // Slightly simplified Profile; there is no admin_role in the generated types.
 type ProfileWithExtras = ReturnType<typeof useProfile>['profile'] & {
@@ -24,6 +21,7 @@ interface PendingArtist {
   account_status: string;
   created_at: string;
   bio?: string;
+  type: "artist";
 }
 
 interface PendingArtwork {
@@ -38,22 +36,24 @@ interface PendingArtwork {
     full_name: string;
     email: string;
   };
+  type: "artwork";
 }
+
+// For combined moderation list
+type ModerationItem = PendingArtist | PendingArtwork;
 
 const AdminDashboard = () => {
   const { user } = useAuth();
   const { profile: baseProfile } = useProfile();
   const profile = baseProfile as ProfileWithExtras;
   const { toast } = useToast();
+
   const [pendingArtists, setPendingArtists] = useState<PendingArtist[]>([]);
   const [pendingArtworks, setPendingArtworks] = useState<PendingArtwork[]>([]);
+  const [moderationList, setModerationList] = useState<ModerationItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Add modal state for artwork preview
-  const [previewArtwork, setPreviewArtwork] = useState<PendingArtwork | null>(null);
-
   useEffect(() => {
-    // There are no admin_role/admin checks anymore
     fetchPendingItems();
     // eslint-disable-next-line
   }, []);
@@ -70,13 +70,19 @@ const AdminDashboard = () => {
         .eq('account_status', 'pending')
         .order('created_at', { ascending: false });
 
-      setPendingArtists((artists as PendingArtist[]) || []);
+      const pendingArtists: PendingArtist[] = (artists as any[] || []).map(a => ({
+        ...a,
+        type: "artist"
+      }));
+
+      setPendingArtists(pendingArtists);
 
       // Fetch pending artworks
       const { data: artworks } = await supabase
         .from('artworks')
         .select(`
           id, title, artist_id, approval_status, created_at, image_url, 
+          description,
           profiles:artist_id (
             full_name,
             email
@@ -85,17 +91,28 @@ const AdminDashboard = () => {
         .eq('approval_status', 'pending')
         .order('created_at', { ascending: false });
 
-      setPendingArtworks((artworks as PendingArtwork[]) || []);
+      const pendingArtworks: PendingArtwork[] = (artworks as any[] || []).map(a => ({
+        ...a,
+        type: "artwork"
+      }));
+
+      setPendingArtworks(pendingArtworks);
+
+      // Merge all pending items into one moderation list (sorted by date, newest first)
+      const combined: ModerationItem[] = [
+        ...pendingArtists,
+        ...pendingArtworks
+      ].sort((a, b) => (b.created_at > a.created_at ? 1 : -1));
+      setModerationList(combined);
+
     } catch (error) {
       setPendingArtists([]);
       setPendingArtworks([]);
+      setModerationList([]);
     } finally {
       setLoading(false);
     }
   };
-
-  // Remove admin approvals (since admin_approvals table does not exist)
-  // Notify about approval actions in UI only
 
   const handleArtistApproval = async (artistId: string, action: 'approved' | 'rejected', notes?: string) => {
     try {
@@ -179,9 +196,6 @@ const AdminDashboard = () => {
     }
   };
 
-  // Admin role check removed. No admin/moderator dashboard distinction.
-  // Just render dashboard for all.
-
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -232,71 +246,42 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
-      <Tabs defaultValue="artists" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="artists">Pending Artists ({pendingArtists.length})</TabsTrigger>
-          <TabsTrigger value="artworks">Pending Artworks ({pendingArtworks.length})</TabsTrigger>
-        </TabsList>
-
-        {/* Pending Artists Table (untouched) */}
-        <TabsContent value="artists" className="space-y-4">
-          {/* ... keep existing artist table implementation the same ... */}
-        </TabsContent>
-
-        {/* Pending Artworks Card-Based Moderation UI */}
-        <TabsContent value="artworks" className="space-y-4">
-          {pendingArtworks.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-8">
-                <Image className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No pending artwork approvals</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 gap-6">
-              {pendingArtworks.map((artwork) => (
-                <Card key={artwork.id} className="flex flex-col md:flex-row items-stretch p-4 gap-4 shadow-md border">
-                  {/* Artwork image */}
-                  <div className="w-full md:w-40 flex-shrink-0 flex items-center justify-center">
-                    <img
-                      src={artwork.image_url}
-                      alt={artwork.title}
-                      className="w-36 h-36 object-cover rounded-lg border shadow-md"
-                    />
-                  </div>
-                  {/* Details */}
-                  <div className="flex-1 flex flex-col justify-between py-2">
-                    <div className="flex flex-col gap-2">
-                      <div className="flex flex-col md:flex-row md:items-center gap-2">
-                        <span className="font-bold text-lg text-gray-900">{artwork.title}</span>
-                        <Badge variant="outline" className="ml-0 md:ml-4">
-                          Submitted: {new Date(artwork.created_at).toLocaleDateString()}
-                        </Badge>
-                        <span className="ml-0 md:ml-auto text-xs text-gray-400 select-all">{artwork.id}</span>
-                      </div>
-                      <div className="flex flex-row items-center gap-2">
-                        <span className="font-medium text-gray-700">{artwork.profiles?.full_name}</span>
-                        <span className="text-xs text-gray-500">{artwork.profiles?.email}</span>
-                      </div>
-                      <div className="mt-1 max-w-2xl text-sm text-gray-800">
-                        {artwork.description
-                          ? artwork.description
-                          : <span className="italic text-muted-foreground">No description</span>
-                        }
-                      </div>
+      {/* Combined Moderation List */}
+      <div className="space-y-6">
+        {moderationList.length === 0 ? (
+          <Card>
+            <CardContent className="text-center py-8">
+              <Image className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">No pending moderation items</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 gap-6">
+            {moderationList.map(item =>
+              item.type === "artist" ? (
+                <Card key={"artist-" + item.id} className="flex flex-col md:flex-row items-stretch p-4 gap-4 border shadow-md bg-white/70">
+                  {/* Artist info */}
+                  <div className="flex-1 flex flex-col gap-2 justify-between py-2">
+                    <div className="flex flex-col md:flex-row md:items-center gap-2">
+                      <span className="font-bold text-lg text-gray-900">{item.full_name}</span>
+                      <Badge variant="outline" className="ml-0 md:ml-4">Artist Profile</Badge>
+                      <span className="ml-0 md:ml-auto text-xs text-gray-400 select-all">{item.id}</span>
                     </div>
-                    {/* Action buttons */}
+                    <span className="text-xs text-gray-500">{item.email}</span>
+                    <div className="mt-1 max-w-2xl text-sm text-gray-800">
+                      {item.bio ? item.bio : <span className="italic text-muted-foreground">No bio provided</span>}
+                    </div>
                     <div className="mt-4 flex gap-3">
                       <Button
                         size="sm"
-                        onClick={() => handleArtworkApproval(artwork.id, 'approved')}
+                        onClick={() => handleArtistApproval(item.id, 'approved')}
                         className="bg-green-600 hover:bg-green-700"
                       >
                         Approve
                       </Button>
                       <Button
                         size="sm"
-                        onClick={() => handleArtworkApproval(artwork.id, 'rejected', 'Content does not meet guidelines')}
+                        onClick={() => handleArtistApproval(item.id, 'rejected', "Your info is insufficient or needs corrections.")}
                         variant="destructive"
                       >
                         Reject
@@ -304,11 +289,60 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                 </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+              ) : (
+                <Card key={"artwork-" + item.id} className="flex flex-col md:flex-row items-stretch p-4 gap-4 border shadow-md bg-white/70">
+                  {/* Artwork image */}
+                  <div className="w-full md:w-40 flex-shrink-0 flex items-center justify-center">
+                    <img
+                      src={item.image_url}
+                      alt={item.title}
+                      className="w-36 h-36 object-cover rounded-lg border shadow-md"
+                    />
+                  </div>
+                  {/* Artwork Info & Actions */}
+                  <div className="flex-1 flex flex-col justify-between py-2">
+                    <div className="flex flex-col gap-2">
+                      <div className="flex flex-col md:flex-row md:items-center gap-2">
+                        <span className="font-bold text-lg text-gray-900">{item.title}</span>
+                        <Badge variant="outline" className="ml-0 md:ml-4">
+                          Submitted: {new Date(item.created_at).toLocaleDateString()}
+                        </Badge>
+                        <span className="ml-0 md:ml-auto text-xs text-gray-400 select-all">{item.id}</span>
+                      </div>
+                      <div className="flex flex-row items-center gap-2">
+                        <span className="font-medium text-gray-700">{item.profiles?.full_name}</span>
+                        <span className="text-xs text-gray-500">{item.profiles?.email}</span>
+                      </div>
+                      <div className="mt-1 max-w-2xl text-sm text-gray-800">
+                        {item.description
+                          ? item.description
+                          : <span className="italic text-muted-foreground">No description</span>
+                        }
+                      </div>
+                    </div>
+                    <div className="mt-4 flex gap-3">
+                      <Button
+                        size="sm"
+                        onClick={() => handleArtworkApproval(item.id, 'approved')}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleArtworkApproval(item.id, 'rejected', "Content does not meet guidelines")}
+                        variant="destructive"
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              )
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
