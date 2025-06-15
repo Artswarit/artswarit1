@@ -74,12 +74,20 @@ serve(async (req) => {
     
     // 2. Call Gemini
     const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GOOGLE_GEMINI_API_KEY}`;
+    
+    const finalContents = [
+      { role: 'user', parts: [{ text: systemPrompt }] },
+      { role: 'model', parts: [{ text: 'Okay, I am ready to help. How can I assist you in finding an artist today?' }] },
+      ...geminiContents
+    ];
+    
     const payload = {
-      contents: geminiContents,
-      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents: finalContents,
       tools: [findArtistsTool],
       generationConfig: { temperature: 0.7 },
     };
+
+    console.log("Gemini Payload:", JSON.stringify(payload, null, 2));
 
     const geminiRes = await fetch(GEMINI_API_URL, {
       method: "POST",
@@ -88,6 +96,9 @@ serve(async (req) => {
     });
     const geminiData = await geminiRes.json();
     
+    console.log("Gemini Response Status:", geminiRes.status);
+    console.log("Gemini Response Body:", JSON.stringify(geminiData, null, 2));
+
     if (geminiRes.status !== 200) {
       const error = geminiData?.error?.message || JSON.stringify(geminiData);
       return new Response(JSON.stringify({ error: "Error from Gemini: " + error }), { status: geminiRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -141,3 +152,4 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
+
