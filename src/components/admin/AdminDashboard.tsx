@@ -297,7 +297,7 @@ const AdminDashboard = () => {
           )}
         </TabsContent>
 
-        {/* Pending Artworks Table */}
+        {/* Pending Artworks Table (UPDATED) */}
         <TabsContent value="artworks" className="space-y-4">
           {pendingArtworks.length === 0 ? (
             <Card>
@@ -311,9 +311,8 @@ const AdminDashboard = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Preview</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Artist</TableHead>
+                    <TableHead>Artwork</TableHead>
+                    <TableHead>Artist Info</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead>Submitted</TableHead>
                     <TableHead className="text-center">Actions</TableHead>
@@ -323,53 +322,24 @@ const AdminDashboard = () => {
                   {pendingArtworks.map((artwork) => (
                     <TableRow key={artwork.id}>
                       <TableCell>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              type="button"
-                              size="icon"
-                              variant="ghost"
-                              className="hover:scale-110 transition-transform"
-                              onClick={() => setPreviewArtwork(artwork)}
-                            >
-                              <img
-                                src={artwork.image_url}
-                                alt={artwork.title}
-                                className="w-12 h-12 rounded-md object-cover border"
-                              />
-                              <Eye className="w-4 h-4 text-gray-500 absolute top-1 left-1 bg-white/80 rounded-full" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent onOpenAutoFocus={e => e.preventDefault()}>
-                            <DialogHeader>
-                              <DialogTitle>{artwork.title}</DialogTitle>
-                              <DialogDescription>
-                                by {artwork.profiles?.full_name} ({artwork.profiles?.email})
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="flex flex-col gap-4 items-center py-2">
-                              <img
-                                src={artwork.image_url}
-                                alt={artwork.title}
-                                className="max-h-[400px] rounded-lg shadow mb-2"
-                              />
-                              <div className="w-full">
-                                <div className="font-bold mb-1">Description:</div>
-                                <div className="text-sm text-gray-700">{artwork.title}</div>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                        <div className="flex items-center gap-4">
+                          <img
+                            src={artwork.image_url}
+                            alt={artwork.title}
+                            className="w-24 h-24 rounded-md object-cover border"
+                          />
+                          <div>
+                            <div className="font-semibold text-base">{artwork.title}</div>
+                            <div className="text-xs text-gray-500 mt-1">{artwork.id}</div>
+                          </div>
+                        </div>
                       </TableCell>
                       <TableCell>
-                        <div className="font-semibold">{artwork.title}</div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">{artwork.profiles?.full_name}</div>
+                        <div className="font-medium">{artwork.profiles?.full_name}</div>
                         <div className="text-xs text-gray-500">{artwork.profiles?.email}</div>
                       </TableCell>
                       <TableCell>
-                        <span className="block line-clamp-2 max-w-xs text-xs text-gray-600"></span>
+                        <div className="max-w-sm text-sm text-gray-700">{/* Description column, if you want to map actual description, assuming description field exists: artwork.description */}</div>
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">
@@ -396,31 +366,6 @@ const AdminDashboard = () => {
                   ))}
                 </TableBody>
               </Table>
-
-              {/* Modal for full artwork preview */}
-              {previewArtwork && (
-                <Dialog open={!!previewArtwork} onOpenChange={() => setPreviewArtwork(null)}>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>{previewArtwork.title}</DialogTitle>
-                      <DialogDescription>
-                        by {previewArtwork.profiles?.full_name} ({previewArtwork.profiles?.email})
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="flex flex-col items-center py-2">
-                      <img
-                        src={previewArtwork.image_url}
-                        alt={previewArtwork.title}
-                        className="max-h-[400px] rounded-lg shadow mb-2"
-                      />
-                      <div className="w-full max-w-md/2 mt-2">
-                        <div className="font-bold">Description:</div>
-                        <span className="text-sm text-gray-700"></span>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              )}
             </div>
           )}
         </TabsContent>
