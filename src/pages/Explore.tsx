@@ -13,8 +13,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import ChatbotBubble from "@/components/explore/ChatbotBubble";
-import ExploreFilters from "@/components/explore/ExploreFilters";
+import UniversalChatbot from "@/components/UniversalChatbot";
 
 const Explore = () => {
   const { artworks, loading, error } = useArtworks();
@@ -302,8 +301,8 @@ const Explore = () => {
 
       <Footer />
 
-      {/* Floating Chatbot Bubble */}
-      <ChatbotBubble />
+      {/* Floating UniversalChatbot (ArtswaritBot) */}
+      <UniversalChatbot />
     </div>
   );
 };
