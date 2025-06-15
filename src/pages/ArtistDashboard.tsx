@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,7 +15,6 @@ import MessagingModule from '@/components/dashboard/messages/MessagingModule';
 import ArtistSettings from '@/components/dashboard/ArtistSettings';
 import PremiumMembership from '@/components/premium/PremiumMembership';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
-import AdminDashboard from '@/components/admin/AdminDashboard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Palette, User, DollarSign, MessageSquare, Settings, Crown, Bell, FolderUp, Briefcase } from 'lucide-react';
 import ArtworkUpload from '@/components/artwork/ArtworkUpload';
@@ -27,7 +27,7 @@ const ArtistDashboard = () => {
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
 
-  // Redirect non-artists
+  // Redirect non-artists to client dashboard
   useEffect(() => {
     if (profile && profile.role !== 'artist' && profile.role !== 'premium') {
       window.location.href = '/client-dashboard';

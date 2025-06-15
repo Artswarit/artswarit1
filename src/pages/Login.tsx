@@ -22,19 +22,19 @@ const Login = () => {
   const { profile, loading: profileLoading, refetch: refetchProfile } = useProfile();
   const [loginError, setLoginError] = useState<string | null>(null);
 
-  // After successful login, fetch latest profile and redirect
+  // Redirect logic based on user role
   useEffect(() => {
-    // Only redirect after all loading is complete, user exists, and either admin or profile loaded
     if (!loading && !adminLoading && !profileLoading && user) {
+      console.log('Redirecting user:', { isAdmin, profileRole: profile?.role });
+      
       if (isAdmin) {
         navigate("/admin-dashboard");
-      } else if (profile?.role === "artist") {
+      } else if (profile?.role === "artist" || profile?.role === "premium") {
         navigate("/artist-dashboard");
       } else {
         navigate("/client-dashboard");
       }
     }
-    // eslint-disable-next-line
   }, [loading, adminLoading, profileLoading, user, isAdmin, profile, navigate]);
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -44,9 +44,9 @@ const Login = () => {
     const { error } = await signIn(email, password);
 
     if (!error) {
-      // Fetch latest profile just to be safe (sometimes the profile is not ready in time)
+      // Fetch latest profile to ensure we have the most up-to-date role
       refetchProfile && refetchProfile();
-      // Redirection will happen automatically through the useEffect above when state updates
+      // Redirection will happen automatically through the useEffect above
     } else {
       setLoginError(error.message || "Login failed");
     }
@@ -168,4 +168,3 @@ const Login = () => {
 };
 
 export default Login;
-

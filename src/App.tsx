@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -40,10 +41,35 @@ function App() {
             <Route path="/about-us" element={<AboutUs />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
-            {/* Temporarily remove protection for testing */}
-            <Route path="/artist-dashboard" element={<ArtistDashboard />} />
-            <Route path="/client-dashboard" element={<ClientDashboard />} />
-            <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            
+            {/* Protected Routes */}
+            <Route 
+              path="/artist-dashboard" 
+              element={
+                <ProtectedRoute>
+                  <ArtistDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/client-dashboard" 
+              element={
+                <ProtectedRoute>
+                  <ClientDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Admin-only Route */}
+            <Route 
+              path="/admin-dashboard" 
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </QueryClientProvider>
