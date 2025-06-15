@@ -1,5 +1,5 @@
 
-import { Twitter, Facebook, Pinterest, Copy } from 'lucide-react';
+import { Twitter, Facebook, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -56,7 +56,9 @@ const SocialShareButtons = ({ url, title, imageUrl }: SocialShareButtonsProps) =
         className="transition-colors hover:bg-red-50"
       >
         <a href={`https://pinterest.com/pin/create/button/?url=${encodedUrl}&media=${encodedImageUrl}&description=${encodedTitle}`} target="_blank" rel="noopener noreferrer" aria-label="Share on Pinterest">
-          <Pinterest className="h-4 w-4 text-[#E60023]" />
+          <div className="h-4 w-4 bg-[#E60023] rounded-sm flex items-center justify-center">
+            <span className="text-white text-xs font-bold">P</span>
+          </div>
         </a>
       </Button>
       <Button variant="outline" size="icon" onClick={copyToClipboard} className="transition-colors hover:bg-gray-100" aria-label="Copy link">
