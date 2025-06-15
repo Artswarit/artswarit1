@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
@@ -6,7 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Eye, Heart, Clock, CheckCircle, XCircle, AlertCircle, DollarSign, Edit, Pin } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Eye, Heart, Clock, CheckCircle, XCircle, AlertCircle, DollarSign, Pin, Search, Filter, SortAsc, SortDesc, Download, BarChart3, Grid, List, MoreHorizontal } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import ArtworkUploadForm from "./artwork/ArtworkUploadForm";
 import PinnedArtworks from "./artwork/PinnedArtworks";
 import ArtworkActions from "./artwork/ArtworkActions";
@@ -17,6 +22,12 @@ const ArtworkManagement = () => {
   const { artworks, loading, uploadArtwork } = useArtworks();
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [localArtworks, setLocalArtworks] = useState(artworks);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("date");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [selectedArtworks, setSelectedArtworks] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [filterCategory, setFilterCategory] = useState("all");
 
   useEffect(() => {
     setLocalArtworks(artworks);
@@ -34,11 +45,64 @@ const ArtworkManagement = () => {
     setLocalArtworks(prev => prev.filter(artwork => artwork.id !== artworkId));
   };
 
+  // Filter and sort artworks
+  const filteredAndSortedArtworks = localArtworks
+    .filter(artwork => {
+      const matchesSearch = artwork.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           artwork.category.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = filterCategory === "all" || artwork.category === filterCategory;
+      return matchesSearch && matchesCategory;
+    })
+    .sort((a, b) => {
+      let comparison = 0;
+      switch (sortBy) {
+        case "title":
+          comparison = a.title.localeCompare(b.title);
+          break;
+        case "likes":
+          comparison = a.likes - b.likes;
+          break;
+        case "views":
+          comparison = a.views - b.views;
+          break;
+        case "price":
+          comparison = (a.price || 0) - (b.price || 0);
+          break;
+        default:
+          comparison = new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+      }
+      return sortOrder === "asc" ? comparison : -comparison;
+    });
+
   // Filter artworks by approval status
-  const pendingArtworks = localArtworks.filter(artwork => artwork.approval_status === 'pending');
-  const approvedArtworks = localArtworks.filter(artwork => artwork.approval_status === 'approved');
-  const rejectedArtworks = localArtworks.filter(artwork => artwork.approval_status === 'rejected');
-  const forSaleArtworks = localArtworks.filter(artwork => artwork.is_for_sale);
+  const pendingArtworks = filteredAndSortedArtworks.filter(artwork => artwork.approval_status === 'pending');
+  const approvedArtworks = filteredAndSortedArtworks.filter(artwork => artwork.approval_status === 'approved');
+  const rejectedArtworks = filteredAndSortedArtworks.filter(artwork => artwork.approval_status === 'rejected');
+  const forSaleArtworks = filteredAndSortedArtworks.filter(artwork => artwork.is_for_sale);
+
+  // Bulk actions
+  const handleSelectAll = (artworkList: any[]) => {
+    const allIds = artworkList.map(artwork => artwork.id);
+    setSelectedArtworks(prev => 
+      prev.length === allIds.length ? [] : allIds
+    );
+  };
+
+  const handleBulkAction = (action: string) => {
+    console.log(`Bulk action: ${action} for artworks:`, selectedArtworks);
+    // Handle bulk actions like delete, pin, mark for sale, etc.
+    setSelectedArtworks([]);
+  };
+
+  const exportArtworkData = () => {
+    const dataStr = JSON.stringify(localArtworks, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'artworks_export.json';
+    link.click();
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -62,8 +126,8 @@ const ArtworkManagement = () => {
     }
   };
 
-  const ArtworkCard = ({ artwork }: { artwork: any }) => (
-    <Card key={artwork.id} className="overflow-hidden">
+  const ArtworkCard = ({ artwork, isSelected, onSelect }: { artwork: any; isSelected: boolean; onSelect: (id: string) => void }) => (
+    <Card key={artwork.id} className={`overflow-hidden transition-all ${isSelected ? 'ring-2 ring-primary' : ''}`}>
       <div className="relative">
         <img
           src={artwork.imageUrl}
@@ -79,7 +143,12 @@ const ArtworkManagement = () => {
             </Badge>
           )}
         </div>
-        <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm rounded-md">
+        <div className="absolute top-2 left-2 flex gap-2">
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={() => onSelect(artwork.id)}
+            className="bg-white/90"
+          />
           <ArtworkActions 
             artwork={artwork}
             onUpdate={handleArtworkUpdate}
@@ -143,11 +212,109 @@ const ArtworkManagement = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Artwork Management</h2>
-        <Button onClick={() => setShowUploadForm(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Upload New Artwork
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={exportArtworkData}>
+            <Download className="h-4 w-4 mr-2" />
+            Export Data
+          </Button>
+          <Button onClick={() => setShowUploadForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Upload New Artwork
+          </Button>
+        </div>
       </div>
+
+      {/* Search and Filter Controls */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search artworks by title or category..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            <Select value={filterCategory} onValueChange={setFilterCategory}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Filter by category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="Music">Music</SelectItem>
+                <SelectItem value="Digital Art">Digital Art</SelectItem>
+                <SelectItem value="Hip-Hop">Hip-Hop</SelectItem>
+                <SelectItem value="Abstract Art">Abstract Art</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={`${sortBy}-${sortOrder}`} onValueChange={(value) => {
+              const [field, order] = value.split('-');
+              setSortBy(field);
+              setSortOrder(order);
+            }}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="date-desc">Newest First</SelectItem>
+                <SelectItem value="date-asc">Oldest First</SelectItem>
+                <SelectItem value="title-asc">Title A-Z</SelectItem>
+                <SelectItem value="title-desc">Title Z-A</SelectItem>
+                <SelectItem value="likes-desc">Most Liked</SelectItem>
+                <SelectItem value="views-desc">Most Viewed</SelectItem>
+                <SelectItem value="price-desc">Highest Price</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="flex gap-2">
+              <Button
+                variant={viewMode === "grid" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setViewMode("grid")}
+              >
+                <Grid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "list" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setViewMode("list")}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Bulk Actions */}
+      {selectedArtworks.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">
+                {selectedArtworks.length} artwork{selectedArtworks.length > 1 ? 's' : ''} selected
+              </span>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => handleBulkAction('pin')}>
+                  <Pin className="h-4 w-4 mr-1" />
+                  Pin Selected
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleBulkAction('sale')}>
+                  <DollarSign className="h-4 w-4 mr-1" />
+                  Mark for Sale
+                </Button>
+                <Button variant="destructive" size="sm" onClick={() => handleBulkAction('delete')}>
+                  Delete Selected
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Upload Form Modal/Dialog */}
       {showUploadForm && (
@@ -171,6 +338,44 @@ const ArtworkManagement = () => {
 
       {/* Pinned Artworks */}
       <PinnedArtworks />
+
+      {/* Analytics Overview */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Performance Overview
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">
+                {localArtworks.reduce((sum, artwork) => sum + artwork.views, 0).toLocaleString()}
+              </div>
+              <div className="text-sm text-gray-600">Total Views</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-600">
+                {localArtworks.reduce((sum, artwork) => sum + artwork.likes, 0).toLocaleString()}
+              </div>
+              <div className="text-sm text-gray-600">Total Likes</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">
+                ₹{localArtworks.filter(a => a.is_for_sale && a.price).reduce((sum, artwork) => sum + (artwork.price || 0), 0).toLocaleString()}
+              </div>
+              <div className="text-sm text-gray-600">Total Value</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600">
+                {(localArtworks.reduce((sum, artwork) => sum + artwork.views, 0) / localArtworks.length || 0).toFixed(0)}
+              </div>
+              <div className="text-sm text-gray-600">Avg Views</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Approval Status Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -230,7 +435,7 @@ const ArtworkManagement = () => {
       {/* Artwork Tabs by Status */}
       <Tabs defaultValue="all" className="w-full">
         <TabsList>
-          <TabsTrigger value="all">All Artworks ({localArtworks.length})</TabsTrigger>
+          <TabsTrigger value="all">All Artworks ({filteredAndSortedArtworks.length})</TabsTrigger>
           <TabsTrigger value="pending">Pending ({pendingArtworks.length})</TabsTrigger>
           <TabsTrigger value="approved">Approved ({approvedArtworks.length})</TabsTrigger>
           <TabsTrigger value="for-sale">For Sale ({forSaleArtworks.length})</TabsTrigger>
@@ -238,9 +443,27 @@ const ArtworkManagement = () => {
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {localArtworks.map((artwork) => (
-              <ArtworkCard key={artwork.id} artwork={artwork} />
+          {selectedArtworks.length === 0 && filteredAndSortedArtworks.length > 0 && (
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Checkbox
+                checked={selectedArtworks.length === filteredAndSortedArtworks.length}
+                onCheckedChange={() => handleSelectAll(filteredAndSortedArtworks)}
+              />
+              Select all artworks
+            </div>
+          )}
+          <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-4"}>
+            {filteredAndSortedArtworks.map((artwork) => (
+              <ArtworkCard 
+                key={artwork.id} 
+                artwork={artwork}
+                isSelected={selectedArtworks.includes(artwork.id)}
+                onSelect={(id) => setSelectedArtworks(prev => 
+                  prev.includes(id) 
+                    ? prev.filter(artId => artId !== id)
+                    : [...prev, id]
+                )}
+              />
             ))}
           </div>
         </TabsContent>
@@ -254,9 +477,18 @@ const ArtworkManagement = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-4"}>
               {pendingArtworks.map((artwork) => (
-                <ArtworkCard key={artwork.id} artwork={artwork} />
+                <ArtworkCard 
+                  key={artwork.id} 
+                  artwork={artwork}
+                  isSelected={selectedArtworks.includes(artwork.id)}
+                  onSelect={(id) => setSelectedArtworks(prev => 
+                    prev.includes(id) 
+                      ? prev.filter(artId => artId !== id)
+                      : [...prev, id]
+                  )}
+                />
               ))}
             </div>
           )}
@@ -271,9 +503,18 @@ const ArtworkManagement = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-4"}>
               {approvedArtworks.map((artwork) => (
-                <ArtworkCard key={artwork.id} artwork={artwork} />
+                <ArtworkCard 
+                  key={artwork.id} 
+                  artwork={artwork}
+                  isSelected={selectedArtworks.includes(artwork.id)}
+                  onSelect={(id) => setSelectedArtworks(prev => 
+                    prev.includes(id) 
+                      ? prev.filter(artId => artId !== id)
+                      : [...prev, id]
+                  )}
+                />
               ))}
             </div>
           )}
@@ -291,9 +532,18 @@ const ArtworkManagement = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-4"}>
               {forSaleArtworks.map((artwork) => (
-                <ArtworkCard key={artwork.id} artwork={artwork} />
+                <ArtworkCard 
+                  key={artwork.id} 
+                  artwork={artwork}
+                  isSelected={selectedArtworks.includes(artwork.id)}
+                  onSelect={(id) => setSelectedArtworks(prev => 
+                    prev.includes(id) 
+                      ? prev.filter(artId => artId !== id)
+                      : [...prev, id]
+                  )}
+                />
               ))}
             </div>
           )}
@@ -308,9 +558,18 @@ const ArtworkManagement = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-4"}>
               {rejectedArtworks.map((artwork) => (
-                <ArtworkCard key={artwork.id} artwork={artwork} />
+                <ArtworkCard 
+                  key={artwork.id} 
+                  artwork={artwork}
+                  isSelected={selectedArtworks.includes(artwork.id)}
+                  onSelect={(id) => setSelectedArtworks(prev => 
+                    prev.includes(id) 
+                      ? prev.filter(artId => artId !== id)
+                      : [...prev, id]
+                  )}
+                />
               ))}
             </div>
           )}
