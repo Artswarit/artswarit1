@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import LogoWithName from "@/components/LogoWithName";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useProfile } from "@/hooks/useProfile";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -17,33 +19,45 @@ const Login = () => {
   const { user, signIn, signInWithGoogle, loading } = useAuth();
   const navigate = useNavigate();
   const { isAdmin, loading: adminLoading } = useIsAdmin();
+  const { profile, loading: profileLoading, refetch: refetchProfile } = useProfile();
+  const [loginError, setLoginError] = useState<string | null>(null);
+
+  // After successful login, fetch latest profile and redirect
+  useEffect(() => {
+    // Only redirect after all loading is complete, user exists, and either admin or profile loaded
+    if (!loading && !adminLoading && !profileLoading && user) {
+      if (isAdmin) {
+        navigate("/admin-dashboard");
+      } else if (profile?.role === "artist") {
+        navigate("/artist-dashboard");
+      } else {
+        navigate("/client-dashboard");
+      }
+    }
+    // eslint-disable-next-line
+  }, [loading, adminLoading, profileLoading, user, isAdmin, profile, navigate]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    
+    setLoginError(null);
+
     const { error } = await signIn(email, password);
-    
+
     if (!error) {
-      setTimeout(() => {
-        if (isAdmin) {
-          navigate("/admin-dashboard");
-        } else {
-          // If user is artist (profiles.role === "artist") redirect accordingly
-          if (user?.user_metadata?.role === "artist" || user?.role === "artist") {
-            navigate("/artist-dashboard");
-          } else {
-            navigate("/client-dashboard");
-          }
-        }
-      }, 250); // Small delay for isAdmin to update
+      // Fetch latest profile just to be safe (sometimes the profile is not ready in time)
+      refetchProfile && refetchProfile();
+      // Redirection will happen automatically through the useEffect above when state updates
+    } else {
+      setLoginError(error.message || "Login failed");
     }
   };
 
   const handleGoogleSignin = async () => {
     const { error } = await signInWithGoogle();
-    if (!error) {
-      // Redirect will happen automatically via auth state change
+    if (error) {
+      setLoginError(error.message || "Google sign in failed");
     }
+    // Redirect will happen automatically via auth state changes
   };
 
   return (
@@ -106,6 +120,9 @@ const Login = () => {
                 <Label htmlFor="rememberMe" className="text-sm">Remember me</Label>
               </div>
             </div>
+            {loginError && (
+              <div className="text-red-600 text-center text-sm">{loginError}</div>
+            )}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in..." : "Log in"}
             </Button>
@@ -151,3 +168,4 @@ const Login = () => {
 };
 
 export default Login;
+
