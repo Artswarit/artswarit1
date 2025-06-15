@@ -403,20 +403,22 @@ const Index = () => {
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4 px-4">
               <Button
+                asChild
                 size="lg"
                 variant="default"
-                className="bg-white text-artswarit-purple hover:bg-gray-100 w-full sm:w-auto font-bold min-w-[200px] h-14"
+                className="bg-white text-artswarit-purple hover:bg-gray-100 font-bold min-w-[200px] h-14 w-full sm:w-auto"
               >
-                <Link to="/signup" className="block w-full">
+                <Link to="/signup" className="flex items-center justify-center w-full h-full">
                   Join as Artist
                 </Link>
               </Button>
               <Button
+                asChild
                 size="lg"
                 variant="outline"
-                className="border-white hover:bg-white w-full sm:w-auto text-violet-600 font-bold rounded-sm py-0 px-0 min-w-[200px] h-14"
+                className="border-white hover:bg-white text-violet-600 font-bold rounded-sm py-0 px-0 min-w-[200px] h-14 w-full sm:w-auto"
               >
-                <Link to="/client-dashboard" className="block w-full">
+                <Link to="/client-dashboard" className="flex items-center justify-center w-full h-full">
                   Join as Client
                 </Link>
               </Button>
