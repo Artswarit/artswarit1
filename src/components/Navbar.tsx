@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -53,6 +52,15 @@ const Navbar = () => {
   const linkInactiveClass =
     "text-gray-700 before:bg-gray-300 hover:text-purple-600";
 
+  // Scroll to top on logo click
+  const handleLogoClick = (e: React.MouseEvent) => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    // if already on home, prevent default so doesn't re-render
+    if (location.pathname === "/") {
+      e.preventDefault();
+    }
+  };
+
   return (
     <nav className="bg-white/70 glass-effect shadow-lg border-b border-gray-100 fixed w-full top-0 z-50 backdrop-blur-md transition-all">
       <div className="w-full flex items-center h-12 px-0 md:px-0">
@@ -61,6 +69,7 @@ const Navbar = () => {
           {/* Logo */}
           <Link
             to="/"
+            onClick={handleLogoClick}
             className="flex items-center font-bold text-lg text-purple-600 tracking-tight hover:opacity-80 transition-opacity"
             style={{ marginLeft: 0, marginRight: 0, padding: 0 }}
           >
