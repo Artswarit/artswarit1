@@ -1,117 +1,162 @@
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useProfile } from "@/hooks/useProfile";
-import { useArtworks } from "@/hooks/useArtworks";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Eye, Heart, Clock, CheckCircle, XCircle, AlertCircle, DollarSign, Pin, Search, Filter, SortAsc, SortDesc, Download, BarChart3, Grid, List, MoreHorizontal } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import ArtworkUploadForm from "./artwork/ArtworkUploadForm";
-import PinnedArtworks from "./artwork/PinnedArtworks";
-import ArtworkActions from "./artwork/ArtworkActions";
+import { useState, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { useArtworks } from '@/hooks/useArtworks';
+import { Grid, List, Plus, BarChart3 } from 'lucide-react';
+import ArtworkUploadForm from './artwork/ArtworkUploadForm';
+import ArtworkEditModal from './artwork/ArtworkEditModal';
+import ArtworkActions from './artwork/ArtworkActions';
+import ArtworkSearchFilters from './artwork/ArtworkSearchFilters';
+import ArtworkBulkActions from './artwork/ArtworkBulkActions';
+import ArtworkAnalytics from './artwork/ArtworkAnalytics';
 
 const ArtworkManagement = () => {
-  const { user } = useAuth();
-  const { profile } = useProfile();
-  const { artworks, loading, uploadArtwork } = useArtworks();
-  const [showUploadForm, setShowUploadForm] = useState(false);
-  const [localArtworks, setLocalArtworks] = useState(artworks);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("date");
-  const [sortOrder, setSortOrder] = useState("desc");
+  const { artworks, loading } = useArtworks();
+  const { toast } = useToast();
+  
   const [selectedArtworks, setSelectedArtworks] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [filterCategory, setFilterCategory] = useState("all");
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showUploadForm, setShowUploadForm] = useState(false);
+  const [editingArtwork, setEditingArtwork] = useState<any>(null);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  
+  const [filters, setFilters] = useState({
+    search: '',
+    category: 'all',
+    status: 'all',
+    type: 'all',
+    tags: [] as string[],
+    sortBy: 'newest'
+  });
 
-  useEffect(() => {
-    setLocalArtworks(artworks);
-  }, [artworks]);
-
-  const handleArtworkUpdate = (updatedArtwork: any) => {
-    setLocalArtworks(prev => 
-      prev.map(artwork => 
-        artwork.id === updatedArtwork.id ? updatedArtwork : artwork
-      )
-    );
+  // Mock analytics data
+  const analyticsData = {
+    totalViews: 45670,
+    totalLikes: 8900,
+    totalRevenue: 12450,
+    totalFollowers: 1234,
+    viewsGrowth: 12.5,
+    likesGrowth: 8.3,
+    revenueGrowth: 15.7,
+    followersGrowth: -2.1
   };
 
-  const handleArtworkDelete = (artworkId: string) => {
-    setLocalArtworks(prev => prev.filter(artwork => artwork.id !== artworkId));
+  const filteredArtworks = useMemo(() => {
+    let filtered = [...artworks];
+
+    // Search filter
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      filtered = filtered.filter(artwork =>
+        artwork.title.toLowerCase().includes(searchTerm) ||
+        artwork.artist.toLowerCase().includes(searchTerm) ||
+        artwork.tags?.some(tag => tag.toLowerCase().includes(searchTerm))
+      );
+    }
+
+    // Category filter
+    if (filters.category !== 'all') {
+      filtered = filtered.filter(artwork => artwork.category === filters.category);
+    }
+
+    // Status filter
+    if (filters.status !== 'all') {
+      filtered = filtered.filter(artwork => artwork.approval_status === filters.status);
+    }
+
+    // Type filter
+    if (filters.type !== 'all') {
+      filtered = filtered.filter(artwork => artwork.type === filters.type);
+    }
+
+    // Tags filter
+    if (filters.tags.length > 0) {
+      filtered = filtered.filter(artwork =>
+        artwork.tags?.some(tag => filters.tags.includes(tag))
+      );
+    }
+
+    // Sort
+    switch (filters.sortBy) {
+      case 'oldest':
+        filtered.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        break;
+      case 'most_liked':
+        filtered.sort((a, b) => b.likes - a.likes);
+        break;
+      case 'most_viewed':
+        filtered.sort((a, b) => b.views - a.views);
+        break;
+      case 'price_high':
+        filtered.sort((a, b) => b.price - a.price);
+        break;
+      case 'price_low':
+        filtered.sort((a, b) => a.price - b.price);
+        break;
+      default: // newest
+        filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        break;
+    }
+
+    return filtered;
+  }, [artworks, filters]);
+
+  const handleSelectArtwork = (artworkId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedArtworks([...selectedArtworks, artworkId]);
+    } else {
+      setSelectedArtworks(selectedArtworks.filter(id => id !== artworkId));
+    }
   };
 
-  // Filter and sort artworks
-  const filteredAndSortedArtworks = localArtworks
-    .filter(artwork => {
-      const matchesSearch = artwork.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           artwork.category.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = filterCategory === "all" || artwork.category === filterCategory;
-      return matchesSearch && matchesCategory;
-    })
-    .sort((a, b) => {
-      let comparison = 0;
-      switch (sortBy) {
-        case "title":
-          comparison = a.title.localeCompare(b.title);
-          break;
-        case "likes":
-          comparison = a.likes - b.likes;
-          break;
-        case "views":
-          comparison = a.views - b.views;
-          break;
-        case "price":
-          comparison = (a.price || 0) - (b.price || 0);
-          break;
-        default:
-          comparison = new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
-      }
-      return sortOrder === "asc" ? comparison : -comparison;
-    });
-
-  // Filter artworks by approval status
-  const pendingArtworks = filteredAndSortedArtworks.filter(artwork => artwork.approval_status === 'pending');
-  const approvedArtworks = filteredAndSortedArtworks.filter(artwork => artwork.approval_status === 'approved');
-  const rejectedArtworks = filteredAndSortedArtworks.filter(artwork => artwork.approval_status === 'rejected');
-  const forSaleArtworks = filteredAndSortedArtworks.filter(artwork => artwork.is_for_sale);
-
-  // Bulk actions
-  const handleSelectAll = (artworkList: any[]) => {
-    const allIds = artworkList.map(artwork => artwork.id);
-    setSelectedArtworks(prev => 
-      prev.length === allIds.length ? [] : allIds
-    );
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedArtworks(filteredArtworks.map(artwork => artwork.id));
+    } else {
+      setSelectedArtworks([]);
+    }
   };
 
-  const handleBulkAction = (action: string) => {
-    console.log(`Bulk action: ${action} for artworks:`, selectedArtworks);
-    // Handle bulk actions like delete, pin, mark for sale, etc.
-    setSelectedArtworks([]);
-  };
-
-  const exportArtworkData = () => {
-    const dataStr = JSON.stringify(localArtworks, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'artworks_export.json';
-    link.click();
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'rejected':
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return <Clock className="h-4 w-4 text-yellow-500" />;
+  const handleBulkAction = (action: string, options?: any) => {
+    console.log('Bulk action:', action, 'for artworks:', selectedArtworks, 'with options:', options);
+    
+    switch (action) {
+      case 'delete':
+        toast({
+          title: "Artworks Deleted",
+          description: `${selectedArtworks.length} artwork(s) have been deleted.`,
+        });
+        setSelectedArtworks([]);
+        break;
+      case 'changeStatus':
+        toast({
+          title: "Status Updated",
+          description: `${selectedArtworks.length} artwork(s) status changed to ${options.status}.`,
+        });
+        break;
+      case 'toggleVisibility':
+        toast({
+          title: "Visibility Toggled",
+          description: `${selectedArtworks.length} artwork(s) visibility has been toggled.`,
+        });
+        break;
+      case 'export':
+        toast({
+          title: "Export Started",
+          description: `Exporting ${selectedArtworks.length} artwork(s)...`,
+        });
+        break;
+      case 'archive':
+        toast({
+          title: "Artworks Archived",
+          description: `${selectedArtworks.length} artwork(s) have been archived.`,
+        });
+        setSelectedArtworks([]);
+        break;
     }
   };
 
@@ -119,462 +164,216 @@ const ArtworkManagement = () => {
     switch (status) {
       case 'approved':
         return <Badge className="bg-green-100 text-green-800">Approved</Badge>;
+      case 'pending':
+        return <Badge variant="secondary">Pending</Badge>;
       case 'rejected':
         return <Badge variant="destructive">Rejected</Badge>;
       default:
-        return <Badge variant="secondary">Pending Review</Badge>;
+        return <Badge variant="outline">Unknown</Badge>;
     }
   };
 
-  const ArtworkCard = ({ artwork, isSelected, onSelect }: { artwork: any; isSelected: boolean; onSelect: (id: string) => void }) => (
-    <Card key={artwork.id} className={`overflow-hidden transition-all ${isSelected ? 'ring-2 ring-primary' : ''}`}>
-      <div className="relative">
-        <img
-          src={artwork.imageUrl}
-          alt={artwork.title}
-          className="w-full h-48 object-cover"
-        />
-        <div className="absolute top-2 right-2 flex gap-2">
-          {getStatusBadge(artwork.approval_status || 'pending')}
-          {artwork.is_pinned && (
-            <Badge variant="outline" className="bg-white/90">
-              <Pin className="h-3 w-3 mr-1" />
-              Pinned
-            </Badge>
-          )}
-        </div>
-        <div className="absolute top-2 left-2 flex gap-2">
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={() => onSelect(artwork.id)}
-            className="bg-white/90"
-          />
-          <ArtworkActions 
-            artwork={artwork}
-            onUpdate={handleArtworkUpdate}
-            onDelete={handleArtworkDelete}
-          />
-        </div>
-      </div>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="font-semibold truncate">{artwork.title}</h3>
-          {getStatusIcon(artwork.approval_status || 'pending')}
-        </div>
-        <p className="text-sm text-gray-600 mb-3 line-clamp-2">{artwork.category}</p>
-        
-        {/* Pricing and Sale Status */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            {artwork.is_for_sale && artwork.price && (
-              <Badge variant="outline" className="text-green-600 border-green-600">
-                <DollarSign className="h-3 w-3 mr-1" />
-                ₹{artwork.price}
-              </Badge>
-            )}
-            {artwork.is_for_sale && !artwork.price && (
-              <Badge variant="outline" className="text-blue-600 border-blue-600">
-                Contact for Price
-              </Badge>
-            )}
-            {!artwork.is_for_sale && (
-              <Badge variant="outline" className="text-gray-600 border-gray-400">
-                Not for Sale
-              </Badge>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between text-sm text-gray-500">
-          <span className="flex items-center gap-1">
-            <Heart className="h-3 w-3" />
-            {artwork.likes}
-          </span>
-          <span className="flex items-center gap-1">
-            <Eye className="h-3 w-3" />
-            {artwork.views}
-          </span>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="h-10 w-48 bg-gray-200 animate-pulse rounded-md"></div>
-        <div className="h-64 bg-gray-200 animate-pulse rounded-md"></div>
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Artwork Management</h2>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Artwork Management</h2>
+          <p className="text-gray-600">Manage and organize your artwork collection</p>
+        </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={exportArtworkData}>
-            <Download className="h-4 w-4 mr-2" />
-            Export Data
+          <Button
+            variant="outline"
+            onClick={() => setShowAnalytics(!showAnalytics)}
+          >
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Analytics
           </Button>
           <Button onClick={() => setShowUploadForm(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Upload New Artwork
+            Upload New
           </Button>
         </div>
       </div>
 
-      {/* Search and Filter Controls */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4 items-center">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search artworks by title or category..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            
-            <Select value={filterCategory} onValueChange={setFilterCategory}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="Music">Music</SelectItem>
-                <SelectItem value="Digital Art">Digital Art</SelectItem>
-                <SelectItem value="Hip-Hop">Hip-Hop</SelectItem>
-                <SelectItem value="Abstract Art">Abstract Art</SelectItem>
-              </SelectContent>
-            </Select>
+      {/* Analytics */}
+      {showAnalytics && (
+        <ArtworkAnalytics data={analyticsData} />
+      )}
 
-            <Select value={`${sortBy}-${sortOrder}`} onValueChange={(value) => {
-              const [field, order] = value.split('-');
-              setSortBy(field);
-              setSortOrder(order);
-            }}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="date-desc">Newest First</SelectItem>
-                <SelectItem value="date-asc">Oldest First</SelectItem>
-                <SelectItem value="title-asc">Title A-Z</SelectItem>
-                <SelectItem value="title-desc">Title Z-A</SelectItem>
-                <SelectItem value="likes-desc">Most Liked</SelectItem>
-                <SelectItem value="views-desc">Most Viewed</SelectItem>
-                <SelectItem value="price-desc">Highest Price</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <div className="flex gap-2">
-              <Button
-                variant={viewMode === "grid" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setViewMode("grid")}
-              >
-                <Grid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setViewMode("list")}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Search and Filters */}
+      <ArtworkSearchFilters onFiltersChange={setFilters} />
 
       {/* Bulk Actions */}
-      {selectedArtworks.length > 0 && (
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">
-                {selectedArtworks.length} artwork{selectedArtworks.length > 1 ? 's' : ''} selected
-              </span>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => handleBulkAction('pin')}>
-                  <Pin className="h-4 w-4 mr-1" />
-                  Pin Selected
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => handleBulkAction('sale')}>
-                  <DollarSign className="h-4 w-4 mr-1" />
-                  Mark for Sale
-                </Button>
-                <Button variant="destructive" size="sm" onClick={() => handleBulkAction('delete')}>
-                  Delete Selected
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <ArtworkBulkActions
+        selectedArtworks={selectedArtworks}
+        onClearSelection={() => setSelectedArtworks([])}
+        onBulkAction={handleBulkAction}
+      />
 
-      {/* Upload Form Modal/Dialog */}
-      {showUploadForm && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Upload New Artwork</CardTitle>
-            <CardDescription>
-              Upload your artwork for review. It will be visible publicly once approved by our team.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ArtworkUploadForm />
-            <div className="flex justify-end gap-2 mt-4">
-              <Button variant="outline" onClick={() => setShowUploadForm(false)}>
-                Cancel
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Pinned Artworks */}
-      <PinnedArtworks />
-
-      {/* Analytics Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Performance Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {localArtworks.reduce((sum, artwork) => sum + artwork.views, 0).toLocaleString()}
-              </div>
-              <div className="text-sm text-gray-600">Total Views</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">
-                {localArtworks.reduce((sum, artwork) => sum + artwork.likes, 0).toLocaleString()}
-              </div>
-              <div className="text-sm text-gray-600">Total Likes</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
-                ₹{localArtworks.filter(a => a.is_for_sale && a.price).reduce((sum, artwork) => sum + (artwork.price || 0), 0).toLocaleString()}
-              </div>
-              <div className="text-sm text-gray-600">Total Value</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">
-                {(localArtworks.reduce((sum, artwork) => sum + artwork.views, 0) / localArtworks.length || 0).toFixed(0)}
-              </div>
-              <div className="text-sm text-gray-600">Avg Views</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Approval Status Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{pendingArtworks.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Awaiting admin approval
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Approved</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{approvedArtworks.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Live and visible to public
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">For Sale</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{forSaleArtworks.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Available for purchase
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Rejected</CardTitle>
-            <XCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{rejectedArtworks.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Need updates before resubmission
-            </p>
-          </CardContent>
-        </Card>
+      {/* View Controls */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-600">
+          {filteredArtworks.length} artwork{filteredArtworks.length !== 1 ? 's' : ''} found
+        </p>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={viewMode === 'grid' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('grid')}
+          >
+            <Grid className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('list')}
+          >
+            <List className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
-      {/* Artwork Tabs by Status */}
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList>
-          <TabsTrigger value="all">All Artworks ({filteredAndSortedArtworks.length})</TabsTrigger>
-          <TabsTrigger value="pending">Pending ({pendingArtworks.length})</TabsTrigger>
-          <TabsTrigger value="approved">Approved ({approvedArtworks.length})</TabsTrigger>
-          <TabsTrigger value="for-sale">For Sale ({forSaleArtworks.length})</TabsTrigger>
-          <TabsTrigger value="rejected">Rejected ({rejectedArtworks.length})</TabsTrigger>
-        </TabsList>
+      {/* Select All */}
+      {filteredArtworks.length > 0 && (
+        <div className="flex items-center gap-2">
+          <Checkbox
+            checked={selectedArtworks.length === filteredArtworks.length}
+            onCheckedChange={handleSelectAll}
+          />
+          <span className="text-sm">Select all artworks</span>
+        </div>
+      )}
 
-        <TabsContent value="all" className="space-y-4">
-          {selectedArtworks.length === 0 && filteredAndSortedArtworks.length > 0 && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Checkbox
-                checked={selectedArtworks.length === filteredAndSortedArtworks.length}
-                onCheckedChange={() => handleSelectAll(filteredAndSortedArtworks)}
-              />
-              Select all artworks
+      {/* Artworks Grid/List */}
+      {filteredArtworks.length > 0 ? (
+        <div className={
+          viewMode === 'grid'
+            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+            : 'space-y-4'
+        }>
+          {filteredArtworks.map((artwork) => (
+            <Card key={artwork.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+              {viewMode === 'grid' ? (
+                <>
+                  <div className="relative">
+                    <img
+                      src={artwork.imageUrl}
+                      alt={artwork.title}
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="absolute top-2 left-2">
+                      <Checkbox
+                        checked={selectedArtworks.includes(artwork.id)}
+                        onCheckedChange={(checked) => handleSelectArtwork(artwork.id, checked as boolean)}
+                      />
+                    </div>
+                    <div className="absolute top-2 right-2">
+                      {getStatusBadge(artwork.approval_status)}
+                    </div>
+                  </div>
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold truncate">{artwork.title}</h3>
+                    <p className="text-sm text-gray-600">{artwork.category}</p>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-lg font-bold">${artwork.price}</span>
+                      <div className="text-xs text-gray-500">
+                        {artwork.likes} ❤️ {artwork.views} 👁️
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <ArtworkActions
+                        artwork={artwork}
+                        onEdit={() => setEditingArtwork(artwork)}
+                      />
+                    </div>
+                  </CardContent>
+                </>
+              ) : (
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-4">
+                    <Checkbox
+                      checked={selectedArtworks.includes(artwork.id)}
+                      onCheckedChange={(checked) => handleSelectArtwork(artwork.id, checked as boolean)}
+                    />
+                    <img
+                      src={artwork.imageUrl}
+                      alt={artwork.title}
+                      className="w-16 h-16 object-cover rounded"
+                    />
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{artwork.title}</h3>
+                      <p className="text-sm text-gray-600">{artwork.category}</p>
+                      <p className="text-xs text-gray-500">Created: {formatDate(artwork.created_at)}</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold">${artwork.price}</div>
+                      <div className="text-xs text-gray-500">
+                        {artwork.likes} ❤️ {artwork.views} 👁️
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {getStatusBadge(artwork.approval_status)}
+                      <ArtworkActions
+                        artwork={artwork}
+                        onEdit={() => setEditingArtwork(artwork)}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <p className="text-gray-500">No artworks found matching your criteria.</p>
+            <Button className="mt-4" onClick={() => setShowUploadForm(true)}>
+              Upload Your First Artwork
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Upload Form Modal */}
+      {showUploadForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold">Upload New Artwork</h3>
+              <Button variant="ghost" onClick={() => setShowUploadForm(false)}>
+                ×
+              </Button>
             </div>
-          )}
-          <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-4"}>
-            {filteredAndSortedArtworks.map((artwork) => (
-              <ArtworkCard 
-                key={artwork.id} 
-                artwork={artwork}
-                isSelected={selectedArtworks.includes(artwork.id)}
-                onSelect={(id) => setSelectedArtworks(prev => 
-                  prev.includes(id) 
-                    ? prev.filter(artId => artId !== id)
-                    : [...prev, id]
-                )}
-              />
-            ))}
+            <ArtworkUploadForm onClose={() => setShowUploadForm(false)} />
           </div>
-        </TabsContent>
+        </div>
+      )}
 
-        <TabsContent value="pending" className="space-y-4">
-          {pendingArtworks.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-8">
-                <Clock className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No artworks pending review</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-4"}>
-              {pendingArtworks.map((artwork) => (
-                <ArtworkCard 
-                  key={artwork.id} 
-                  artwork={artwork}
-                  isSelected={selectedArtworks.includes(artwork.id)}
-                  onSelect={(id) => setSelectedArtworks(prev => 
-                    prev.includes(id) 
-                      ? prev.filter(artId => artId !== id)
-                      : [...prev, id]
-                  )}
-                />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="approved" className="space-y-4">
-          {approvedArtworks.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-8">
-                <CheckCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No approved artworks yet</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-4"}>
-              {approvedArtworks.map((artwork) => (
-                <ArtworkCard 
-                  key={artwork.id} 
-                  artwork={artwork}
-                  isSelected={selectedArtworks.includes(artwork.id)}
-                  onSelect={(id) => setSelectedArtworks(prev => 
-                    prev.includes(id) 
-                      ? prev.filter(artId => artId !== id)
-                      : [...prev, id]
-                  )}
-                />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="for-sale" className="space-y-4">
-          {forSaleArtworks.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-8">
-                <DollarSign className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No artworks for sale</p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Edit your artworks to mark them for sale
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-4"}>
-              {forSaleArtworks.map((artwork) => (
-                <ArtworkCard 
-                  key={artwork.id} 
-                  artwork={artwork}
-                  isSelected={selectedArtworks.includes(artwork.id)}
-                  onSelect={(id) => setSelectedArtworks(prev => 
-                    prev.includes(id) 
-                      ? prev.filter(artId => artId !== id)
-                      : [...prev, id]
-                  )}
-                />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="rejected" className="space-y-4">
-          {rejectedArtworks.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-8">
-                <XCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No rejected artworks</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-4"}>
-              {rejectedArtworks.map((artwork) => (
-                <ArtworkCard 
-                  key={artwork.id} 
-                  artwork={artwork}
-                  isSelected={selectedArtworks.includes(artwork.id)}
-                  onSelect={(id) => setSelectedArtworks(prev => 
-                    prev.includes(id) 
-                      ? prev.filter(artId => artId !== id)
-                      : [...prev, id]
-                  )}
-                />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+      {/* Edit Modal */}
+      {editingArtwork && (
+        <ArtworkEditModal
+          artwork={editingArtwork}
+          onClose={() => setEditingArtwork(null)}
+          onSave={(updatedArtwork) => {
+            console.log('Saving updated artwork:', updatedArtwork);
+            setEditingArtwork(null);
+          }}
+        />
+      )}
     </div>
   );
 };
