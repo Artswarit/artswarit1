@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 export default function SubscriptionManagement() {
-  const { user } = useAuth();
+  const { user, session } = useAuth(); // Add session here
   const { isActive, subscriptionTier, renewAt, loading } = usePremiumSubscription(user?.id);
   const { toast } = useToast();
 
@@ -16,7 +16,7 @@ export default function SubscriptionManagement() {
       const resp = await fetch("/functions/v1/customer-portal", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${user?.access_token}`,
+          "Authorization": `Bearer ${session?.access_token}`, // Use session.access_token
           "Content-Type": "application/json"
         }
       });
