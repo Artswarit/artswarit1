@@ -9,6 +9,54 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      artwork_feedback: {
+        Row: {
+          artwork_id: string
+          content: string
+          created_at: string
+          id: string
+          parent_id: string | null
+          rating: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          artwork_id: string
+          content: string
+          created_at?: string
+          id?: string
+          parent_id?: string | null
+          rating?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          artwork_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          parent_id?: string | null
+          rating?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artwork_feedback_artwork_id_fkey"
+            columns: ["artwork_id"]
+            isOneToOne: false
+            referencedRelation: "artworks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "artwork_feedback_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "artwork_feedback"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       artwork_likes: {
         Row: {
           artwork_id: string | null

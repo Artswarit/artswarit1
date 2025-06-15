@@ -6,6 +6,7 @@ import GlassCard from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { Image, FileAudio, FileVideo } from "lucide-react";
 import { useArtworks } from "@/hooks/useArtworks";
+import ArtworkFeedback from "@/components/artwork/ArtworkFeedback";
 
 export default function ArtworkDetails() {
   const { id } = useParams();
@@ -50,39 +51,43 @@ export default function ArtworkDetails() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
       <Navbar />
-      <main className="flex-1 flex items-center justify-center px-4 my-[56px]">
-        <GlassCard className="max-w-2xl w-full mx-auto p-6 md:p-10">
-          <div className="mb-4 flex items-center gap-3">
-            {artwork.type === "image" && <Image className="text-blue-500" />}
-            {(artwork.type === "audio" || artwork.type === "music") && <FileAudio className="text-green-600" />}
-            {artwork.type === "video" && <FileVideo className="text-red-600" />}
-            <h1 className="font-heading text-2xl md:text-3xl font-bold text-gray-900">{artwork.title}</h1>
-          </div>
-          <div className="mb-8 rounded overflow-hidden">
-            <img src={artwork.imageUrl} alt={artwork.title} className="w-full object-cover rounded-lg" />
-          </div>
-          {(artwork.type === "audio" || artwork.type === "music") && artwork.audioUrl && (
-            <audio controls className="mb-4 w-full">
-              <source src={artwork.audioUrl} type="audio/mpeg" />
-              Your browser does not support the audio tag.
-            </audio>
-          )}
-          {artwork.type === "video" && artwork.videoUrl && (
-            <video controls className="mb-4 w-full rounded-lg">
-              <source src={artwork.videoUrl} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-          )}
-          <div className="mb-6">
-            <span className="text-muted-foreground text-sm">by </span>
-            <Link to={`/artist/${artwork.artistId}`} className="text-blue-700 hover:underline font-medium">
-              {artwork.artist}
-            </Link>
-          </div>
-          <Button asChild className="mt-2">
-            <Link to="/explore">Back to Explore</Link>
-          </Button>
-        </GlassCard>
+      <main className="flex-1 py-12 px-4">
+        <div className="max-w-2xl w-full mx-auto">
+          <GlassCard className="w-full p-6 md:p-10">
+            <div className="mb-4 flex items-center gap-3">
+              {artwork.type === "image" && <Image className="text-blue-500" />}
+              {(artwork.type === "audio" || artwork.type === "music") && <FileAudio className="text-green-600" />}
+              {artwork.type === "video" && <FileVideo className="text-red-600" />}
+              <h1 className="font-heading text-2xl md:text-3xl font-bold text-gray-900">{artwork.title}</h1>
+            </div>
+            <div className="mb-8 rounded overflow-hidden">
+              <img src={artwork.imageUrl} alt={artwork.title} className="w-full object-cover rounded-lg" />
+            </div>
+            {(artwork.type === "audio" || artwork.type === "music") && artwork.audioUrl && (
+              <audio controls className="mb-4 w-full">
+                <source src={artwork.audioUrl} type="audio/mpeg" />
+                Your browser does not support the audio tag.
+              </audio>
+            )}
+            {artwork.type === "video" && artwork.videoUrl && (
+              <video controls className="mb-4 w-full rounded-lg">
+                <source src={artwork.videoUrl} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            )}
+            <div className="mb-6">
+              <span className="text-muted-foreground text-sm">by </span>
+              <Link to={`/artist/${artwork.artistId}`} className="text-blue-700 hover:underline font-medium">
+                {artwork.artist}
+              </Link>
+            </div>
+            <Button asChild className="mt-2">
+              <Link to="/explore">Back to Explore</Link>
+            </Button>
+          </GlassCard>
+          
+          {id && <ArtworkFeedback artworkId={id} />}
+        </div>
       </main>
       <Footer />
     </div>
