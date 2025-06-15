@@ -1,4 +1,3 @@
-
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -245,11 +244,35 @@ export default function ArtistProfile() {
     setLoadingFollow(false);
   };
 
-  // These are demo-only, provide instant feedback via toast
-  const handleMessage = () =>
-    toast({ title: "Coming soon!", description: "Messaging will be available in a future update.", variant: "default" });
+  // Fixed message handler - now shows proper demo feedback
+  const handleMessage = () => {
+    console.log("Message button clicked"); // Debug log
+    
+    if (!user?.id) {
+      toast({
+        title: "Not logged in",
+        description: "Please sign in to message artists.",
+      });
+      return;
+    }
 
+    if (id === ARTIST_UUID_1 || id === ARTIST_UUID_2) {
+      toast({
+        title: "Demo Message",
+        description: `This is a demo profile. In a real app, you would be able to message ${profileState?.name}.`,
+      });
+    } else {
+      toast({
+        title: "Coming soon!",
+        description: "Messaging will be available in a future update.",
+      });
+    }
+  };
+
+  // Fixed save handler - now works for demo artists too
   const handleToggleSave = async () => {
+    console.log("Save button clicked"); // Debug log
+    
     if (!id || !user?.id) {
       toast({
         title: "Not logged in",
@@ -258,11 +281,18 @@ export default function ArtistProfile() {
       return;
     }
 
+    // For demo artists, simulate save/unsave
     if (id === ARTIST_UUID_1 || id === ARTIST_UUID_2) {
-      toast({
-        title: "Demo Action",
-        description: "Save feature is for registered artists, not demo profiles.",
-      });
+      setLoadingSave(true);
+      // Simulate loading delay
+      setTimeout(() => {
+        setIsSaved(!isSaved);
+        toast({
+          title: isSaved ? "Artist Unsaved (Demo)" : "Artist Saved! (Demo)",
+          description: `This is a demo profile. In a real app, ${profileState?.name} would be ${isSaved ? 'removed from' : 'added to'} your saved artists.`,
+        });
+        setLoadingSave(false);
+      }, 500);
       return;
     }
 
