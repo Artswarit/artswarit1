@@ -84,7 +84,7 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans min-w-full;
     background-image: 
       radial-gradient(circle at 0% 0%, rgba(var(--primary) / 0.08), transparent 80%),
       radial-gradient(circle at 100% 0%, rgba(var(--accent) / 0.08), transparent 80%),
@@ -164,9 +164,9 @@
     box-shadow: 0 20px 30px -15px rgba(0, 0, 0, 0.2);
   }
   
-  /* Enhanced responsive utilities */
+  /* Responsive utilities */
   .container-responsive {
-    @apply w-full mx-auto px-3 sm:px-4 lg:px-6 xl:px-8;
+    @apply w-full mx-auto px-4 sm:px-6 lg:px-8;
     max-width: 100%;
   }
 
@@ -199,31 +199,13 @@
   }
   
   .heading-responsive {
-    @apply text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold;
+    @apply text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold;
   }
-
-  /* Mobile-first responsive text sizes */
-  .text-mobile-xs { @apply text-xs sm:text-sm; }
-  .text-mobile-sm { @apply text-sm sm:text-base; }
-  .text-mobile-base { @apply text-base sm:text-lg; }
-  .text-mobile-lg { @apply text-lg sm:text-xl; }
-  .text-mobile-xl { @apply text-xl sm:text-2xl; }
-  .text-mobile-2xl { @apply text-xl sm:text-2xl md:text-3xl; }
-  .text-mobile-3xl { @apply text-2xl sm:text-3xl md:text-4xl; }
-
-  /* Mobile spacing utilities */
-  .px-mobile { @apply px-3 sm:px-4 lg:px-6; }
-  .py-mobile { @apply py-3 sm:py-4 lg:py-6; }
-  .p-mobile { @apply p-3 sm:p-4 lg:p-6; }
-  .m-mobile { @apply m-3 sm:m-4 lg:m-6; }
-
-  /* Touch-friendly button sizes */
-  .btn-touch { @apply min-h-[44px] px-4 py-2 text-base; }
 }
 
 @layer components {
   .badge {
-    @apply inline-flex items-center justify-center rounded-full py-1 px-2 text-xs sm:py-1 sm:px-3 sm:text-sm font-medium;
+    @apply inline-flex items-center justify-center rounded-full py-0.5 px-2 text-xs sm:py-0.5 sm:px-2.5 sm:text-xs font-medium;
   }
   
   .badge-primary {
@@ -255,7 +237,7 @@
   }
   
   .artwork-card-overlay {
-    @apply absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 sm:p-6;
+    @apply absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6;
   }
   
   .btn-glow {
@@ -275,23 +257,12 @@
   }
   
   .section-title {
-    @apply font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 text-gradient-purple;
+    @apply font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-gradient-purple;
   }
   
   .section-subtitle {
-    @apply text-sm sm:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto;
+    @apply text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto;
   }
-
-  /* Mobile-optimized card styles */
-  .mobile-card {
-    @apply bg-white/40 backdrop-blur-md border border-white/20 shadow-lg rounded-xl p-4 sm:p-6;
-  }
-
-  /* Responsive grid patterns */
-  .grid-mobile-1 { @apply grid-cols-1; }
-  .grid-mobile-2 { @apply grid-cols-1 sm:grid-cols-2; }
-  .grid-mobile-3 { @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3; }
-  .grid-mobile-4 { @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4; }
 }
 
 @keyframes btn-glow {
@@ -310,32 +281,4 @@
   padding: 0;
   text-align: left;
   width: 100%;
-}
-
-/* Enhanced mobile responsiveness */
-@media (max-width: 640px) {
-  .container {
-    @apply px-3;
-  }
-  
-  /* Ensure touch targets are large enough */
-  button, .btn, [role="button"] {
-    @apply min-h-[44px];
-  }
-  
-  /* Improve mobile text readability */
-  body {
-    -webkit-text-size-adjust: 100%;
-    text-size-adjust: 100%;
-  }
-}
-
-/* Prevent horizontal scroll on mobile */
-body, html {
-  overflow-x: hidden;
-  width: 100%;
-}
-
-* {
-  box-sizing: border-box;
 }

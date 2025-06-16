@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,7 +18,7 @@ const Signup = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "artist",
+    role: "artist", // Default role
     acceptTerms: false
   });
   
@@ -59,6 +58,7 @@ const Signup = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     
+    // Simple validation
     if (formData.password !== formData.confirmPassword) {
       return;
     }
@@ -73,6 +73,7 @@ const Signup = () => {
     });
     
     if (!error) {
+      // Redirect based on role after successful signup
       if (formData.role === "artist") {
         setTimeout(() => navigate("/artist-dashboard"), 1000);
       } else {
@@ -82,13 +83,11 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="flex flex-col min-h-screen">
       <Navbar />
-      <div className="flex-1 flex items-center justify-center px-3 sm:px-6 lg:px-8 py-[60px] sm:py-[80px]">
-        <div className="w-full max-w-sm sm:max-w-md space-y-6 sm:space-y-8">
-          <div className="text-center">
-            <LogoWithName />
-          </div>
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 bg-gray-50 my-0 lg:px-0 py-[52px]">
+        <div className="w-full max-w-md space-y-8">
+          <LogoWithName />
           <SignupHeader />
           <SocialLoginButtons onSocialSignup={handleSocialSignup} />
           <SignupForm
