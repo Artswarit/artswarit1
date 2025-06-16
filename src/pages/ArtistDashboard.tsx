@@ -27,7 +27,6 @@ const ArtistDashboard = () => {
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
 
-  // Redirect non-artists to client dashboard
   useEffect(() => {
     if (profile && profile.role !== 'artist' && profile.role !== 'premium') {
       window.location.href = '/client-dashboard';
@@ -48,7 +47,7 @@ const ArtistDashboard = () => {
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
         <Navbar />
-        <main className="container mx-auto px-4 py-8 pt-24">
+        <main className="container mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-6 sm:py-8 pt-20 sm:pt-24">
           <DashboardHeader 
             user={user} 
             profile={profile}
@@ -57,40 +56,50 @@ const ArtistDashboard = () => {
           />
 
           <Tabs defaultValue={defaultTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-8 mb-8 overflow-auto">
-              <TabsTrigger value="artworks" className="flex items-center gap-2">
-                <Palette className="h-4 w-4" />
-                <span className="hidden sm:inline">Artworks</span>
-              </TabsTrigger>
-              <TabsTrigger value="projects" className="flex items-center gap-2">
-                <Briefcase className="h-4 w-4" />
-                <span className="hidden sm:inline">Projects</span>
-              </TabsTrigger>
-              <TabsTrigger value="profile" className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                <span className="hidden sm:inline">Profile</span>
-              </TabsTrigger>
-              <TabsTrigger value="premium" className="flex items-center gap-2">
-                <Crown className="h-4 w-4" />
-                <span className="hidden sm:inline">Premium</span>
-              </TabsTrigger>
-              <TabsTrigger value="earnings" className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                <span className="hidden sm:inline">Earnings</span>
-              </TabsTrigger>
-              <TabsTrigger value="messages" className="flex items-center gap-2">
-                <MessageSquare className="h-4 w-4" />
-                <span className="hidden sm:inline">Messages</span>
-              </TabsTrigger>
-              <TabsTrigger value="notifications" className="flex items-center gap-2">
-                <Bell className="h-4 w-4" />
-                <span className="hidden sm:inline">Notifications</span>
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                <span className="hidden sm:inline">Settings</span>
-              </TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto mb-6 sm:mb-8">
+              <TabsList className="grid grid-cols-4 sm:grid-cols-8 w-full min-w-[600px] sm:min-w-0 bg-white/60 backdrop-blur-sm">
+                <TabsTrigger value="artworks" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                  <Palette className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Artworks</span>
+                  <span className="xs:hidden">Art</span>
+                </TabsTrigger>
+                <TabsTrigger value="projects" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                  <Briefcase className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Projects</span>
+                  <span className="xs:hidden">Proj</span>
+                </TabsTrigger>
+                <TabsTrigger value="profile" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                  <User className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Profile</span>
+                  <span className="xs:hidden">Prof</span>
+                </TabsTrigger>
+                <TabsTrigger value="premium" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                  <Crown className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Premium</span>
+                  <span className="xs:hidden">Prem</span>
+                </TabsTrigger>
+                <TabsTrigger value="earnings" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                  <DollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Earnings</span>
+                  <span className="xs:hidden">Earn</span>
+                </TabsTrigger>
+                <TabsTrigger value="messages" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                  <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Messages</span>
+                  <span className="xs:hidden">Msg</span>
+                </TabsTrigger>
+                <TabsTrigger value="notifications" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                  <Bell className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Notifications</span>
+                  <span className="xs:hidden">Bell</span>
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                  <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Settings</span>
+                  <span className="xs:hidden">Set</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="artworks" className="space-y-6">
               <ArtworkManagement />
