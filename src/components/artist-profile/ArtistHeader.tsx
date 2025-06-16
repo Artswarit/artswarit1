@@ -1,3 +1,4 @@
+
 import React from "react";
 import GlassCard from "@/components/ui/glass-card";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +26,7 @@ const StarRating = ({ value }: { value: number }) => {
     stars.push(
       <Star
         key={i}
-        size={18}
+        size={14}
         className={`mr-0.5 ${
           value >= i ? "text-yellow-400 fill-yellow-400" : "text-gray-300"
         }`}
@@ -80,155 +81,139 @@ const ArtistHeader: React.FC<Props> = ({
   };
 
   return (
-    <div className="relative w-full min-h-[330px] flex flex-col items-end md:items-center">
+    <div className="relative w-full min-h-[280px] sm:min-h-[320px] lg:min-h-[380px] flex flex-col">
       {/* Background with simple dark overlay only */}
-      <div className="absolute inset-0 overflow-hidden rounded-b-[2.5rem]">
+      <div className="absolute inset-0 overflow-hidden rounded-b-xl sm:rounded-b-2xl lg:rounded-b-[2.5rem]">
         <img
           src={artist.cover}
           alt=""
-          className="w-full h-full object-cover object-[center_30%] scale-105 blur-sm opacity-70 transition-all duration-300"
+          className="w-full h-full object-cover object-center scale-105 blur-sm opacity-70 transition-all duration-300"
           style={{ filter: "blur(5px)" }}
         />
         <div className="absolute inset-0 bg-black/70" />
       </div>
-      <div className="relative w-full flex flex-col md:flex-row items-end md:items-center justify-between z-10 gap-6 p-4 md:p-10 pb-4">
-        {/* Avatar + Info block */}
-        <div className="flex items-end md:items-center gap-7">
-          <div className="p-2 flex flex-col items-center justify-center shadow-xl rounded-2xl border-white/30 bg-white/60">
-            <img
-              src={artist.avatar}
-              alt={artist.name}
-              className="w-28 h-28 md:w-36 md:h-36 rounded-full border-4 border-white object-cover shadow-md"
-              style={{
-                aspectRatio: "1/1",
-                background: "white",
-              }}
-            />
-          </div>
-          {/* Info*/}
-          <div className="flex flex-col gap-3 text-white md:text-left min-w-[220px]">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-3xl md:text-5xl font-bold font-heading drop-shadow-lg">
-                {artist.name}
-              </h1>
-              {artist.isVerified && (
-                <Badge className="bg-blue-600/90 text-white flex items-center gap-1 px-3 py-1 text-[0.82rem] font-semibold border-2 border-white/40">
-                  <Verified size={16} /> Verified
-                </Badge>
-              )}
-              {artist.premium && (
-                <span className="relative isolate inline-block">
-                  <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-yellow-900 flex items-center gap-1 px-3 py-1 text-[0.82rem] font-semibold border-2 border-yellow-100/40 overflow-hidden relative border-0">
-                    <Star size={16} /> Premium
-                    {/* Animated shine */}
-                    <span
-                      className="pointer-events-none absolute left-0 top-0 h-full w-full z-10"
-                      style={{}}
-                      aria-hidden="true"
-                    >
-                      <span className="absolute left-[-60%] top-0 h-full w-[80%] bg-gradient-to-r from-transparent via-white/60 to-transparent blur-[2px] opacity-60 animate-[shine-move_1.5s_linear_infinite]" />
-                    </span>
+      
+      <div className="relative w-full flex flex-col z-10 gap-4 p-3 sm:p-6 lg:p-10 pb-3 sm:pb-4">
+        {/* Mobile-first layout: Stack everything vertically on small screens */}
+        <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-7 w-full">
+          {/* Avatar + Info block */}
+          <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-7 w-full sm:w-auto">
+            <div className="p-1.5 sm:p-2 flex flex-col items-center justify-center shadow-xl rounded-xl sm:rounded-2xl border-white/30 bg-white/60">
+              <img
+                src={artist.avatar}
+                alt={artist.name}
+                className="w-20 h-20 sm:w-28 sm:h-28 lg:w-36 lg:h-36 rounded-full border-2 sm:border-4 border-white object-cover shadow-md"
+                style={{
+                  aspectRatio: "1/1",
+                  background: "white",
+                }}
+              />
+            </div>
+            
+            {/* Info - Centered on mobile, left-aligned on desktop */}
+            <div className="flex flex-col gap-2 sm:gap-3 text-white text-center sm:text-left min-w-0 flex-1">
+              <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+                <h1 className="text-xl sm:text-3xl lg:text-5xl font-bold font-heading drop-shadow-lg">
+                  {artist.name}
+                </h1>
+                {artist.isVerified && (
+                  <Badge className="bg-blue-600/90 text-white flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm font-semibold border border-white/40">
+                    <Verified size={14} /> Verified
                   </Badge>
-                  {/* Tailwind custom keyframe shine */}
-                  <style>
-                    {`
+                )}
+                {artist.premium && (
+                  <span className="relative isolate inline-block">
+                    <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-yellow-900 flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm font-semibold border border-yellow-100/40 overflow-hidden relative">
+                      <Star size={14} /> Premium
+                      <span
+                        className="pointer-events-none absolute left-0 top-0 h-full w-full z-10"
+                        aria-hidden="true"
+                      >
+                        <span className="absolute left-[-60%] top-0 h-full w-[80%] bg-gradient-to-r from-transparent via-white/60 to-transparent blur-[2px] opacity-60 animate-[shine-move_1.5s_linear_infinite]" />
+                      </span>
+                    </Badge>
+                    <style>
+                      {`
 @keyframes shine-move {
   0% { left: -60%; }
   100% { left: 110%; }
 }
-                    `}
-                  </style>
-                </span>
-              )}
-            </div>
-            {/* Bio with solid, non-glass background */}
-            <div className="text-[0.95rem] md:text-base text-white font-normal leading-relaxed max-w-md">
-              <div className="w-fit bg-gray-900 bg-opacity-80 text-white px-4 py-2 rounded-2xl shadow">
-                <span>{artist.tagline || artist.category}</span>
+                      `}
+                    </style>
+                  </span>
+                )}
+              </div>
+              
+              {/* Bio with solid, non-glass background */}
+              <div className="text-sm sm:text-base text-white font-normal leading-relaxed">
+                <div className="w-fit mx-auto sm:mx-0 bg-gray-900 bg-opacity-80 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl shadow">
+                  <span>{artist.tagline || artist.category}</span>
+                </div>
+              </div>
+              
+              {/* Tags with solid pill style */}
+              <div className="flex flex-wrap gap-1.5 sm:gap-2 items-center justify-center sm:justify-start mt-1">
+                {artist.tags &&
+                  artist.tags.map((t: string) => (
+                    <span
+                      key={t}
+                      className="bg-gradient-to-r from-purple-700 to-blue-700 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs shadow border border-white/20 font-semibold"
+                    >
+                      {t}
+                    </span>
+                  ))}
+              </div>
+              
+              {/* Dopamine trigger stats: NO glass, high contrast */}
+              <div className="flex gap-2 sm:gap-4 mt-2 sm:mt-3 px-2 py-1.5 sm:px-2 sm:py-2 bg-black/80 rounded-xl sm:rounded-2xl shadow-lg max-w-full overflow-x-auto">
+                {stats.map((stat) => (
+                  <StatCard
+                    key={stat.type}
+                    type={stat.type as any}
+                    value={stat.value}
+                    label={stat.label}
+                  />
+                ))}
               </div>
             </div>
-            {/* Tags with solid pill style */}
-            <div className="flex flex-wrap gap-2 items-center mt-1">
-              {artist.tags &&
-                artist.tags.map((t: string) => (
-                  <span
-                    key={t}
-                    className="bg-gradient-to-r from-purple-700 to-blue-700 text-white px-3 py-1 rounded-full text-xs shadow border border-white/20 font-semibold"
-                  >
-                    {t}
-                  </span>
-                ))}
-            </div>
-            {/* Dopamine trigger stats: NO glass, high contrast */}
-            <div className="flex gap-4 mt-3 px-2 py-2 bg-black/80 rounded-2xl shadow-lg max-w-md">
-              {stats.map((stat) => (
-                <StatCard
-                  key={stat.type}
-                  type={stat.type as any}
-                  value={stat.value}
-                  label={stat.label}
-                />
-              ))}
-            </div>
           </div>
-        </div>
-        {/* Main Actions */}
-        <div className="flex flex-col gap-2 items-stretch min-w-[230px]">
-          <ArtistActionsBar
-            isFollowing={isFollowing}
-            onFollow={onFollow}
-            onMessage={onMessage}
-            isSaved={isSaved}
-            onSave={onSave}
-            onRequest={onRequest}
-            loadingSave={loadingSave}
-          />
-          {/* Save & Request for tiny screens */}
-          <div className="flex gap-2 mt-2 flex-wrap md:hidden">
-            <Button
-              onClick={onSave}
-              variant="outline"
-              disabled={loadingSave}
-              className={`border-pink-400 hover:text-pink-900 ${
-                isSaved 
-                  ? 'bg-pink-100 text-pink-800 hover:bg-pink-200/60' 
-                  : 'text-pink-700 hover:bg-pink-200/50'
-              }`}
-            >
-              <Save size={17} className="mr-1" />
-              {isSaved ? "Saved" : "Save Artist"}
-            </Button>
-            <Button
-              onClick={onRequest}
-              variant="outline"
-              className="border-yellow-400 text-amber-800 hover:bg-amber-100/70 hover:text-amber-900"
-            >
-              <FilePlus size={17} className="mr-1" />
-              Request Project
-            </Button>
+          
+          {/* Actions - Full width on mobile, fixed width on desktop */}
+          <div className="w-full sm:w-auto sm:min-w-[200px] lg:min-w-[230px]">
+            <ArtistActionsBar
+              isFollowing={isFollowing}
+              onFollow={onFollow}
+              onMessage={onMessage}
+              isSaved={isSaved}
+              onSave={onSave}
+              onRequest={onRequest}
+              loadingSave={loadingSave}
+            />
           </div>
         </div>
       </div>
-      {/* ALL artist summary section (placeholder for 'All' details/analytics) */}
-      <div className="relative w-full px-5 pt-3 md:px-10 z-10">
-        <div className="bg-white rounded-2xl shadow-lg border p-5 max-w-2xl md:ml-48 mt-2">
-          <h3 className="text-lg font-bold text-gray-800 mb-2">Artist Overview</h3>
-          <div className="flex flex-wrap gap-7 items-center mb-2">
-            <div>
-              <span className="block text-2xl font-bold text-blue-900">{artistAllDetails.totalProjects}</span>
+      
+      {/* Artist summary section - Responsive positioning */}
+      <div className="relative w-full px-3 sm:px-5 lg:px-10 pt-2 sm:pt-3 z-10">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border p-3 sm:p-5 w-full sm:max-w-2xl sm:ml-0 lg:ml-48 mt-1 sm:mt-2">
+          <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-2">Artist Overview</h3>
+          <div className="flex flex-wrap gap-4 sm:gap-7 items-center mb-2">
+            <div className="text-center sm:text-left">
+              <span className="block text-xl sm:text-2xl font-bold text-blue-900">{artistAllDetails.totalProjects}</span>
               <span className="text-xs text-gray-500">Projects Completed</span>
             </div>
-            <div>
-              <span className="block text-2xl font-bold text-yellow-500">{artistAllDetails.avgRating.toFixed(1)}</span>
-              <span className="text-xs text-gray-500 flex items-center gap-1">Avg. Rating <StarRating value={artistAllDetails.avgRating} /></span>
+            <div className="text-center sm:text-left">
+              <span className="block text-xl sm:text-2xl font-bold text-yellow-500">{artistAllDetails.avgRating.toFixed(1)}</span>
+              <span className="text-xs text-gray-500 flex items-center justify-center sm:justify-start gap-1">
+                Avg. Rating <StarRating value={artistAllDetails.avgRating} />
+              </span>
             </div>
-            <div>
-              <span className="block text-2xl font-bold text-pink-600">{artistAllDetails.reviewCount}</span>
+            <div className="text-center sm:text-left">
+              <span className="block text-xl sm:text-2xl font-bold text-pink-600">{artistAllDetails.reviewCount}</span>
               <span className="text-xs text-gray-500">Client Reviews</span>
             </div>
           </div>
-          {/* In a real app, map reviews, stats, etc */}
-          <div className="mt-3 text-sm text-gray-700">
+          <div className="mt-3 text-xs sm:text-sm text-gray-700 text-center sm:text-left">
             This area gives clients a quick overview of the artist's performance and reputation on the platform.<br />
             <span className="font-semibold text-gray-900">Want more detail?</span> Use the "All" tab in the portfolio to explore everything!
           </div>
