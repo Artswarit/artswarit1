@@ -5,7 +5,8 @@ import LiveStreamPlayer from '@/components/streaming/LiveStreamPlayer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Play, Users, Calendar, Clock } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Play, Users, Calendar, Clock, Video, Mic, Settings, Share } from 'lucide-react';
 
 const LiveStreaming = () => {
   const [activeStreams] = useState([
@@ -17,7 +18,8 @@ const LiveStreaming = () => {
       viewerCount: 247,
       category: 'Digital Art',
       thumbnail: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300&h=200&fit=crop',
-      startTime: '2 hours ago'
+      startTime: '2 hours ago',
+      streamUrl: 'https://example.com/stream1'
     },
     {
       id: '2',
@@ -27,7 +29,8 @@ const LiveStreaming = () => {
       viewerCount: 156,
       category: 'Music',
       thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=200&fit=crop',
-      startTime: '45 minutes ago'
+      startTime: '45 minutes ago',
+      streamUrl: 'https://example.com/stream2'
     }
   ]);
 
@@ -42,12 +45,18 @@ const LiveStreaming = () => {
     }
   ]);
 
+  const [selectedStream, setSelectedStream] = useState(activeStreams[0]);
+
   const handleLike = () => {
     console.log('Liked stream');
   };
 
   const handleComment = (comment: string) => {
     console.log('New comment:', comment);
+  };
+
+  const startStream = () => {
+    console.log('Starting stream...');
   };
 
   return (
@@ -62,19 +71,29 @@ const LiveStreaming = () => {
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Watch artists create in real-time and interact with the creative process
             </p>
+            <div className="flex justify-center gap-4 mt-6">
+              <Button onClick={startStream} className="flex items-center gap-2">
+                <Video className="h-4 w-4" />
+                Start Streaming
+              </Button>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Schedule Stream
+              </Button>
+            </div>
           </div>
 
           {/* Featured Live Stream */}
-          {activeStreams.length > 0 && (
+          {selectedStream && (
             <div className="space-y-4">
               <h2 className="text-2xl font-bold">🔴 Live Now</h2>
               <div className="max-w-4xl mx-auto">
                 <LiveStreamPlayer
-                  streamId={activeStreams[0].id}
-                  title={activeStreams[0].title}
-                  artist={activeStreams[0].artist}
-                  isLive={activeStreams[0].isLive}
-                  viewerCount={activeStreams[0].viewerCount}
+                  streamId={selectedStream.id}
+                  title={selectedStream.title}
+                  artist={selectedStream.artist}
+                  isLive={selectedStream.isLive}
+                  viewerCount={selectedStream.viewerCount}
                   onLike={handleLike}
                   onComment={handleComment}
                 />
@@ -82,12 +101,61 @@ const LiveStreaming = () => {
             </div>
           )}
 
+          {/* Stream Controls for Artists */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Stream Controls
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Stream Title</label>
+                  <Input placeholder="Enter stream title..." />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Category</label>
+                  <select className="w-full p-2 border rounded">
+                    <option>Digital Art</option>
+                    <option>Music</option>
+                    <option>Photography</option>
+                    <option>Writing</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Privacy</label>
+                  <select className="w-full p-2 border rounded">
+                    <option>Public</option>
+                    <option>Followers Only</option>
+                    <option>Premium Only</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 mt-4">
+                <Button className="flex items-center gap-2">
+                  <Video className="h-4 w-4" />
+                  Go Live
+                </Button>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Mic className="h-4 w-4" />
+                  Audio Only
+                </Button>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Share className="h-4 w-4" />
+                  Share
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Other Live Streams */}
           <div className="space-y-4">
             <h2 className="text-2xl font-bold">Other Live Streams</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {activeStreams.slice(1).map((stream) => (
-                <Card key={stream.id} className="hover:shadow-md transition-shadow cursor-pointer">
+                <Card key={stream.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedStream(stream)}>
                   <div className="relative">
                     <img 
                       src={stream.thumbnail} 

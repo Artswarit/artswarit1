@@ -22,6 +22,13 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 import AIDetection from "./pages/AIDetection";
 import FeatureAudit from "./pages/FeatureAudit";
+import LiveStreaming from "./pages/LiveStreaming";
+import Collections from "./pages/Collections";
+import Trending from "./pages/Trending";
+import Recommendations from "./pages/Recommendations";
+import Commissions from "./pages/Commissions";
+import Events from "./pages/Events";
+import Merchandise from "./pages/Merchandise";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +57,13 @@ const App = () => (
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/ai-detection" element={<AIDetection />} />
             <Route path="/feature-audit" element={<FeatureAudit />} />
+            <Route path="/live-streaming" element={<LiveStreaming />} />
+            <Route path="/collections" element={<Collections />} />
+            <Route path="/trending" element={<Trending />} />
+            <Route path="/recommendations" element={<Recommendations />} />
+            <Route path="/commissions" element={<Commissions />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/merchandise" element={<Merchandise />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

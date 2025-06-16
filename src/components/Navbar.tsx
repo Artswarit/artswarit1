@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ModeToggle } from "@/components/ModeToggle";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Home, Users, Search as SearchIcon } from "lucide-react";
+import { Home, Users, Search as SearchIcon, Video, TrendingUp } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 const menuItems = [
@@ -30,6 +30,16 @@ const menuItems = [
     name: "Explore",
     path: "/explore",
     icon: <SearchIcon size={18} />,
+  },
+  {
+    name: "Live",
+    path: "/live-streaming",
+    icon: <Video size={18} />,
+  },
+  {
+    name: "Trending",
+    path: "/trending",
+    icon: <TrendingUp size={18} />,
   },
 ];
 
