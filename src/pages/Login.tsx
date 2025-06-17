@@ -1,159 +1,165 @@
 
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/contexts/AuthContext";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import LogoWithName from "@/components/LogoWithName";
-import { Eye, EyeOff } from "lucide-react";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useProfile } from "@/hooks/useProfile";
 
 const Login = () => {
-  const navigate = useNavigate();
-  const { signIn, signInWithGoogle, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const { user, signIn, signInWithGoogle, loading } = useAuth();
+  const navigate = useNavigate();
+  const { isAdmin, loading: adminLoading } = useIsAdmin();
+  const { profile, loading: profileLoading, refetch: refetchProfile } = useProfile();
+  const [loginError, setLoginError] = useState<string | null>(null);
+
+  // Redirect logic based on user role
+  useEffect(() => {
+    if (!loading && !adminLoading && !profileLoading && user) {
+      console.log('Redirecting user:', { isAdmin, profileRole: profile?.role });
+      
+      if (isAdmin) {
+        navigate("/admin-dashboard");
+      } else if (profile?.role === "artist" || profile?.role === "premium") {
+        navigate("/artist-dashboard");
+      } else {
+        navigate("/client-dashboard");
+      }
+    }
+  }, [loading, adminLoading, profileLoading, user, isAdmin, profile, navigate]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setLoginError(null);
+
     const { error } = await signIn(email, password);
+
     if (!error) {
-      navigate("/");
+      // Fetch latest profile to ensure we have the most up-to-date role
+      refetchProfile && refetchProfile();
+      // Redirection will happen automatically through the useEffect above
+    } else {
+      setLoginError(error.message || "Login failed");
     }
   };
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignin = async () => {
     const { error } = await signInWithGoogle();
-    if (!error) {
-      navigate("/");
+    if (error) {
+      setLoginError(error.message || "Google sign in failed");
     }
+    // Redirect will happen automatically via auth state changes
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="flex flex-col min-h-screen">
       <Navbar />
-      <div className="flex-1 flex items-center justify-center px-3 sm:px-6 lg:px-8 py-[80px]">
-        <div className="w-full max-w-sm sm:max-w-md space-y-6">
+      <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="w-full max-w-md space-y-8">
+          <LogoWithName />
           <div className="text-center">
-            <LogoWithName />
+            <h1 className="font-heading text-3xl font-bold tracking-tight text-gray-900 my-[26px]">
+              Log in to your account
+            </h1>
+            <p className="mt-2 text-sm text-gray-600 my-0 mx-0">
+              Or{" "}
+              <Link to="/signup" className="font-medium text-artswarit-purple hover:text-artswarit-purple-dark">
+                create a new account
+              </Link>
+            </p>
           </div>
-
-          <Card className="glass-card border-0 shadow-xl">
-            <CardHeader className="space-y-3 pb-4">
-              <CardTitle className="text-xl sm:text-2xl text-center font-heading">
-                Welcome Back
-              </CardTitle>
-              <CardDescription className="text-center text-sm sm:text-base">
-                Sign in to your account
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium">
-                    Email
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="h-11 text-base"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium">
-                    Password
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      className="h-11 text-base pr-12"
-                    />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-5 w-5 text-gray-400" />
-                      ) : (
-                        <Eye className="h-5 w-5 text-gray-400" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full h-11 bg-gradient-to-r from-artswarit-purple to-blue-500 hover:from-artswarit-purple-dark hover:to-blue-600 text-white font-medium"
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="email">Email address</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="name@example.com" 
+                  value={email} 
+                  onChange={e => setEmail(e.target.value)} 
+                  required 
+                  className="mt-1"
                   disabled={loading}
-                >
-                  {loading ? "Signing in..." : "Sign In"}
-                </Button>
-              </form>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Or continue with
-                  </span>
+                />
+              </div>
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  placeholder="••••••••" 
+                  value={password} 
+                  onChange={e => setPassword(e.target.value)} 
+                  required 
+                  className="mt-1"
+                  disabled={loading}
+                />
+                <div className="flex justify-end mt-1">
+                  <Link to="/forgot-password" className="text-sm font-medium text-artswarit-purple hover:text-artswarit-purple-dark">
+                    Forgot your password?
+                  </Link>
                 </div>
               </div>
-
-              <Button
-                variant="outline"
-                onClick={handleGoogleSignIn}
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="rememberMe" 
+                  checked={rememberMe} 
+                  onCheckedChange={checked => setRememberMe(checked === true)}
+                  disabled={loading}
+                />
+                <Label htmlFor="rememberMe" className="text-sm">Remember me</Label>
+              </div>
+            </div>
+            {loginError && (
+              <div className="text-red-600 text-center text-sm">{loginError}</div>
+            )}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Signing in..." : "Log in"}
+            </Button>
+            <div className="flex items-center my-4">
+              <div className="flex-1 border-t border-gray-300"></div>
+              <div className="px-3 text-sm text-gray-500">Or continue with</div>
+              <div className="flex-1 border-t border-gray-300"></div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Button 
+                variant="outline" 
+                className="w-full flex items-center justify-center"
+                onClick={handleGoogleSignin}
+                type="button"
                 disabled={loading}
-                className="w-full h-11 border-gray-300 hover:bg-gray-50"
               >
-                <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" className="mr-2">
+                  <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
+                  <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
+                  <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" />
+                  <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
                 </svg>
-                Continue with Google
+                Google
               </Button>
-
-              <div className="text-center text-sm">
-                <span className="text-gray-600">Don't have an account? </span>
-                <Link
-                  to="/signup"
-                  className="font-medium text-artswarit-purple hover:text-artswarit-purple-dark"
-                >
-                  Sign up
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
+              <Button variant="outline" className="w-full flex items-center justify-center" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" className="mr-2">
+                  <linearGradient id="Ld6sqrtcxMyckEl6xeDdMa" x1="9.993" x2="40.615" y1="9.993" y2="40.615" gradientUnits="userSpaceOnUse">
+                    <stop offset="0" stopColor="#2aa4f4" />
+                    <stop offset="1" stopColor="#007ad9" />
+                  </linearGradient>
+                  <path fill="url(#Ld6sqrtcxMyckEl6xeDdMa)" d="M24,4C12.954,4,4,12.954,4,24s8.954,20,20,20s20-8.954,20-20S35.046,4,24,4z" />
+                  <path fill="#fff" d="M26.707,29.301h5.176l0.813-5.258h-5.989v-2.874c0-2.184,0.714-4.121,2.757-4.121h3.283V12.46 c-0.577-0.078-1.797-0.248-4.102-0.248c-4.814,0-7.636,2.542-7.636,8.334v3.498H16.06v5.258h4.948v14.452 C21.988,43.9,22.981,44,24,44c0.921,0,1.82-0.084,2.707-0.204V29.301z" />
+                </svg>
+                Facebook
+              </Button>
+            </div>
+          </form>
         </div>
       </div>
       <Footer />
