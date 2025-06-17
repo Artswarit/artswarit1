@@ -95,51 +95,51 @@ const ClientDashboard = () => {
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Navbar />
 
-      <div className="container mx-auto mobile-padding py-4 sm:py-6 lg:py-8 pt-20 sm:pt-24">
+      <div className="container mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-6 sm:py-8 pt-20 sm:pt-[84px]">
         {/* Dashboard Header */}
         <div className="mb-6 sm:mb-8">
           <h1 className="font-heading text-2xl sm:text-3xl font-bold mb-2">Client Dashboard</h1>
-          <p className="text-sm sm:text-base text-muted-foreground">Welcome back, Thomas! Manage your projects and discover new artists.</p>
+          <p className="text-muted-foreground text-sm sm:text-base">Welcome back, Thomas! Manage your projects and discover new artists.</p>
         </div>
 
         {/* Dashboard Navigation */}
         <Tabs defaultValue="overview" className="mb-6 sm:mb-8" onValueChange={setSelectedTab}>
-          <div className="overflow-x-auto mb-6">
-            <TabsList className="bg-white/50 backdrop-blur-sm mb-6 grid grid-cols-4 sm:grid-cols-7 min-w-max sm:min-w-0">
-              <TabsTrigger value="overview" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-xs sm:text-sm">
+          <div className="overflow-x-auto mb-4 sm:mb-6">
+            <TabsList className="bg-white/50 backdrop-blur-sm grid grid-cols-3 sm:grid-cols-7 min-w-[500px] sm:min-w-0">
+              <TabsTrigger value="overview" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
                 <LayoutDashboard className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Overview</span>
-                <span className="sm:hidden">Over</span>
+                <span className="hidden xs:inline">Overview</span>
+                <span className="xs:hidden">Home</span>
               </TabsTrigger>
-              <TabsTrigger value="projects" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-xs sm:text-sm">
+              <TabsTrigger value="projects" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
                 <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Projects</span>
-                <span className="sm:hidden">Proj</span>
+                <span className="hidden xs:inline">Projects</span>
+                <span className="xs:hidden">Proj</span>
               </TabsTrigger>
-              <TabsTrigger value="messages" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-xs sm:text-sm">
+              <TabsTrigger value="messages" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
                 <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Messages</span>
-                <span className="sm:hidden">Msg</span>
+                <span className="hidden xs:inline">Messages</span>
+                <span className="xs:hidden">Msg</span>
               </TabsTrigger>
-              <TabsTrigger value="artists" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-xs sm:text-sm">
+              <TabsTrigger value="artists" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
                 <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Saved Artists</span>
-                <span className="sm:hidden">Save</span>
+                <span className="hidden xs:inline">Saved Artists</span>
+                <span className="xs:hidden">Artists</span>
               </TabsTrigger>
-              <TabsTrigger value="ratings" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-xs sm:text-sm">
+              <TabsTrigger value="ratings" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
                 <Star className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Reviews</span>
-                <span className="sm:hidden">Rev</span>
+                <span className="hidden xs:inline">Reviews</span>
+                <span className="xs:hidden">Rate</span>
               </TabsTrigger>
-              <TabsTrigger value="payments" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-xs sm:text-sm">
+              <TabsTrigger value="payments" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
                 <CreditCard className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Payments</span>
-                <span className="sm:hidden">Pay</span>
+                <span className="hidden xs:inline">Payments</span>
+                <span className="xs:hidden">Pay</span>
               </TabsTrigger>
-              <TabsTrigger value="settings" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-xs sm:text-sm">
+              <TabsTrigger value="settings" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
                 <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Settings</span>
-                <span className="sm:hidden">Set</span>
+                <span className="hidden xs:inline">Settings</span>
+                <span className="xs:hidden">Set</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -147,47 +147,48 @@ const ClientDashboard = () => {
           {/* Overview Tab Content */}
           <TabsContent value="overview" className="space-y-6 sm:space-y-8">
             {/* Stats Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
               <div className="bg-white/60 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-sm border border-blue-100">
-                <h3 className="font-medium text-sm text-muted-foreground mb-2">Active Projects</h3>
+                <h3 className="font-medium text-xs sm:text-sm text-muted-foreground mb-2">Active Projects</h3>
                 <p className="text-2xl sm:text-3xl font-bold">{activeProjects.length}</p>
               </div>
               <div className="bg-white/60 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-sm border border-blue-100">
-                <h3 className="font-medium text-sm text-muted-foreground mb-2">Completed Projects</h3>
+                <h3 className="font-medium text-xs sm:text-sm text-muted-foreground mb-2">Completed Projects</h3>
                 <p className="text-2xl sm:text-3xl font-bold">{completedProjects.length}</p>
               </div>
-              <div className="bg-white/60 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-sm border border-blue-100 sm:col-span-2 lg:col-span-1">
-                <h3 className="font-medium text-sm text-muted-foreground mb-2">Saved Artists</h3>
+              <div className="bg-white/60 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-sm border border-blue-100">
+                <h3 className="font-medium text-xs sm:text-sm text-muted-foreground mb-2">Saved Artists</h3>
                 <p className="text-2xl sm:text-3xl font-bold">12</p>
               </div>
             </div>
 
             {/* Active Projects Section */}
             <div>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4">
                 <h2 className="font-heading text-lg sm:text-xl font-semibold">Active Projects</h2>
-                <Button variant="outline" size="sm" asChild className="touch-target">
+                <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
                   <Link to="/projects">View All</Link>
                 </Button>
               </div>
               <div className="grid grid-cols-1 gap-4">
                 {activeProjects.map(project => (
                   <div key={project.id} className="bg-white/60 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-blue-100 hover:shadow-md transition-all">
-                    <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                      <div className="flex-1">
-                        <h3 className="font-medium text-sm sm:text-base">{project.title}</h3>
+                    <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-sm sm:text-base truncate">{project.title}</h3>
                         <p className="text-xs sm:text-sm text-muted-foreground">Artist: {project.artist}</p>
                         <div className="flex items-center gap-2 mt-2">
                           <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div className="bg-gradient-to-r from-artswarit-purple to-blue-500 h-2 rounded-full" style={{
-                              width: `${project.progress}%`
-                            }}></div>
+                            <div 
+                              className="bg-gradient-to-r from-artswarit-purple to-blue-500 h-2 rounded-full" 
+                              style={{ width: `${project.progress}%` }}
+                            />
                           </div>
-                          <span className="text-xs font-medium whitespace-nowrap">{project.progress}%</span>
+                          <span className="text-xs font-medium min-w-[35px]">{project.progress}%</span>
                         </div>
                       </div>
                       <div className="text-right">
-                        <span className="text-xs text-gray-500">Due: {project.dueDate}</span>
+                        <span className="text-xs text-gray-500 block">Due: {project.dueDate}</span>
                         <div className="mt-1">
                           {project.status === "In Progress" ? (
                             <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">In Progress</span>
@@ -204,10 +205,10 @@ const ClientDashboard = () => {
 
             {/* Recommended Artists */}
             <div>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4">
                 <h2 className="font-heading text-lg sm:text-xl font-semibold">Recommended for You</h2>
-                <Button variant="ghost" size="sm" asChild className="text-artswarit-purple touch-target">
-                  <Link to="/explore" className="flex items-center">
+                <Button variant="ghost" size="sm" asChild className="text-artswarit-purple w-full sm:w-auto">
+                  <Link to="/explore" className="flex items-center justify-center sm:justify-start">
                     Explore More
                     <ChevronRight className="h-4 w-4 ml-1" />
                   </Link>
@@ -215,11 +216,19 @@ const ClientDashboard = () => {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {recommendedArtists.map(artist => (
-                  <Link key={artist.id} to={`/artist/${artist.id}`} className="bg-white/60 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-blue-100 hover:shadow-md transition-all touch-target">
-                    <div className="flex items-center gap-4">
-                      <img src={artist.profileImage} alt={artist.name} className="h-12 w-12 rounded-full object-cover" />
-                      <div className="flex-1">
-                        <h3 className="font-medium text-sm sm:text-base">{artist.name}</h3>
+                  <Link 
+                    key={artist.id} 
+                    to={`/artist/${artist.id}`} 
+                    className="bg-white/60 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-blue-100 hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <img 
+                        src={artist.profileImage} 
+                        alt={artist.name} 
+                        className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover" 
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-sm sm:text-base truncate">{artist.name}</h3>
                         <p className="text-xs sm:text-sm text-muted-foreground">{artist.profession}</p>
                       </div>
                       <div className="flex items-center">
@@ -234,18 +243,21 @@ const ClientDashboard = () => {
 
             {/* Recent Notifications */}
             <div>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4">
                 <h2 className="font-heading text-lg sm:text-xl font-semibold">Recent Notifications</h2>
-                <Button variant="ghost" size="sm" className="touch-target">
+                <Button variant="ghost" size="sm" className="w-full sm:w-auto">
                   <Bell className="h-4 w-4 mr-1" />
                   <span>Manage</span>
                 </Button>
               </div>
               <div className="bg-white/60 backdrop-blur-sm rounded-xl shadow-sm border border-blue-100 divide-y">
                 {notifications.map(notification => (
-                  <div key={notification.id} className={`p-4 flex items-start gap-3 ${notification.read ? '' : 'bg-blue-50/40'}`}>
-                    <div className={`mt-1 h-2 w-2 rounded-full ${notification.read ? 'bg-transparent' : 'bg-blue-500'}`}></div>
-                    <div className="flex-1">
+                  <div 
+                    key={notification.id} 
+                    className={`p-3 sm:p-4 flex items-start gap-3 ${notification.read ? '' : 'bg-blue-50/40'}`}
+                  >
+                    <div className={`mt-1 h-2 w-2 rounded-full ${notification.read ? 'bg-transparent' : 'bg-blue-500'}`} />
+                    <div className="flex-1 min-w-0">
                       <p className="text-xs sm:text-sm">{notification.content}</p>
                       <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
                     </div>
@@ -257,79 +269,73 @@ const ClientDashboard = () => {
 
           {/* Projects Tab */}
           <TabsContent value="projects" className="space-y-6 sm:space-y-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4">
               <h2 className="font-heading text-lg sm:text-xl font-semibold">All Projects</h2>
               <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 <div className="relative">
                   <input 
                     type="text" 
                     placeholder="Search projects..." 
-                    className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/70 focus:border-transparent bg-white/80 w-full sm:w-auto" 
+                    className="w-full sm:w-auto pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/70 focus:border-transparent bg-white/80" 
                   />
                   <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                     <Search size={16} />
                   </div>
                 </div>
-                <Button className="touch-target">New Project</Button>
+                <Button className="w-full sm:w-auto">New Project</Button>
               </div>
             </div>
             
             <div className="grid grid-cols-1 gap-6">
-              <div className="bg-white/60 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-sm border border-blue-100">
-                <h3 className="font-heading text-base sm:text-lg font-semibold mb-4 flex items-center">
-                  <Clock className="h-4 sm:h-5 w-4 sm:w-5 mr-2 text-amber-600" />
+              <div className="bg-white/60 backdrop-blur-sm p-6 rounded-xl shadow-sm border border-blue-100">
+                <h3 className="font-heading text-lg font-semibold mb-4 flex items-center">
+                  <Clock className="h-5 w-5 mr-2 text-amber-600" />
                   In Progress
                 </h3>
                 <div className="space-y-4">
-                  {activeProjects.map(project => (
-                    <div key={project.id} className="p-4 border border-gray-100 rounded-lg bg-white/70">
-                      <div className="flex flex-col sm:flex-row justify-between gap-2">
-                        <h4 className="font-medium text-sm sm:text-base">{project.title}</h4>
-                        <span className={`px-2 py-1 text-xs rounded-full self-start ${project.status === "In Progress" ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"}`}>
+                  {activeProjects.map(project => <div key={project.id} className="p-4 border border-gray-100 rounded-lg bg-white/70">
+                      <div className="flex justify-between">
+                        <h4 className="font-medium">{project.title}</h4>
+                        <span className={`px-2 py-1 text-xs rounded-full ${project.status === "In Progress" ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"}`}>
                           {project.status}
                         </span>
                       </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground mt-1">Artist: {project.artist}</p>
+                      <p className="text-sm text-muted-foreground mt-1">Artist: {project.artist}</p>
                       <div className="flex items-center gap-2 mt-3">
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div className="bg-gradient-to-r from-artswarit-purple to-blue-500 h-2 rounded-full" style={{
-                            width: `${project.progress}%`
-                          }}></div>
+                        width: `${project.progress}%`
+                      }}></div>
                         </div>
-                        <span className="text-xs font-medium whitespace-nowrap">{project.progress}%</span>
+                        <span className="text-xs font-medium">{project.progress}%</span>
                       </div>
-                      <div className="mt-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                      <div className="mt-3 flex justify-between items-center">
                         <span className="text-xs text-gray-500">Due: {project.dueDate}</span>
-                        <Button size="sm" variant="outline" className="touch-target">View Details</Button>
+                        <Button size="sm" variant="outline">View Details</Button>
                       </div>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </div>
               
-              <div className="bg-white/60 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-sm border border-blue-100">
-                <h3 className="font-heading text-base sm:text-lg font-semibold mb-4 flex items-center">
-                  <CheckCircle className="h-4 sm:h-5 w-4 sm:w-5 mr-2 text-green-600" />
+              <div className="bg-white/60 backdrop-blur-sm p-6 rounded-xl shadow-sm border border-blue-100">
+                <h3 className="font-heading text-lg font-semibold mb-4 flex items-center">
+                  <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
                   Completed
                 </h3>
                 <div className="space-y-4">
-                  {completedProjects.map(project => (
-                    <div key={project.id} className="p-4 border border-gray-100 rounded-lg bg-white/70">
-                      <div className="flex flex-col sm:flex-row justify-between gap-2">
-                        <h4 className="font-medium text-sm sm:text-base">{project.title}</h4>
-                        <div className="flex self-start">
-                          {[...Array(project.rating)].map((_, i) => (
-                            <span key={i} className="text-yellow-400">★</span>
-                          ))}
+                  {completedProjects.map(project => <div key={project.id} className="p-4 border border-gray-100 rounded-lg bg-white/70">
+                      <div className="flex justify-between">
+                        <h4 className="font-medium">{project.title}</h4>
+                        <div className="flex">
+                          {[...Array(project.rating)].map((_, i) => <span key={i} className="text-yellow-400">★</span>)}
                         </div>
                       </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground mt-1">Artist: {project.artist}</p>
-                      <div className="mt-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                      <p className="text-sm text-muted-foreground mt-1">Artist: {project.artist}</p>
+                      <div className="mt-3 flex justify-between items-center">
                         <span className="text-xs text-gray-500">Completed: {project.completedDate}</span>
-                        <Button size="sm" variant="outline" className="touch-target">View Details</Button>
+                        <Button size="sm" variant="outline">View Details</Button>
                       </div>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </div>
             </div>
@@ -353,10 +359,10 @@ const ClientDashboard = () => {
           </TabsContent>
           
           <TabsContent value="settings">
-            <div className="bg-white/60 backdrop-blur-sm p-6 sm:p-8 lg:p-20 rounded-xl shadow-sm border border-blue-100 text-center">
-              <h3 className="font-heading text-lg sm:text-xl font-semibold mb-2">Account Settings</h3>
-              <p className="text-sm sm:text-base text-muted-foreground mb-4">Manage your profile, preferences, and account settings.</p>
-              <Button className="touch-target">Edit Settings</Button>
+            <div className="bg-white/60 backdrop-blur-sm p-6 rounded-xl shadow-sm border border-blue-100 text-center py-20">
+              <h3 className="font-heading text-xl font-semibold mb-2">Account Settings</h3>
+              <p className="text-muted-foreground mb-4">Manage your profile, preferences, and account settings.</p>
+              <Button>Edit Settings</Button>
             </div>
           </TabsContent>
         </Tabs>

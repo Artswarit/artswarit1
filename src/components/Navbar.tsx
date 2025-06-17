@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,8 +10,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ModeToggle } from "@/components/ModeToggle";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Home, Users, Search as SearchIcon, Video, TrendingUp, X, Menu } from "lucide-react";
+import { Home, Users, Search as SearchIcon, Video, TrendingUp } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 const menuItems = [
@@ -49,49 +49,64 @@ const Navbar = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const isMobile = useIsMobile();
+  const [search, setSearch] = useState("");
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const closeMenu = () => setIsOpen(false);
 
+  // Underline effect for nav links (no background)
   const linkBaseClass =
-    "relative flex items-center gap-2 px-3 py-2 font-medium text-sm rounded-lg transition-all duration-300 before:absolute before:inset-x-2 before:bottom-0 before:h-0.5 before:bg-purple-600 before:scale-x-0 hover:before:scale-x-100 before:transition-transform before:duration-300 touch-target";
-  const linkActiveClass = "text-purple-600 before:scale-x-100";
-  const linkInactiveClass = "text-gray-700 hover:text-purple-600 hover:bg-purple-50";
+    "relative flex items-center gap-1 px-3 py-1.5 font-medium text-sm rounded transition-all before:absolute before:inset-x-2 before:bottom-0 before:h-0.5 before:bg-purple-600 before:scale-x-0 hover:before:scale-x-100 before:transition-transform before:duration-300";
+  const linkActiveClass =
+    "text-purple-600 before:scale-x-100";
+  const linkInactiveClass =
+    "text-gray-700 before:bg-gray-300 hover:text-purple-600";
 
+  // Scroll to top on logo click
   const handleLogoClick = (e: React.MouseEvent) => {
     window.scrollTo({ top: 0, behavior: "smooth" });
+    // if already on home, prevent default so doesn't re-render
     if (location.pathname === "/") {
       e.preventDefault();
     }
-    closeMenu();
   };
 
   return (
     <nav className="bg-white/70 glass-effect shadow-lg border-b border-gray-100 fixed w-full top-0 z-50 backdrop-blur-md transition-all">
-      <div className="w-full flex items-center justify-between h-14 sm:h-16 px-4 sm:px-6 lg:px-8">
-        {/* Logo Section */}
-        <div className="flex items-center">
+      <div className="w-full flex items-center h-12 px-0 md:px-0">
+        {/* Left: logo + desktop menu grouped, reduce gap for tighter alignment */}
+        <div className="flex items-center gap-x-2">
+          {/* Logo */}
           <Link
             to="/"
             onClick={handleLogoClick}
             className="flex items-center font-bold text-lg text-purple-600 tracking-tight hover:opacity-80 transition-opacity"
+            style={{ marginLeft: 0, marginRight: 0, padding: 0 }}
           >
             <img
               src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png"
               alt="Artswarit Logo"
-              className="h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14 object-contain transition-transform duration-300 hover:scale-110"
+              className="h-12 w-12 md:h-16 md:w-16 object-contain transition-transform duration-300 hover:scale-110"
+              style={{
+                background: "none"
+              }}
             />
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center ml-8 space-x-1">
+          {/* Minimal desktop nav */}
+          <div className="hidden md:flex items-center">
             {menuItems.map((item) => (
               <Link
                 key={item.name}
                 to={item.path}
-                className={`${linkBaseClass} ${
-                  location.pathname === item.path ? linkActiveClass : linkInactiveClass
-                }`}
+                className={
+                  linkBaseClass +
+                  " " +
+                  (location.pathname === item.path
+                    ? linkActiveClass
+                    : linkInactiveClass)
+                }
+                style={{ marginLeft: "0.5rem" }}
               >
                 {item.icon}
                 <span>{item.name}</span>
@@ -99,134 +114,146 @@ const Navbar = () => {
             ))}
           </div>
         </div>
+        {/* End Left section */}
 
-        {/* Right Side Controls */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        {/* Right side controls */}
+        <div className="flex items-center ml-auto gap-2">
+          {/* Dashboard link removed as requested */}
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-10 w-10 p-0 touch-target">
-                  <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
-                    <AvatarImage 
-                      src={user.user_metadata?.avatar_url} 
-                      alt={user.user_metadata?.full_name || user.email} 
-                    />
-                    <AvatarFallback className="text-sm">
-                      {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0)}
-                    </AvatarFallback>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.user_metadata?.avatar_url} alt={user.user_metadata?.full_name || user.email} />
+                    <AvatarFallback>{user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0)}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                className="w-48 z-50 bg-white backdrop-blur-sm border border-gray-200" 
-                align="end" 
-                forceMount
-              >
+              <DropdownMenuContent className="w-44 z-50 bg-white backdrop-blur-sm border border-gray-200" align="end" forceMount>
                 <DropdownMenuItem asChild>
-                  <Link 
-                    to={isAdmin ? "/admin-dashboard" : (user.user_metadata?.role === "artist" ? "/artist-dashboard" : "/client-dashboard")}
-                    className="touch-target"
-                  >
+                  <Link to={isAdmin ? "/admin-dashboard" : (user.user_metadata?.role === "artist" ? "/artist-dashboard" : "/client-dashboard")}>
                     Dashboard
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={signOut} className="touch-target">
-                  Logout
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={signOut}>Logout</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="hidden sm:flex items-center gap-2">
+            <>
               <Link
                 to="/login"
-                className="text-gray-700 hover:text-purple-600 font-medium px-3 py-2 rounded-lg text-sm transition-colors touch-target"
+                className="text-gray-700 hover:text-purple-600 font-medium px-2 py-1 rounded-lg text-sm transition-colors"
               >
                 Login
               </Link>
               <Link
                 to="/signup"
-                className="bg-purple-600 text-white rounded-lg px-4 py-2 font-medium text-sm hover:bg-purple-700 transition-all touch-target"
+                className="bg-purple-600 text-white rounded-lg px-3 py-1.5 font-medium text-sm hover:bg-purple-700 transition-all"
               >
                 Sign Up
               </Link>
-            </div>
+            </>
           )}
-
-          {/* Mobile Menu Button */}
-          <Button 
-            variant="ghost" 
-            onClick={toggleMenu} 
-            className="lg:hidden h-10 w-10 p-0 touch-target"
-          >
-            <span className="sr-only">Toggle Menu</span>
-            {isOpen ? <X size={20} /> : <Menu size={20} />}
-          </Button>
+          {/* Remove ModeToggle component */}
         </div>
+
+        {/* Mobile menu button */}
+        {isMobile && (
+          <div className="flex items-center space-x-1 ml-auto">
+            {user && (
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user.user_metadata?.avatar_url} alt={user.user_metadata?.full_name || user.email} />
+                <AvatarFallback>{user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0)}</AvatarFallback>
+              </Avatar>
+            )}
+            <Button variant="ghost" onClick={toggleMenu} className="h-8 w-8 p-0">
+              <span className="sr-only">Toggle Menu</span>
+              <svg width="21" height="21" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6" viewBox="0 0 24 24">
+                {isOpen
+                  ? (
+                    <>
+                      <line x1="4" y1="4" x2="20" y2="20" />
+                      <line x1="20" y1="4" x2="4" y2="20" />
+                    </>
+                  )
+                  : (
+                    <>
+                      <line x1="4" y1="7" x2="20" y2="7" />
+                      <line x1="4" y1="12" x2="20" y2="12" />
+                      <line x1="4" y1="17" x2="20" y2="17" />
+                    </>
+                  )
+                }
+              </svg>
+            </Button>
+          </div>
+        )}
       </div>
 
-      {/* Mobile Menu */}
-      {isOpen && (
-        <div className="lg:hidden absolute top-full left-0 right-0 bg-white/95 backdrop-blur-md z-50 border-b border-gray-200 shadow-lg">
-          <div className="px-4 py-4 space-y-2">
-            {/* Navigation Items */}
+      {/* Minimal Mobile Menu */}
+      {(isMobile && isOpen) && (
+        <div className="md:hidden absolute top-full left-0 right-0 bg-white/90 z-50 border-b border-gray-200 shadow transition-all animate-fade-in backdrop-blur">
+          <div className="px-4 py-2 space-y-1">
             {menuItems.map((item) => (
               <Link
                 to={item.path}
                 key={item.name}
-                className={`mobile-nav-item ${
-                  location.pathname === item.path
-                    ? "text-purple-600 bg-purple-50"
-                    : "text-gray-700 hover:text-purple-600 hover:bg-gray-50"
-                }`}
+                className={
+                  "relative flex items-center gap-2 px-3 py-2 text-base font-medium rounded-lg transition-colors " +
+                  (location.pathname === item.path
+                    ? "text-purple-600 after:absolute after:left-3 after:right-3 after:bottom-0 after:h-0.5 after:bg-purple-600 after:rounded-full after:scale-x-100 after:transition-transform after:duration-300"
+                    : "text-gray-700 after:bg-gray-300 hover:text-purple-600 after:absolute after:left-3 after:right-3 after:bottom-0 after:h-0.5 after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300")
+                }
                 onClick={closeMenu}
+                style={{ marginLeft: "0.6rem", marginRight: "0.6rem" }}
               >
                 {item.icon}
                 <span>{item.name}</span>
               </Link>
             ))}
-            
-            {/* Auth Buttons for Mobile */}
-            {!user && (
-              <div className="pt-4 border-t border-gray-200 space-y-2">
-                <Link
-                  to="/login"
-                  className="mobile-nav-item text-gray-700 hover:text-purple-600 hover:bg-gray-50"
-                  onClick={closeMenu}
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/signup"
-                  className="mobile-nav-item bg-purple-600 text-white hover:bg-purple-700"
-                  onClick={closeMenu}
-                >
-                  Sign Up
-                </Link>
-              </div>
-            )}
-
-            {/* User Actions for Mobile */}
-            {user && (
-              <div className="pt-4 border-t border-gray-200 space-y-2">
-                <Link
-                  to={isAdmin ? "/admin-dashboard" : (user.user_metadata?.role === "artist" ? "/artist-dashboard" : "/client-dashboard")}
-                  className="mobile-nav-item text-gray-700 hover:text-purple-600 hover:bg-gray-50"
-                  onClick={closeMenu}
-                >
-                  Dashboard
-                </Link>
-                <button
-                  onClick={() => {
-                    signOut();
-                    closeMenu();
-                  }}
-                  className="mobile-nav-item w-full text-left text-gray-700 hover:text-purple-600 hover:bg-gray-50"
-                >
-                  Logout
-                </button>
-              </div>
-            )}
+            <div className="mt-2">
+              {/* Dashboard/Profile button for mobile, now admin-aware */}
+              {user ? (
+                <>
+                  <Link
+                    to={isAdmin ? "/admin-dashboard" : (user.user_metadata?.role === "artist" ? "/artist-dashboard" : "/client-dashboard")}
+                    className="block px-3 py-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                    onClick={closeMenu}
+                  >
+                    Profile
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start font-medium mt-1"
+                    onClick={() => {
+                      signOut();
+                      closeMenu();
+                    }}
+                  >
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="block px-3 py-2 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                    onClick={closeMenu}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="block px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-all font-medium mt-1"
+                    onClick={closeMenu}
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
+            </div>
+            {/* Dashboard button replaces dark mode toggle */}
           </div>
         </div>
       )}

@@ -19,7 +19,7 @@ const Signup = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "artist", // Default role
+    role: "artist",
     acceptTerms: false
   });
   
@@ -59,7 +59,6 @@ const Signup = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     
-    // Simple validation
     if (formData.password !== formData.confirmPassword) {
       return;
     }
@@ -74,7 +73,6 @@ const Signup = () => {
     });
     
     if (!error) {
-      // Redirect based on role after successful signup
       if (formData.role === "artist") {
         setTimeout(() => navigate("/artist-dashboard"), 1000);
       } else {
@@ -84,10 +82,10 @@ const Signup = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Navbar />
-      <div className="flex-1 flex items-center justify-center mobile-padding py-16 sm:py-20 bg-gray-50">
-        <div className="w-full max-w-md space-y-6 sm:space-y-8">
+      <div className="flex-1 flex items-center justify-center px-3 sm:px-6 lg:px-8 py-[60px] sm:py-[80px]">
+        <div className="w-full max-w-sm sm:max-w-md space-y-6 sm:space-y-8">
           <div className="text-center">
             <LogoWithName />
           </div>
