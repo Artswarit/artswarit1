@@ -1,4 +1,3 @@
-
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -402,8 +401,8 @@ export default function ArtistProfile() {
     return (
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
         <Navbar />
-        <div className="flex-1 flex items-center justify-center">
-          <GlassCard className="p-8 text-center">
+        <div className="flex-1 flex items-center justify-center px-4">
+          <GlassCard className="p-8 text-center max-w-md w-full">
             <h1 className="text-2xl font-bold mb-4">Artist Not Found</h1>
             <p className="text-muted-foreground mb-4">The artist you're looking for doesn't exist.</p>
             <GlassButton>
@@ -435,15 +434,16 @@ export default function ArtistProfile() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-gray-100 flex flex-col">
       <Navbar />
-      {/* Diagnostic login banner */}
       {showDiagnosticBanner && (
-        <div className="w-full bg-orange-200 py-2 text-center text-orange-900 font-semibold">
-          <span>
+        <div className="w-full bg-orange-200 py-2 px-4 text-center text-orange-900 font-semibold">
+          <span className="text-sm">
             Not logged in! Some actions (follow, save, message, project request) are disabled. 
-            <span className="ml-2 text-sm">[Preview mode diagnostic 💡]</span>
+            <span className="ml-2 text-xs">[Preview mode diagnostic 💡]</span>
           </span>
         </div>
       )}
+      
+      {/* Artist Header Section - Fully responsive */}
       <div className="pt-16 w-full">
         <ArtistHeader
           artist={{
@@ -464,37 +464,45 @@ export default function ArtistProfile() {
           loadingSave={loadingSave}
         />
       </div>
-      <main className="container max-w-screen-xl mx-auto flex-1 px-4 sm:px-6 pb-8 mt-6">
-        <div className="block sm:hidden mb-4">
-          <TagDisplay tags={[profileState.category, ...(profileState.specialties || [])]} />
-        </div>
-        <div className="hidden sm:block">
-          <TagDisplay tags={[profileState.category, ...(profileState.specialties || [])]} />
-        </div>
-        <GlassCard className="p-4 sm:p-6 md:p-8 mt-4 shadow-lg">
-          <div className="flex items-center gap-3 mb-4">
-            <h2 className="font-heading text-lg md:text-xl font-bold text-gray-900">
-              Portfolio
-            </h2>
+      
+      {/* Main Content - Responsive container */}
+      <main className="w-full flex-1 px-4 sm:px-6 lg:px-8 pb-8 mt-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Tags Section - Mobile responsive */}
+          <div className="mb-4">
+            <TagDisplay tags={[profileState.category, ...(profileState.specialties || [])]} />
           </div>
-          <div className="w-full overflow-hidden">
-            <ArtistTabs
-              allArt={portfolio}
-              premiumArt={premiumArt}
-              exclusiveArt={exclusiveArt}
-              pinnedIds={pinnedIds}
-              aboutDetails={{
-                artist: profileState,
-                projectsCount: 19,
-                avgRating: 4.7,
-                reviewCount: 12,
-              }}
-              onArtworkClick={handleArtworkClick}
-            />
-          </div>
-        </GlassCard>
+          
+          {/* Portfolio Section - Responsive glass card */}
+          <GlassCard className="p-4 sm:p-6 lg:p-8 mt-4 shadow-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <h2 className="font-heading text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
+                Portfolio
+              </h2>
+            </div>
+            
+            {/* Tabs Container - Responsive overflow handling */}
+            <div className="w-full">
+              <div className="overflow-x-auto">
+                <ArtistTabs
+                  allArt={portfolio}
+                  premiumArt={premiumArt}
+                  exclusiveArt={exclusiveArt}
+                  pinnedIds={pinnedIds}
+                  aboutDetails={{
+                    artist: profileState,
+                    projectsCount: 19,
+                    avgRating: 4.7,
+                    reviewCount: 12,
+                  }}
+                  onArtworkClick={handleArtworkClick}
+                />
+              </div>
+            </div>
+          </GlassCard>
+        </div>
         
-        {/* Artwork Details Modal */}
+        {/* Artwork Details Modal - Mobile responsive */}
         {selectedArtwork && (
           <div
             className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
@@ -505,7 +513,7 @@ export default function ArtistProfile() {
               onClick={(e) => e.stopPropagation()}
             >
               <button
-                className="absolute top-3 right-3 text-gray-500 hover:text-red-500 text-xl font-bold z-10"
+                className="absolute top-3 right-3 text-gray-500 hover:text-red-500 text-xl font-bold z-10 w-8 h-8 flex items-center justify-center"
                 onClick={closeModal}
                 aria-label="Close"
               >
@@ -544,9 +552,9 @@ export default function ArtistProfile() {
         )}
       </main>
 
-      {/* Project Request Modal */}
+      {/* Project Request Modal - Mobile responsive */}
       <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
-        <DialogContent className="max-w-md mx-4 sm:mx-auto">
+        <DialogContent className="max-w-md mx-4 sm:mx-auto max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Send Project Request</DialogTitle>
             <DialogDescription>

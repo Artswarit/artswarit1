@@ -72,7 +72,6 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
 
   const { toast } = useToast();
 
-  // Put pinned artworks at the top for "All"
   let allWithPinnedFirst = allArt;
   if (pinnedIds.length > 0 && allArt) {
     const pinned = allArt.filter((a) => pinnedIds.includes(a.id));
@@ -86,12 +85,10 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
     exclusive: exclusiveArt || [],
   };
 
-  // Only compute paged and hasMore for artworks tabs
   const isArtTab = ART_TABS.includes(tab);
   const paged = isArtTab && displayed[tab] ? displayed[tab].slice(0, PAGE_SIZE * page) : [];
   const hasMore = isArtTab && displayed[tab] && displayed[tab].length > PAGE_SIZE * page;
 
-  // Form setup for Services tab
   const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm({ defaultValues: {
     title: "",
     description: "",
@@ -107,21 +104,24 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
   };
 
   return (
-    <div>
+    <div className="w-full">
       <Tabs value={tab} onValueChange={(v) => { setTab(v); setPage(1); }}>
-        <TabsList className="bg-white/40 backdrop-blur rounded-2xl glass-effect w-max mb-4 py-1 px-1">
-          <TabsTrigger value="all">All Art</TabsTrigger>
-          <TabsTrigger value="premium">Premium</TabsTrigger>
-          <TabsTrigger value="exclusive">Exclusive</TabsTrigger>
-          <TabsTrigger value="services">Services</TabsTrigger>
-          <TabsTrigger value="about">About</TabsTrigger>
-        </TabsList>
+        {/* Responsive Tabs List */}
+        <div className="w-full overflow-x-auto mb-4">
+          <TabsList className="bg-white/40 backdrop-blur rounded-2xl glass-effect w-max min-w-full sm:w-max mb-4 py-1 px-1 flex">
+            <TabsTrigger value="all" className="flex-shrink-0">All Art</TabsTrigger>
+            <TabsTrigger value="premium" className="flex-shrink-0">Premium</TabsTrigger>
+            <TabsTrigger value="exclusive" className="flex-shrink-0">Exclusive</TabsTrigger>
+            <TabsTrigger value="services" className="flex-shrink-0">Services</TabsTrigger>
+            <TabsTrigger value="about" className="flex-shrink-0">About</TabsTrigger>
+          </TabsList>
+        </div>
 
-        {/* "All Art", "Premium", "Exclusive" tabs */}
+        {/* Art Tabs Content */}
         <TabsContent value={tab} forceMount>
           {isArtTab && (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 my-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 my-4">
                 {paged.map((art) => (
                   <ArtworkCardModern
                     key={art.id}
@@ -148,9 +148,9 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
             </>
           )}
 
-          {/* Services Tab */}
+          {/* Services Tab - Mobile Responsive */}
           {tab === "services" && (
-            <div className="my-6 max-w-2xl mx-auto">
+            <div className="my-6 w-full max-w-4xl mx-auto px-2 sm:px-0">
               <h3 className="font-bold text-xl text-purple-900 mb-3 flex items-center gap-2">
                 <Mail className="text-purple-500" size={22} />
                 Services & Project Request
@@ -158,7 +158,7 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
               <div className="grid gap-4 mb-7">
                 {demoServices.map((service, i) => (
                   <div key={i} className="p-4 rounded-xl border bg-white/60 shadow flex flex-col md:flex-row justify-between items-start md:items-center">
-                    <div>
+                    <div className="flex-1">
                       <div className="text-lg font-semibold text-gray-900">{service.title}</div>
                       <div className="text-gray-700">{service.description}</div>
                     </div>
@@ -166,7 +166,7 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
                   </div>
                 ))}
               </div>
-              <form onSubmit={handleSubmit(submitRequest)} className="bg-white/80 rounded-xl p-6 shadow space-y-4">
+              <form onSubmit={handleSubmit(submitRequest)} className="bg-white/80 rounded-xl p-4 sm:p-6 shadow space-y-4">
                 <div>
                   <label className="font-medium text-gray-700 block mb-1">Project Title</label>
                   <Input placeholder="E.g. 'Custom Portrait'" required {...register("title")} />
@@ -182,7 +182,7 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="bg-violet-600 text-white hover:bg-violet-700 font-semibold gap-2 flex items-center"
+                  className="bg-violet-600 text-white hover:bg-violet-700 font-semibold gap-2 flex items-center w-full sm:w-auto"
                 >
                   <Mail size={17} />
                   {isSubmitting ? "Sending..." : "Send Request"}
@@ -191,103 +191,110 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
             </div>
           )}
 
-          {/* Expanded "About" tab details with more info and top review */}
+          {/* About Tab - Fully Mobile Responsive */}
           {tab === "about" && aboutDetails && (
-            <div className="my-8 px-2 max-w-xl mx-auto">
-              <h3 className="font-bold text-xl text-purple-900 mb-2">
-                {aboutDetails.artist.name}
-              </h3>
+            <div className="my-8 w-full max-w-4xl mx-auto px-2 sm:px-0">
+              <div className="bg-white/80 rounded-xl p-4 sm:p-6 shadow space-y-6">
+                <h3 className="font-bold text-xl sm:text-2xl text-purple-900 mb-4">
+                  {aboutDetails.artist.name}
+                </h3>
 
-              {/* Key profile info */}
-              <div className="flex flex-col gap-2 mb-4 text-[15px]">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <MapPin size={18} className="text-purple-400" />
-                  <span>
-                    {aboutDetails.artist.location || "Location not specified"}
-                  </span>
-                </div>
-                {aboutDetails.artist.email && (
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Mail size={18} className="text-blue-400" />
-                    <a 
-                      href={`mailto:${aboutDetails.artist.email}`}
-                      className="hover:underline"
-                    >
-                      {aboutDetails.artist.email}
-                    </a>
-                  </div>
-                )}
-                {aboutDetails.artist.website && (
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <span className="font-semibold">Website:</span>
-                    <a
-                      href={aboutDetails.artist.website}
-                      className="text-blue-700 hover:underline"
-                      target="_blank" rel="noopener noreferrer"
-                    >
-                      {aboutDetails.artist.website}
-                    </a>
-                  </div>
-                )}
-              </div>
-
-              {/* Bio */}
-              <div className="mb-3">
-                <span className="font-semibold text-gray-700 mr-2">Bio:</span>
-                <span className="text-gray-800">{aboutDetails.artist.bio || "No bio available."}</span>
-              </div>
-
-              {/* Projects, rating, review count */}
-              <div className="flex flex-wrap gap-x-7 gap-y-1 mb-4">
-                <div>
-                  <span className="font-semibold text-gray-700">Projects Done: </span>
-                  <span className="text-purple-900 font-bold">
-                    {aboutDetails.projectsCount}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="font-semibold text-gray-700">Avg. Rating:</span>
-                  <span className="text-yellow-600 font-bold">
-                    {aboutDetails.avgRating?.toFixed(1) || "—"}
-                  </span>
-                  <Star className="text-yellow-400 fill-yellow-400" size={20} />
-                </div>
-                <div>
-                  <span className="font-semibold text-gray-700">Reviews:</span>
-                  <span className="ml-1 font-bold">
-                    {aboutDetails.reviewCount}
-                  </span>
-                </div>
-              </div>
-
-              <hr className="my-4" />
-
-              {/* Featured Top Review (demo, adjust for real data) */}
-              <div className="mb-5">
-                <h4 className="font-semibold text-lg mb-1 text-purple-900">Top Client Review</h4>
-                <div className="bg-purple-50 rounded-lg px-5 py-4 border border-purple-100 shadow flex flex-col gap-2">
-                  <div className="flex items-center gap-3 mb-1">
-                    {/* Demo avatar */}
-                    <img
-                      src="https://randomuser.me/api/portraits/women/50.jpg"
-                      alt="Client"
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                    <span className="font-semibold text-sm text-purple-700">Priya Patel</span>
-                    <span className="flex gap-0.5 ml-2">
-                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                {/* Key profile info - Mobile responsive */}
+                <div className="space-y-3 text-sm sm:text-base">
+                  <div className="flex items-start gap-2 text-gray-600">
+                    <MapPin size={18} className="text-purple-400 flex-shrink-0 mt-0.5" />
+                    <span className="break-words">
+                      {aboutDetails.artist.location || "Location not specified"}
                     </span>
                   </div>
-                  <p className="text-gray-700 italic">
-                    "Absolutely phenomenal artist! Exceeded our expectations with every project.
-                    Great communication and high professionalism. Will collaborate again!"
+                  {aboutDetails.artist.email && (
+                    <div className="flex items-start gap-2 text-gray-600">
+                      <Mail size={18} className="text-blue-400 flex-shrink-0 mt-0.5" />
+                      <a 
+                        href={`mailto:${aboutDetails.artist.email}`}
+                        className="hover:underline break-all"
+                      >
+                        {aboutDetails.artist.email}
+                      </a>
+                    </div>
+                  )}
+                  {aboutDetails.artist.website && (
+                    <div className="flex items-start gap-2 text-gray-600">
+                      <span className="font-semibold flex-shrink-0">Website:</span>
+                      <a
+                        href={aboutDetails.artist.website}
+                        className="text-blue-700 hover:underline break-all"
+                        target="_blank" rel="noopener noreferrer"
+                      >
+                        {aboutDetails.artist.website}
+                      </a>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bio */}
+                <div className="space-y-2">
+                  <span className="font-semibold text-gray-700 block">Bio:</span>
+                  <p className="text-gray-800 leading-relaxed">
+                    {aboutDetails.artist.bio || "No bio available."}
                   </p>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    — Client, Apr 2025
+                </div>
+
+                {/* Stats - Mobile responsive grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 py-4 border-t border-gray-200">
+                  <div className="text-center sm:text-left">
+                    <span className="font-semibold text-gray-700 block">Projects Done</span>
+                    <span className="text-purple-900 font-bold text-lg">
+                      {aboutDetails.projectsCount}
+                    </span>
+                  </div>
+                  <div className="text-center sm:text-left">
+                    <span className="font-semibold text-gray-700 block">Avg. Rating</span>
+                    <div className="flex items-center justify-center sm:justify-start gap-1">
+                      <span className="text-yellow-600 font-bold text-lg">
+                        {aboutDetails.avgRating?.toFixed(1) || "—"}
+                      </span>
+                      <Star className="text-yellow-400 fill-yellow-400" size={20} />
+                    </div>
+                  </div>
+                  <div className="text-center sm:text-left">
+                    <span className="font-semibold text-gray-700 block">Reviews</span>
+                    <span className="font-bold text-lg">
+                      {aboutDetails.reviewCount}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Featured Review - Mobile responsive */}
+                <div className="space-y-3 border-t pt-4">
+                  <h4 className="font-semibold text-lg text-purple-900">Top Client Review</h4>
+                  <div className="bg-purple-50 rounded-lg p-4 sm:p-5 border border-purple-100 shadow space-y-3">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src="https://randomuser.me/api/portraits/women/50.jpg"
+                        alt="Client"
+                        className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                          <span className="font-semibold text-sm text-purple-700">Priya Patel</span>
+                          <div className="flex gap-0.5">
+                            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-gray-700 italic leading-relaxed">
+                      "Absolutely phenomenal artist! Exceeded our expectations with every project.
+                      Great communication and high professionalism. Will collaborate again!"
+                    </p>
+                    <div className="text-xs text-muted-foreground">
+                      — Client, Apr 2025
+                    </div>
                   </div>
                 </div>
               </div>
@@ -300,4 +307,3 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
 };
 
 export default ArtistTabs;
-
