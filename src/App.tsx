@@ -52,6 +52,7 @@ const App = () => (
             <Route path="/artist-dashboard/:tab" element={<ArtistDashboard />} />
             <Route path="/client-dashboard" element={<ClientDashboard />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route path="/about-us" element={<AboutUs />} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
