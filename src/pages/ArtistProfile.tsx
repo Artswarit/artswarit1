@@ -1,3 +1,4 @@
+
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -463,41 +464,48 @@ export default function ArtistProfile() {
           loadingSave={loadingSave}
         />
       </div>
-      <main className="container max-w-screen-xl mx-auto flex-1 px-2 sm:px-6 pb-8 mt-6">
-        <TagDisplay tags={[profileState.category, ...(profileState.specialties || [])]} />
-        <GlassCard className="p-7 md:p-8 mt-4 shadow-lg">
-          <div className="flex items-center gap-3 mb-2">
+      <main className="container max-w-screen-xl mx-auto flex-1 px-4 sm:px-6 pb-8 mt-6">
+        <div className="block sm:hidden mb-4">
+          <TagDisplay tags={[profileState.category, ...(profileState.specialties || [])]} />
+        </div>
+        <div className="hidden sm:block">
+          <TagDisplay tags={[profileState.category, ...(profileState.specialties || [])]} />
+        </div>
+        <GlassCard className="p-4 sm:p-6 md:p-8 mt-4 shadow-lg">
+          <div className="flex items-center gap-3 mb-4">
             <h2 className="font-heading text-lg md:text-xl font-bold text-gray-900">
               Portfolio
             </h2>
           </div>
-          <ArtistTabs
-            allArt={portfolio}
-            premiumArt={premiumArt}
-            exclusiveArt={exclusiveArt}
-            pinnedIds={pinnedIds}
-            aboutDetails={{
-              artist: profileState,
-              projectsCount: 19,
-              avgRating: 4.7,
-              reviewCount: 12,
-            }}
-            onArtworkClick={handleArtworkClick}
-          />
+          <div className="w-full overflow-hidden">
+            <ArtistTabs
+              allArt={portfolio}
+              premiumArt={premiumArt}
+              exclusiveArt={exclusiveArt}
+              pinnedIds={pinnedIds}
+              aboutDetails={{
+                artist: profileState,
+                projectsCount: 19,
+                avgRating: 4.7,
+                reviewCount: 12,
+              }}
+              onArtworkClick={handleArtworkClick}
+            />
+          </div>
         </GlassCard>
         
         {/* Artwork Details Modal */}
         {selectedArtwork && (
           <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
             onClick={closeModal}
           >
             <div
-              className="bg-white rounded-2xl shadow-2xl max-w-xl w-full relative p-6"
+              className="bg-white rounded-2xl shadow-2xl max-w-xl w-full relative p-4 sm:p-6 max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <button
-                className="absolute top-3 right-3 text-gray-500 hover:text-red-500 text-xl font-bold"
+                className="absolute top-3 right-3 text-gray-500 hover:text-red-500 text-xl font-bold z-10"
                 onClick={closeModal}
                 aria-label="Close"
               >
@@ -508,8 +516,8 @@ export default function ArtistProfile() {
                 alt={selectedArtwork.title}
                 className="w-full rounded-lg mb-4 object-cover max-h-64"
               />
-              <h3 className="text-xl font-bold mb-2">{selectedArtwork.title}</h3>
-              <div className="flex gap-4 text-gray-600 text-sm mb-2">
+              <h3 className="text-lg sm:text-xl font-bold mb-2 pr-8">{selectedArtwork.title}</h3>
+              <div className="flex flex-wrap gap-2 sm:gap-4 text-gray-600 text-sm mb-2">
                 <span>❤️ {selectedArtwork.likes}</span>
                 <span>👁 {selectedArtwork.views}</span>
                 {selectedArtwork.price !== undefined && (
@@ -518,17 +526,17 @@ export default function ArtistProfile() {
                   </span>
                 )}
                 {selectedArtwork.isPremium && (
-                  <span className="bg-yellow-200 rounded px-2 py-0.5 text-yellow-900 font-medium">
+                  <span className="bg-yellow-200 rounded px-2 py-0.5 text-yellow-900 font-medium text-xs">
                     Premium
                   </span>
                 )}
                 {selectedArtwork.isExclusive && (
-                  <span className="bg-purple-200 rounded px-2 py-0.5 text-purple-800 font-medium">
+                  <span className="bg-purple-200 rounded px-2 py-0.5 text-purple-800 font-medium text-xs">
                     Exclusive
                   </span>
                 )}
               </div>
-              <p className="text-gray-700">
+              <p className="text-gray-700 text-sm sm:text-base">
                 {selectedArtwork.description || "No description for this artwork."}
               </p>
             </div>
@@ -538,7 +546,7 @@ export default function ArtistProfile() {
 
       {/* Project Request Modal */}
       <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md mx-4 sm:mx-auto">
           <DialogHeader>
             <DialogTitle>Send Project Request</DialogTitle>
             <DialogDescription>
@@ -585,11 +593,11 @@ export default function ArtistProfile() {
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRequestDialogOpen(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setIsRequestDialogOpen(false)} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button onClick={handleSendProjectRequest} disabled={sendProjectRequestMutation.isPending || !user}>
+            <Button onClick={handleSendProjectRequest} disabled={sendProjectRequestMutation.isPending || !user} className="w-full sm:w-auto">
               {sendProjectRequestMutation.isPending ? 'Sending...' : 'Send Request'}
             </Button>
           </DialogFooter>
