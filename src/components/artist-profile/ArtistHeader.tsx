@@ -78,7 +78,7 @@ const ArtistHeader: React.FC<ArtistHeaderProps> = ({
                   </p>
                   
                   {artist.location && <div className="flex items-center justify-center sm:justify-start gap-1 text-white/80 mb-3">
-                      <MapPin className="h-4 w-4" />
+                      <MapPin className="h-4 w-4 bg-zinc-500" />
                       <span className="text-sm text-zinc-700">{artist.location}</span>
                     </div>}
 
