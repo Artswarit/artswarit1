@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -85,9 +86,11 @@ const Signup = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 bg-gray-50 my-0 lg:px-0 py-[52px]">
-        <div className="w-full max-w-md space-y-8">
-          <LogoWithName />
+      <div className="flex-1 flex items-center justify-center mobile-padding py-16 sm:py-20 bg-gray-50">
+        <div className="w-full max-w-md space-y-6 sm:space-y-8">
+          <div className="text-center">
+            <LogoWithName />
+          </div>
           <SignupHeader />
           <SocialLoginButtons onSocialSignup={handleSocialSignup} />
           <SignupForm
