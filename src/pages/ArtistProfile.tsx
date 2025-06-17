@@ -401,8 +401,8 @@ export default function ArtistProfile() {
     return (
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
         <Navbar />
-        <div className="flex-1 flex items-center justify-center px-4">
-          <GlassCard className="p-8 text-center max-w-md w-full">
+        <div className="flex-1 flex items-center justify-center">
+          <GlassCard className="p-8 text-center">
             <h1 className="text-2xl font-bold mb-4">Artist Not Found</h1>
             <p className="text-muted-foreground mb-4">The artist you're looking for doesn't exist.</p>
             <GlassButton>
@@ -434,16 +434,15 @@ export default function ArtistProfile() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-gray-100 flex flex-col">
       <Navbar />
+      {/* Diagnostic login banner */}
       {showDiagnosticBanner && (
-        <div className="w-full bg-orange-200 py-2 px-4 text-center text-orange-900 font-semibold">
-          <span className="text-sm">
+        <div className="w-full bg-orange-200 py-2 text-center text-orange-900 font-semibold">
+          <span>
             Not logged in! Some actions (follow, save, message, project request) are disabled. 
-            <span className="ml-2 text-xs">[Preview mode diagnostic 💡]</span>
+            <span className="ml-2 text-sm">[Preview mode diagnostic 💡]</span>
           </span>
         </div>
       )}
-      
-      {/* Artist Header Section - Fully responsive */}
       <div className="pt-16 w-full">
         <ArtistHeader
           artist={{
@@ -464,56 +463,41 @@ export default function ArtistProfile() {
           loadingSave={loadingSave}
         />
       </div>
-      
-      {/* Main Content - Responsive container */}
-      <main className="w-full flex-1 px-4 sm:px-6 lg:px-8 pb-8 mt-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Tags Section - Mobile responsive */}
-          <div className="mb-4">
-            <TagDisplay tags={[profileState.category, ...(profileState.specialties || [])]} />
+      <main className="container max-w-screen-xl mx-auto flex-1 px-2 sm:px-6 pb-8 mt-6">
+        <TagDisplay tags={[profileState.category, ...(profileState.specialties || [])]} />
+        <GlassCard className="p-7 md:p-8 mt-4 shadow-lg">
+          <div className="flex items-center gap-3 mb-2">
+            <h2 className="font-heading text-lg md:text-xl font-bold text-gray-900">
+              Portfolio
+            </h2>
           </div>
-          
-          {/* Portfolio Section - Responsive glass card */}
-          <GlassCard className="p-4 sm:p-6 lg:p-8 mt-4 shadow-lg">
-            <div className="flex items-center gap-3 mb-4">
-              <h2 className="font-heading text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
-                Portfolio
-              </h2>
-            </div>
-            
-            {/* Tabs Container - Responsive overflow handling */}
-            <div className="w-full">
-              <div className="overflow-x-auto">
-                <ArtistTabs
-                  allArt={portfolio}
-                  premiumArt={premiumArt}
-                  exclusiveArt={exclusiveArt}
-                  pinnedIds={pinnedIds}
-                  aboutDetails={{
-                    artist: profileState,
-                    projectsCount: 19,
-                    avgRating: 4.7,
-                    reviewCount: 12,
-                  }}
-                  onArtworkClick={handleArtworkClick}
-                />
-              </div>
-            </div>
-          </GlassCard>
-        </div>
+          <ArtistTabs
+            allArt={portfolio}
+            premiumArt={premiumArt}
+            exclusiveArt={exclusiveArt}
+            pinnedIds={pinnedIds}
+            aboutDetails={{
+              artist: profileState,
+              projectsCount: 19,
+              avgRating: 4.7,
+              reviewCount: 12,
+            }}
+            onArtworkClick={handleArtworkClick}
+          />
+        </GlassCard>
         
-        {/* Artwork Details Modal - Mobile responsive */}
+        {/* Artwork Details Modal */}
         {selectedArtwork && (
           <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
             onClick={closeModal}
           >
             <div
-              className="bg-white rounded-2xl shadow-2xl max-w-xl w-full relative p-4 sm:p-6 max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-2xl shadow-2xl max-w-xl w-full relative p-6"
               onClick={(e) => e.stopPropagation()}
             >
               <button
-                className="absolute top-3 right-3 text-gray-500 hover:text-red-500 text-xl font-bold z-10 w-8 h-8 flex items-center justify-center"
+                className="absolute top-3 right-3 text-gray-500 hover:text-red-500 text-xl font-bold"
                 onClick={closeModal}
                 aria-label="Close"
               >
@@ -524,8 +508,8 @@ export default function ArtistProfile() {
                 alt={selectedArtwork.title}
                 className="w-full rounded-lg mb-4 object-cover max-h-64"
               />
-              <h3 className="text-lg sm:text-xl font-bold mb-2 pr-8">{selectedArtwork.title}</h3>
-              <div className="flex flex-wrap gap-2 sm:gap-4 text-gray-600 text-sm mb-2">
+              <h3 className="text-xl font-bold mb-2">{selectedArtwork.title}</h3>
+              <div className="flex gap-4 text-gray-600 text-sm mb-2">
                 <span>❤️ {selectedArtwork.likes}</span>
                 <span>👁 {selectedArtwork.views}</span>
                 {selectedArtwork.price !== undefined && (
@@ -534,17 +518,17 @@ export default function ArtistProfile() {
                   </span>
                 )}
                 {selectedArtwork.isPremium && (
-                  <span className="bg-yellow-200 rounded px-2 py-0.5 text-yellow-900 font-medium text-xs">
+                  <span className="bg-yellow-200 rounded px-2 py-0.5 text-yellow-900 font-medium">
                     Premium
                   </span>
                 )}
                 {selectedArtwork.isExclusive && (
-                  <span className="bg-purple-200 rounded px-2 py-0.5 text-purple-800 font-medium text-xs">
+                  <span className="bg-purple-200 rounded px-2 py-0.5 text-purple-800 font-medium">
                     Exclusive
                   </span>
                 )}
               </div>
-              <p className="text-gray-700 text-sm sm:text-base">
+              <p className="text-gray-700">
                 {selectedArtwork.description || "No description for this artwork."}
               </p>
             </div>
@@ -552,9 +536,9 @@ export default function ArtistProfile() {
         )}
       </main>
 
-      {/* Project Request Modal - Mobile responsive */}
+      {/* Project Request Modal */}
       <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
-        <DialogContent className="max-w-md mx-4 sm:mx-auto max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Send Project Request</DialogTitle>
             <DialogDescription>
@@ -601,11 +585,11 @@ export default function ArtistProfile() {
               />
             </div>
           </div>
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={() => setIsRequestDialogOpen(false)} className="w-full sm:w-auto">
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRequestDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSendProjectRequest} disabled={sendProjectRequestMutation.isPending || !user} className="w-full sm:w-auto">
+            <Button onClick={handleSendProjectRequest} disabled={sendProjectRequestMutation.isPending || !user}>
               {sendProjectRequestMutation.isPending ? 'Sending...' : 'Send Request'}
             </Button>
           </DialogFooter>

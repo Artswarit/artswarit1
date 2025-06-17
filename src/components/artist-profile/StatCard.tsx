@@ -23,10 +23,11 @@ interface StatCardProps {
 }
 
 const StatCard: React.FC<StatCardProps> = ({ type, value, label }) => (
-  <div className="flex flex-col items-center justify-center min-w-[70px] px-2 py-2">
-    <div className="flex items-center gap-2 p-1 rounded-lg">
+  <div className="flex flex-col items-center justify-center min-w-[60px] sm:min-w-[70px] px-1 py-2">
+    <div className="flex items-center gap-1 sm:gap-2 p-1 rounded-lg">
       <span className={`${COLORS[type]}`}>{ICONS[type]}</span>
-      <span className={`text-lg lg:text-xl font-bold ${COLORS[type]}`}>
+      <span className={`text-base sm:text-lg lg:text-xl font-bold ${COLORS[type]}`}>
+        {/* For rating, show one decimal place */}
         {type === "rating" ? value.toFixed(1) : value}
       </span>
     </div>
