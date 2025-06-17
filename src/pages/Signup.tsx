@@ -84,24 +84,22 @@ const Signup = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Navbar />
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20 sm:py-24">
-        <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg space-y-6 sm:space-y-8">
+      <div className="flex-1 flex items-center justify-center px-3 sm:px-6 lg:px-8 py-[60px] sm:py-[80px]">
+        <div className="w-full max-w-sm sm:max-w-md space-y-6 sm:space-y-8">
           <div className="text-center">
             <LogoWithName />
           </div>
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 sm:p-8 border border-white/20">
-            <SignupHeader />
-            <SocialLoginButtons onSocialSignup={handleSocialSignup} />
-            <SignupForm
-              formData={formData}
-              handleChange={handleChange}
-              handleRoleChange={handleRoleChange}
-              handleTermsChange={handleTermsChange}
-              handleSubmit={handleSubmit}
-              loading={loading}
-            />
-            <TestLinks />
-          </div>
+          <SignupHeader />
+          <SocialLoginButtons onSocialSignup={handleSocialSignup} />
+          <SignupForm
+            formData={formData}
+            handleChange={handleChange}
+            handleRoleChange={handleRoleChange}
+            handleTermsChange={handleTermsChange}
+            handleSubmit={handleSubmit}
+            loading={loading}
+          />
+          <TestLinks />
         </div>
       </div>
       <Footer />
