@@ -435,9 +435,10 @@ export default function ArtistProfile() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-gray-100 flex flex-col">
       <Navbar />
+      
       {/* Diagnostic login banner - mobile responsive */}
       {showDiagnosticBanner && (
-        <div className="w-full bg-orange-200 py-2 px-4 text-center text-orange-900 font-medium text-xs sm:text-sm">
+        <div className="w-full bg-orange-200 py-3 px-4 text-center text-orange-900 font-medium text-sm">
           <span className="block sm:inline">
             Not logged in! Some actions are disabled.
             <span className="block sm:inline sm:ml-2">[Preview mode 💡]</span>
@@ -445,7 +446,7 @@ export default function ArtistProfile() {
         </div>
       )}
       
-      {/* Artist Header - responsive padding */}
+      {/* Artist Header - Mobile Responsive */}
       <div className="pt-16 w-full">
         <ArtistHeader
           artist={{
@@ -467,42 +468,49 @@ export default function ArtistProfile() {
         />
       </div>
       
-      {/* Main content - responsive container */}
-      <main className="container-responsive flex-1 pb-6 sm:pb-8 mt-4 sm:mt-6">
-        <TagDisplay tags={[profileState.category, ...(profileState.specialties || [])]} />
-        <GlassCard className="p-4 sm:p-6 lg:p-8 mt-4 shadow-lg">
-          <div className="flex items-center gap-3 mb-4">
-            <h2 className="font-heading text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
-              Portfolio
-            </h2>
-          </div>
-          <ArtistTabs
-            allArt={portfolio}
-            premiumArt={premiumArt}
-            exclusiveArt={exclusiveArt}
-            pinnedIds={pinnedIds}
-            aboutDetails={{
-              artist: profileState,
-              projectsCount: 19,
-              avgRating: 4.7,
-              reviewCount: 12,
-            }}
-            onArtworkClick={handleArtworkClick}
-          />
-        </GlassCard>
+      {/* Main content - Mobile Responsive */}
+      <main className="container-mobile flex-1 pb-6 sm:pb-8 mt-6 sm:mt-8">
+        <div className="space-y-6">
+          <TagDisplay tags={[profileState.category, ...(profileState.specialties || [])]} />
+          
+          <GlassCard className="mobile-card shadow-lg">
+            <div className="flex items-center gap-3 mb-6">
+              <h2 className="font-heading text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+                Portfolio
+              </h2>
+            </div>
+            
+            {/* Mobile-optimized tabs */}
+            <div className="w-full overflow-hidden">
+              <ArtistTabs
+                allArt={portfolio}
+                premiumArt={premiumArt}
+                exclusiveArt={exclusiveArt}
+                pinnedIds={pinnedIds}
+                aboutDetails={{
+                  artist: profileState,
+                  projectsCount: 19,
+                  avgRating: 4.7,
+                  reviewCount: 12,
+                }}
+                onArtworkClick={handleArtworkClick}
+              />
+            </div>
+          </GlassCard>
+        </div>
         
-        {/* Artwork Details Modal - mobile responsive */}
+        {/* Artwork Details Modal - Mobile Responsive */}
         {selectedArtwork && (
           <div
             className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
             onClick={closeModal}
           >
             <div
-              className="bg-white rounded-2xl shadow-2xl max-w-xl w-full relative p-4 sm:p-6 max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-md sm:max-w-lg relative mobile-card max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <button
-                className="absolute top-3 right-3 text-gray-500 hover:text-red-500 text-xl font-bold z-10"
+                className="absolute top-4 right-4 text-gray-500 hover:text-red-500 text-2xl font-bold z-10 mobile-touch flex items-center justify-center"
                 onClick={closeModal}
                 aria-label="Close"
               >
@@ -511,29 +519,29 @@ export default function ArtistProfile() {
               <img
                 src={selectedArtwork.img}
                 alt={selectedArtwork.title}
-                className="w-full rounded-lg mb-4 object-cover max-h-48 sm:max-h-64"
+                className="w-full rounded-lg mb-4 object-cover h-48 sm:h-64"
               />
-              <h3 className="text-lg sm:text-xl font-bold mb-2">{selectedArtwork.title}</h3>
-              <div className="flex flex-wrap gap-2 sm:gap-4 text-gray-600 text-xs sm:text-sm mb-2">
-                <span>❤️ {selectedArtwork.likes}</span>
-                <span>👁 {selectedArtwork.views}</span>
+              <h3 className="text-xl sm:text-2xl font-bold mb-4">{selectedArtwork.title}</h3>
+              <div className="flex flex-wrap gap-3 sm:gap-4 text-gray-600 text-sm sm:text-base mb-4">
+                <span className="flex items-center gap-1">❤️ {selectedArtwork.likes}</span>
+                <span className="flex items-center gap-1">👁 {selectedArtwork.views}</span>
                 {selectedArtwork.price !== undefined && (
-                  <span>
+                  <span className="font-medium">
                     {selectedArtwork.price === 0 ? "Free" : `₹${selectedArtwork.price}`}
                   </span>
                 )}
                 {selectedArtwork.isPremium && (
-                  <span className="bg-yellow-200 rounded px-2 py-0.5 text-yellow-900 font-medium text-xs">
+                  <span className="bg-yellow-200 rounded-full px-3 py-1 text-yellow-900 font-medium text-sm">
                     Premium
                   </span>
                 )}
                 {selectedArtwork.isExclusive && (
-                  <span className="bg-purple-200 rounded px-2 py-0.5 text-purple-800 font-medium text-xs">
+                  <span className="bg-purple-200 rounded-full px-3 py-1 text-purple-800 font-medium text-sm">
                     Exclusive
                   </span>
                 )}
               </div>
-              <p className="text-gray-700 text-sm sm:text-base">
+              <p className="text-gray-700 text-base leading-relaxed">
                 {selectedArtwork.description || "No description for this artwork."}
               </p>
             </div>
@@ -541,67 +549,71 @@ export default function ArtistProfile() {
         )}
       </main>
 
-      {/* Project Request Modal - mobile responsive */}
+      {/* Project Request Modal - Mobile Responsive */}
       <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
-        <DialogContent className="max-w-md mx-4 sm:mx-auto">
+        <DialogContent className="w-full max-w-md mx-4 sm:mx-auto mobile-card">
           <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl">Send Project Request</DialogTitle>
-            <DialogDescription className="text-sm sm:text-base">
+            <DialogTitle className="text-xl sm:text-2xl">Send Project Request</DialogTitle>
+            <DialogDescription className="text-base">
               Send a project request to {profileState?.name}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="form-responsive py-4">
             <div>
-              <Label htmlFor="req-title" className="text-sm sm:text-base">Project Title</Label>
+              <Label htmlFor="req-title" className="text-base font-medium">Project Title</Label>
               <Input 
                 id="req-title" 
                 value={projectRequest.title} 
                 onChange={(e) => setProjectRequest({...projectRequest, title: e.target.value})} 
                 placeholder="e.g., Album Cover Design"
-                className="text-sm sm:text-base"
+                className="input-responsive mt-2"
               />
             </div>
             <div>
-              <Label htmlFor="req-budget" className="text-sm sm:text-base">Budget (₹)</Label>
+              <Label htmlFor="req-budget" className="text-base font-medium">Budget (₹)</Label>
               <Input 
                 id="req-budget" 
                 type="number" 
                 value={projectRequest.budget} 
                 onChange={(e) => setProjectRequest({...projectRequest, budget: e.target.value})} 
                 placeholder="e.g., 15000"
-                className="text-sm sm:text-base"
+                className="input-responsive mt-2"
               />
             </div>
             <div>
-              <Label htmlFor="req-deadline" className="text-sm sm:text-base">Deadline</Label>
+              <Label htmlFor="req-deadline" className="text-base font-medium">Deadline</Label>
               <Input 
                 id="req-deadline" 
                 type="date" 
                 value={projectRequest.deadline} 
                 onChange={(e) => setProjectRequest({...projectRequest, deadline: e.target.value})}
-                className="text-sm sm:text-base"
+                className="input-responsive mt-2"
               />
             </div>
             <div>
-              <Label htmlFor="req-description" className="text-sm sm:text-base">Project Description</Label>
+              <Label htmlFor="req-description" className="text-base font-medium">Project Description</Label>
               <Textarea 
                 id="req-description" 
                 value={projectRequest.description} 
                 onChange={(e) => setProjectRequest({...projectRequest, description: e.target.value})} 
                 placeholder="Describe your project requirements..." 
-                rows={3}
-                className="text-sm sm:text-base"
+                rows={4}
+                className="input-responsive mt-2 resize-none"
               />
             </div>
           </div>
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={() => setIsRequestDialogOpen(false)} className="w-full sm:w-auto">
+          <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsRequestDialogOpen(false)} 
+              className="button-responsive order-2 sm:order-1"
+            >
               Cancel
             </Button>
             <Button 
               onClick={handleSendProjectRequest} 
               disabled={sendProjectRequestMutation.isPending || !user}
-              className="w-full sm:w-auto"
+              className="button-responsive order-1 sm:order-2"
             >
               {sendProjectRequestMutation.isPending ? 'Sending...' : 'Send Request'}
             </Button>

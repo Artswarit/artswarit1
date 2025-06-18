@@ -256,13 +256,13 @@ const Index = () => {
       
       <AnimatedHeroSlider />
       
-      {/* Featured Artists Section */}
-      <section id="featured-artists" className="container mx-auto px-4 py-12 sm:py-16 sm:px-6 lg:px-8 mt-4 sm:mt-8">
+      {/* Featured Artists Section - Mobile Responsive */}
+      <section id="featured-artists" className="container-mobile section-padding">
         <div className="text-center mb-8 sm:mb-12">
-          <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-artswarit-purple to-blue-500">
+          <h2 className="section-title">
             Featured Artists
           </h2>
-          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
+          <p className="section-subtitle px-4">
             Discover trending creators making waves on Artswarit, updated regularly based on popularity.
           </p>
         </div>
@@ -290,14 +290,14 @@ const Index = () => {
       {/* Artwork Carousel Section */}
       <ArtworkCarousel />
 
-      {/* Categories Section */}
-      <section className="py-12 sm:py-16 bg-gradient-to-r from-indigo-50 to-purple-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Categories Section - Mobile Responsive */}
+      <section className="section-padding bg-gradient-to-r from-indigo-50 to-purple-50">
+        <div className="container-mobile">
           <div className="text-center mb-8 sm:mb-12">
-            <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-artswarit-purple to-blue-500">
+            <h2 className="section-title">
               Popular Categories
             </h2>
-            <p className="text-base sm:text-lg font-serif text-muted-foreground max-w-2xl mx-auto px-4">
+            <p className="section-subtitle px-4">
               Find the perfect creative professional for your project from our diverse selection of specialized talents.
             </p>
             <p className="text-sm text-muted-foreground mt-2">
@@ -305,82 +305,82 @@ const Index = () => {
               Live counts • Updated regularly
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid-responsive-3 gap-responsive">
             {categories.slice(0, 6).map((category, index) => (
               <CategoryCard key={index} {...category} />
             ))}
           </div>
           <div className="text-center mt-8">
-            <p className="text-base sm:text-lg italic text-muted-foreground mb-4 px-4">
+            <p className="section-subtitle mb-4 px-4">
               ...and many more categories to explore with thousands of talented artists
             </p>
-            <Button asChild variant="outline" size="lg" className="border-artswarit-purple text-artswarit-purple hover:bg-artswarit-purple hover:text-white transition-all">
+            <Button asChild variant="outline" size="lg" className="button-responsive border-artswarit-purple text-artswarit-purple hover:bg-artswarit-purple hover:text-white transition-all">
               <Link to="/categories">View All Categories</Link>
             </Button>
           </div>
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section className="container mx-auto px-4 py-12 sm:py-16 sm:px-6 lg:px-8">
+      {/* How It Works Section - Mobile Responsive */}
+      <section className="container-mobile section-padding">
         <div className="text-center mb-8 sm:mb-12">
-          <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-artswarit-purple to-blue-500">
+          <h2 className="section-title">
             How Artswarit Works
           </h2>
-          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
+          <p className="section-subtitle px-4">
             A simple process to showcase your talent or find the perfect creative professional.
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-          <div className="text-center p-4 sm:p-6 bg-white/60 backdrop-blur-sm rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-all">
-            <div className="bg-gradient-to-r from-artswarit-purple to-blue-500 h-12 w-12 sm:h-16 sm:w-16 rounded-full flex items-center justify-center text-white mx-auto mb-4">
-              <span className="font-bold text-lg sm:text-xl">1</span>
+        <div className="grid-responsive-3 gap-responsive">
+          <div className="text-center mobile-card hover:shadow-md transition-all">
+            <div className="bg-gradient-to-r from-artswarit-purple to-blue-500 h-16 w-16 rounded-full flex items-center justify-center text-white mx-auto mb-4">
+              <span className="font-bold text-xl">1</span>
             </div>
-            <h3 className="font-heading text-lg sm:text-xl font-semibold mb-2">Create Your Profile</h3>
+            <h3 className="font-heading text-xl font-semibold mb-2">Create Your Profile</h3>
             <p className="text-sm sm:text-base text-muted-foreground">
               Sign up as an artist and build your custom profile showcasing your skills, portfolio, and services.
             </p>
           </div>
-          <div className="text-center p-4 sm:p-6 bg-white/60 backdrop-blur-sm rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-all">
-            <div className="bg-gradient-to-r from-artswarit-purple to-blue-500 h-12 w-12 sm:h-16 sm:w-16 rounded-full flex items-center justify-center text-white mx-auto mb-4">
-              <span className="font-bold text-lg sm:text-xl">2</span>
+          <div className="text-center mobile-card hover:shadow-md transition-all">
+            <div className="bg-gradient-to-r from-artswarit-purple to-blue-500 h-16 w-16 rounded-full flex items-center justify-center text-white mx-auto mb-4">
+              <span className="font-bold text-xl">2</span>
             </div>
-            <h3 className="font-heading text-lg sm:text-xl font-semibold mb-2">Upload Your Content</h3>
+            <h3 className="font-heading text-xl font-semibold mb-2">Upload Your Content</h3>
             <p className="text-sm sm:text-base text-muted-foreground">
               Share your work with the world. Upload audio, video, or text content to showcase your talent.
             </p>
           </div>
-          <div className="text-center p-4 sm:p-6 bg-white/60 backdrop-blur-sm rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-all">
-            <div className="bg-gradient-to-r from-artswarit-purple to-blue-500 h-12 w-12 sm:h-16 sm:w-16 rounded-full flex items-center justify-center text-white mx-auto mb-4">
-              <span className="font-bold text-lg sm:text-xl">3</span>
+          <div className="text-center mobile-card hover:shadow-md transition-all">
+            <div className="bg-gradient-to-r from-artswarit-purple to-blue-500 h-16 w-16 rounded-full flex items-center justify-center text-white mx-auto mb-4">
+              <span className="font-bold text-xl">3</span>
             </div>
-            <h3 className="font-heading text-lg sm:text-xl font-semibold mb-2">Connect & Earn</h3>
+            <h3 className="font-heading text-xl font-semibold mb-2">Connect & Earn</h3>
             <p className="text-sm sm:text-base text-muted-foreground">
               Get discovered by clients, receive project offers, and monetize your creative skills.
             </p>
           </div>
         </div>
         <div className="text-center mt-8 sm:mt-10">
-          <Button asChild size="lg" className="bg-gradient-to-r from-artswarit-purple to-blue-500 border-none">
+          <Button asChild size="lg" className="button-responsive bg-gradient-to-r from-artswarit-purple to-blue-500 border-none">
             <Link to="/signup">Get Started Now</Link>
           </Button>
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-12 sm:py-16 bg-gradient-to-r from-indigo-50 to-purple-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Testimonials Section - Mobile Responsive */}
+      <section className="section-padding bg-gradient-to-r from-indigo-50 to-purple-50">
+        <div className="container-mobile">
           <div className="text-center mb-8 sm:mb-12">
-            <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-artswarit-purple to-blue-500">
+            <h2 className="section-title">
               Success Stories
             </h2>
-            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
+            <p className="section-subtitle px-4">
               Hear from artists who have transformed their careers with Artswarit.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid-responsive-3 gap-responsive">
             {testimonials.map((testimonial, index) => (
-              <div key={index} className="bg-white/60 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-sm border border-blue-100 hover:shadow-md transition-all">
+              <div key={index} className="mobile-card hover:shadow-md transition-all">
                 <div className="mb-4">
                   {[...Array(5)].map((_, i) => (
                     <span key={i} className="text-yellow-400">★</span>
@@ -397,33 +397,33 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Enhanced CTA Section */}
-      <section className="bg-gradient-to-r from-artswarit-purple to-blue-500 text-white py-12 sm:py-16 relative overflow-hidden">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <div className="max-w-3xl mx-auto">
-            <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
+      {/* Enhanced CTA Section - Mobile Responsive */}
+      <section className="bg-gradient-to-r from-artswarit-purple to-blue-500 text-white section-padding relative overflow-hidden">
+        <div className="container-mobile text-center relative z-10">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
               Ready to Showcase Your Talent?
             </h2>
-            <p className="text-lg sm:text-xl mb-8 text-white/90">
+            <p className="text-lg sm:text-xl lg:text-2xl mb-8 text-white/90">
               Join thousands of creative professionals building their careers with Artswarit.
             </p>
             
-            {/* Enhanced Buttons Container */}
-            <div className="flex flex-col sm:flex-row justify-center gap-4 max-w-md mx-auto">
-              <Button asChild className="group relative overflow-hidden bg-white text-artswarit-purple hover:bg-gray-50 font-medium px-6 py-3 text-sm transition-all duration-300 hover:scale-105 hover:shadow-lg">
+            {/* Enhanced Buttons Container - Mobile Responsive */}
+            <div className="flex flex-col sm:flex-row justify-center gap-4 max-w-lg mx-auto">
+              <Button asChild className="group relative overflow-hidden bg-white text-artswarit-purple hover:bg-gray-50 font-medium button-responsive transition-all duration-300 hover:scale-105 hover:shadow-lg">
                 <Link to="/signup" className="flex items-center justify-center gap-2 relative z-10">
-                  <User className="w-4 h-4 transition-transform group-hover:scale-110" />
+                  <User className="w-5 h-5 transition-transform group-hover:scale-110" />
                   <span>Join as Artist</span>
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-100/50 to-purple-100/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-md"></div>
                 </Link>
               </Button>
 
-              <Button asChild className="group relative overflow-hidden bg-white text-artswarit-purple hover:bg-gray-50 font-medium px-6 py-3 text-sm transition-all duration-300 hover:scale-105 hover:shadow-lg">
+              <Button asChild className="group relative overflow-hidden bg-white text-artswarit-purple hover:bg-gray-50 font-medium button-responsive transition-all duration-300 hover:scale-105 hover:shadow-lg">
                 <Link to="/client-dashboard" className="flex items-center justify-center gap-2 relative z-10">
-                  <Briefcase className="w-4 h-4 transition-transform group-hover:scale-110" />
+                  <Briefcase className="w-5 h-5 transition-transform group-hover:scale-110" />
                   <span>Join as Client</span>
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-100/50 to-purple-100/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-md"></div>
                 </Link>
               </Button>
