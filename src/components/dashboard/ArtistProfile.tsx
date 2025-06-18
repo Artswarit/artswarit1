@@ -65,23 +65,23 @@ const ArtistProfile = ({ isLoading }: ArtistProfileProps) => {
   }, []);
 
   const profileImages = useMemo(() => (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-1">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base sm:text-lg">Profile Image</CardTitle>
-            <CardDescription className="text-sm">Your public profile photo</CardDescription>
+            <CardTitle>Profile Image</CardTitle>
+            <CardDescription>Your public profile photo</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="relative mx-auto w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden border">
+            <div className="relative mx-auto w-40 h-40 rounded-full overflow-hidden border">
               <img 
                 src={profile.profileImage} 
                 alt="Profile" 
                 className="w-full h-full object-cover"
               />
               {isEditing && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 cursor-pointer">
-                  <button className="text-white hover:underline text-sm">
+                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                  <button className="text-white hover:underline">
                     Change
                   </button>
                 </div>
@@ -98,22 +98,22 @@ const ArtistProfile = ({ isLoading }: ArtistProfileProps) => {
         </Card>
       </div>
 
-      <div className="lg:col-span-2 space-y-4 lg:space-y-6">
+      <div className="lg:col-span-2 space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base sm:text-lg">Cover Image</CardTitle>
-            <CardDescription className="text-sm">Displayed at the top of your profile page</CardDescription>
+            <CardTitle>Cover Image</CardTitle>
+            <CardDescription>Displayed at the top of your profile page</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="relative w-full h-32 sm:h-40 rounded-md overflow-hidden">
+            <div className="relative w-full h-40 rounded-md overflow-hidden">
               <img 
                 src={profile.coverImage} 
                 alt="Cover" 
                 className="w-full h-full object-cover"
               />
               {isEditing && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 cursor-pointer">
-                  <button className="text-white hover:underline text-sm">
+                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                  <button className="text-white hover:underline">
                     Change Cover
                   </button>
                 </div>
@@ -128,17 +128,17 @@ const ArtistProfile = ({ isLoading }: ArtistProfileProps) => {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 sm:h-10 w-32 sm:w-48 bg-gray-200 animate-pulse rounded-md"></div>
-        <div className="h-48 sm:h-64 bg-gray-200 animate-pulse rounded-md"></div>
-        <div className="h-48 sm:h-64 bg-gray-200 animate-pulse rounded-md"></div>
+        <div className="h-10 w-48 bg-gray-200 animate-pulse rounded-md"></div>
+        <div className="h-64 bg-gray-200 animate-pulse rounded-md"></div>
+        <div className="h-64 bg-gray-200 animate-pulse rounded-md"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-lg sm:text-xl font-semibold">Artist Profile</h2>
+        <h2 className="text-xl font-semibold">Artist Profile</h2>
       </div>
 
       {profileImages}
