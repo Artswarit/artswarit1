@@ -1,40 +1,54 @@
 
 import React from "react";
-import { Heart, Eye, Users, Star } from "lucide-react";
-
-const ICONS: Record<string, React.ReactNode> = {
-  likes: <Heart size={18} className="text-pink-500" />,
-  views: <Eye size={18} className="text-blue-400" />,
-  followers: <Users size={18} className="text-green-500" />,
-  rating: <Star size={18} className="text-yellow-500 fill-yellow-400" />,
-};
-
-const COLORS: Record<string, string> = {
-  likes: "text-pink-500",
-  views: "text-blue-400",
-  followers: "text-green-500",
-  rating: "text-yellow-500",
-};
+import { Users, Heart, Eye, Star } from "lucide-react";
 
 interface StatCardProps {
-  type: "likes" | "views" | "followers" | "rating";
+  type: "followers" | "likes" | "views" | "rating";
   value: number;
-  label?: string;
+  label: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ type, value, label }) => (
-  <div className="flex flex-col items-center justify-center min-w-[60px] sm:min-w-[70px] px-1">
-    <div className="flex items-center gap-1 sm:gap-2 p-1 rounded-lg">
-      <span className={`${COLORS[type]} shrink-0`}>{ICONS[type]}</span>
-      <span className={`text-base sm:text-lg lg:text-xl font-bold ${COLORS[type]} truncate`}>
-        {/* For rating, show one decimal place */}
-        {type === "rating" ? value.toFixed(1) : value}
-      </span>
+const StatCard: React.FC<StatCardProps> = ({ type, value, label }) => {
+  const formatValue = (val: number) => {
+    if (type === "rating") {
+      return val.toFixed(1);
+    }
+    if (val >= 1000000) {
+      return `${(val / 1000000).toFixed(1)}M`;
+    }
+    if (val >= 1000) {
+      return `${(val / 1000).toFixed(1)}K`;
+    }
+    return val.toString();
+  };
+
+  const getIcon = () => {
+    const iconProps = { size: 12, className: "text-white/70" };
+    switch (type) {
+      case "followers":
+        return <Users {...iconProps} />;
+      case "likes":
+        return <Heart {...iconProps} />;
+      case "views":
+        return <Eye {...iconProps} />;
+      case "rating":
+        return <Star {...iconProps} />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center text-center min-w-0 flex-1">
+      <div className="flex items-center gap-1 mb-0.5">
+        {getIcon()}
+        <span className="text-white font-bold text-sm sm:text-base leading-tight">
+          {formatValue(value)}
+        </span>
+      </div>
+      <span className="text-white/80 text-xs leading-tight">{label}</span>
     </div>
-    <div className="mt-1 text-xs text-muted-foreground uppercase tracking-wide font-semibold text-center">
-      {label ?? type}
-    </div>
-  </div>
-);
+  );
+};
 
 export default StatCard;

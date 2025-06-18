@@ -166,7 +166,7 @@
   
   /* Enhanced responsive utilities */
   .container-responsive {
-    @apply w-full mx-auto px-4 sm:px-6 lg:px-8;
+    @apply w-full mx-auto px-3 sm:px-4 lg:px-6 xl:px-8;
     max-width: 100%;
   }
 
@@ -212,33 +212,18 @@
   .text-mobile-3xl { @apply text-2xl sm:text-3xl md:text-4xl; }
 
   /* Mobile spacing utilities */
-  .px-mobile { @apply px-4 sm:px-6 lg:px-8; }
-  .py-mobile { @apply py-4 sm:py-6 lg:py-8; }
-  .p-mobile { @apply p-4 sm:p-6 lg:p-8; }
-  .m-mobile { @apply m-4 sm:m-6 lg:m-8; }
+  .px-mobile { @apply px-3 sm:px-4 lg:px-6; }
+  .py-mobile { @apply py-3 sm:py-4 lg:py-6; }
+  .p-mobile { @apply p-3 sm:p-4 lg:p-6; }
+  .m-mobile { @apply m-3 sm:m-4 lg:m-6; }
 
   /* Touch-friendly button sizes */
-  .btn-touch { @apply min-h-[48px] px-4 py-3 text-base; }
-  
-  /* Mobile-optimized containers */
-  .container-mobile {
-    @apply w-full max-w-none px-4 sm:max-w-xl sm:px-6 md:max-w-3xl lg:max-w-6xl lg:px-8 mx-auto;
-  }
-  
-  /* Responsive grid utilities */
-  .grid-responsive-1 { @apply grid grid-cols-1; }
-  .grid-responsive-2 { @apply grid grid-cols-1 sm:grid-cols-2; }
-  .grid-responsive-3 { @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3; }
-  .grid-responsive-4 { @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4; }
-  
-  /* Flexible spacing */
-  .gap-responsive { @apply gap-4 sm:gap-6 lg:gap-8; }
-  .space-y-responsive > * + * { @apply mt-4 sm:mt-6 lg:mt-8; }
+  .btn-touch { @apply min-h-[44px] px-4 py-2 text-base; }
 }
 
 @layer components {
   .badge {
-    @apply inline-flex items-center justify-center rounded-full py-1 px-3 text-sm font-medium;
+    @apply inline-flex items-center justify-center rounded-full py-1 px-2 text-xs sm:py-1 sm:px-3 sm:text-sm font-medium;
   }
   
   .badge-primary {
@@ -290,35 +275,23 @@
   }
   
   .section-title {
-    @apply font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 text-gradient-purple;
+    @apply font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 text-gradient-purple;
   }
   
   .section-subtitle {
-    @apply text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto;
+    @apply text-sm sm:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto;
   }
 
   /* Mobile-optimized card styles */
   .mobile-card {
-    @apply bg-white/40 backdrop-blur-md border border-white/20 shadow-lg rounded-xl p-4 sm:p-6 lg:p-8;
+    @apply bg-white/40 backdrop-blur-md border border-white/20 shadow-lg rounded-xl p-4 sm:p-6;
   }
 
-  /* Responsive navigation */
-  .nav-responsive {
-    @apply flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4;
-  }
-  
-  /* Mobile-friendly forms */
-  .form-responsive {
-    @apply space-y-4 sm:space-y-6;
-  }
-  
-  .input-responsive {
-    @apply w-full min-h-[48px] text-base px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent;
-  }
-  
-  .button-responsive {
-    @apply w-full sm:w-auto min-h-[48px] px-6 py-3 text-base font-medium rounded-lg transition-all duration-200;
-  }
+  /* Responsive grid patterns */
+  .grid-mobile-1 { @apply grid-cols-1; }
+  .grid-mobile-2 { @apply grid-cols-1 sm:grid-cols-2; }
+  .grid-mobile-3 { @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3; }
+  .grid-mobile-4 { @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4; }
 }
 
 @keyframes btn-glow {
@@ -342,42 +315,18 @@
 /* Enhanced mobile responsiveness */
 @media (max-width: 640px) {
   .container {
-    @apply px-4;
+    @apply px-3;
   }
   
   /* Ensure touch targets are large enough */
-  button, .btn, [role="button"], a {
-    @apply min-h-[48px];
+  button, .btn, [role="button"] {
+    @apply min-h-[44px];
   }
   
   /* Improve mobile text readability */
   body {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
-  }
-  
-  /* Mobile-specific overrides */
-  .mobile-hidden {
-    @apply hidden;
-  }
-  
-  .mobile-block {
-    @apply block;
-  }
-  
-  .mobile-flex {
-    @apply flex;
-  }
-  
-  /* Better mobile typography */
-  h1 { @apply text-2xl sm:text-3xl md:text-4xl; }
-  h2 { @apply text-xl sm:text-2xl md:text-3xl; }
-  h3 { @apply text-lg sm:text-xl md:text-2xl; }
-  h4 { @apply text-base sm:text-lg md:text-xl; }
-  
-  /* Mobile spacing improvements */
-  .section-padding {
-    @apply py-8 sm:py-12 md:py-16;
   }
 }
 
@@ -389,37 +338,4 @@ body, html {
 
 * {
   box-sizing: border-box;
-}
-
-/* Additional mobile optimizations */
-@media (max-width: 768px) {
-  .desktop-only {
-    @apply hidden;
-  }
-  
-  .mobile-stack {
-    @apply flex-col;
-  }
-  
-  .mobile-center {
-    @apply text-center items-center justify-center;
-  }
-  
-  .mobile-full-width {
-    @apply w-full;
-  }
-  
-  /* Improved mobile interactions */
-  .mobile-touch {
-    @apply min-h-[48px] min-w-[48px];
-  }
-  
-  /* Better mobile margins */
-  .mobile-mx {
-    @apply mx-4;
-  }
-  
-  .mobile-my {
-    @apply my-4;
-  }
 }
