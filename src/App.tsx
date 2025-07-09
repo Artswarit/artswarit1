@@ -52,9 +52,9 @@ const App = () => (
             <Route path="/artist-dashboard/:tab" element={<ArtistDashboard />} />
             <Route path="/client-dashboard" element={<ClientDashboard />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
-            <Route path="/about" element={<AboutUs />} />
-            <Route path="/terms" element={<TermsOfService />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/about-us" element={<AboutUs />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/ai-detection" element={<AIDetection />} />
             <Route path="/feature-audit" element={<FeatureAudit />} />
             <Route path="/live-streaming" element={<LiveStreaming />} />
