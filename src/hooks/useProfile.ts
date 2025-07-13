@@ -32,6 +32,7 @@ export const useProfile = () => {
     } else {
       setProfile(null);
       setLoading(false);
+      setError(null);
     }
   }, [user]);
 
@@ -47,23 +48,56 @@ export const useProfile = () => {
 
       console.log('Fetching profile for user:', user.id);
 
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching profile:', error);
-        setError(error.message);
+      if (fetchError) {
+        console.error('Error fetching profile:', fetchError);
+        setError(fetchError.message);
+        toast({
+          title: "Profile Error",
+          description: "Failed to load profile data. Please try refreshing the page.",
+          variant: "destructive"
+        });
         return;
       }
 
-      console.log('Profile data:', data);
-      setProfile(data);
+      if (!data) {
+        console.log('No profile found, creating default profile');
+        // Create a default profile if none exists
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert([{
+            id: user.id,
+            email: user.email || '',
+            full_name: user.user_metadata?.full_name || null,
+            role: user.user_metadata?.role || 'client',
+          }])
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('Error creating profile:', createError);
+          setError(createError.message);
+          return;
+        }
+
+        setProfile(newProfile);
+      } else {
+        console.log('Profile data:', data);
+        setProfile(data);
+      }
     } catch (err: any) {
-      console.error('Error fetching profile:', err);
+      console.error('Error in fetchProfile:', err);
       setError(err.message);
+      toast({
+        title: "Network Error",
+        description: "Unable to connect to the server. Please check your internet connection.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -78,19 +112,22 @@ export const useProfile = () => {
     try {
       console.log('Updating profile with:', updates);
 
-      const { error } = await supabase
+      const { error: updateError } = await supabase
         .from('profiles')
-        .update(updates)
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', user.id);
 
-      if (error) {
-        console.error('Error updating profile:', error);
+      if (updateError) {
+        console.error('Error updating profile:', updateError);
         toast({
           title: "Update failed",
-          description: error.message,
+          description: updateError.message,
           variant: "destructive"
         });
-        return { error };
+        return { error: updateError };
       }
 
       // Refresh profile data

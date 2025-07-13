@@ -1,7 +1,9 @@
 
 import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 export const useArtworks = () => {
+  const { toast } = useToast();
   const [artworks] = useState([
     {
       id: "1",
@@ -156,15 +158,43 @@ export const useArtworks = () => {
 
   const toggleLike = (artworkId: string) => {
     console.log(`Toggling like for artwork: ${artworkId}`);
+    toast({
+      title: "Like toggled",
+      description: "Artwork like status updated successfully.",
+    });
   };
 
   const fetchArtworks = () => {
     console.log('Fetching artworks...');
   };
 
-  const uploadArtwork = (artwork: any) => {
+  const uploadArtwork = async (artwork: any) => {
     console.log('Uploading artwork:', artwork);
-    return Promise.resolve({ error: null });
+    
+    try {
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Simulate occasional failures for testing
+      if (Math.random() > 0.9) {
+        throw new Error("Network error during upload");
+      }
+      
+      toast({
+        title: "Success",
+        description: "Artwork uploaded successfully!",
+      });
+      
+      return { error: null };
+    } catch (error: any) {
+      console.error('Upload failed:', error);
+      toast({
+        title: "Upload Failed",
+        description: error.message || "Failed to upload artwork. Please try again.",
+        variant: "destructive",
+      });
+      return { error: error.message };
+    }
   };
 
   return {
