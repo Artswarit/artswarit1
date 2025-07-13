@@ -6,7 +6,6 @@ import { useProfile } from '@/hooks/useProfile';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import ApprovalPending from '@/components/auth/ApprovalPending';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import ArtworkManagement from '@/components/dashboard/ArtworkManagement';
 import ArtistProfile from '@/components/dashboard/ArtistProfile';
@@ -14,10 +13,8 @@ import ArtistEarnings from '@/components/dashboard/ArtistEarnings';
 import MessagingModule from '@/components/dashboard/messages/MessagingModule';
 import ArtistSettings from '@/components/dashboard/ArtistSettings';
 import PremiumMembership from '@/components/premium/PremiumMembership';
-import NotificationCenter from '@/components/notifications/NotificationCenter';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Palette, User, DollarSign, MessageSquare, Settings, Crown, Bell, FolderUp, Briefcase } from 'lucide-react';
-import ArtworkUpload from '@/components/artwork/ArtworkUpload';
+import { Palette, User, DollarSign, MessageSquare, Settings, Crown, Bell, Briefcase } from 'lucide-react';
 import ProjectManagement from '@/components/dashboard/projects/ProjectManagement';
 import ArtistNotifications from '@/components/dashboard/ArtistNotifications';
 import UniversalChatbot from '@/components/UniversalChatbot';
@@ -25,10 +22,12 @@ import UniversalChatbot from '@/components/UniversalChatbot';
 const ArtistDashboard = () => {
   const { tab } = useParams();
   const { user } = useAuth();
-  const { profile, loading: profileLoading } = useProfile();
+  const { profile, loading: profileLoading, error: profileError } = useProfile();
 
   useEffect(() => {
+    console.log('Profile data in dashboard:', profile);
     if (profile && profile.role !== 'artist' && profile.role !== 'premium') {
+      console.log('Redirecting non-artist user');
       window.location.href = '/client-dashboard';
     }
   }, [profile]);
@@ -41,6 +40,10 @@ const ArtistDashboard = () => {
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     );
+  }
+
+  if (profileError) {
+    console.error('Profile error:', profileError);
   }
 
   return (
@@ -57,7 +60,7 @@ const ArtistDashboard = () => {
 
           <Tabs defaultValue={defaultTab} className="w-full">
             <div className="overflow-x-auto mb-6 sm:mb-8">
-              <TabsList className="grid grid-cols-4 sm:grid-cols-8 w-full min-w-[600px] sm:min-w-0 bg-white/60 backdrop-blur-sm">
+              <TabsList className="grid grid-cols-4 sm:grid-cols-7 w-full min-w-[600px] sm:min-w-0 bg-white/60 backdrop-blur-sm">
                 <TabsTrigger value="artworks" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
                   <Palette className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="hidden xs:inline">Artworks</span>

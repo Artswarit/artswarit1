@@ -1,7 +1,8 @@
 
-import { useState, useCallback, useMemo } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import ProfileForm from "./profile/ProfileForm";
+import { useState, useCallback } from "react";
+import { useProfile } from "@/hooks/useProfile";
+import ProfileEditor from "./profile/ProfileEditor";
+import ProfileImages from "./profile/ProfileImages";
 import TagManager from "./profile/TagManager";
 
 interface ArtistProfileProps {
@@ -9,123 +10,46 @@ interface ArtistProfileProps {
 }
 
 const ArtistProfile = ({ isLoading }: ArtistProfileProps) => {
+  const { profile, loading } = useProfile();
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState({
-    displayName: "Ananya Sharma",
-    tagName: "cosmic_canvas",
-    bio: "Contemporary visual artist specializing in abstract expressionism and digital art. Exploring the intersection of tradition and technology in Indian visual storytelling.",
-    profileImage: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
-    coverImage: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
-    artBioTags: ["Abstract", "Digital", "Expressionism", "Contemporary"],
-    artStyleTags: ["Bold colors", "Geometric", "Cultural fusion", "Minimalist"]
+  const [tags, setTags] = useState({
+    artBio: ["Abstract", "Digital", "Contemporary"],
+    artStyle: ["Bold colors", "Geometric", "Minimalist"]
   });
-
-  const handleChange = useCallback((field: string, value: string) => {
-    setProfile(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  }, []);
-
-  const addArtBioTag = useCallback((tag: string) => {
-    setProfile(prev => ({
-      ...prev,
-      artBioTags: [...prev.artBioTags, tag]
-    }));
-  }, []);
-
-  const removeArtBioTag = useCallback((tag: string) => {
-    setProfile(prev => ({
-      ...prev,
-      artBioTags: prev.artBioTags.filter(t => t !== tag)
-    }));
-  }, []);
-
-  const addArtStyleTag = useCallback((tag: string) => {
-    setProfile(prev => ({
-      ...prev,
-      artStyleTags: [...prev.artStyleTags, tag]
-    }));
-  }, []);
-
-  const removeArtStyleTag = useCallback((tag: string) => {
-    setProfile(prev => ({
-      ...prev,
-      artStyleTags: prev.artStyleTags.filter(t => t !== tag)
-    }));
-  }, []);
-
-  const saveProfile = useCallback(() => {
-    console.log("Saving profile:", profile);
-    setIsEditing(false);
-  }, [profile]);
 
   const toggleEdit = useCallback(() => {
     setIsEditing(prev => !prev);
   }, []);
 
-  const profileImages = useMemo(() => (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-1">
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile Image</CardTitle>
-            <CardDescription>Your public profile photo</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="relative mx-auto w-40 h-40 rounded-full overflow-hidden border">
-              <img 
-                src={profile.profileImage} 
-                alt="Profile" 
-                className="w-full h-full object-cover"
-              />
-              {isEditing && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                  <button className="text-white hover:underline">
-                    Change
-                  </button>
-                </div>
-              )}
-            </div>
-            
-            {!isEditing && (
-              <div className="text-center">
-                <h3 className="font-semibold text-lg">{profile.displayName}</h3>
-                <p className="text-muted-foreground">@{profile.tagName}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+  const addArtBioTag = useCallback((tag: string) => {
+    setTags(prev => ({
+      ...prev,
+      artBio: [...prev.artBio, tag]
+    }));
+  }, []);
 
-      <div className="lg:col-span-2 space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Cover Image</CardTitle>
-            <CardDescription>Displayed at the top of your profile page</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="relative w-full h-40 rounded-md overflow-hidden">
-              <img 
-                src={profile.coverImage} 
-                alt="Cover" 
-                className="w-full h-full object-cover"
-              />
-              {isEditing && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                  <button className="text-white hover:underline">
-                    Change Cover
-                  </button>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  ), [profile.profileImage, profile.coverImage, profile.displayName, profile.tagName, isEditing]);
+  const removeArtBioTag = useCallback((tag: string) => {
+    setTags(prev => ({
+      ...prev,
+      artBio: prev.artBio.filter(t => t !== tag)
+    }));
+  }, []);
 
-  if (isLoading) {
+  const addArtStyleTag = useCallback((tag: string) => {
+    setTags(prev => ({
+      ...prev,
+      artStyle: [...prev.artStyle, tag]
+    }));
+  }, []);
+
+  const removeArtStyleTag = useCallback((tag: string) => {
+    setTags(prev => ({
+      ...prev,
+      artStyle: prev.artStyle.filter(t => t !== tag)
+    }));
+  }, []);
+
+  if (isLoading || loading) {
     return (
       <div className="space-y-6">
         <div className="h-10 w-48 bg-gray-200 animate-pulse rounded-md"></div>
@@ -141,20 +65,14 @@ const ArtistProfile = ({ isLoading }: ArtistProfileProps) => {
         <h2 className="text-xl font-semibold">Artist Profile</h2>
       </div>
 
-      {profileImages}
+      <ProfileImages isEditing={isEditing} />
 
-      <ProfileForm
-        profile={profile}
-        isEditing={isEditing}
-        onToggleEdit={toggleEdit}
-        onSave={saveProfile}
-        onChange={handleChange}
-      />
+      <ProfileEditor />
 
       <TagManager
         title="Art Bio Tags"
         description="Categories and themes in your work"
-        tags={profile.artBioTags}
+        tags={tags.artBio}
         onAddTag={addArtBioTag}
         onRemoveTag={removeArtBioTag}
         isEditing={isEditing}
@@ -164,7 +82,7 @@ const ArtistProfile = ({ isLoading }: ArtistProfileProps) => {
       <TagManager
         title="Art Style Tags"
         description="Your artistic style and techniques"
-        tags={profile.artStyleTags}
+        tags={tags.artStyle}
         onAddTag={addArtStyleTag}
         onRemoveTag={removeArtStyleTag}
         isEditing={isEditing}

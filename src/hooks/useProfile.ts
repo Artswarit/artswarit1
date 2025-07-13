@@ -36,15 +36,22 @@ export const useProfile = () => {
   }, [user]);
 
   const fetchProfile = async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
 
+      console.log('Fetching profile for user:', user.id);
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user?.id)
-        .single();
+        .eq('id', user.id)
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching profile:', error);
@@ -52,6 +59,7 @@ export const useProfile = () => {
         return;
       }
 
+      console.log('Profile data:', data);
       setProfile(data);
     } catch (err: any) {
       console.error('Error fetching profile:', err);
@@ -62,9 +70,14 @@ export const useProfile = () => {
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
-    if (!user) return { error: 'No user logged in' };
+    if (!user?.id) {
+      console.error('No user logged in');
+      return { error: 'No user logged in' };
+    }
 
     try {
+      console.log('Updating profile with:', updates);
+
       const { error } = await supabase
         .from('profiles')
         .update(updates)
@@ -91,6 +104,11 @@ export const useProfile = () => {
       return { error: null };
     } catch (err: any) {
       console.error('Error updating profile:', err);
+      toast({
+        title: "Update failed",
+        description: err.message,
+        variant: "destructive"
+      });
       return { error: err.message };
     }
   };

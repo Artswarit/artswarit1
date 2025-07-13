@@ -1,4 +1,3 @@
-
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -18,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
-// --- Demo Data for fallback ---
+// Demo data for fallback
 const ARTIST_UUID_1 = "11111111-1111-1111-1111-111111111111";
 const ARTIST_UUID_2 = "22222222-2222-2222-2222-222222222222";
 
@@ -27,54 +26,37 @@ const artistsData = {
     id: ARTIST_UUID_1,
     name: "Alex Rivera",
     category: "Musician",
-    avatar:
-      "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-4.0.0&auto=format&fit=crop&w=200&q=80",
+    avatar: "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-4.0.0&auto=format&fit=crop&w=200&q=80",
     bio: "Multi-platinum musician passionate about creating moving music and telling stories.",
     followers: 12035,
     likes: 3204,
     isVerified: true,
     specialties: ["Pop", "Rock", "Electronic"],
     location: "Los Angeles, CA",
-    cover:
-      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80",
+    cover: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80",
     artworks: [
-      {
-        id: "a1",
-        title: "Midnight Symphony",
-        img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=400&q=80",
-      },
-      {
-        id: "a2",
-        title: "Live Concert 2024",
-        img: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=400&q=80",
-      },
+      { id: "a1", title: "Midnight Symphony", img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=400&q=80" },
+      { id: "a2", title: "Live Concert 2024", img: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=400&q=80" }
     ],
   },
   [ARTIST_UUID_2]: {
     id: ARTIST_UUID_2,
     name: "Maya Johnson",
     category: "Writer",
-    avatar:
-      "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=200&q=80",
+    avatar: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=200&q=80",
     bio: "Award-winning author, creative in fantasy and science fiction novels.",
     followers: 8621,
     likes: 1945,
     isVerified: true,
     specialties: ["Fantasy", "Sci-Fi", "Short Stories"],
     location: "New York, NY",
-    cover:
-      "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=800&q=80",
+    cover: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=800&q=80",
     artworks: [
-      {
-        id: "b1",
-        title: "Crystal Realm",
-        img: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=400&q=80",
-      },
+      { id: "b1", title: "Crystal Realm", img: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=400&q=80" }
     ],
   },
 };
 
-// Route adaptation: If /artist/1 or /artist/2, map to demo UUIDs
 function toDemoUUID(id: string | undefined): string | undefined {
   if (id === "1") return ARTIST_UUID_1;
   if (id === "2") return ARTIST_UUID_2;
@@ -88,24 +70,18 @@ export default function ArtistProfile() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // DIAGNOSTIC: Show login state and preview context
-  console.log("[ARTIST PROFILE] Rendered. RouteID:", routeId, "Mapped ID:", id, "User:", user);
+  console.log("[ARTIST PROFILE] RouteID:", routeId, "Mapped ID:", id, "User:", user);
 
   const [profileState, setProfileState] = useState(() => {
-    // fallback demo data for local dev: artistData
     const demoArtist = artistsData[id as keyof typeof artistsData];
     return demoArtist;
   });
 
   const [isFollowing, setIsFollowing] = useState(false);
-  const [followersCount, setFollowersCount] = useState<number>(
-    profileState?.followers || 0
-  );
+  const [followersCount, setFollowersCount] = useState<number>(profileState?.followers || 0);
   const [loadingFollow, setLoadingFollow] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [loadingSave, setLoadingSave] = useState(false);
-
-  // State for project request dialog
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const [projectRequest, setProjectRequest] = useState({
     title: "",
@@ -113,67 +89,65 @@ export default function ArtistProfile() {
     budget: "",
     deadline: "",
   });
-
-  // Add a flag to show diagnostic banner for NOT logged in state
   const [showDiagnosticBanner, setShowDiagnosticBanner] = useState(false);
+  const [selectedArtwork, setSelectedArtwork] = useState<any | null>(null);
+
   useEffect(() => {
-    // Show this banner if NOT logged in, only for preview/new tab
-    if (!user) {
-      setShowDiagnosticBanner(true);
-    } else {
-      setShowDiagnosticBanner(false);
-    }
+    setShowDiagnosticBanner(!user);
   }, [user]);
 
-  // Get supabase user is now handled by useAuth
-
-  // Fetch actual followers count & user following state
+  // Fetch followers data
   useEffect(() => {
     async function fetchFollowersData() {
-      // skip for demo profiles
       if (!id || id === ARTIST_UUID_1 || id === ARTIST_UUID_2) {
-        console.log("[ARTIST PROFILE] Demo/fallback profile - skipping real DB fetch");
+        console.log("[ARTIST PROFILE] Demo profile - skipping DB fetch");
         return;
       }
 
-      // total followers for this artist
-      const { data: followers, error: countErr } = await supabase
-        .from("follows")
-        .select("id", { count: "exact", head: false })
-        .eq("artist_id", id);
-
-      if (!countErr && followers) {
-        setFollowersCount(followers.length);
-      }
-      // check if this user is following the artist
-      if (user?.id) {
-        const { data: following, error: followErr } = await supabase
+      try {
+        const { data: followers, error: countErr } = await supabase
           .from("follows")
-          .select("id")
-          .eq("artist_id", id)
-          .eq("client_id", user.id)
-          .maybeSingle();
-        setIsFollowing(!!following);
+          .select("id", { count: "exact", head: false })
+          .eq("artist_id", id);
+
+        if (!countErr && followers) {
+          setFollowersCount(followers.length);
+        }
+
+        if (user?.id) {
+          const { data: following, error: followErr } = await supabase
+            .from("follows")
+            .select("id")
+            .eq("artist_id", id)
+            .eq("client_id", user.id)
+            .maybeSingle();
+          setIsFollowing(!!following);
+        }
+      } catch (error) {
+        console.error('Error fetching followers data:', error);
       }
     }
     fetchFollowersData();
-    // re-run when id or userId changes
   }, [id, user?.id]);
 
-  // Fetch saved artist status
+  // Fetch saved status
   useEffect(() => {
     async function checkSavedStatus() {
       if (!id || !user?.id || id === ARTIST_UUID_1 || id === ARTIST_UUID_2) return;
 
-      const { data, error } = await supabase
-        .from('saved_artists')
-        .select('id')
-        .eq('artist_id', id)
-        .eq('client_id', user.id)
-        .maybeSingle();
-      
-      if (!error) {
-        setIsSaved(!!data);
+      try {
+        const { data, error } = await supabase
+          .from('saved_artists')
+          .select('id')
+          .eq('artist_id', id)
+          .eq('client_id', user.id)
+          .maybeSingle();
+        
+        if (!error) {
+          setIsSaved(!!data);
+        }
+      } catch (error) {
+        console.error('Error checking saved status:', error);
       }
     }
 
@@ -182,7 +156,6 @@ export default function ArtistProfile() {
     }
   }, [id, user?.id]);
 
-  // Handle follow: demo fallback for demo artists, supabase for real
   const handleFollow = async () => {
     if (!id || !user?.id) {
       toast({
@@ -192,145 +165,117 @@ export default function ArtistProfile() {
       return;
     }
 
-    // Demo profiles: local state only!
+    // Demo profiles
     if (id === ARTIST_UUID_1 || id === ARTIST_UUID_2) {
       setLoadingFollow(true);
-      if (!isFollowing) {
-        setIsFollowing(true);
-        setFollowersCount((cnt) => cnt + 1);
-        toast({
-          title: "Followed (Demo)",
-          description: "You are now following this artist! (Demo artist profile)",
-        });
-      } else {
-        setIsFollowing(false);
-        setFollowersCount((cnt) => Math.max(cnt - 1, 0));
-        toast({
-          title: "Unfollowed (Demo)",
-          description: "You have unfollowed this artist. (Demo artist profile)",
-        });
-      }
-      setLoadingFollow(false);
+      setTimeout(() => {
+        if (!isFollowing) {
+          setIsFollowing(true);
+          setFollowersCount((cnt) => cnt + 1);
+          toast({ title: "Followed (Demo)", description: "Demo artist profile" });
+        } else {
+          setIsFollowing(false);
+          setFollowersCount((cnt) => Math.max(cnt - 1, 0));
+          toast({ title: "Unfollowed (Demo)", description: "Demo artist profile" });
+        }
+        setLoadingFollow(false);
+      }, 500);
       return;
     }
 
     setLoadingFollow(true);
-    if (!isFollowing) {
-      // follow in supabase
-      const { error } = await supabase.from("follows").insert({
-        artist_id: id,
-        client_id: user.id,
-      });
-      if (!error) {
-        setIsFollowing(true);
-        setFollowersCount((cnt) => cnt + 1);
-        toast({
-          title: "Followed",
-          description: "You are now following this artist!",
+    try {
+      if (!isFollowing) {
+        const { error } = await supabase.from("follows").insert({
+          artist_id: id,
+          client_id: user.id,
         });
+        if (!error) {
+          setIsFollowing(true);
+          setFollowersCount((cnt) => cnt + 1);
+          toast({ title: "Followed", description: "You are now following this artist!" });
+        } else {
+          toast({ variant: "destructive", title: "Error", description: "Something went wrong while following." });
+        }
       } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Something went wrong while following.",
-        });
+        const { error } = await supabase
+          .from("follows")
+          .delete()
+          .eq("artist_id", id)
+          .eq("client_id", user.id);
+        if (!error) {
+          setIsFollowing(false);
+          setFollowersCount((cnt) => Math.max(cnt - 1, 0));
+          toast({ title: "Unfollowed", description: "You have unfollowed this artist." });
+        } else {
+          toast({ variant: "destructive", title: "Error", description: "Could not unfollow artist." });
+        }
       }
-    } else {
-      // unfollow in supabase
-      const { error } = await supabase
-        .from("follows")
-        .delete()
-        .eq("artist_id", id)
-        .eq("client_id", user.id);
-      if (!error) {
-        setIsFollowing(false);
-        setFollowersCount((cnt) => Math.max(cnt - 1, 0));
-        toast({
-          title: "Unfollowed",
-          description: "You have unfollowed this artist.",
-        });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Could not unfollow artist.",
-        });
-      }
+    } catch (error) {
+      console.error('Follow error:', error);
+      toast({ variant: "destructive", title: "Error", description: "Something went wrong." });
     }
     setLoadingFollow(false);
   };
 
-  // Message handler
   const handleMessage = () => {
     if (!user?.id) {
-      toast({
-        title: "Not logged in",
-        description: "Please sign in to message artists.",
-      });
+      toast({ title: "Not logged in", description: "Please sign in to message artists." });
       return;
     }
     if (id === ARTIST_UUID_1 || id === ARTIST_UUID_2) {
-      toast({
-        title: "Demo Message",
-        description: `This is a demo profile. In a real app, you would be able to message ${profileState?.name}.`,
-      });
+      toast({ title: "Demo Message", description: `Demo profile - messaging ${profileState?.name}.` });
     } else {
-      toast({
-        title: "Coming soon!",
-        description: "Messaging will be available in a future update.",
-      });
+      toast({ title: "Coming soon!", description: "Messaging will be available in a future update." });
     }
   };
 
-  // Save handler
   const handleToggleSave = async () => {
     if (!id || !user?.id) {
-      toast({
-        title: "Not logged in",
-        description: "Please sign in to save artists.",
-      });
+      toast({ title: "Not logged in", description: "Please sign in to save artists." });
       return;
     }
-    // Demo state
+
     if (id === ARTIST_UUID_1 || id === ARTIST_UUID_2) {
       setLoadingSave(true);
       setTimeout(() => {
         setIsSaved(!isSaved);
-        toast({
-          title: isSaved ? "Artist Unsaved (Demo)" : "Artist Saved! (Demo)",
-          description: `This is a demo profile. In a real app, ${profileState?.name} would be ${isSaved ? 'removed from' : 'added to'} your saved artists.`,
-        });
+        toast({ title: isSaved ? "Artist Unsaved (Demo)" : "Artist Saved! (Demo)" });
         setLoadingSave(false);
       }, 500);
       return;
     }
-    setLoadingSave(true);
-    if (isSaved) {
-      // Unsave logic
-      const { error } = await supabase
-        .from("saved_artists")
-        .delete()
-        .eq("artist_id", id)
-        .eq("client_id", user.id);
-      
-      if (!error) {
-        setIsSaved(false);
-        toast({ title: "Artist Unsaved" });
-      } else {
-        toast({ variant: "destructive", title: "Error", description: "Could not unsave artist." });
-      }
-    } else {
-      // Save logic
-      const { error } = await supabase
-        .from("saved_artists")
-        .insert({ artist_id: id, client_id: user.id });
 
-      if (!error) {
-        setIsSaved(true);
-        toast({ title: "Artist Saved!" });
+    setLoadingSave(true);
+    try {
+      if (isSaved) {
+        const { error } = await supabase
+          .from("saved_artists")
+          .delete()
+          .eq("artist_id", id)
+          .eq("client_id", user.id);
+        
+        if (!error) {
+          setIsSaved(false);
+          toast({ title: "Artist Unsaved" });
+        } else {
+          toast({ variant: "destructive", title: "Error", description: "Could not unsave artist." });
+        }
       } else {
-        toast({ variant: "destructive", title: "Error", description: "Could not save artist." });
+        const { error } = await supabase
+          .from("saved_artists")
+          .insert({ artist_id: id, client_id: user.id });
+
+        if (!error) {
+          setIsSaved(true);
+          toast({ title: "Artist Saved!" });
+        } else {
+          toast({ variant: "destructive", title: "Error", description: "Could not save artist." });
+        }
       }
+    } catch (error) {
+      console.error('Save error:', error);
+      toast({ variant: "destructive", title: "Error", description: "Something went wrong." });
     }
     setLoadingSave(false);
   };
@@ -369,32 +314,22 @@ export default function ArtistProfile() {
 
   const handleRequestProject = () => {
     if (!user) {
-      toast({
-        title: "Not logged in",
-        description: "Please sign in to request a project.",
-      });
+      toast({ title: "Not logged in", description: "Please sign in to request a project." });
       return;
     }
     setIsRequestDialogOpen(true);
   };
 
-  // Add state for the modal and selected artwork
-  const [selectedArtwork, setSelectedArtwork] = useState<any | null>(null);
-
-  // Function to handle artwork click and show modal
   const handleArtworkClick = (art: any) => {
     setSelectedArtwork(art);
   };
 
-  // Function to close modal
   const closeModal = () => setSelectedArtwork(null);
 
-  // Extra robust: always show demo data for /artist/1 and /artist/2, regardless of login
   useEffect(() => {
     if (id === ARTIST_UUID_1 || id === ARTIST_UUID_2) {
       setProfileState(artistsData[id]);
       setFollowersCount(artistsData[id].followers);
-      console.log("[ARTIST PROFILE] Loaded demo artist profile, ignoring auth state");
     }
   }, [id]);
 
@@ -416,7 +351,6 @@ export default function ArtistProfile() {
     );
   }
 
-  // Demo logic: show enriched data with new followersCount from DB, not from static mock
   const portfolio = profileState.artworks.map((a, ix) => ({
     ...a,
     likes: 100 + ix * 11,
@@ -428,7 +362,6 @@ export default function ArtistProfile() {
 
   const pinnedArtworks = [portfolio[0]].filter(Boolean);
   const pinnedIds = pinnedArtworks.map((a) => a.id);
-
   const premiumArt = portfolio.filter((p) => p.isPremium);
   const exclusiveArt = portfolio.filter((p) => p.isExclusive);
 
@@ -436,7 +369,6 @@ export default function ArtistProfile() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-gray-100 flex flex-col">
       <Navbar />
       
-      {/* Diagnostic login banner - mobile responsive */}
       {showDiagnosticBanner && (
         <div className="w-full bg-orange-200 py-2 px-3 sm:px-4 text-center text-orange-900 font-medium text-xs sm:text-sm">
           <span className="block sm:inline">
@@ -446,7 +378,6 @@ export default function ArtistProfile() {
         </div>
       )}
       
-      {/* Artist Header - responsive spacing */}
       <div className="pt-16 w-full">
         <ArtistHeader
           artist={{
@@ -468,7 +399,6 @@ export default function ArtistProfile() {
         />
       </div>
       
-      {/* Main content - responsive container with proper spacing */}
       <main className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 flex-1 pb-4 sm:pb-6 lg:pb-8 mt-3 sm:mt-4 lg:mt-6">
         <TagDisplay tags={[profileState.category, ...(profileState.specialties || [])]} />
         <GlassCard className="p-3 sm:p-4 lg:p-6 xl:p-8 mt-3 sm:mt-4 shadow-lg">
@@ -492,7 +422,6 @@ export default function ArtistProfile() {
           />
         </GlassCard>
         
-        {/* Artwork Details Modal - fully responsive */}
         {selectedArtwork && (
           <div
             className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4"
@@ -542,7 +471,6 @@ export default function ArtistProfile() {
         )}
       </main>
 
-      {/* Project Request Modal - mobile responsive */}
       <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
         <DialogContent className="max-w-sm sm:max-w-md mx-3 sm:mx-auto">
           <DialogHeader>
