@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useArtworks } from '@/hooks/useArtworks';
 import Navbar from '@/components/Navbar';
@@ -18,7 +19,7 @@ import ChatbotBubble from '@/components/explore/ChatbotBubble';
 const Explore = () => {
   console.log('Explore page rendering');
   
-  const { artworks, loading, error } = useArtworks();
+  const { artworks, loading, error, fetchArtworks } = useArtworks();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filteredArtworks, setFilteredArtworks] = useState(artworks || []);
   const [currentPage, setCurrentPage] = useState(1);
@@ -29,6 +30,16 @@ const Explore = () => {
     .slice(0, 4);
 
   console.log('Explore state:', { artworks: artworks?.length, loading, error, filteredArtworks: filteredArtworks?.length });
+
+  // Auto-refresh every 30 seconds to show new uploads
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log('Auto-refreshing artworks...');
+      fetchArtworks();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [fetchArtworks]);
 
   // Pagination logic
   const totalPages = Math.ceil((filteredArtworks?.length || 0) / itemsPerPage);
@@ -61,11 +72,13 @@ const Explore = () => {
         const artistName = artwork.artist?.toLowerCase() || '';
         const title = artwork.title.toLowerCase();
         const category = artwork.category?.toLowerCase() || '';
+        const description = artwork.description?.toLowerCase() || '';
         
-        // Prioritize artist name matches
+        // Search across multiple fields
         return artistName.includes(searchTerm) || 
                title.includes(searchTerm) || 
-               category.includes(searchTerm);
+               category.includes(searchTerm) ||
+               description.includes(searchTerm);
       });
     }
 
@@ -113,7 +126,7 @@ const Explore = () => {
       );
     }
 
-    // Approval Status filter (NEW)
+    // Approval Status filter
     if (filters.approvalStatus && filters.approvalStatus !== "all") {
       filtered = filtered.filter(
         artwork =>
@@ -121,27 +134,27 @@ const Explore = () => {
       );
     }
 
-    // Minimum Likes filter (NEW)
+    // Minimum Likes filter
     if (typeof filters.minLikes === "number" && filters.minLikes > 0) {
       filtered = filtered.filter(artwork => (artwork.likes || 0) >= filters.minLikes);
     }
 
-    // Minimum Views filter (NEW)
+    // Minimum Views filter
     if (typeof filters.minViews === "number" && filters.minViews > 0) {
       filtered = filtered.filter(artwork => (artwork.views || 0) >= filters.minViews);
     }
 
-    // Has Audio filter (NEW)
+    // Has Audio filter
     if (filters.hasAudio) {
-      filtered = filtered.filter(artwork => !!artwork.audioUrl);
+      filtered = filtered.filter(artwork => !!artwork.audioUrl || artwork.type === 'music');
     }
 
-    // Has Video filter (NEW)
+    // Has Video filter
     if (filters.hasVideo) {
-      filtered = filtered.filter(artwork => !!artwork.videoUrl);
+      filtered = filtered.filter(artwork => !!artwork.videoUrl || artwork.type === 'video');
     }
 
-    // For Sale Only filter (NEW)
+    // For Sale Only filter
     if (filters.forSaleOnly) {
       filtered = filtered.filter(artwork => artwork.is_for_sale === true);
     }
@@ -156,13 +169,13 @@ const Explore = () => {
         });
         break;
       case 'most_viewed':
-        filtered.sort((a, b) => b.views - a.views);
+        filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
         break;
       case 'most_liked':
-        filtered.sort((a, b) => b.likes - a.likes);
+        filtered.sort((a, b) => (b.likes || 0) - (a.likes || 0));
         break;
       case 'top_rated':
-        filtered.sort((a, b) => (b.views + b.likes) - (a.views + a.likes));
+        filtered.sort((a, b) => ((b.views || 0) + (b.likes || 0)) - ((a.views || 0) + (a.likes || 0)));
         break;
       case 'price_low':
         filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
@@ -172,7 +185,8 @@ const Explore = () => {
         break;
       case 'most_recent':
       default:
-        // Keep original order for mock data
+        // Sort by creation date, newest first
+        filtered.sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime());
         break;
     }
 

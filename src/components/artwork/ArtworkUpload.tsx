@@ -7,12 +7,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, CheckCircle } from 'lucide-react';
 import { useArtworks } from '@/hooks/useArtworks';
 import { useToast } from '@/hooks/use-toast';
 
 interface ArtworkUploadProps {
   onClose?: () => void;
+  onUploadSuccess?: () => void;
 }
 
 const categories = [
@@ -25,11 +26,18 @@ const categories = [
   'Abstract',
   'Portrait',
   'Landscape',
-  'Street Art'
+  'Street Art',
+  'Music',
+  'Audio',
+  'Video',
+  'Film',
+  'Writing',
+  'Literature',
+  'Poetry'
 ];
 
-const ArtworkUpload = ({ onClose }: ArtworkUploadProps) => {
-  const { uploadArtwork, loading } = useArtworks();
+const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
+  const { uploadArtwork } = useArtworks();
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     title: '',
@@ -44,6 +52,8 @@ const ArtworkUpload = ({ onClose }: ArtworkUploadProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -76,21 +86,27 @@ const ArtworkUpload = ({ onClose }: ArtworkUploadProps) => {
     const file = e.target.files?.[0];
     if (file) {
       // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      const allowedTypes = [
+        'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+        'video/mp4', 'video/avi', 'video/mov', 'video/wmv',
+        'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/m4a',
+        'text/plain', 'application/pdf', 'text/html'
+      ];
+      
       if (!allowedTypes.includes(file.type)) {
         toast({
           title: "Invalid file type",
-          description: "Please select a valid image file (JPEG, PNG, GIF, or WebP)",
+          description: "Please select a valid image, video, audio, or text file.",
           variant: "destructive"
         });
         return;
       }
       
-      // Validate file size (10MB limit)
-      if (file.size > 10 * 1024 * 1024) {
+      // Validate file size (50MB limit)
+      if (file.size > 50 * 1024 * 1024) {
         toast({
           title: "File too large",
-          description: "Please select a file smaller than 10MB",
+          description: "Please select a file smaller than 50MB",
           variant: "destructive"
         });
         return;
@@ -136,6 +152,9 @@ const ArtworkUpload = ({ onClose }: ArtworkUploadProps) => {
       return;
     }
 
+    setIsUploading(true);
+    setUploadSuccess(false);
+
     const tagsArray = formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
     
     try {
@@ -152,9 +171,10 @@ const ArtworkUpload = ({ onClose }: ArtworkUploadProps) => {
       });
 
       if (!result?.error) {
+        setUploadSuccess(true);
         toast({
-          title: "Success",
-          description: "Artwork uploaded successfully!"
+          title: "Success!",
+          description: "Your artwork has been uploaded and is now visible on the explore page and your profile!"
         });
         
         // Reset form
@@ -169,7 +189,12 @@ const ArtworkUpload = ({ onClose }: ArtworkUploadProps) => {
           release_date: '',
         });
         handleRemoveFile();
-        onClose?.();
+        
+        // Call success callback and close after a delay
+        setTimeout(() => {
+          onUploadSuccess?.();
+          onClose?.();
+        }, 2000);
       } else {
         throw new Error(result.error);
       }
@@ -180,8 +205,24 @@ const ArtworkUpload = ({ onClose }: ArtworkUploadProps) => {
         description: error.message || "Failed to upload artwork. Please try again.",
         variant: "destructive"
       });
+    } finally {
+      setIsUploading(false);
     }
   };
+
+  if (uploadSuccess) {
+    return (
+      <Card className="w-full max-w-2xl mx-auto">
+        <CardContent className="flex flex-col items-center justify-center py-12">
+          <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
+          <h3 className="text-xl font-semibold mb-2">Upload Successful!</h3>
+          <p className="text-muted-foreground text-center">
+            Your artwork has been uploaded and is now visible on the explore page and your profile.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -199,7 +240,7 @@ const ArtworkUpload = ({ onClose }: ArtworkUploadProps) => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* File Upload */}
           <div className="space-y-2">
-            <Label htmlFor="file">Artwork Image *</Label>
+            <Label htmlFor="file">Artwork File *</Label>
             {!selectedFile ? (
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                 <Upload className="mx-auto h-12 w-12 text-gray-400" />
@@ -210,20 +251,31 @@ const ArtworkUpload = ({ onClose }: ArtworkUploadProps) => {
                       id="file"
                       type="file"
                       className="sr-only"
-                      accept="image/*"
+                      accept="image/*,video/*,audio/*,.txt,.pdf"
                       onChange={handleFileSelect}
                     />
                   </label>
                 </div>
-                <p className="text-sm text-gray-500">PNG, JPG, GIF, WebP up to 10MB</p>
+                <p className="text-sm text-gray-500">Images, Videos, Audio, or Text files up to 50MB</p>
               </div>
             ) : (
               <div className="relative">
-                <img
-                  src={previewUrl!}
-                  alt="Preview"
-                  className="w-full h-64 object-cover rounded-lg"
-                />
+                {selectedFile.type.startsWith('image/') && (
+                  <img
+                    src={previewUrl!}
+                    alt="Preview"
+                    className="w-full h-64 object-cover rounded-lg"
+                  />
+                )}
+                {(selectedFile.type.startsWith('video/') || selectedFile.type.startsWith('audio/') || selectedFile.type.startsWith('text/')) && (
+                  <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <div className="text-center">
+                      <Upload className="mx-auto h-12 w-12 text-gray-400 mb-2" />
+                      <p className="text-sm font-medium">{selectedFile.name}</p>
+                      <p className="text-xs text-gray-500">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                    </div>
+                  </div>
+                )}
                 <Button
                   type="button"
                   variant="destructive"
@@ -347,9 +399,9 @@ const ArtworkUpload = ({ onClose }: ArtworkUploadProps) => {
           <Button 
             type="submit" 
             className="w-full" 
-            disabled={loading}
+            disabled={isUploading}
           >
-            {loading ? 'Uploading...' : 'Upload Artwork'}
+            {isUploading ? 'Uploading...' : 'Upload Artwork'}
           </Button>
         </form>
       </CardContent>
