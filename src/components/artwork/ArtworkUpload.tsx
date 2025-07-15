@@ -85,7 +85,6 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file type
       const allowedTypes = [
         'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
         'video/mp4', 'video/avi', 'video/mov', 'video/wmv',
@@ -102,7 +101,6 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
         return;
       }
       
-      // Validate file size (50MB limit)
       if (file.size > 50 * 1024 * 1024) {
         toast({
           title: "File too large",
@@ -113,10 +111,14 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
       }
       
       setSelectedFile(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
       
-      // Clear file error if it exists
+      if (file.type.startsWith('image/')) {
+        const url = URL.createObjectURL(file);
+        setPreviewUrl(url);
+      } else {
+        setPreviewUrl(null);
+      }
+      
       if (errors.file) {
         setErrors(prev => ({ ...prev, file: '' }));
       }
@@ -134,7 +136,6 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
@@ -172,12 +173,7 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
 
       if (!result?.error) {
         setUploadSuccess(true);
-        toast({
-          title: "Success!",
-          description: "Your artwork has been uploaded and is now visible on the explore page and your profile!"
-        });
         
-        // Reset form
         setFormData({
           title: '',
           description: '',
@@ -190,7 +186,6 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
         });
         handleRemoveFile();
         
-        // Call success callback and close after a delay
         setTimeout(() => {
           onUploadSuccess?.();
           onClose?.();
@@ -238,7 +233,6 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* File Upload */}
           <div className="space-y-2">
             <Label htmlFor="file">Artwork File *</Label>
             {!selectedFile ? (
@@ -260,14 +254,13 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
               </div>
             ) : (
               <div className="relative">
-                {selectedFile.type.startsWith('image/') && (
+                {previewUrl ? (
                   <img
-                    src={previewUrl!}
+                    src={previewUrl}
                     alt="Preview"
                     className="w-full h-64 object-cover rounded-lg"
                   />
-                )}
-                {(selectedFile.type.startsWith('video/') || selectedFile.type.startsWith('audio/') || selectedFile.type.startsWith('text/')) && (
+                ) : (
                   <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
                     <div className="text-center">
                       <Upload className="mx-auto h-12 w-12 text-gray-400 mb-2" />
@@ -290,7 +283,6 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
             {errors.file && <p className="text-sm text-red-500">{errors.file}</p>}
           </div>
 
-          {/* Title */}
           <div className="space-y-2">
             <Label htmlFor="title">Title *</Label>
             <Input
@@ -303,7 +295,6 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
             {errors.title && <p className="text-sm text-red-500">{errors.title}</p>}
           </div>
 
-          {/* Description */}
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
@@ -315,7 +306,6 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
             />
           </div>
 
-          {/* Category */}
           <div className="space-y-2">
             <Label>Category *</Label>
             <Select 
@@ -336,7 +326,6 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
             {errors.category && <p className="text-sm text-red-500">{errors.category}</p>}
           </div>
 
-          {/* Tags */}
           <div className="space-y-2">
             <Label htmlFor="tags">Tags</Label>
             <Input
@@ -348,7 +337,6 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
             <p className="text-xs text-gray-500">Separate multiple tags with commas</p>
           </div>
 
-          {/* Price and For Sale */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <Checkbox
@@ -374,7 +362,6 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
             )}
           </div>
 
-          {/* Pin Artwork */}
           <div className="flex items-center space-x-2">
             <Checkbox
               id="is_pinned"
@@ -384,7 +371,6 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
             <Label htmlFor="is_pinned">Pin to top of profile</Label>
           </div>
 
-          {/* Release Date */}
           <div className="space-y-2">
             <Label htmlFor="release_date">Release Date (Optional)</Label>
             <Input
