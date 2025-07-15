@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,19 +26,11 @@ export const useProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      fetchProfile();
-    } else {
+  const fetchProfile = async (retryCount = 0) => {
+    if (!user?.id) {
       setProfile(null);
       setLoading(false);
       setError(null);
-    }
-  }, [user]);
-
-  const fetchProfile = async () => {
-    if (!user?.id) {
-      setLoading(false);
       return;
     }
 
@@ -47,14 +40,29 @@ export const useProfile = () => {
 
       console.log('Fetching profile for user:', user.id);
 
+      // Add timeout and retry logic
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
       const { data, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
+        .abortSignal(controller.signal)
         .maybeSingle();
+
+      clearTimeout(timeoutId);
 
       if (fetchError) {
         console.error('Error fetching profile:', fetchError);
+        
+        // Retry logic for network errors
+        if (retryCount < 2 && (fetchError.message.includes('Failed to fetch') || fetchError.message.includes('network'))) {
+          console.log(`Retrying profile fetch (attempt ${retryCount + 1})`);
+          setTimeout(() => fetchProfile(retryCount + 1), 1000 * (retryCount + 1));
+          return;
+        }
+        
         setError(fetchError.message);
         toast({
           title: "Profile Error",
@@ -86,21 +94,42 @@ export const useProfile = () => {
 
         setProfile(newProfile);
       } else {
-        console.log('Profile data:', data);
+        console.log('Profile data loaded successfully:', data);
         setProfile(data);
       }
     } catch (err: any) {
       console.error('Error in fetchProfile:', err);
-      setError(err.message);
+      
+      // Handle network errors specifically
+      if (err.name === 'AbortError') {
+        setError('Request timed out. Please check your internet connection.');
+      } else if (retryCount < 2) {
+        console.log(`Retrying profile fetch due to error (attempt ${retryCount + 1})`);
+        setTimeout(() => fetchProfile(retryCount + 1), 1000 * (retryCount + 1));
+        return;
+      } else {
+        setError(err.message || 'Network error occurred');
+      }
+      
       toast({
         title: "Network Error",
-        description: "Unable to connect to the server. Please check your internet connection.",
+        description: "Unable to connect to the server. Please check your internet connection and try again.",
         variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (user) {
+      fetchProfile();
+    } else {
+      setProfile(null);
+      setLoading(false);
+      setError(null);
+    }
+  }, [user]);
 
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user?.id) {
