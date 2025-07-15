@@ -1,6 +1,6 @@
 
 import { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import Navbar from '@/components/Navbar';
@@ -21,16 +21,24 @@ import UniversalChatbot from '@/components/UniversalChatbot';
 
 const ArtistDashboard = () => {
   const { tab } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
-  const { profile, loading: profileLoading, error: profileError } = useProfile();
+  const { profile, loading: profileLoading, error: profileError, refetch: refetchProfile } = useProfile();
 
   useEffect(() => {
     console.log('Profile data in dashboard:', profile);
     if (profile && profile.role !== 'artist' && profile.role !== 'premium') {
       console.log('Redirecting non-artist user');
-      window.location.href = '/client-dashboard';
+      navigate('/client-dashboard');
     }
-  }, [profile]);
+  }, [profile, navigate]);
+
+  // Refresh profile when user changes
+  useEffect(() => {
+    if (user) {
+      refetchProfile();
+    }
+  }, [user, refetchProfile]);
 
   const defaultTab = tab || 'artworks';
 
