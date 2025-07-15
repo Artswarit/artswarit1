@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -150,11 +149,34 @@ export const useProfile = () => {
     }
   };
 
+  const getProfile = async (userId: string) => {
+    try {
+      console.log('Fetching profile for user:', userId);
+
+      const { data, error: fetchError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (fetchError) {
+        console.error('Error fetching profile:', fetchError);
+        return null;
+      }
+
+      return data;
+    } catch (err: any) {
+      console.error('Error in getProfile:', err);
+      return null;
+    }
+  };
+
   return {
     profile,
     loading,
     error,
     updateProfile,
-    refetch: fetchProfile
+    refetch: fetchProfile,
+    getProfile
   };
 };

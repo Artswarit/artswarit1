@@ -23,6 +23,9 @@ const ArtistProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [loadingFollow, setLoadingFollow] = useState(false);
+  const [loadingSave, setLoadingSave] = useState(false);
 
   useEffect(() => {
     const loadArtistData = async () => {
@@ -43,17 +46,22 @@ const ArtistProfile = () => {
             location: profileData.location || 'Location not specified',
             website: profileData.website || '',
             avatar: profileData.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${profileData.full_name || 'Artist'}`,
-            coverImage: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1200&q=80',
+            cover: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1200&q=80',
             isVerified: profileData.is_verified || false,
             joinDate: profileData.created_at,
             followers: 0,
             following: 0,
-            totalLikes: artworksData.reduce((sum, artwork) => sum + (artwork.likes || 0), 0),
-            totalViews: artworksData.reduce((sum, artwork) => sum + (artwork.views || 0), 0),
+            likes: artworksData.reduce((sum, artwork) => sum + (artwork.likes || 0), 0),
+            views: artworksData.reduce((sum, artwork) => sum + (artwork.views || 0), 0),
             artworkCount: artworksData.length,
             tags: ['Digital Art', 'Abstract', 'Contemporary'],
             socialLinks: profileData.social_links || {},
-            achievements: []
+            achievements: [],
+            email: profileData.email,
+            premium: false,
+            rating: 4.7,
+            totalProjects: 19,
+            reviewCount: 12
           });
           setArtworks(artworksData);
         } else {
@@ -70,28 +78,29 @@ const ArtistProfile = () => {
     loadArtistData();
   }, [id]);
 
-  const handleFollow = () => {
+  const handleFollow = async () => {
+    setLoadingFollow(true);
+    // TODO: Implement follow/unfollow API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
     setIsFollowing(!isFollowing);
+    setLoadingFollow(false);
   };
 
   const handleMessage = () => {
     navigate('/messages');
   };
 
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `${artist?.name}'s Profile`,
-          text: `Check out ${artist?.name}'s artwork on ArtSwarit!`,
-          url: window.location.href,
-        });
-      } catch (err) {
-        console.log('Error sharing:', err);
-      }
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-    }
+  const handleSave = async () => {
+    setLoadingSave(true);
+    // TODO: Implement save/unsave API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setIsSaved(!isSaved);
+    setLoadingSave(false);
+  };
+
+  const handleRequest = () => {
+    // TODO: Implement request project functionality
+    console.log('Request project for artist:', id);
   };
 
   if (loading) {
@@ -133,20 +142,46 @@ const ArtistProfile = () => {
     return null;
   }
 
+  // Transform artworks data for ArtistTabs
+  const galleryArtworks = artworks.map(artwork => ({
+    id: artwork.id,
+    title: artwork.title,
+    img: artwork.imageUrl,
+    views: artwork.views || 0,
+    likes: artwork.likes || 0,
+    price: artwork.price,
+    isPremium: false,
+    isExclusive: false
+  }));
+
+  const aboutDetails = {
+    artist: artist,
+    projectsCount: artist.totalProjects,
+    avgRating: artist.rating,
+    reviewCount: artist.reviewCount
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <ArtistHeader artist={artist} />
+      <ArtistHeader 
+        artist={artist}
+        onFollow={handleFollow}
+        isFollowing={isFollowing}
+        onMessage={handleMessage}
+        isSaved={isSaved}
+        onSave={handleSave}
+        onRequest={handleRequest}
+        loadingFollow={loadingFollow}
+        loadingSave={loadingSave}
+      />
       
       <div className="container mx-auto px-4 py-8">
-        <ArtistActionsBar
-          artist={artist}
-          isFollowing={isFollowing}
-          onFollow={handleFollow}
-          onMessage={handleMessage}
-          onShare={handleShare}
+        <ArtistTabs 
+          allArt={galleryArtworks}
+          premiumArt={[]}
+          exclusiveArt={[]}
+          aboutDetails={aboutDetails}
         />
-        
-        <ArtistTabs artist={artist} artworks={artworks} />
       </div>
     </div>
   );
