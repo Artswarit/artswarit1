@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Search, Filter, Grid, List, TrendingUp, Calendar, Star } from 'lucide-react';
+import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -112,6 +113,7 @@ const Explore = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Navbar />
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar Filters */}
