@@ -28,12 +28,7 @@ const visibilityOptions = [
   { id: "followers", label: "Followers Only - Visible to your followers" },
 ];
 
-interface ArtworkUploadFormProps {
-  onSuccess?: () => void;
-  uploadArtwork?: (artworkData: any) => Promise<{ error: any; artwork?: any }>;
-}
-
-const ArtworkUploadForm = ({ onSuccess, uploadArtwork }: ArtworkUploadFormProps = {}) => {
+const ArtworkUploadForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [selectedType, setSelectedType] = useState("image");
@@ -139,58 +134,33 @@ const ArtworkUploadForm = ({ onSuccess, uploadArtwork }: ArtworkUploadFormProps 
     }
 
     try {
-      if (uploadArtwork) {
-        const artworkData = {
-          title,
-          description,
-          category: selectedType,
-          price: price ? parseFloat(price) : null,
-          is_for_sale: visibilityType !== "free",
-          file: selectedFiles[0],
-          tags: [],
-          release_date: scheduleRelease ? releaseDate : null
-        };
+      // Simulate upload process with proper error handling
+      await new Promise((resolve, reject) => {
+        setTimeout(() => {
+          // Simulate occasional failures for testing
+          if (Math.random() > 0.9) {
+            reject(new Error("Upload failed due to network error"));
+          } else {
+            resolve(true);
+          }
+        }, 2000);
+      });
 
-        const result = await uploadArtwork(artworkData);
-        
-        if (result.error) {
-          throw new Error(result.error);
-        }
-        
-        // Clear form
-        setTitle("");
-        setDescription("");
-        setPrice("");
-        setSelectedFiles([]);
-        setDetectionResults([]);
-        setHasAiContent(false);
-        setErrors({});
-        
-        if (onSuccess) {
-          onSuccess();
-        } else {
-          navigate("/artist-dashboard");
-        }
-      } else {
-        // Fallback to mock upload
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        
-        toast({
-          title: "Success",
-          description: "Your artwork has been uploaded successfully!",
-        });
-        
-        // Clear form
-        setTitle("");
-        setDescription("");
-        setPrice("");
-        setSelectedFiles([]);
-        setDetectionResults([]);
-        setHasAiContent(false);
-        setErrors({});
-        
-        navigate("/artist-dashboard");
-      }
+      toast({
+        title: "Success",
+        description: "Your artwork has been uploaded successfully!",
+      });
+      
+      // Clear form
+      setTitle("");
+      setDescription("");
+      setPrice("");
+      setSelectedFiles([]);
+      setDetectionResults([]);
+      setHasAiContent(false);
+      setErrors({});
+      
+      navigate("/artist-dashboard");
     } catch (error: any) {
       console.error('Upload error:', error);
       toast({

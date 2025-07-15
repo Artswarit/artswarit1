@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
 import { X, Search, Filter } from 'lucide-react';
+
 interface ExploreFiltersProps {
   categories: string[];
   types: string[];
@@ -18,6 +20,7 @@ interface ExploreFiltersProps {
   priceRange: string;
   setPriceRange: (range: string) => void;
 }
+
 const ExploreFilters = ({
   categories,
   types,
@@ -31,11 +34,24 @@ const ExploreFilters = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [priceSlider, setPriceSlider] = useState([0, 1000]);
-  const popularTags = ['Digital Art', 'Photography', 'Painting', 'Abstract', 'Portrait', 'Landscape', 'Street Art', 'Contemporary', 'Minimalist', 'Colorful'];
-  const filteredCategories = categories.filter(cat => cat.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const popularTags = [
+    'Digital Art', 'Photography', 'Painting', 'Abstract', 'Portrait',
+    'Landscape', 'Street Art', 'Contemporary', 'Minimalist', 'Colorful'
+  ];
+
+  const filteredCategories = categories.filter(cat =>
+    cat.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const handleTagToggle = (tag: string) => {
-    setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+    setSelectedTags(prev =>
+      prev.includes(tag)
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    );
   };
+
   const clearFilters = () => {
     setSelectedCategory('all');
     setSelectedType('all');
@@ -44,8 +60,10 @@ const ExploreFilters = ({
     setPriceSlider([0, 1000]);
     setSearchTerm('');
   };
-  return <Card className="sticky top-4">
-      <CardHeader className="my-[10px]">
+
+  return (
+    <Card className="sticky top-4">
+      <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Filter className="h-5 w-5" />
           Filters
@@ -57,7 +75,12 @@ const ExploreFilters = ({
           <Label>Search Categories</Label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
+            <Input
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
           </div>
         </div>
 
@@ -69,9 +92,11 @@ const ExploreFilters = ({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {filteredCategories.map(category => <SelectItem key={category} value={category}>
+              {filteredCategories.map(category => (
+                <SelectItem key={category} value={category}>
                   {category === 'all' ? 'All Categories' : category}
-                </SelectItem>)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -84,9 +109,11 @@ const ExploreFilters = ({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {types.map(type => <SelectItem key={type} value={type}>
+              {types.map(type => (
+                <SelectItem key={type} value={type}>
                   {type === 'all' ? 'All Types' : type.charAt(0).toUpperCase() + type.slice(1)}
-                </SelectItem>)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -111,27 +138,48 @@ const ExploreFilters = ({
         {/* Price Slider */}
         <div className="space-y-2">
           <Label>Price Range: ${priceSlider[0]} - ${priceSlider[1]}</Label>
-          <Slider value={priceSlider} onValueChange={setPriceSlider} max={1000} step={10} className="w-full" />
+          <Slider
+            value={priceSlider}
+            onValueChange={setPriceSlider}
+            max={1000}
+            step={10}
+            className="w-full"
+          />
         </div>
 
         {/* Popular Tags */}
         <div className="space-y-2">
           <Label>Popular Tags</Label>
           <div className="flex flex-wrap gap-2">
-            {popularTags.map(tag => <Badge key={tag} variant={selectedTags.includes(tag) ? 'default' : 'outline'} className="cursor-pointer" onClick={() => handleTagToggle(tag)}>
+            {popularTags.map(tag => (
+              <Badge
+                key={tag}
+                variant={selectedTags.includes(tag) ? 'default' : 'outline'}
+                className="cursor-pointer"
+                onClick={() => handleTagToggle(tag)}
+              >
                 {tag}
-                {selectedTags.includes(tag) && <X className="ml-1 h-3 w-3" />}
-              </Badge>)}
+                {selectedTags.includes(tag) && (
+                  <X className="ml-1 h-3 w-3" />
+                )}
+              </Badge>
+            ))}
           </div>
         </div>
 
         <Separator />
 
         {/* Clear Filters */}
-        <Button variant="outline" onClick={clearFilters} className="w-full">
+        <Button 
+          variant="outline" 
+          onClick={clearFilters}
+          className="w-full"
+        >
           Clear All Filters
         </Button>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };
+
 export default ExploreFilters;
