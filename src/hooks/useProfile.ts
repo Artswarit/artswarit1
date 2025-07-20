@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +15,7 @@ interface Profile {
   website: string | null;
   social_links: any;
   is_verified: boolean;
+  account_status: string;
   created_at: string;
   updated_at: string;
 }

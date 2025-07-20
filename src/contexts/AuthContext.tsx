@@ -1,6 +1,6 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -8,10 +8,10 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, userData: { full_name: string; role: string }) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signOut: () => Promise<{ error: any }>;
-  signInWithGoogle: () => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string, userData?: any) => Promise<{ error: AuthError | null }>;
+  signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,102 +24,138 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface AuthProviderProps {
+  children: React.ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener
+    // Get initial session
+    const getInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          return;
+        }
+
+        setSession(session);
+        setUser(session?.user ?? null);
+      } catch (error) {
+        console.error('Error in getInitialSession:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getInitialSession();
+
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id);
+        
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-        
+
         if (event === 'SIGNED_IN' && session?.user) {
-          console.log('User signed in:', session.user.email);
-        } else if (event === 'SIGNED_OUT') {
-          console.log('User signed out');
+          // Ensure user profile exists
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .maybeSingle();
+
+          if (error) {
+            console.error('Error checking profile:', error);
+          }
+
+          if (!profile) {
+            // Create profile if it doesn't exist
+            const { error: insertError } = await supabase
+              .from('profiles')
+              .insert({
+                id: session.user.id,
+                email: session.user.email || '',
+                full_name: session.user.user_metadata?.full_name || null,
+                role: session.user.user_metadata?.role || 'client',
+              });
+
+            if (insertError) {
+              console.error('Error creating profile:', insertError);
+            }
+          }
         }
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
     return () => subscription.unsubscribe();
   }, []);
-
-  const signUp = async (email: string, password: string, userData: { full_name: string; role: string }) => {
-    try {
-      setLoading(true);
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: userData
-        }
-      });
-
-      if (error) {
-        console.error('Signup error:', error);
-        toast({
-          title: "Sign up failed",
-          description: error.message,
-          variant: "destructive"
-        });
-        return { error };
-      }
-
-      toast({
-        title: "Account created successfully!",
-        description: "Please check your email to verify your account."
-      });
-
-      return { error: null };
-    } catch (error: any) {
-      console.error('Signup error:', error);
-      return { error };
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
       const { error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
       });
 
       if (error) {
-        console.error('Signin error:', error);
         toast({
-          title: "Sign in failed",
+          title: "Sign In Failed",
           description: error.message,
-          variant: "destructive"
+          variant: "destructive",
         });
-        return { error };
+      } else {
+        toast({
+          title: "Welcome back!",
+          description: "You have successfully signed in.",
+        });
       }
 
-      toast({
-        title: "Welcome back!",
-        description: "You've successfully signed in."
+      return { error };
+    } catch (error: any) {
+      console.error('Sign in error:', error);
+      return { error };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signUp = async (email: string, password: string, userData?: any) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: userData || {},
+        },
       });
 
-      return { error: null };
+      if (error) {
+        toast({
+          title: "Sign Up Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Account Created!",
+          description: "Please check your email to verify your account.",
+        });
+      }
+
+      return { error };
     } catch (error: any) {
-      console.error('Signin error:', error);
+      console.error('Sign up error:', error);
       return { error };
     } finally {
       setLoading(false);
@@ -132,61 +168,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        console.error('Signout error:', error);
-        return { error };
+        console.error('Sign out error:', error);
+        toast({
+          title: "Sign Out Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Signed Out",
+          description: "You have been successfully signed out.",
+        });
       }
-
-      toast({
-        title: "Signed out",
-        description: "You've been successfully signed out."
-      });
-
-      return { error: null };
     } catch (error: any) {
-      console.error('Signout error:', error);
-      return { error };
+      console.error('Sign out error:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const signInWithGoogle = async () => {
+  const resetPassword = async (email: string) => {
     try {
-      setLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/`
-        }
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
       });
 
       if (error) {
-        console.error('Google signin error:', error);
         toast({
-          title: "Google sign in failed",
+          title: "Reset Failed",
           description: error.message,
-          variant: "destructive"
+          variant: "destructive",
         });
-        return { error };
+      } else {
+        toast({
+          title: "Reset Email Sent",
+          description: "Check your email for password reset instructions.",
+        });
       }
 
-      return { error: null };
-    } catch (error: any) {
-      console.error('Google signin error:', error);
       return { error };
-    } finally {
-      setLoading(false);
+    } catch (error: any) {
+      console.error('Reset password error:', error);
+      return { error };
     }
   };
 
-  const value = {
+  const value: AuthContextType = {
     user,
     session,
     loading,
-    signUp,
     signIn,
+    signUp,
     signOut,
-    signInWithGoogle
+    resetPassword,
   };
 
   return (

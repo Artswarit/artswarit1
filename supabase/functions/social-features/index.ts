@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -10,6 +9,12 @@ const corsHeaders = {
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+// UUID validation function
+const isValidUUID = (str: string) => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -20,6 +25,20 @@ serve(async (req) => {
   try {
     const { action, data } = await req.json();
     console.log(`Social features action: ${action}`, data);
+
+    // Validate UUIDs in data
+    if (data.userId && !isValidUUID(data.userId)) {
+      throw new Error(`Invalid userId format: ${data.userId}`);
+    }
+    if (data.followerId && !isValidUUID(data.followerId)) {
+      throw new Error(`Invalid followerId format: ${data.followerId}`);
+    }
+    if (data.followingId && !isValidUUID(data.followingId)) {
+      throw new Error(`Invalid followingId format: ${data.followingId}`);
+    }
+    if (data.artworkId && !isValidUUID(data.artworkId)) {
+      throw new Error(`Invalid artworkId format: ${data.artworkId}`);
+    }
 
     switch (action) {
       case "follow_user":
