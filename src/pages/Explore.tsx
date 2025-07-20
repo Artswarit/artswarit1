@@ -33,12 +33,14 @@ const Explore = () => {
   const types = ['all', 'image', 'video', 'music', 'text'];
 
   const filteredArtworks = artworks.filter(artwork => {
+    const artistName = artwork.artist || artwork.profiles?.full_name || '';
     const matchesSearch = artwork.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         artwork.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         artistName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          artwork.category?.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesCategory = selectedCategory === 'all' || artwork.category === selectedCategory;
-    const matchesType = selectedType === 'all' || artwork.type === selectedType;
+    const artworkType = artwork.type || artwork.category?.toLowerCase() || 'image';
+    const matchesType = selectedType === 'all' || artworkType === selectedType;
     
     let matchesPrice = true;
     if (priceRange !== 'all') {
@@ -65,9 +67,9 @@ const Explore = () => {
   const sortedArtworks = [...filteredArtworks].sort((a, b) => {
     switch (sortBy) {
       case 'popular':
-        return (b.likes || 0) - (a.likes || 0);
+        return (b.likes_count || 0) - (a.likes_count || 0);
       case 'views':
-        return (b.views || 0) - (a.views || 0);
+        return (b.views_count || 0) - (a.views_count || 0);
       case 'price-low':
         return (a.price || 0) - (b.price || 0);
       case 'price-high':
@@ -242,12 +244,12 @@ const Explore = () => {
                       key={artwork.id}
                       id={artwork.id}
                       title={artwork.title}
-                      artist={artwork.artist}
-                      artistId={artwork.artistId}
-                      type={artwork.type}
-                      imageUrl={artwork.imageUrl}
-                      likes={artwork.likes}
-                      views={artwork.views}
+                      artist={artwork.artist || artwork.profiles?.full_name || 'Unknown Artist'}
+                      artistId={artwork.artist_id}
+                      type={artwork.type || artwork.category?.toLowerCase() || 'image'}
+                      imageUrl={artwork.image_url}
+                      likes={artwork.likes_count || 0}
+                      views={artwork.views_count || 0}
                       price={artwork.price}
                       category={artwork.category}
                       audioUrl={artwork.audioUrl}

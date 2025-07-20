@@ -26,6 +26,15 @@ export interface Artwork {
     full_name: string | null;
     avatar_url: string | null;
   };
+  // Frontend compatibility properties
+  imageUrl?: string;
+  likes?: number;
+  views?: number;
+  artist?: string;
+  artistId?: string;
+  type?: string;
+  audioUrl?: string;
+  videoUrl?: string;
 }
 
 export const useArtworks = (artistId?: string) => {
@@ -69,7 +78,19 @@ export const useArtworks = (artistId?: string) => {
       }
 
       console.log('Fetched artworks from DB:', data);
-      setArtworks(data || []);
+      
+      // Transform data for frontend compatibility
+      const transformedArtworks = (data || []).map((artwork: any) => ({
+        ...artwork,
+        imageUrl: artwork.image_url,
+        likes: artwork.likes_count,
+        views: artwork.views_count,
+        artist: artwork.profiles?.full_name || 'Unknown Artist',
+        artistId: artwork.artist_id,
+        type: artwork.category?.toLowerCase() || 'image'
+      }));
+      
+      setArtworks(transformedArtworks);
     } catch (err: any) {
       console.error('Error in fetchArtworks:', err);
       setError(err.message);
@@ -83,6 +104,43 @@ export const useArtworks = (artistId?: string) => {
     }
   };
 
+  const fetchUserArtworks = async (userId: string) => {
+    try {
+      console.log('Fetching user artworks for:', userId);
+
+      const { data, error: fetchError } = await supabase
+        .from('artworks')
+        .select(`
+          *,
+          profiles:artist_id (
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('artist_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (fetchError) {
+        console.error('Error fetching user artworks:', fetchError);
+        throw fetchError;
+      }
+
+      // Transform data for frontend compatibility
+      return (data || []).map((artwork: any) => ({
+        ...artwork,
+        imageUrl: artwork.image_url,
+        likes: artwork.likes_count,
+        views: artwork.views_count,
+        artist: artwork.profiles?.full_name || 'Unknown Artist',
+        artistId: artwork.artist_id,
+        type: artwork.category?.toLowerCase() || 'image'
+      }));
+    } catch (err: any) {
+      console.error('Error in fetchUserArtworks:', err);
+      throw err;
+    }
+  };
+
   const uploadArtwork = async (artworkData: {
     title: string;
     description?: string;
@@ -91,6 +149,9 @@ export const useArtworks = (artistId?: string) => {
     tags?: string[];
     price?: number;
     is_for_sale?: boolean;
+    is_pinned?: boolean;
+    release_date?: string;
+    file?: File;
   }) => {
     if (!user) {
       toast({
@@ -109,6 +170,7 @@ export const useArtworks = (artistId?: string) => {
           artist_id: user.id,
           tags: artworkData.tags || [],
           is_for_sale: artworkData.is_for_sale || false,
+          is_pinned: artworkData.is_pinned || false,
           approval_status: 'pending',
         }])
         .select()
@@ -243,7 +305,7 @@ export const useArtworks = (artistId?: string) => {
     }
   };
 
-  const likeArtwork = async (artworkId: string) => {
+  const toggleLike = async (artworkId: string) => {
     if (!user) {
       toast({
         title: "Authentication Required",
@@ -256,7 +318,7 @@ export const useArtworks = (artistId?: string) => {
     try {
       const { error } = await supabase.functions.invoke('social-features', {
         body: {
-          action: 'like_artwork',
+          action: 'toggle_like',
           data: {
             userId: user.id,
             artworkId
@@ -265,7 +327,7 @@ export const useArtworks = (artistId?: string) => {
       });
 
       if (error) {
-        console.error('Error liking artwork:', error);
+        console.error('Error toggling like:', error);
         toast({
           title: "Error",
           description: "Failed to like artwork. Please try again.",
@@ -279,48 +341,7 @@ export const useArtworks = (artistId?: string) => {
       
       return { error: null };
     } catch (err: any) {
-      console.error('Error in likeArtwork:', err);
-      return { error: err.message };
-    }
-  };
-
-  const unlikeArtwork = async (artworkId: string) => {
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to unlike artworks.",
-        variant: "destructive",
-      });
-      return { error: 'Not authenticated' };
-    }
-
-    try {
-      const { error } = await supabase.functions.invoke('social-features', {
-        body: {
-          action: 'unlike_artwork',
-          data: {
-            userId: user.id,
-            artworkId
-          }
-        }
-      });
-
-      if (error) {
-        console.error('Error unliking artwork:', error);
-        toast({
-          title: "Error",
-          description: "Failed to unlike artwork. Please try again.",
-          variant: "destructive",
-        });
-        return { error };
-      }
-
-      // Refresh artworks to update like count
-      await fetchArtworks();
-      
-      return { error: null };
-    } catch (err: any) {
-      console.error('Error in unlikeArtwork:', err);
+      console.error('Error in toggleLike:', err);
       return { error: err.message };
     }
   };
@@ -334,10 +355,10 @@ export const useArtworks = (artistId?: string) => {
     loading,
     error,
     fetchArtworks,
+    fetchUserArtworks,
     uploadArtwork,
     updateArtwork,
     deleteArtwork,
-    likeArtwork,
-    unlikeArtwork,
+    toggleLike,
   };
 };
