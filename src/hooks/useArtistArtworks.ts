@@ -1,18 +1,22 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
-export const useArtworks = () => {
+export const useArtistArtworks = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [artworks, setArtworks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchArtworks = async () => {
-    console.log('Fetching artworks from Supabase...');
+  const fetchArtistArtworks = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    console.log('Fetching artist artworks from Supabase...');
     setLoading(true);
     
     try {
@@ -22,15 +26,15 @@ export const useArtworks = () => {
           *,
           profiles!artworks_artist_id_fkey(full_name, avatar_url)
         `)
-        .eq('approval_status', 'approved')
+        .eq('artist_id', user.id)
         .order('created_at', { ascending: false });
 
       if (fetchError) {
-        console.error('Error fetching artworks:', fetchError);
+        console.error('Error fetching artist artworks:', fetchError);
         setError(fetchError.message);
         setArtworks([]);
       } else {
-        console.log('Fetched artworks from DB:', dbArtworks);
+        console.log('Fetched artist artworks from DB:', dbArtworks);
         
         const transformedArtworks = dbArtworks?.map(artwork => ({
           id: artwork.id,
@@ -55,7 +59,7 @@ export const useArtworks = () => {
         setArtworks(transformedArtworks);
       }
     } catch (err) {
-      console.error('Error in fetchArtworks:', err);
+      console.error('Error in fetchArtistArtworks:', err);
       setError('Failed to fetch artworks');
       setArtworks([]);
     } finally {
@@ -133,7 +137,7 @@ export const useArtworks = () => {
         is_pinned: artworkData.is_pinned || false,
         image_url: imageUrl,
         artist_id: user.id,
-        approval_status: 'approved',
+        approval_status: 'pending',
         release_date: artworkData.release_date || null,
         views_count: 0,
         likes_count: 0
@@ -177,11 +181,12 @@ export const useArtworks = () => {
         description: newArtwork.description
       };
 
+      // Add to the beginning of the artworks array
       setArtworks(prevArtworks => [transformedArtwork, ...prevArtworks]);
 
       toast({
         title: "Success",
-        description: "Artwork uploaded successfully and is now visible on the explore page and your profile!",
+        description: "Artwork uploaded successfully!",
       });
       
       return { error: null, artwork: transformedArtwork };
@@ -196,124 +201,16 @@ export const useArtworks = () => {
     }
   };
 
-  const toggleLike = async (artworkId) => {
-    console.log(`Toggling like for artwork: ${artworkId}`);
-    
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to like artworks.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const { data: existingLike, error: checkError } = await supabase
-        .from('artwork_likes')
-        .select('id')
-        .eq('artwork_id', artworkId)
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (checkError) {
-        console.error('Error checking like status:', checkError);
-        throw checkError;
-      }
-
-      if (existingLike) {
-        const { error: deleteError } = await supabase
-          .from('artwork_likes')
-          .delete()
-          .eq('id', existingLike.id);
-
-        if (deleteError) throw deleteError;
-        
-        toast({
-          title: "Unliked",
-          description: "Artwork removed from likes.",
-        });
-      } else {
-        const { error: insertError } = await supabase
-          .from('artwork_likes')
-          .insert([{
-            artwork_id: artworkId,
-            user_id: user.id
-          }]);
-
-        if (insertError) throw insertError;
-        
-        toast({
-          title: "Liked",
-          description: "Artwork added to your likes!",
-        });
-      }
-
-      fetchArtworks();
-    } catch (error) {
-      console.error('Error toggling like:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update like status. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const fetchUserArtworks = async (userId) => {
-    console.log('Fetching user artworks for:', userId);
-    
-    try {
-      const { data: userArtworks, error: fetchError } = await supabase
-        .from('artworks')
-        .select(`
-          *,
-          profiles!artworks_artist_id_fkey(full_name, avatar_url)
-        `)
-        .eq('artist_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (fetchError) {
-        console.error('Error fetching user artworks:', fetchError);
-        return [];
-      }
-
-      return userArtworks?.map(artwork => ({
-        id: artwork.id,
-        title: artwork.title,
-        artist: artwork.profiles?.full_name || 'Unknown Artist',
-        artistId: artwork.artist_id,
-        artist_id: artwork.artist_id,
-        type: getArtworkType(artwork.category),
-        imageUrl: artwork.image_url,
-        likes: artwork.likes_count || 0,
-        views: artwork.views_count || 0,
-        price: artwork.price || 0,
-        category: artwork.category,
-        is_pinned: artwork.is_pinned || false,
-        is_for_sale: artwork.is_for_sale || false,
-        tags: artwork.tags || [],
-        approval_status: artwork.approval_status || 'pending',
-        created_at: artwork.created_at,
-        description: artwork.description
-      })) || [];
-    } catch (err) {
-      console.error('Error in fetchUserArtworks:', err);
-      return [];
-    }
-  };
-
   useEffect(() => {
-    fetchArtworks();
+    fetchArtistArtworks();
   }, [user]);
 
   return {
     artworks,
     loading,
     error,
-    fetchArtworks,
-    toggleLike,
+    fetchArtistArtworks,
     uploadArtwork,
-    fetchUserArtworks
+    refetch: fetchArtistArtworks
   };
 };
