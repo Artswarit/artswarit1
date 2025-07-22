@@ -44,46 +44,48 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
+const App = () => {
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/explore" element={<Explore />} />
-              <Route path="/explore-artists" element={<ExploreArtists />} />
-              <Route path="/categories" element={<Categories />} />
-              <Route path="/artist/:id" element={<ArtistProfile />} />
-              <Route path="/artwork/:id" element={<ArtworkDetails />} />
-              <Route path="/artist-dashboard" element={<ArtistDashboard />} />
-              <Route path="/artist-dashboard/:tab" element={<ArtistDashboard />} />
-              <Route path="/client-dashboard" element={<ClientDashboard />} />
-              <Route path="/admin-dashboard" element={<AdminDashboard />} />
-              <Route path="/about-us" element={<AboutUs />} />
-              <Route path="/terms-of-service" element={<TermsOfService />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/ai-detection" element={<AIDetection />} />
-              <Route path="/feature-audit" element={<FeatureAudit />} />
-              <Route path="/live-streaming" element={<LiveStreaming />} />
-              <Route path="/collections" element={<Collections />} />
-              <Route path="/trending" element={<Trending />} />
-              <Route path="/recommendations" element={<Recommendations />} />
-              <Route path="/commissions" element={<Commissions />} />
-              <Route path="/events" element={<Events />} />
-              <Route path="/merchandise" element={<Merchandise />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+          <TooltipProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/explore" element={<Explore />} />
+                <Route path="/explore-artists" element={<ExploreArtists />} />
+                <Route path="/categories" element={<Categories />} />
+                <Route path="/artist/:id" element={<ArtistProfile />} />
+                <Route path="/artwork/:id" element={<ArtworkDetails />} />
+                <Route path="/artist-dashboard" element={<ArtistDashboard />} />
+                <Route path="/artist-dashboard/:tab" element={<ArtistDashboard />} />
+                <Route path="/client-dashboard" element={<ClientDashboard />} />
+                <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                <Route path="/about-us" element={<AboutUs />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/ai-detection" element={<AIDetection />} />
+                <Route path="/feature-audit" element={<FeatureAudit />} />
+                <Route path="/live-streaming" element={<LiveStreaming />} />
+                <Route path="/collections" element={<Collections />} />
+                <Route path="/trending" element={<Trending />} />
+                <Route path="/recommendations" element={<Recommendations />} />
+                <Route path="/commissions" element={<Commissions />} />
+                <Route path="/events" element={<Events />} />
+                <Route path="/merchandise" element={<Merchandise />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+            <Toaster />
+            <Sonner />
+          </TooltipProvider>
         </AuthProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </ErrorBoundary>
-);
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
+};
 
 export default App;
