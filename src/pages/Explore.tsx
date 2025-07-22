@@ -17,7 +17,7 @@ const Explore = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
-  const [priceRange, setPriceRange] = useState([0, 1000]);
+  const [priceRange, setPriceRange] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
 
   const categories = [
@@ -39,8 +39,25 @@ const Explore = () => {
     const matchesType = selectedType === 'all' || 
       artwork.type?.toLowerCase() === selectedType.toLowerCase();
     
-    const matchesPrice = !artwork.price || 
-      (artwork.price >= priceRange[0] && artwork.price <= priceRange[1]);
+    let matchesPrice = true;
+    if (priceRange !== 'all' && artwork.price) {
+      switch (priceRange) {
+        case 'free':
+          matchesPrice = artwork.price === 0;
+          break;
+        case 'under50':
+          matchesPrice = artwork.price > 0 && artwork.price < 50;
+          break;
+        case 'under100':
+          matchesPrice = artwork.price >= 50 && artwork.price <= 100;
+          break;
+        case 'over100':
+          matchesPrice = artwork.price > 100;
+          break;
+        default:
+          matchesPrice = true;
+      }
+    }
 
     return matchesSearch && matchesCategory && matchesType && matchesPrice;
   }) || [];
@@ -174,7 +191,7 @@ const Explore = () => {
                     setSearchTerm('');
                     setSelectedCategory('all');
                     setSelectedType('all');
-                    setPriceRange([0, 1000]);
+                    setPriceRange('all');
                   }}
                 >
                   Clear Filters
