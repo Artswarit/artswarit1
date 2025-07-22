@@ -1,267 +1,235 @@
 
-import { useState, useEffect } from 'react';
-import { Search, Filter, Grid, List, TrendingUp, Calendar, Star } from 'lucide-react';
+import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import { useArtworks } from '@/hooks/useArtworks';
+import ExploreFilters from '@/components/explore/ExploreFilters';
+import ArtworkCard from '@/components/artwork/ArtworkCard';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import ArtworkCard from '@/components/artwork/ArtworkCard';
-import ExploreFilters from '@/components/explore/ExploreFilters';
-import TopFilters from '@/components/explore/TopFilters';
-import { useArtworks } from '@/hooks/useArtworks';
+import { Search, Filter, Grid, List, TrendingUp, Clock, Heart } from 'lucide-react';
 
 const Explore = () => {
-  const { artworks, loading, error, fetchArtworks } = useArtworks();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedType, setSelectedType] = useState('all');
-  const [priceRange, setPriceRange] = useState('all');
-  const [sortBy, setSortBy] = useState('recent');
-  const [viewMode, setViewMode] = useState('grid');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [sortBy, setSortBy] = useState('trending');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
+  
+  const { data: artworks = [], isLoading } = useArtworks();
 
   const categories = [
-    'all', 'Digital Art', 'Photography', 'Painting', 'Illustration', 
-    'Sculpture', 'Mixed Media', 'Abstract', 'Portrait', 'Landscape', 
-    'Street Art', 'Music', 'Audio', 'Video', 'Film', 'Writing', 
-    'Literature', 'Poetry'
+    'All',
+    'Digital Art',
+    'Photography', 
+    'Illustration',
+    'Graphic Design',
+    'Painting',
+    'Sculpture',
+    'Animation'
   ];
 
-  const types = ['all', 'image', 'video', 'music', 'text'];
+  const sortOptions = [
+    { value: 'trending', label: 'Trending', icon: TrendingUp },
+    { value: 'newest', label: 'Newest', icon: Clock },
+    { value: 'popular', label: 'Most Liked', icon: Heart }
+  ];
 
   const filteredArtworks = artworks.filter(artwork => {
-    const artistName = artwork.artist || artwork.profiles?.full_name || '';
-    const matchesSearch = artwork.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         artistName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         artwork.category?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesCategory = selectedCategory === 'all' || artwork.category === selectedCategory;
-    const artworkType = artwork.type || artwork.category?.toLowerCase() || 'image';
-    const matchesType = selectedType === 'all' || artworkType === selectedType;
-    
-    let matchesPrice = true;
-    if (priceRange !== 'all') {
-      const price = artwork.price || 0;
-      switch (priceRange) {
-        case 'free':
-          matchesPrice = price === 0;
-          break;
-        case 'under50':
-          matchesPrice = price > 0 && price < 50;
-          break;
-        case 'under100':
-          matchesPrice = price >= 50 && price < 100;
-          break;
-        case 'over100':
-          matchesPrice = price >= 100;
-          break;
-      }
-    }
-    
-    return matchesSearch && matchesCategory && matchesType && matchesPrice;
+    const matchesSearch = artwork.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         artwork.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = !selectedCategory || selectedCategory === 'All' || 
+                           artwork.category === selectedCategory;
+    return matchesSearch && matchesCategory;
   });
-
-  const sortedArtworks = [...filteredArtworks].sort((a, b) => {
-    switch (sortBy) {
-      case 'popular':
-        return (b.likes_count || 0) - (a.likes_count || 0);
-      case 'views':
-        return (b.views_count || 0) - (a.views_count || 0);
-      case 'price-low':
-        return (a.price || 0) - (b.price || 0);
-      case 'price-high':
-        return (b.price || 0) - (a.price || 0);
-      case 'recent':
-      default:
-        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
-    }
-  });
-
-  useEffect(() => {
-    fetchArtworks();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {[...Array(8)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <div className="aspect-square bg-gray-200 rounded-t-lg"></div>
-              <CardContent className="p-4">
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <p className="text-red-500 mb-4">Error loading artworks: {error}</p>
-          <Button onClick={fetchArtworks}>Try Again</Button>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar Filters */}
-          <div className={`lg:w-80 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-            <ExploreFilters
-              categories={categories}
-              types={types}
-              selectedCategory={selectedCategory}
-              setSelectedCategory={setSelectedCategory}
-              selectedType={selectedType}
-              setSelectedType={setSelectedType}
-              priceRange={priceRange}
-              setPriceRange={setPriceRange}
-            />
-          </div>
+      
+      <main className="pt-20 pb-16">
+        {/* Header Section */}
+        <div className="bg-white/50 backdrop-blur-sm border-b border-gray-200 py-8">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-8">
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                Explore Artworks
+              </h1>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                Discover amazing artworks from talented artists around the world
+              </p>
+            </div>
 
-          {/* Main Content */}
-          <div className="flex-1">
-            {/* Top Bar */}
-            <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-              <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-                <div className="flex-1 max-w-md">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      placeholder="Search artworks, artists, or tags..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10"
-                    />
+            {/* Search and Filters */}
+            <div className="max-w-4xl mx-auto space-y-6">
+              {/* Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Search artworks, artists, or styles..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-12 pr-4 py-3 text-lg border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Category Filters */}
+              <div className="flex flex-wrap gap-2 justify-center">
+                {categories.map((category) => (
+                  <Button
+                    key={category}
+                    variant={selectedCategory === category || (category === 'All' && !selectedCategory) ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedCategory(category === 'All' ? '' : category)}
+                    className="rounded-full px-4 py-2"
+                  >
+                    {category}
+                  </Button>
+                ))}
+              </div>
+
+              {/* Sort and View Options */}
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="flex items-center gap-2"
+                  >
+                    <Filter className="h-4 w-4" />
+                    Filters
+                  </Button>
+                  
+                  <div className="flex items-center gap-2">
+                    {sortOptions.map((option) => (
+                      <Button
+                        key={option.value}
+                        variant={sortBy === option.value ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setSortBy(option.value)}
+                        className="flex items-center gap-2"
+                      >
+                        <option.icon className="h-4 w-4" />
+                        {option.label}
+                      </Button>
+                    ))}
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <Button
-                    variant="outline"
+                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
                     size="sm"
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="lg:hidden"
+                    onClick={() => setViewMode('grid')}
                   >
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filters
+                    <Grid className="h-4 w-4" />
                   </Button>
-
-                  <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="w-40">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="recent">Most Recent</SelectItem>
-                      <SelectItem value="popular">Most Popular</SelectItem>
-                      <SelectItem value="views">Most Viewed</SelectItem>
-                      <SelectItem value="price-low">Price: Low to High</SelectItem>
-                      <SelectItem value="price-high">Price: High to Low</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <div className="flex border rounded-lg overflow-hidden">
-                    <Button
-                      variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setViewMode('grid')}
-                      className="rounded-none"
-                    >
-                      <Grid className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant={viewMode === 'list' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setViewMode('list')}
-                      className="rounded-none"
-                    >
-                      <List className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <Button
+                    variant={viewMode === 'list' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-
-              <TopFilters
-                categories={categories}
-                selectedCategory={selectedCategory}
-                setSelectedCategory={setSelectedCategory}
-              />
             </div>
+          </div>
+        </div>
 
-            {/* Results */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">
-                  {sortedArtworks.length} artworks found
-                </h2>
-                {searchQuery && (
-                  <Badge variant="secondary" className="text-sm">
-                    Search: "{searchQuery}"
-                  </Badge>
-                )}
-              </div>
+        {/* Filters Panel */}
+        {showFilters && (
+          <div className="bg-white border-b border-gray-200 py-6">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+              <ExploreFilters />
+            </div>
+          </div>
+        )}
 
-              {sortedArtworks.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="text-gray-400 mb-4">
-                    <Search className="h-16 w-16 mx-auto mb-4" />
-                    <p className="text-lg">No artworks found</p>
-                    <p className="text-sm">Try adjusting your search or filters</p>
-                  </div>
-                  <Button
+        {/* Results Section */}
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Results Header */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">
+                {filteredArtworks.length} Artworks Found
+              </h2>
+              {searchQuery && (
+                <p className="text-gray-600 mt-1">
+                  Results for "{searchQuery}"
+                </p>
+              )}
+            </div>
+            
+            {selectedCategory && (
+              <Badge variant="secondary" className="text-sm">
+                Category: {selectedCategory}
+              </Badge>
+            )}
+          </div>
+
+          {/* Loading State */}
+          {isLoading && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Card key={i} className="animate-pulse">
+                  <div className="aspect-square bg-gray-200 rounded-t-lg"></div>
+                  <CardContent className="p-4 space-y-2">
+                    <div className="h-4 bg-gray-200 rounded"></div>
+                    <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Artworks Grid/List */}
+          {!isLoading && (
+            <>
+              {filteredArtworks.length > 0 ? (
+                <div className={
+                  viewMode === 'grid' 
+                    ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                    : "space-y-6"
+                }>
+                  {filteredArtworks.map((artwork) => (
+                    <ArtworkCard 
+                      key={artwork.id} 
+                      artwork={artwork}
+                      variant={viewMode}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-16">
+                  <div className="text-6xl mb-4">🎨</div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                    No artworks found
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    Try adjusting your search criteria or browse different categories
+                  </p>
+                  <Button 
                     onClick={() => {
                       setSearchQuery('');
-                      setSelectedCategory('all');
-                      setSelectedType('all');
-                      setPriceRange('all');
+                      setSelectedCategory('');
                     }}
                     variant="outline"
                   >
                     Clear Filters
                   </Button>
                 </div>
-              ) : (
-                <div className={
-                  viewMode === 'grid' 
-                    ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
-                    : 'space-y-4'
-                }>
-                  {sortedArtworks.map((artwork) => (
-                    <ArtworkCard
-                      key={artwork.id}
-                      id={artwork.id}
-                      title={artwork.title}
-                      artist={artwork.artist || artwork.profiles?.full_name || 'Unknown Artist'}
-                      artistId={artwork.artist_id}
-                      type={artwork.type || artwork.category?.toLowerCase() || 'image'}
-                      imageUrl={artwork.image_url}
-                      likes={artwork.likes_count || 0}
-                      views={artwork.views_count || 0}
-                      price={artwork.price}
-                      category={artwork.category}
-                      audioUrl={artwork.audioUrl}
-                      videoUrl={artwork.videoUrl}
-                    />
-                  ))}
-                </div>
               )}
-            </div>
-          </div>
+            </>
+          )}
         </div>
-      </div>
+      </main>
+
+      <Footer />
     </div>
   );
 };
