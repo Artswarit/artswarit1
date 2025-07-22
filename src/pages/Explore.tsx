@@ -220,13 +220,14 @@ const Explore = () => {
                       key={artwork.id} 
                       id={artwork.id}
                       title={artwork.title}
-                      imageUrl={artwork.image_url || artwork.imageUrl || ''}
                       artist={artwork.artist || 'Unknown Artist'}
+                      artistId={artwork.artist_id}
+                      type={artwork.type || 'image'}
+                      imageUrl={artwork.image_url || artwork.imageUrl || ''}
                       likes={artwork.likes_count || artwork.likes || 0}
-                      category={artwork.category}
+                      views={artwork.views_count || artwork.views || 0}
                       price={artwork.price}
-                      isForSale={artwork.is_for_sale}
-                      variant={viewMode}
+                      category={artwork.category}
                     />
                   ))}
                 </div>
