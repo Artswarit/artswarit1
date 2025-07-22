@@ -16,6 +16,7 @@ import ArtworkDetails from '@/pages/ArtworkDetails';
 import Login from '@/pages/Login';
 import Signup from '@/pages/Signup';
 import BackendTest from "@/pages/BackendTest";
+import TrendingPage from "@/pages/TrendingPage";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ function App() {
               <Route path="/explore" element={<Explore />} />
               <Route path="/artists" element={<ExploreArtists />} />
               <Route path="/explore-artists" element={<ExploreArtists />} />
+              <Route path="/trending" element={<TrendingPage />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/artist-dashboard" element={<ArtistDashboard />} />
