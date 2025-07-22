@@ -1,43 +1,41 @@
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
-/**
- * Returns { isAdmin, loading } for the currently logged-in user.
- */
-export function useIsAdmin() {
+export const useIsAdmin = () => {
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let active = true;
-    if (!user) {
-      setIsAdmin(false);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (!active) return;
+    const checkAdminStatus = async () => {
+      if (!user?.id) {
+        setIsAdmin(false);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .rpc('is_admin', { _user_id: user.id });
+
         if (error) {
+          console.error('Error checking admin status:', error);
           setIsAdmin(false);
         } else {
-          setIsAdmin(data?.role === "admin");
+          setIsAdmin(data || false);
         }
+      } catch (error) {
+        console.error('Error in checkAdminStatus:', error);
+        setIsAdmin(false);
+      } finally {
         setLoading(false);
-      });
-    return () => {
-      active = false;
+      }
     };
-    // only rerun when user changes
+
+    checkAdminStatus();
   }, [user]);
+
   return { isAdmin, loading };
-}
+};

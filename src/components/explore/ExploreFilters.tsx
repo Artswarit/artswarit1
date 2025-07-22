@@ -1,13 +1,9 @@
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Slider } from '@/components/ui/slider';
-import { Separator } from '@/components/ui/separator';
-import { X, Search, Filter } from 'lucide-react';
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 interface ExploreFiltersProps {
   categories: string[];
   types: string[];
@@ -18,6 +14,7 @@ interface ExploreFiltersProps {
   priceRange: string;
   setPriceRange: (range: string) => void;
 }
+
 const ExploreFilters = ({
   categories,
   types,
@@ -28,75 +25,52 @@ const ExploreFilters = ({
   priceRange,
   setPriceRange
 }: ExploreFiltersProps) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [priceSlider, setPriceSlider] = useState([0, 1000]);
-  const popularTags = ['Digital Art', 'Photography', 'Painting', 'Abstract', 'Portrait', 'Landscape', 'Street Art', 'Contemporary', 'Minimalist', 'Colorful'];
-  const filteredCategories = categories.filter(cat => cat.toLowerCase().includes(searchTerm.toLowerCase()));
-  const handleTagToggle = (tag: string) => {
-    setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
-  };
-  const clearFilters = () => {
-    setSelectedCategory('all');
-    setSelectedType('all');
-    setPriceRange('all');
-    setSelectedTags([]);
-    setPriceSlider([0, 1000]);
-    setSearchTerm('');
-  };
-  return <Card className="sticky top-4">
-      <CardHeader className="my-[10px]">
-        <CardTitle className="flex items-center gap-2">
-          <Filter className="h-5 w-5" />
-          Filters
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Search */}
-        <div className="space-y-2">
-          <Label>Search Categories</Label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
-          </div>
-        </div>
-
-        {/* Category Filter */}
-        <div className="space-y-2">
-          <Label>Category</Label>
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {filteredCategories.map(category => <SelectItem key={category} value={category}>
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">Categories</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <RadioGroup value={selectedCategory} onValueChange={setSelectedCategory}>
+            {categories.map((category) => (
+              <div key={category} className="flex items-center space-x-2">
+                <RadioGroupItem value={category} id={category} />
+                <Label htmlFor={category} className="text-sm capitalize">
                   {category === 'all' ? 'All Categories' : category}
-                </SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </CardContent>
+      </Card>
 
-        {/* Type Filter */}
-        <div className="space-y-2">
-          <Label>Type</Label>
-          <Select value={selectedType} onValueChange={setSelectedType}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {types.map(type => <SelectItem key={type} value={type}>
-                  {type === 'all' ? 'All Types' : type.charAt(0).toUpperCase() + type.slice(1)}
-                </SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">Content Type</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <RadioGroup value={selectedType} onValueChange={setSelectedType}>
+            {types.map((type) => (
+              <div key={type} className="flex items-center space-x-2">
+                <RadioGroupItem value={type} id={type} />
+                <Label htmlFor={type} className="text-sm capitalize">
+                  {type === 'all' ? 'All Types' : type}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </CardContent>
+      </Card>
 
-        {/* Price Range */}
-        <div className="space-y-2">
-          <Label>Price Range</Label>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">Price Range</CardTitle>
+        </CardHeader>
+        <CardContent>
           <Select value={priceRange} onValueChange={setPriceRange}>
             <SelectTrigger>
-              <SelectValue />
+              <SelectValue placeholder="Select price range" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Prices</SelectItem>
@@ -106,32 +80,10 @@ const ExploreFilters = ({
               <SelectItem value="over100">Over $100</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-
-        {/* Price Slider */}
-        <div className="space-y-2">
-          <Label>Price Range: ${priceSlider[0]} - ${priceSlider[1]}</Label>
-          <Slider value={priceSlider} onValueChange={setPriceSlider} max={1000} step={10} className="w-full" />
-        </div>
-
-        {/* Popular Tags */}
-        <div className="space-y-2">
-          <Label>Popular Tags</Label>
-          <div className="flex flex-wrap gap-2">
-            {popularTags.map(tag => <Badge key={tag} variant={selectedTags.includes(tag) ? 'default' : 'outline'} className="cursor-pointer" onClick={() => handleTagToggle(tag)}>
-                {tag}
-                {selectedTags.includes(tag) && <X className="ml-1 h-3 w-3" />}
-              </Badge>)}
-          </div>
-        </div>
-
-        <Separator />
-
-        {/* Clear Filters */}
-        <Button variant="outline" onClick={clearFilters} className="w-full">
-          Clear All Filters
-        </Button>
-      </CardContent>
-    </Card>;
+        </CardContent>
+      </Card>
+    </div>
+  );
 };
+
 export default ExploreFilters;

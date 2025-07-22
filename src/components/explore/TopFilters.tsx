@@ -1,7 +1,6 @@
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TopFiltersProps {
   categories: string[];
@@ -9,30 +8,27 @@ interface TopFiltersProps {
   setSelectedCategory: (category: string) => void;
 }
 
-const TopFilters = ({ categories, selectedCategory, setSelectedCategory }: TopFiltersProps) => {
-  const quickFilters = categories.slice(0, 8); // Show first 8 categories
-
+const TopFilters = ({
+  categories,
+  selectedCategory,
+  setSelectedCategory
+}: TopFiltersProps) => {
   return (
-    <div className="flex flex-wrap gap-2 mt-4">
-      {quickFilters.map(category => (
-        <Badge
-          key={category}
-          variant={selectedCategory === category ? 'default' : 'outline'}
-          className="cursor-pointer hover:bg-primary/10 transition-colors"
-          onClick={() => setSelectedCategory(category)}
-        >
-          {category === 'all' ? 'All' : category}
-          {selectedCategory === category && selectedCategory !== 'all' && (
-            <X 
-              className="ml-1 h-3 w-3" 
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedCategory('all');
-              }}
-            />
-          )}
-        </Badge>
-      ))}
+    <div className="mt-4">
+      <ScrollArea className="w-full whitespace-nowrap">
+        <div className="flex space-x-2 pb-4">
+          {categories.slice(0, 8).map((category) => (
+            <Badge
+              key={category}
+              variant={selectedCategory === category ? "default" : "outline"}
+              className="cursor-pointer px-3 py-1 text-xs whitespace-nowrap"
+              onClick={() => setSelectedCategory(category)}
+            >
+              {category === 'all' ? 'All' : category}
+            </Badge>
+          ))}
+        </div>
+      </ScrollArea>
     </div>
   );
 };

@@ -1,6 +1,7 @@
 
-import { memo, useState, useCallback } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, X } from "lucide-react";
@@ -12,66 +13,72 @@ interface TagManagerProps {
   onAddTag: (tag: string) => void;
   onRemoveTag: (tag: string) => void;
   isEditing: boolean;
-  colorClass?: string;
+  colorClass: string;
 }
 
-const TagManager = memo(({ title, description, tags, onAddTag, onRemoveTag, isEditing, colorClass = "bg-primary/10 text-primary" }: TagManagerProps) => {
-  const [newTag, setNewTag] = useState("");
+const TagManager = ({
+  title,
+  description,
+  tags,
+  onAddTag,
+  onRemoveTag,
+  isEditing,
+  colorClass
+}: TagManagerProps) => {
+  const [newTag, setNewTag] = useState('');
 
-  const handleAddTag = useCallback(() => {
-    if (newTag.trim() !== "") {
+  const handleAddTag = () => {
+    if (newTag.trim() && !tags.includes(newTag.trim())) {
       onAddTag(newTag.trim());
-      setNewTag("");
+      setNewTag('');
     }
-  }, [newTag, onAddTag]);
+  };
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
       handleAddTag();
     }
-  }, [handleAddTag]);
-
-  const handleRemoveTag = useCallback((tag: string) => {
-    onRemoveTag(tag);
-  }, [onRemoveTag]);
+  };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+        <p className="text-sm text-muted-foreground">{description}</p>
       </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap gap-2 mb-4">
+      <CardContent className="space-y-4">
+        <div className="flex flex-wrap gap-2">
           {tags.map((tag) => (
-            <div 
-              key={tag} 
-              className={`${colorClass} px-3 py-1 rounded-full text-sm flex items-center gap-1`}
+            <Badge
+              key={tag}
+              variant="secondary"
+              className={`${colorClass} ${isEditing ? 'pr-1' : ''}`}
             >
-              <span>{tag}</span>
+              {tag}
               {isEditing && (
-                <button 
-                  onClick={() => handleRemoveTag(tag)} 
-                  className="hover:text-red-500"
-                  type="button"
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-4 w-4 p-0 ml-1 hover:bg-transparent"
+                  onClick={() => onRemoveTag(tag)}
                 >
                   <X className="h-3 w-3" />
-                </button>
+                </Button>
               )}
-            </div>
+            </Badge>
           ))}
         </div>
 
         {isEditing && (
-          <div className="flex gap-2">
+          <div className="flex space-x-2">
             <Input
               value={newTag}
               onChange={(e) => setNewTag(e.target.value)}
-              placeholder="Add a tag"
-              onKeyDown={handleKeyDown}
+              onKeyPress={handleKeyPress}
+              placeholder="Add a tag..."
+              className="flex-1"
             />
-            <Button type="button" onClick={handleAddTag}>
+            <Button onClick={handleAddTag} size="sm">
               <Plus className="h-4 w-4" />
             </Button>
           </div>
@@ -79,8 +86,6 @@ const TagManager = memo(({ title, description, tags, onAddTag, onRemoveTag, isEd
       </CardContent>
     </Card>
   );
-});
-
-TagManager.displayName = "TagManager";
+};
 
 export default TagManager;
