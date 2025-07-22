@@ -74,14 +74,8 @@ export const useProfile = () => {
           .insert([{
             id: user.id,
             email: user.email || '',
-            full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+            full_name: user.user_metadata?.full_name || null,
             role: user.user_metadata?.role || 'client',
-            bio: null,
-            location: null,
-            website: null,
-            social_links: {},
-            is_verified: false,
-            account_status: 'active'
           }])
           .select()
           .single();
@@ -92,7 +86,6 @@ export const useProfile = () => {
           return;
         }
 
-        console.log('Created new profile:', newProfile);
         setProfile(newProfile);
       } else {
         console.log('Profile data:', data);
@@ -161,12 +154,6 @@ export const useProfile = () => {
   const getProfile = async (userId: string) => {
     try {
       console.log('Fetching profile for user:', userId);
-
-      // First check if it's a real UUID, if not, try to find by a different method
-      if (!userId || userId.length < 10) {
-        console.log('Invalid user ID provided:', userId);
-        return null;
-      }
 
       const { data, error: fetchError } = await supabase
         .from('profiles')

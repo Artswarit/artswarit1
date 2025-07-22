@@ -49,8 +49,6 @@ export default function ArtworkDetails() {
     );
   }
 
-  const artworkType = artwork.type || artwork.category?.toLowerCase() || 'image';
-
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
       <Navbar />
@@ -58,21 +56,21 @@ export default function ArtworkDetails() {
         <div className="max-w-2xl w-full mx-auto">
           <GlassCard className="w-full p-6 md:p-10">
             <div className="mb-4 flex items-center gap-3">
-              {artworkType === "image" && <Image className="text-blue-500" />}
-              {(artworkType === "audio" || artworkType === "music") && <FileAudio className="text-green-600" />}
-              {artworkType === "video" && <FileVideo className="text-red-600" />}
+              {artwork.type === "image" && <Image className="text-blue-500" />}
+              {(artwork.type === "audio" || artwork.type === "music") && <FileAudio className="text-green-600" />}
+              {artwork.type === "video" && <FileVideo className="text-red-600" />}
               <h1 className="font-heading text-2xl md:text-3xl font-bold text-gray-900">{artwork.title}</h1>
             </div>
             <div className="mb-8 rounded overflow-hidden">
-              <img src={artwork.image_url} alt={artwork.title} className="w-full object-cover rounded-lg" />
+              <img src={artwork.imageUrl} alt={artwork.title} className="w-full object-cover rounded-lg" />
             </div>
-            {(artworkType === "audio" || artworkType === "music") && artwork.audioUrl && (
+            {(artwork.type === "audio" || artwork.type === "music") && artwork.audioUrl && (
               <audio controls className="mb-4 w-full">
                 <source src={artwork.audioUrl} type="audio/mpeg" />
                 Your browser does not support the audio tag.
               </audio>
             )}
-            {artworkType === "video" && artwork.videoUrl && (
+            {artwork.type === "video" && artwork.videoUrl && (
               <video controls className="mb-4 w-full rounded-lg">
                 <source src={artwork.videoUrl} type="video/mp4" />
                 Your browser does not support the video tag.
@@ -80,15 +78,15 @@ export default function ArtworkDetails() {
             )}
             <div className="mb-6">
               <span className="text-muted-foreground text-sm">by </span>
-              <Link to={`/artist/${artwork.artist_id}`} className="text-blue-700 hover:underline font-medium">
-                {artwork.artist || artwork.profiles?.full_name || 'Unknown Artist'}
+              <Link to={`/artist/${artwork.artistId}`} className="text-blue-700 hover:underline font-medium">
+                {artwork.artist}
               </Link>
             </div>
             <div className="flex items-center justify-between mt-6">
               <SocialShareButtons
                 url={window.location.href}
                 title={artwork.title}
-                imageUrl={artwork.image_url}
+                imageUrl={artwork.imageUrl}
               />
               <Button asChild>
                 <Link to="/explore">Back to Explore</Link>

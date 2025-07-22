@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
 import { X, Search, Filter } from 'lucide-react';
 
@@ -32,6 +33,7 @@ const ExploreFilters = ({
 }: ExploreFiltersProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [priceSlider, setPriceSlider] = useState([0, 1000]);
 
   const popularTags = [
     'Digital Art', 'Photography', 'Painting', 'Abstract', 'Portrait',
@@ -55,6 +57,7 @@ const ExploreFilters = ({
     setSelectedType('all');
     setPriceRange('all');
     setSelectedTags([]);
+    setPriceSlider([0, 1000]);
     setSearchTerm('');
   };
 
@@ -130,6 +133,18 @@ const ExploreFilters = ({
               <SelectItem value="over100">Over $100</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Price Slider */}
+        <div className="space-y-2">
+          <Label>Price Range: ${priceSlider[0]} - ${priceSlider[1]}</Label>
+          <Slider
+            value={priceSlider}
+            onValueChange={setPriceSlider}
+            max={1000}
+            step={10}
+            className="w-full"
+          />
         </div>
 
         {/* Popular Tags */}

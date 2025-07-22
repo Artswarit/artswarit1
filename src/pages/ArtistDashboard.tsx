@@ -17,9 +17,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Palette, User, DollarSign, MessageSquare, Settings, Crown, Bell, Briefcase } from 'lucide-react';
 import ProjectManagement from '@/components/dashboard/projects/ProjectManagement';
 import ArtistNotifications from '@/components/dashboard/ArtistNotifications';
+import UniversalChatbot from '@/components/UniversalChatbot';
 
 const ArtistDashboard = () => {
-  const { tab } = useParams<{ tab?: string }>();
+  const { tab } = useParams();
   const { user } = useAuth();
   const { profile, loading: profileLoading, error: profileError } = useProfile();
 
@@ -130,6 +131,7 @@ const ArtistDashboard = () => {
           </Tabs>
         </main>
         <Footer />
+        <UniversalChatbot />
       </div>
     </ProtectedRoute>
   );

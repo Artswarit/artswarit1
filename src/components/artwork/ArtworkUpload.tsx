@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -161,7 +162,6 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
       const result = await uploadArtwork({
         title: formData.title,
         description: formData.description,
-        image_url: 'https://via.placeholder.com/800x600', // Placeholder - should be actual upload URL
         category: formData.category,
         tags: tagsArray,
         price: formData.price ? parseFloat(formData.price) : undefined,
