@@ -13,6 +13,7 @@ interface AuthContextType {
   signOut: () => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
   refreshSession: () => Promise<void>;
+  resendVerification: (email: string) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,14 +41,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
         
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('User signed in:', session.user.email);
-          toast({
-            title: "Welcome!",
-            description: "You've successfully signed in.",
-          });
+          
+          // Check if user needs email verification
+          if (!session.user.email_confirmed_at) {
+            toast({
+              title: "Email verification required",
+              description: "Please check your email and click the verification link.",
+              variant: "destructive"
+            });
+          } else {
+            toast({
+              title: "Welcome back!",
+              description: "You've successfully signed in.",
+            });
+          }
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');
           toast({
@@ -56,7 +66,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
         } else if (event === 'TOKEN_REFRESHED') {
           console.log('Token refreshed');
+        } else if (event === 'USER_UPDATED') {
+          console.log('User updated');
+          if (session?.user?.email_confirmed_at) {
+            toast({
+              title: "Email verified!",
+              description: "Your email has been successfully verified.",
+            });
+          }
         }
+        
+        setLoading(false);
       }
     );
 
@@ -187,6 +207,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       console.log('Signin successful:', data.user?.email);
+      
+      // Check if email is verified
+      if (data.user && !data.user.email_confirmed_at) {
+        toast({
+          title: "Email verification required",
+          description: "Please verify your email before accessing your account.",
+          variant: "destructive"
+        });
+        return { error: { message: 'Email not verified' } };
+      }
+      
       return { error: null };
     } catch (error: any) {
       console.error('Signin error:', error);
@@ -270,6 +301,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const resendVerification = async (email: string) => {
+    try {
+      console.log('Resending verification email to:', email);
+      
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
+
+      if (error) {
+        console.error('Resend verification error:', error);
+        toast({
+          title: "Failed to resend verification",
+          description: error.message,
+          variant: "destructive"
+        });
+        return { error };
+      }
+
+      toast({
+        title: "Verification email sent",
+        description: "Please check your email for the verification link.",
+      });
+      
+      return { error: null };
+    } catch (error: any) {
+      console.error('Resend verification error:', error);
+      toast({
+        title: "Failed to resend verification",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
+      return { error };
+    }
+  };
+
   const value = {
     user,
     session,
@@ -278,7 +348,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signOut,
     signInWithGoogle,
-    refreshSession
+    refreshSession,
+    resendVerification
   };
 
   return (

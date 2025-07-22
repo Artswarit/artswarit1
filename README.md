@@ -1,239 +1,303 @@
 
-# Artswarit - Full-Stack Art Platform
+# Artswarit - Digital Art Platform
 
-Artswarit is a comprehensive platform connecting artists with clients, featuring artwork uploads, commissions, messaging, and premium memberships.
+Artswarit is a comprehensive digital art platform that connects artists with clients, featuring artwork showcasing, commission management, and community engagement features.
 
 ## 🚀 Features
 
 ### Authentication & User Management
-- **Email/Password Authentication** - Secure user registration and login
-- **Google OAuth Integration** - Quick social login option
-- **Role-based Access Control** - Artist, Client, Admin, and Premium roles
-- **Profile Management** - Complete user profile system with avatars and portfolios
+- **Email/Password Authentication**: Secure user registration and login
+- **Email Verification**: Mandatory email verification for account activation
+- **Google OAuth**: Social login integration
+- **Role-based Access**: Artist, Client, and Admin roles
+- **Profile Management**: Comprehensive user profiles with portfolio support
 
-### Content Management
-- **Artwork Upload System** - Support for images, videos, and audio files
-- **Storage Integration** - Secure file storage with Supabase Storage
-- **Category System** - Organized artwork categorization
-- **Search & Filtering** - Advanced artwork discovery features
+### Artist Features
+- **Portfolio Management**: Upload and manage artwork collections
+- **Commission System**: Accept and manage client commissions
+- **Earnings Dashboard**: Track revenue and payment history
+- **Profile Approval System**: Admin moderation for artist profiles
+- **AI Content Detection**: Automated content verification
 
-### Social Features
-- **Like/Unlike System** - Engagement tracking for artworks
-- **Following System** - Users can follow their favorite artists
-- **Feedback System** - Comments and ratings on artworks
-- **Artist Profiles** - Public profile pages with portfolio display
+### Client Features
+- **Art Discovery**: Browse and search artwork collections
+- **Artist Following**: Follow favorite artists
+- **Commission Requests**: Request custom artwork from artists
+- **Saved Collections**: Bookmark favorite artworks and artists
 
-### Business Features
-- **Commission Management** - Project tracking and management
-- **Messaging System** - Direct communication between artists and clients
-- **Premium Memberships** - Subscription-based premium features
-- **Payment Integration** - Ready for Stripe integration
-- **Admin Dashboard** - Content moderation and platform management
+### Admin Features
+- **User Management**: Approve/reject artist profiles
+- **Content Moderation**: Review and approve artwork submissions
+- **Platform Analytics**: Monitor platform usage and engagement
 
 ## 🛠 Tech Stack
 
 ### Frontend
-- **React 18** - Modern React with hooks and functional components
-- **TypeScript** - Type-safe development
-- **Tailwind CSS** - Utility-first CSS framework
-- **Vite** - Fast build tool and dev server
-- **React Router** - Client-side routing
-- **Radix UI** - Accessible component primitives
+- **React 18** with TypeScript
+- **Vite** for build tooling
+- **Tailwind CSS** for styling
+- **React Router** for navigation
+- **React Query** for data fetching
+- **Radix UI** for component primitives
 
 ### Backend & Database
-- **Supabase** - Backend-as-a-Service platform
-- **PostgreSQL** - Robust relational database
-- **Row Level Security (RLS)** - Database-level security policies
-- **Real-time Subscriptions** - Live updates for messaging and notifications
+- **Supabase** for backend services
+- **PostgreSQL** database
+- **Row Level Security (RLS)** for data protection
+- **Supabase Auth** for authentication
+- **Supabase Storage** for file uploads
 
-### Storage & Media
-- **Supabase Storage** - File upload and management
-- **Image Optimization** - Automatic image processing
-- **CDN Delivery** - Fast media delivery worldwide
-
-## 📦 Installation & Setup
+## 🔧 Installation & Setup
 
 ### Prerequisites
 - Node.js 18+ 
 - npm or yarn package manager
-- Supabase account
 
-### 1. Clone the Repository
+### Environment Setup
+
+1. **Clone the repository**
 ```bash
 git clone https://github.com/your-username/artswarit.git
 cd artswarit
 ```
 
-### 2. Install Dependencies
+2. **Install dependencies**
 ```bash
 npm install
 ```
 
-### 3. Environment Setup
-The Supabase configuration is already set up in `src/integrations/supabase/client.ts`. The project is connected to:
-- **Project URL**: `https://sqdzemlcqesgjsybbhte.supabase.co`
-- **Anon Key**: Pre-configured for development
+3. **Configure Supabase**
+- Create a new Supabase project at [supabase.com](https://supabase.com)
+- Copy your project URL and anon key from the project settings
+- The Supabase configuration is already set in `src/integrations/supabase/client.ts`
 
-### 4. Database Schema
-The database is already configured with the following tables:
-- `profiles` - User profile information
-- `artworks` - Artwork metadata and references
-- `artwork_likes` - Like/unlike relationships
-- `artwork_feedback` - Comments and ratings
-- `follows` - User following relationships
-- `projects` - Commission projects
-- `conversations` - Messaging conversations
-- `messages` - Individual messages
-- `notifications` - User notifications
-- `subscribers` - Premium membership data
-- `transactions` - Payment and earning records
-
-### 5. Start Development Server
+4. **Run the development server**
 ```bash
 npm run dev
 ```
 
-The application will be available at `http://localhost:5173`
+## 📊 Database Schema
+
+The platform uses the following main database tables:
+
+### Core Tables
+- **profiles**: User profile information and metadata
+- **artworks**: Artist portfolio pieces and submissions
+- **projects**: Commission projects between artists and clients
+- **transactions**: Payment and financial records
+
+### Engagement Tables
+- **artwork_likes**: User likes on artworks
+- **artwork_feedback**: Comments and reviews
+- **follows**: Artist-client follow relationships
+- **saved_artists**: Client bookmarks of artists
+
+### Communication
+- **conversations**: Chat threads between users
+- **messages**: Individual chat messages
+- **notifications**: System and user notifications
+
+## 🔐 Authentication Flow
+
+### Sign Up Process
+1. User fills registration form (email, password, role)
+2. System sends verification email via Supabase Auth
+3. User clicks verification link to activate account
+4. Artist accounts require admin approval before full access
+5. Approved users can access their respective dashboards
+
+### Sign In Process
+1. User enters email and password
+2. System validates credentials via Supabase Auth
+3. Email verification status is checked
+4. Role-based redirect to appropriate dashboard
+
+### Protected Routes
+- Authentication required for all dashboard pages
+- Role-based access control (artists vs clients vs admins)
+- Email verification requirement for platform access
+
+## 🎨 Artist Workflow
+
+### Getting Started
+1. **Sign up** with artist role
+2. **Verify email** via confirmation link
+3. **Complete profile** with bio, portfolio, and contact info
+4. **Wait for admin approval** (24-48 hours)
+5. **Access artist dashboard** after approval
+
+### Managing Artwork
+- Upload artwork with titles, descriptions, and tags
+- Set pricing and availability
+- Track views, likes, and engagement
+- Manage featured and pinned content
+
+### Commission Management
+- Receive commission requests from clients
+- Set project timelines and pricing
+- Communicate with clients via built-in messaging
+- Track project progress and payments
+
+## 👥 Client Workflow
+
+### Discovering Art
+- Browse featured artwork on homepage
+- Search by categories, tags, and artists
+- Filter by price, style, and availability
+- View detailed artwork pages with artist info
+
+### Engaging with Artists
+- Follow favorite artists for updates
+- Like and comment on artwork
+- Save artists and artworks to collections
+- Request custom commissions
 
 ## 🔧 API Integration
 
 ### Authentication API
-All authentication is handled through Supabase Auth:
-
 ```typescript
-import { useAuth } from '@/contexts/AuthContext';
+// Sign up
+const { error } = await supabase.auth.signUp({
+  email,
+  password,
+  options: { emailRedirectTo: redirectUrl, data: userData }
+});
 
-const { signUp, signIn, signOut, user, loading } = useAuth();
-
-// Sign up a new user
-await signUp(email, password, { full_name: name, role: 'artist' });
-
-// Sign in existing user
-await signIn(email, password);
+// Sign in
+const { error } = await supabase.auth.signInWithPassword({
+  email,
+  password
+});
 
 // Sign out
-await signOut();
+const { error } = await supabase.auth.signOut();
 ```
 
-### Database Operations
-Database operations use Supabase client with automatic RLS:
-
+### Profile Management
 ```typescript
-import { supabase } from '@/integrations/supabase/client';
+// Get user profile
+const { data: profile } = await supabase
+  .from('profiles')
+  .select('*')
+  .eq('id', userId)
+  .single();
 
-// Fetch artworks
-const { data, error } = await supabase
-  .from('artworks')
-  .select('*, profiles(full_name)')
-  .eq('approval_status', 'approved');
+// Update profile
+const { error } = await supabase
+  .from('profiles')
+  .update(updates)
+  .eq('id', userId);
+```
 
+### Artwork Management
+```typescript
 // Upload artwork
 const { data, error } = await supabase
   .from('artworks')
-  .insert([artworkData]);
+  .insert({
+    title,
+    description,
+    image_url,
+    artist_id,
+    category,
+    tags
+  });
+
+// Get artworks
+const { data: artworks } = await supabase
+  .from('artworks')
+  .select('*, profiles!artworks_artist_id_fkey(full_name, avatar_url)')
+  .eq('approval_status', 'approved');
 ```
 
-### File Upload
-File uploads are handled through Supabase Storage:
-
+### Engagement Features
 ```typescript
-// Upload file
-const { data, error } = await supabase.storage
-  .from('artworks')
-  .upload(`${userId}/${fileName}`, file);
+// Like artwork
+const { error } = await supabase
+  .from('artwork_likes')
+  .insert({ artwork_id, user_id });
 
-// Get public URL
-const { data } = supabase.storage
-  .from('artworks')
-  .getPublicUrl(filePath);
+// Follow artist
+const { error } = await supabase
+  .from('follows')
+  .insert({ artist_id, client_id });
 ```
-
-## 🔐 Security Features
-
-### Row Level Security (RLS)
-Database access is secured with RLS policies:
-- Users can only modify their own data
-- Public read access for approved content
-- Admin override capabilities
-
-### Input Validation
-All forms include comprehensive validation:
-- Required field validation
-- Email format validation
-- Password strength requirements
-- File type and size restrictions
-
-### Error Handling
-Robust error handling throughout the application:
-- User-friendly error messages
-- Automatic retry mechanisms
-- Network error detection
-- Graceful fallbacks
 
 ## 🚀 Deployment
 
-### Frontend Deployment
-The frontend can be deployed to any static hosting service:
-
+### Build for Production
 ```bash
 npm run build
 ```
 
-### Backend Configuration
-The backend is already deployed on Supabase. For custom deployments:
-1. Set up Supabase project
+### Environment Variables
+The app uses Supabase configuration that's already integrated. For custom deployments:
+
+1. Update Supabase project settings
 2. Configure authentication providers
-3. Set up storage buckets
-4. Deploy database schema
+3. Set up email templates for verification
+4. Configure storage buckets for file uploads
 
-## 📱 Usage Guide
+## 🧪 Testing
 
-### For Artists
-1. **Sign Up** as an artist
-2. **Complete Profile** with bio, location, and portfolio
-3. **Upload Artworks** with proper categorization
-4. **Manage Commissions** through the project system
-5. **Communicate** with clients via messaging
-6. **Upgrade** to Premium for additional features
+### Test User Accounts
+For development testing, you can create test accounts:
 
-### For Clients
-1. **Sign Up** as a client
-2. **Browse Artworks** using search and filters
-3. **Follow Artists** you're interested in
-4. **Commission Projects** by contacting artists
-5. **Provide Feedback** on completed works
+**Test Artist Account:**
+- Email: artist@test.com
+- Role: Artist
+- Status: Requires email verification and admin approval
 
-### For Admins
-1. **Access Admin Dashboard** with admin role
-2. **Moderate Content** and user reports
-3. **Manage Users** and permissions
-4. **Monitor Platform** analytics
+**Test Client Account:**
+- Email: client@test.com  
+- Role: Client
+- Status: Requires email verification only
 
-## 🤝 Contributing
+### Full Platform Testing
+1. **Registration Flow**: Sign up → verify email → login
+2. **Artist Workflow**: Profile completion → admin approval → dashboard access
+3. **Content Upload**: Artwork upload → admin approval → public visibility
+4. **Engagement**: Browse art → like → follow → commission request
+5. **Communication**: Messaging between artists and clients
+
+## 📝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/new-feature`)
+3. Commit changes (`git commit -am 'Add new feature'`)
+4. Push to branch (`git push origin feature/new-feature`)
+5. Create a Pull Request
+
+## 🔍 Troubleshooting
+
+### Common Issues
+
+**Authentication Problems:**
+- Ensure Supabase URL configuration in authentication settings
+- Check email verification settings in Supabase dashboard
+- Verify redirect URLs in Supabase Auth settings
+
+**Profile Access Issues:**
+- Confirm email verification status
+- Check account approval status for artists
+- Verify role-based permissions
+
+**File Upload Issues:**
+- Check Supabase storage bucket configuration
+- Verify RLS policies for storage access
+- Ensure proper file type and size limits
+
+## 📧 Support
+
+For support and questions:
+- Create an issue in the GitHub repository
+- Check the documentation in `/docs` folder
+- Review Supabase logs for backend issues
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🆘 Support
+---
 
-For support and questions:
-- Create an issue in the GitHub repository
-- Contact the development team
-- Check the documentation
-
-## 🔮 Future Enhancements
-
-- Mobile app development
-- Advanced analytics dashboard
-- AI-powered artwork recommendations
-- NFT marketplace integration
-- Video streaming for live art sessions
-- Advanced payment processing
-- Multi-language support
+**Built with ❤️ for the digital art community**

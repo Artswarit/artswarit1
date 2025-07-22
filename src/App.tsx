@@ -9,6 +9,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import EmailVerification from "./pages/EmailVerification";
 import Explore from "./pages/Explore";
 import ExploreArtists from "./pages/ExploreArtists";
 import Categories from "./pages/Categories";
@@ -55,6 +56,7 @@ const App = () => {
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
+                <Route path="/verify-email" element={<EmailVerification />} />
                 <Route path="/explore" element={<Explore />} />
                 <Route path="/explore-artists" element={<ExploreArtists />} />
                 <Route path="/categories" element={<Categories />} />
