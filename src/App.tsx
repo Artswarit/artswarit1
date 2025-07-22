@@ -33,6 +33,7 @@ function App() {
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/artist-dashboard" element={<ArtistDashboard />} />
+              <Route path="/artist-dashboard/:tab" element={<ArtistDashboard />} />
               <Route path="/client-dashboard" element={<ClientDashboard />} />
               <Route path="/artist/:id" element={<ArtistProfile />} />
               <Route path="/artwork/:id" element={<ArtworkDetails />} />
