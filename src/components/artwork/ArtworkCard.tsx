@@ -1,10 +1,11 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Heart, Eye, Play, Download, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import GlassCard from '@/components/ui/glass-card';
 import { Button } from '@/components/ui/button';
 import { useArtworks } from '@/hooks/useArtworks';
+import { useArtworkViews } from '@/hooks/useArtworkViews';
 
 interface ArtworkCardProps {
   id: string;
@@ -36,9 +37,16 @@ const ArtworkCard = ({
   videoUrl
 }: ArtworkCardProps) => {
   const { toggleLike } = useArtworks();
+  const { incrementView } = useArtworkViews();
   const [isLiked, setIsLiked] = useState(false);
   const [currentLikes, setCurrentLikes] = useState(likes || 0);
+  const [currentViews, setCurrentViews] = useState(views || 0);
   const [isHovered, setIsHovered] = useState(false);
+
+  const handleViewArtwork = () => {
+    incrementView(id);
+    setCurrentViews(prev => prev + 1);
+  };
 
   const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -88,7 +96,7 @@ const ArtworkCard = ({
   };
 
   return (
-    <Link to={`/artwork/${id}`}>
+    <Link to={`/artwork/${id}`} onClick={handleViewArtwork}>
       <GlassCard 
         className="group overflow-hidden hover:scale-[1.02] transition-all duration-300 cursor-pointer"
         onMouseEnter={() => setIsHovered(true)}
@@ -137,7 +145,7 @@ const ArtworkCard = ({
                   </span>
                   <span className="flex items-center gap-1">
                     <Eye className="w-3 h-3" />
-                    {views || 0}
+                    {currentViews}
                   </span>
                 </div>
                 {price !== undefined && (
@@ -184,7 +192,7 @@ const ArtworkCard = ({
               </span>
               <span className="flex items-center gap-1">
                 <Eye className="w-3 h-3" />
-                {views || 0}
+                {currentViews}
               </span>
             </div>
             

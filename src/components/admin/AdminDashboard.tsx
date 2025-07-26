@@ -142,10 +142,8 @@ const AdminDashboard = () => {
         type: "artwork"
       }));
 
-      // If no real pending artworks, use mock data for demonstration
-      if (fetchedPendingArtworks.length === 0) {
-        fetchedPendingArtworks = mockArtworks;
-      }
+      // Include mock data for demonstration purposes
+      fetchedPendingArtworks = [...fetchedPendingArtworks, ...mockArtworks];
 
       setPendingArtworks(fetchedPendingArtworks);
 
