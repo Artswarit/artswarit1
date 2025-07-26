@@ -168,40 +168,39 @@ const AdminDashboard = () => {
 
   const handleArtistApproval = async (artistId: string, action: 'approved' | 'rejected', notes?: string) => {
     try {
-      await supabase
+      const { error } = await supabase
         .from('profiles')
-        .update({
-          account_status: action,
-          updated_at: new Date().toISOString()
-        })
+        .update({ account_status: action })
         .eq('id', artistId);
 
-      // Send notification to artist
+      if (error) throw error;
+
+      // Create notification for the artist
       const artist = pendingArtists.find(a => a.id === artistId);
       if (artist) {
         await supabase
           .from('notifications')
           .insert({
             user_id: artistId,
-            title: `Profile ${action === 'approved' ? 'Approved' : 'Rejected'}`,
-            message: action === 'approved'
-              ? 'Congratulations! Your artist profile has been approved. You can now access all features.'
-              : `Your artist profile was not approved. ${notes || 'Please update your profile and try again.'}`,
+            title: action === 'approved' ? 'Account Approved!' : 'Account Status Update',
+            message: action === 'approved' 
+              ? 'Your artist account has been approved. You can now access all artist features.'
+              : 'Your artist account application has been reviewed. Please contact support for more information.',
             type: action === 'approved' ? 'success' : 'error'
           });
       }
 
       toast({
-        title: "Success",
-        description: `Artist ${action} successfully`,
-        variant: action === 'approved' ? 'default' : 'destructive'
+        title: action === 'approved' ? "Artist Approved" : "Artist Rejected",
+        description: `Artist has been ${action === 'approved' ? 'approved' : 'rejected'} successfully.`
       });
 
       fetchPendingItems();
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error updating artist status:', error);
       toast({
         title: "Error",
-        description: "An error occurred",
+        description: "Failed to update artist status",
         variant: "destructive"
       });
     }
@@ -222,40 +221,39 @@ const AdminDashboard = () => {
     }
 
     try {
-      await supabase
+      const { error } = await supabase
         .from('artworks')
-        .update({
-          approval_status: action,
-          updated_at: new Date().toISOString()
-        })
+        .update({ approval_status: action })
         .eq('id', artworkId);
 
-      // Send notification to artist
+      if (error) throw error;
+
+      // Create notification for the artist
       const artwork = pendingArtworks.find(a => a.id === artworkId);
-      if (artwork) {
+      if (artwork?.artist_id) {
         await supabase
           .from('notifications')
           .insert({
             user_id: artwork.artist_id,
-            title: `Artwork ${action === 'approved' ? 'Approved' : 'Rejected'}`,
-            message: action === 'approved'
-              ? `Your artwork "${artwork.title}" has been approved and is now live.`
-              : `Your artwork "${artwork.title}" was not approved. ${notes || 'Please review and resubmit.'}`,
+            title: action === 'approved' ? 'Artwork Approved!' : 'Artwork Status Update',
+            message: action === 'approved' 
+              ? `Your artwork "${artwork.title}" has been approved and is now visible to the public.`
+              : `Your artwork "${artwork.title}" was not approved. Please review our guidelines and try again.`,
             type: action === 'approved' ? 'success' : 'error'
           });
       }
 
       toast({
-        title: "Success",
-        description: `Artwork ${action} successfully`,
-        variant: action === 'approved' ? 'default' : 'destructive'
+        title: action === 'approved' ? "Artwork Approved" : "Artwork Rejected",
+        description: `Artwork has been ${action === 'approved' ? 'approved' : 'rejected'} successfully.`
       });
 
       fetchPendingItems();
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error updating artwork status:', error);
       toast({
         title: "Error",
-        description: "An error occurred",
+        description: "Failed to update artwork status",
         variant: "destructive"
       });
     }

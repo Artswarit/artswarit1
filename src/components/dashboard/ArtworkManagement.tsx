@@ -6,7 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useArtworks } from '@/hooks/useArtworks';
 import { useAuth } from '@/contexts/AuthContext';
+import { useArtistStats } from '@/hooks/useArtistStats';
 import { Grid, List, Plus, BarChart3 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import ArtworkUploadForm from './artwork/ArtworkUploadForm';
 import ArtworkEditModal from './artwork/ArtworkEditModal';
 import ArtworkActions from './artwork/ArtworkActions';
@@ -16,7 +18,8 @@ import ArtworkAnalytics from './artwork/ArtworkAnalytics';
 
 const ArtworkManagement = () => {
   const { user } = useAuth();
-  const { artworks, loading } = useArtworks({ artistId: user?.id, status: 'all' });
+  const { artworks, loading, refetch, uploadArtwork } = useArtworks({ artistId: user?.id, status: 'all' });
+  const { stats } = useArtistStats();
   const { toast } = useToast();
   
   const [selectedArtworks, setSelectedArtworks] = useState<string[]>([]);
@@ -34,16 +37,16 @@ const ArtworkManagement = () => {
     sortBy: 'newest'
   });
 
-  // Mock analytics data
+  // Real analytics data from backend
   const analyticsData = {
-    totalViews: 45670,
-    totalLikes: 8900,
-    totalRevenue: 12450,
-    totalFollowers: 1234,
-    viewsGrowth: 12.5,
-    likesGrowth: 8.3,
-    revenueGrowth: 15.7,
-    followersGrowth: -2.1
+    totalViews: stats.total_views || 0,
+    totalLikes: stats.total_likes || 0,
+    totalRevenue: artworks.filter(a => a.is_for_sale && a.price).reduce((sum, a) => sum + (a.price || 0), 0),
+    totalFollowers: stats.total_followers || 0,
+    viewsGrowth: 12.5, // TODO: Calculate growth from historical data
+    likesGrowth: 8.3,   // TODO: Calculate growth from historical data
+    revenueGrowth: 15.7, // TODO: Calculate growth from historical data
+    followersGrowth: -2.1 // TODO: Calculate growth from historical data
   };
 
   const filteredArtworks = useMemo(() => {
@@ -87,10 +90,10 @@ const ArtworkManagement = () => {
         filtered.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
         break;
       case 'most_liked':
-        filtered.sort((a, b) => b.likes - a.likes);
+        filtered.sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
         break;
       case 'most_viewed':
-        filtered.sort((a, b) => b.views - a.views);
+        filtered.sort((a, b) => (b.views_count || 0) - (a.views_count || 0));
         break;
       case 'price_high':
         filtered.sort((a, b) => b.price - a.price);
@@ -122,42 +125,105 @@ const ArtworkManagement = () => {
     }
   };
 
-  const handleBulkAction = (action: string, options?: any) => {
-    console.log('Bulk action:', action, 'for artworks:', selectedArtworks, 'with options:', options);
-    
-    switch (action) {
-      case 'delete':
-        toast({
-          title: "Artworks Deleted",
-          description: `${selectedArtworks.length} artwork(s) have been deleted.`,
-        });
-        setSelectedArtworks([]);
-        break;
-      case 'changeStatus':
-        toast({
-          title: "Status Updated",
-          description: `${selectedArtworks.length} artwork(s) status changed to ${options.status}.`,
-        });
-        break;
-      case 'toggleVisibility':
-        toast({
-          title: "Visibility Toggled",
-          description: `${selectedArtworks.length} artwork(s) visibility has been toggled.`,
-        });
-        break;
-      case 'export':
-        toast({
-          title: "Export Started",
-          description: `Exporting ${selectedArtworks.length} artwork(s)...`,
-        });
-        break;
-      case 'archive':
-        toast({
-          title: "Artworks Archived",
-          description: `${selectedArtworks.length} artwork(s) have been archived.`,
-        });
-        setSelectedArtworks([]);
-        break;
+  const handleBulkAction = async (action: string, options?: any) => {
+    if (!user || selectedArtworks.length === 0) return;
+
+    try {
+      switch (action) {
+        case 'delete':
+          const { error: deleteError } = await supabase
+            .from('artworks')
+            .delete()
+            .in('id', selectedArtworks)
+            .eq('artist_id', user.id);
+
+          if (deleteError) throw deleteError;
+
+          toast({
+            title: "Artworks Deleted",
+            description: `${selectedArtworks.length} artwork(s) have been deleted.`,
+          });
+          setSelectedArtworks([]);
+          refetch();
+          break;
+
+        case 'changeStatus':
+          const { error: statusError } = await supabase
+            .from('artworks')
+            .update({ approval_status: options.status })
+            .in('id', selectedArtworks)
+            .eq('artist_id', user.id);
+
+          if (statusError) throw statusError;
+
+          toast({
+            title: "Status Updated",
+            description: `${selectedArtworks.length} artwork(s) status changed to ${options.status}.`,
+          });
+          refetch();
+          break;
+
+        case 'toggleVisibility':
+          // Note: This would require a visibility column in the database
+          toast({
+            title: "Feature Coming Soon",
+            description: "Visibility toggle feature will be available soon.",
+          });
+          break;
+
+        case 'export':
+          // Export selected artworks data
+          const exportData = artworks
+            .filter(artwork => selectedArtworks.includes(artwork.id))
+            .map(artwork => ({
+              title: artwork.title,
+              category: artwork.category,
+              price: artwork.price,
+              likes: artwork.likes_count,
+              views: artwork.views_count,
+              status: artwork.approval_status,
+              created_at: artwork.created_at
+            }));
+
+          const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+          const downloadAnchorNode = document.createElement('a');
+          downloadAnchorNode.setAttribute("href", dataStr);
+          downloadAnchorNode.setAttribute("download", "artworks_export.json");
+          document.body.appendChild(downloadAnchorNode);
+          downloadAnchorNode.click();
+          downloadAnchorNode.remove();
+
+          toast({
+            title: "Export Complete",
+            description: `Exported ${selectedArtworks.length} artwork(s) data.`,
+          });
+          break;
+
+        case 'archive':
+          // Note: This would require an archived status or column
+          const { error: archiveError } = await supabase
+            .from('artworks')
+            .update({ approval_status: 'archived' })
+            .in('id', selectedArtworks)
+            .eq('artist_id', user.id);
+
+          if (archiveError) throw archiveError;
+
+          toast({
+            title: "Artworks Archived",
+            description: `${selectedArtworks.length} artwork(s) have been archived.`,
+          });
+          setSelectedArtworks([]);
+          refetch();
+          break;
+      }
+    } catch (error: any) {
+      console.error('Bulk action error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to perform bulk action",
+        variant: "destructive"
+      });
     }
   };
 
@@ -178,12 +244,66 @@ const ArtworkManagement = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
-  const handleArtworkUpdate = (updatedArtwork: any) => {
-    console.log('Updating artwork:', updatedArtwork);
-    toast({
-      title: "Artwork Updated",
-      description: "Your artwork has been updated successfully.",
-    });
+  const handleArtworkUpdate = async (updatedArtwork: any) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('artworks')
+        .update({
+          title: updatedArtwork.title,
+          description: updatedArtwork.description,
+          category: updatedArtwork.category,
+          price: updatedArtwork.price,
+          is_for_sale: updatedArtwork.is_for_sale,
+          is_pinned: updatedArtwork.is_pinned,
+          tags: updatedArtwork.tags
+        })
+        .eq('id', updatedArtwork.id)
+        .eq('artist_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Artwork Updated",
+        description: "Your artwork has been updated successfully.",
+      });
+      refetch();
+    } catch (error: any) {
+      console.error('Error updating artwork:', error);
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update artwork",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleArtworkDelete = async (artworkId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('artworks')
+        .delete()
+        .eq('id', artworkId)
+        .eq('artist_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Artwork Deleted",
+        description: "Your artwork has been deleted successfully.",
+      });
+      refetch();
+    } catch (error: any) {
+      console.error('Error deleting artwork:', error);
+      toast({
+        title: "Delete Failed",
+        description: error.message || "Failed to delete artwork",
+        variant: "destructive"
+      });
+    }
   };
 
   if (loading) {
@@ -299,13 +419,14 @@ const ArtworkManagement = () => {
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-lg font-bold">${artwork.price}</span>
                       <div className="text-xs text-gray-500">
-                        {artwork.likes} ❤️ {artwork.views} 👁️
+                        {artwork.likes_count || 0} ❤️ {artwork.views_count || 0} 👁️
                       </div>
                     </div>
                     <div className="mt-3">
                       <ArtworkActions
                         artwork={artwork}
                         onUpdate={handleArtworkUpdate}
+                        onDelete={handleArtworkDelete}
                       />
                     </div>
                   </CardContent>
@@ -330,7 +451,7 @@ const ArtworkManagement = () => {
                     <div className="text-right">
                       <div className="text-lg font-bold">${artwork.price}</div>
                       <div className="text-xs text-gray-500">
-                        {artwork.likes} ❤️ {artwork.views} 👁️
+                        {artwork.likes_count || 0} ❤️ {artwork.views_count || 0} 👁️
                       </div>
                     </div>
                     <div className="flex flex-col gap-2">
@@ -338,6 +459,7 @@ const ArtworkManagement = () => {
                       <ArtworkActions
                         artwork={artwork}
                         onUpdate={handleArtworkUpdate}
+                        onDelete={handleArtworkDelete}
                       />
                     </div>
                   </div>
@@ -367,7 +489,10 @@ const ArtworkManagement = () => {
                 ×
               </Button>
             </div>
-            <ArtworkUploadForm />
+            <ArtworkUploadForm onUploadSuccess={() => {
+              setShowUploadForm(false);
+              refetch();
+            }} />
           </div>
         </div>
       )}

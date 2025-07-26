@@ -11,7 +11,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, ImageIcon, MusicIcon, VideoIcon, FileTextIcon, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { useArtworks } from "@/hooks/useArtworks";
+import { useAuth } from "@/contexts/AuthContext";
 import AIContentDetection from "@/components/dashboard/AIContentDetection";
 
 const contentTypes = [
@@ -27,12 +29,20 @@ const visibilityOptions = [
   { id: "followers", label: "Followers Only - Visible to your followers" },
 ];
 
-const ArtworkUploadForm = () => {
+interface ArtworkUploadFormProps {
+  onUploadSuccess?: () => void;
+}
+
+const ArtworkUploadForm = ({ onUploadSuccess }: ArtworkUploadFormProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { uploadArtwork } = useArtworks();
+  const { user } = useAuth();
   const [selectedType, setSelectedType] = useState("image");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
   const [price, setPrice] = useState("");
   const [visibility, setVisibility] = useState("public");
   const [visibilityType, setVisibilityType] = useState("free");
@@ -106,15 +116,52 @@ const ArtworkUploadForm = () => {
       }
     }
 
-    // Simulate upload process
-    setTimeout(() => {
-      toast({
-        title: "Success",
-        description: "Your artwork has been uploaded successfully!",
+    try {
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to upload artwork.",
+          variant: "destructive",
+        });
+        setIsUploading(false);
+        return;
+      }
+
+      const result = await uploadArtwork({
+        title,
+        description,
+        category: category || "Digital Art",
+        tags,
+        price: visibilityType !== "free" ? parseFloat(price) : undefined,
+        is_for_sale: visibilityType !== "free",
+        is_pinned: false,
+        release_date: scheduleRelease && releaseDate ? releaseDate.toISOString() : undefined,
+        file: selectedFiles[0] // Use the first file for now
       });
+
+      if (result?.error) {
+        toast({
+          title: "Upload Failed",
+          description: result.error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Your artwork has been uploaded successfully!",
+        });
+        onUploadSuccess?.();
+      }
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload Failed",
+        description: error.message || "Failed to upload artwork",
+        variant: "destructive",
+      });
+    } finally {
       setIsUploading(false);
-      navigate("/artist-dashboard");
-    }, 2000);
+    }
   };
 
   return (
@@ -172,6 +219,26 @@ const ArtworkUploadForm = () => {
                 placeholder="Tell us about your artwork"
                 rows={4}
               />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Digital Art">Digital Art</SelectItem>
+                  <SelectItem value="Photography">Photography</SelectItem>
+                  <SelectItem value="Painting">Painting</SelectItem>
+                  <SelectItem value="Music">Music</SelectItem>
+                  <SelectItem value="Video">Video</SelectItem>
+                  <SelectItem value="3D Art">3D Art</SelectItem>
+                  <SelectItem value="Abstract">Abstract</SelectItem>
+                  <SelectItem value="Portrait">Portrait</SelectItem>
+                  <SelectItem value="Landscape">Landscape</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             <div className="space-y-2">
