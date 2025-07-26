@@ -1,8 +1,10 @@
 
 import { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
+import { useArtworks } from '@/hooks/useArtworks';
+import { useProjects } from '@/hooks/useProjects';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -16,7 +18,9 @@ import ArtistSettings from '@/components/dashboard/ArtistSettings';
 import PremiumMembership from '@/components/premium/PremiumMembership';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Palette, User, DollarSign, MessageSquare, Settings, Crown, Bell, FolderUp, Briefcase } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Palette, User, DollarSign, MessageSquare, Settings, Crown, Bell, FolderUp, Briefcase, Plus } from 'lucide-react';
 import ArtworkUpload from '@/components/artwork/ArtworkUpload';
 import ProjectManagement from '@/components/dashboard/projects/ProjectManagement';
 import ArtistNotifications from '@/components/dashboard/ArtistNotifications';
@@ -26,6 +30,8 @@ const ArtistDashboard = () => {
   const { tab } = useParams();
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
+  const { artworks } = useArtworks({ artistId: user?.id });
+  const { projects } = useProjects();
 
   useEffect(() => {
     if (profile && profile.role !== 'artist' && profile.role !== 'premium') {
@@ -34,6 +40,33 @@ const ArtistDashboard = () => {
   }, [profile]);
 
   const defaultTab = tab || 'artworks';
+
+  // Check if artist has any data to show
+  const hasArtworks = artworks.length > 0;
+  const hasProjects = projects.length > 0;
+  const isNewArtist = !hasArtworks && !hasProjects;
+
+  const WelcomeMessage = () => (
+    <div className="text-center py-12">
+      <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-8 max-w-md mx-auto">
+        <div className="mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Plus className="w-8 h-8 text-white" />
+          </div>
+        </div>
+        <h3 className="text-lg font-semibold mb-2">Welcome to Artswarit!</h3>
+        <p className="text-gray-600 mb-4">
+          Your dashboard will be updated once you upload artwork or receive communication.
+        </p>
+        <Button className="w-full mb-3">
+          Upload Your First Artwork
+        </Button>
+        <p className="text-xs text-gray-500">
+          Start building your portfolio and connecting with clients
+        </p>
+      </div>
+    </div>
+  );
 
   if (profileLoading) {
     return (
@@ -102,10 +135,22 @@ const ArtistDashboard = () => {
             </div>
 
             <TabsContent value="artworks" className="space-y-6">
-              <ArtworkManagement />
+              {isNewArtist && !hasArtworks ? <WelcomeMessage /> : <ArtworkManagement />}
             </TabsContent>
             <TabsContent value="projects" className="space-y-6">
-              <ProjectManagement />
+              {!hasProjects ? (
+                <Card className="bg-white/60 backdrop-blur-sm">
+                  <CardContent className="p-8 text-center">
+                    <h3 className="text-lg font-semibold mb-2">No Projects Yet</h3>
+                    <p className="text-gray-600 mb-4">Projects will appear here when clients reach out to you.</p>
+                    <Button variant="outline" asChild>
+                      <Link to="/explore">Browse Platform</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <ProjectManagement />
+              )}
             </TabsContent>
             <TabsContent value="profile" className="space-y-6">
               <ArtistProfile isLoading={profileLoading} />

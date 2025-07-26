@@ -14,7 +14,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { useArtworks } from "@/hooks/useArtworks";
 import { useAuth } from "@/contexts/AuthContext";
-import AIContentDetection from "@/components/dashboard/AIContentDetection";
 
 const contentTypes = [
   { id: "image", label: "Image", icon: ImageIcon },
@@ -50,24 +49,11 @@ const ArtworkUploadForm = ({ onUploadSuccess }: ArtworkUploadFormProps) => {
   const [releaseDate, setReleaseDate] = useState<Date | undefined>(undefined);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [detectionResults, setDetectionResults] = useState<any[]>([]);
-  const [hasAiContent, setHasAiContent] = useState(false);
-
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const fileArray = Array.from(e.target.files);
       setSelectedFiles(fileArray);
     }
-  };
-
-  const handleDetectionComplete = (result: any, fileIndex: number) => {
-    const newResults = [...detectionResults];
-    newResults[fileIndex] = result;
-    setDetectionResults(newResults);
-    
-    // Check if any file is flagged as AI content
-    const hasAi = newResults.some(r => r && r.flagged);
-    setHasAiContent(hasAi);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -105,16 +91,6 @@ const ArtworkUploadForm = ({ onUploadSuccess }: ArtworkUploadFormProps) => {
       return;
     }
 
-    // Additional validation for AI content
-    if (hasAiContent) {
-      const proceed = window.confirm(
-        "Some files have been flagged as AI-generated content. Do you want to proceed anyway? This may affect content visibility."
-      );
-      if (!proceed) {
-        setIsUploading(false);
-        return;
-      }
-    }
 
     try {
       if (!user) {
@@ -278,10 +254,10 @@ const ArtworkUploadForm = ({ onUploadSuccess }: ArtworkUploadFormProps) => {
                 </Label>
               </div>
               
-              {/* AI Content Detection for uploaded files */}
+              {/* File preview for uploaded files */}
               {selectedFiles.length > 0 && (
                 <div className="space-y-4 mt-4">
-                  <h4 className="font-medium text-sm">AI Content Analysis</h4>
+                  <h4 className="font-medium text-sm">Selected Files</h4>
                   {selectedFiles.map((file, index) => (
                     <div key={index} className="border rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
@@ -290,27 +266,15 @@ const ArtworkUploadForm = ({ onUploadSuccess }: ArtworkUploadFormProps) => {
                           {(file.size / 1024 / 1024).toFixed(2)} MB
                         </span>
                       </div>
-                      <AIContentDetection
-                        fileUrl={URL.createObjectURL(file)}
-                        contentType={selectedType as any}
-                        onDetectionComplete={(result) => handleDetectionComplete(result, index)}
-                        autoDetect={true}
-                      />
+                      {selectedType === "image" && (
+                        <img 
+                          src={URL.createObjectURL(file)} 
+                          alt="Preview" 
+                          className="w-full h-32 object-cover rounded"
+                        />
+                      )}
                     </div>
                   ))}
-                  
-                  {hasAiContent && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                      <div className="flex items-center gap-2 text-amber-800">
-                        <AlertTriangle className="h-4 w-4" />
-                        <span className="font-medium">AI Content Detected</span>
-                      </div>
-                      <p className="text-sm text-amber-700 mt-1">
-                        Some of your files have been flagged as potentially AI-generated. 
-                        You can still upload them, but they may be subject to additional review.
-                      </p>
-                    </div>
-                  )}
                 </div>
               )}
             </div>
