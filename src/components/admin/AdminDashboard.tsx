@@ -129,7 +129,7 @@ const AdminDashboard = () => {
         .select(`
           id, title, artist_id, approval_status, created_at, image_url, 
           description,
-          profiles:artist_id (
+          profiles!artworks_artist_id_fkey (
             full_name,
             email
           )

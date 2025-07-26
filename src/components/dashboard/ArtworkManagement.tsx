@@ -5,6 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useArtworks } from '@/hooks/useArtworks';
+import { useAuth } from '@/contexts/AuthContext';
 import { Grid, List, Plus, BarChart3 } from 'lucide-react';
 import ArtworkUploadForm from './artwork/ArtworkUploadForm';
 import ArtworkEditModal from './artwork/ArtworkEditModal';
@@ -14,7 +15,8 @@ import ArtworkBulkActions from './artwork/ArtworkBulkActions';
 import ArtworkAnalytics from './artwork/ArtworkAnalytics';
 
 const ArtworkManagement = () => {
-  const { artworks, loading } = useArtworks();
+  const { user } = useAuth();
+  const { artworks, loading } = useArtworks({ artistId: user?.id, status: 'all' });
   const { toast } = useToast();
   
   const [selectedArtworks, setSelectedArtworks] = useState<string[]>([]);

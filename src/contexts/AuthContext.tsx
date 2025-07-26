@@ -66,7 +66,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
         options: {
           emailRedirectTo: redirectUrl,
-          data: userData
+          data: {
+            ...userData,
+            // Set account_status based on role
+            account_status: userData.role === 'artist' ? 'pending' : 'approved'
+          }
         }
       });
 

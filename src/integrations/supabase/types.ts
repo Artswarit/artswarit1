@@ -98,6 +98,35 @@ export type Database = {
           },
         ]
       }
+      artwork_views: {
+        Row: {
+          artwork_id: string | null
+          created_at: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          artwork_id?: string | null
+          created_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          artwork_id?: string | null
+          created_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artwork_views_artwork_id_fkey"
+            columns: ["artwork_id"]
+            isOneToOne: false
+            referencedRelation: "artworks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       artworks: {
         Row: {
           approval_status: string | null
@@ -337,12 +366,16 @@ export type Database = {
           bio: string | null
           created_at: string
           email: string
+          experience_years: number | null
           full_name: string | null
+          hourly_rate: number | null
           id: string
           is_verified: boolean | null
           location: string | null
+          portfolio_url: string | null
           role: string
           social_links: Json | null
+          tags: string[] | null
           updated_at: string
           website: string | null
         }
@@ -352,12 +385,16 @@ export type Database = {
           bio?: string | null
           created_at?: string
           email: string
+          experience_years?: number | null
           full_name?: string | null
+          hourly_rate?: number | null
           id: string
           is_verified?: boolean | null
           location?: string | null
+          portfolio_url?: string | null
           role?: string
           social_links?: Json | null
+          tags?: string[] | null
           updated_at?: string
           website?: string | null
         }
@@ -367,12 +404,16 @@ export type Database = {
           bio?: string | null
           created_at?: string
           email?: string
+          experience_years?: number | null
           full_name?: string | null
+          hourly_rate?: number | null
           id?: string
           is_verified?: boolean | null
           location?: string | null
+          portfolio_url?: string | null
           role?: string
           social_links?: Json | null
+          tags?: string[] | null
           updated_at?: string
           website?: string | null
         }
@@ -680,13 +721,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_artist_stats: {
+        Args: { artist_uuid: string }
+        Returns: Json
+      }
+      increment_artwork_views: {
+        Args: { artwork_uuid: string; user_uuid: string }
+        Returns: number
+      }
       is_admin: {
         Args: { _user_id: string }
         Returns: boolean
       }
     }
     Enums: {
+      account_status: "pending" | "approved" | "rejected"
       app_role: "admin" | "moderator" | "artist" | "client"
+      approval_status: "pending" | "approved" | "rejected"
+      notification_type: "success" | "error" | "info" | "warning"
+      project_status: "pending" | "accepted" | "completed" | "cancelled"
       subscription_tier: "monthly" | "yearly" | "lifetime"
     }
     CompositeTypes: {
@@ -815,7 +868,11 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_status: ["pending", "approved", "rejected"],
       app_role: ["admin", "moderator", "artist", "client"],
+      approval_status: ["pending", "approved", "rejected"],
+      notification_type: ["success", "error", "info", "warning"],
+      project_status: ["pending", "accepted", "completed", "cancelled"],
       subscription_tier: ["monthly", "yearly", "lifetime"],
     },
   },
