@@ -11,7 +11,11 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Save, Shield, Bell, Eye, Globe } from "lucide-react";
 
-const ArtistSettings = () => {
+interface ArtistSettingsProps {
+  isLoading: boolean;
+}
+
+const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
   const [settings, setSettings] = useState({
     emailNotifications: true,
     profileVisibility: true,
@@ -56,6 +60,16 @@ const ArtistSettings = () => {
       confirmPassword: ""
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="h-10 w-48 bg-gray-200 animate-pulse rounded-md"></div>
+        <div className="h-64 bg-gray-200 animate-pulse rounded-md"></div>
+        <div className="h-64 bg-gray-200 animate-pulse rounded-md"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

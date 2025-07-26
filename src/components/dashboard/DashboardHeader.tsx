@@ -10,18 +10,9 @@ interface DashboardHeaderProps {
   profile?: any;
   title: string;
   subtitle: string;
-  activeTab?: string;
-  onTabChange?: (tab: string) => void;
 }
 
-const DashboardHeader = ({
-  user,
-  profile,
-  title,
-  subtitle,
-  activeTab,
-  onTabChange
-}: DashboardHeaderProps) => {
+const DashboardHeader = ({ user, profile, title, subtitle }: DashboardHeaderProps) => {
   const navigate = useNavigate();
   const [artistStats, setArtistStats] = useState({
     totalViews: 12463,
@@ -39,6 +30,14 @@ const DashboardHeader = ({
             {subtitle}
           </p>
         </div>
+        
+        <Button 
+          onClick={() => navigate("/artist-dashboard/upload")} 
+          className="w-full lg:w-auto bg-gradient-to-r from-artswarit-purple to-blue-500 border-none min-h-[44px]"
+        >
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add New Artwork
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">

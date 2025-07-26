@@ -1,83 +1,13 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, Mail, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { Clock, Mail, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 
 const ApprovalPending = () => {
-  const { signOut, user, resendVerification } = useAuth();
-  const { profile: baseProfile, refetch } = useProfile();
+  const { signOut } = useAuth();
+  const { profile: baseProfile } = useProfile();
   const profile = baseProfile as typeof baseProfile & { account_status?: string };
-
-  const handleResendVerification = async () => {
-    if (user?.email) {
-      await resendVerification(user.email);
-    }
-  };
-
-  const handleRefreshStatus = () => {
-    refetch();
-  };
-
-  // Check if email is not verified
-  if (user && !user.email_confirmed_at) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <Card className="w-full max-w-md border-orange-200 bg-orange-50">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <Mail className="h-12 w-12 text-orange-500" />
-            </div>
-            <CardTitle className="text-xl">Email Verification Required</CardTitle>
-            <CardDescription className="text-center">
-              Please verify your email address to continue using Artswarit.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="bg-white p-4 rounded-lg border">
-              <p className="text-sm text-gray-600 mb-3">
-                We sent a verification link to <span className="font-medium">{user.email}</span>
-              </p>
-              <ul className="text-sm text-gray-600 space-y-1 mb-4">
-                <li>• Check your email inbox and spam folder</li>
-                <li>• Click the verification link in the email</li>
-                <li>• Return here after verification</li>
-              </ul>
-              <div className="space-y-2">
-                <Button 
-                  onClick={handleResendVerification} 
-                  variant="outline" 
-                  className="w-full"
-                >
-                  Resend Verification Email
-                </Button>
-                <Button 
-                  onClick={handleRefreshStatus} 
-                  variant="ghost" 
-                  className="w-full"
-                  size="sm"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Refresh Status
-                </Button>
-              </div>
-            </div>
-
-            <div className="pt-4 border-t">
-              <Button
-                onClick={() => signOut()}
-                variant="ghost"
-                className="w-full"
-              >
-                Sign Out
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   const getStatusInfo = () => {
     switch (profile?.account_status || "pending") {
@@ -177,19 +107,11 @@ const ApprovalPending = () => {
             </div>
           )}
 
-          <div className="flex gap-2">
-            <Button
-              onClick={handleRefreshStatus}
-              variant="outline"
-              className="flex-1"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
+          <div className="pt-4 border-t">
             <Button
               onClick={() => signOut()}
               variant="ghost"
-              className="flex-1"
+              className="w-full"
             >
               Sign Out
             </Button>

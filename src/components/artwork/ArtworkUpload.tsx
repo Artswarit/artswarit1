@@ -7,13 +7,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Upload, X, CheckCircle } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 import { useArtworks } from '@/hooks/useArtworks';
-import { useToast } from '@/hooks/use-toast';
 
 interface ArtworkUploadProps {
   onClose?: () => void;
-  onUploadSuccess?: () => void;
 }
 
 const categories = [
@@ -26,19 +24,11 @@ const categories = [
   'Abstract',
   'Portrait',
   'Landscape',
-  'Street Art',
-  'Music',
-  'Audio',
-  'Video',
-  'Film',
-  'Writing',
-  'Literature',
-  'Poetry'
+  'Street Art'
 ];
 
-const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
-  const { uploadArtwork } = useArtworks();
-  const { toast } = useToast();
+const ArtworkUpload = ({ onClose }: ArtworkUploadProps) => {
+  const { uploadArtwork, loading } = useArtworks();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -51,77 +41,13 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadSuccess, setUploadSuccess] = useState(false);
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!formData.title.trim()) {
-      newErrors.title = 'Title is required';
-    }
-    
-    if (!formData.category) {
-      newErrors.category = 'Category is required';
-    }
-    
-    if (!selectedFile) {
-      newErrors.file = 'Please select an artwork file';
-    }
-    
-    if (formData.is_for_sale && !formData.price) {
-      newErrors.price = 'Price is required for items marked for sale';
-    }
-    
-    if (formData.price && isNaN(parseFloat(formData.price))) {
-      newErrors.price = 'Please enter a valid price';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const allowedTypes = [
-        'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
-        'video/mp4', 'video/avi', 'video/mov', 'video/wmv',
-        'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/m4a',
-        'text/plain', 'application/pdf', 'text/html'
-      ];
-      
-      if (!allowedTypes.includes(file.type)) {
-        toast({
-          title: "Invalid file type",
-          description: "Please select a valid image, video, audio, or text file.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      if (file.size > 50 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "Please select a file smaller than 50MB",
-          variant: "destructive"
-        });
-        return;
-      }
-      
       setSelectedFile(file);
-      
-      if (file.type.startsWith('image/')) {
-        const url = URL.createObjectURL(file);
-        setPreviewUrl(url);
-      } else {
-        setPreviewUrl(null);
-      }
-      
-      if (errors.file) {
-        setErrors(prev => ({ ...prev, file: '' }));
-      }
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
     }
   };
 
@@ -133,91 +59,43 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
     }
   };
 
-  const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fix the errors in the form",
-        variant: "destructive"
-      });
+    if (!selectedFile) {
       return;
     }
 
-    setIsUploading(true);
-    setUploadSuccess(false);
-
     const tagsArray = formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
     
-    try {
-      const result = await uploadArtwork({
-        title: formData.title,
-        description: formData.description,
-        category: formData.category,
-        tags: tagsArray,
-        price: formData.price ? parseFloat(formData.price) : undefined,
-        is_for_sale: formData.is_for_sale,
-        is_pinned: formData.is_pinned,
-        release_date: formData.release_date || undefined,
-        file: selectedFile,
-      });
+    const result = await uploadArtwork({
+      title: formData.title,
+      description: formData.description,
+      category: formData.category,
+      tags: tagsArray,
+      price: formData.price ? parseFloat(formData.price) : undefined,
+      is_for_sale: formData.is_for_sale,
+      is_pinned: formData.is_pinned,
+      release_date: formData.release_date || undefined,
+      file: selectedFile,
+    });
 
-      if (!result?.error) {
-        setUploadSuccess(true);
-        
-        setFormData({
-          title: '',
-          description: '',
-          category: '',
-          tags: '',
-          price: '',
-          is_for_sale: false,
-          is_pinned: false,
-          release_date: '',
-        });
-        handleRemoveFile();
-        
-        setTimeout(() => {
-          onUploadSuccess?.();
-          onClose?.();
-        }, 2000);
-      } else {
-        throw new Error(result.error);
-      }
-    } catch (error: any) {
-      console.error('Upload error:', error);
-      toast({
-        title: "Upload Failed",
-        description: error.message || "Failed to upload artwork. Please try again.",
-        variant: "destructive"
+    if (!result?.error) {
+      // Reset form
+      setFormData({
+        title: '',
+        description: '',
+        category: '',
+        tags: '',
+        price: '',
+        is_for_sale: false,
+        is_pinned: false,
+        release_date: '',
       });
-    } finally {
-      setIsUploading(false);
+      handleRemoveFile();
+      onClose?.();
     }
   };
-
-  if (uploadSuccess) {
-    return (
-      <Card className="w-full max-w-2xl mx-auto">
-        <CardContent className="flex flex-col items-center justify-center py-12">
-          <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
-          <h3 className="text-xl font-semibold mb-2">Upload Successful!</h3>
-          <p className="text-muted-foreground text-center">
-            Your artwork has been uploaded and is now visible on the explore page and your profile.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -233,8 +111,9 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* File Upload */}
           <div className="space-y-2">
-            <Label htmlFor="file">Artwork File *</Label>
+            <Label htmlFor="file">Artwork Image</Label>
             {!selectedFile ? (
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                 <Upload className="mx-auto h-12 w-12 text-gray-400" />
@@ -245,30 +124,20 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
                       id="file"
                       type="file"
                       className="sr-only"
-                      accept="image/*,video/*,audio/*,.txt,.pdf"
+                      accept="image/*"
                       onChange={handleFileSelect}
                     />
                   </label>
                 </div>
-                <p className="text-sm text-gray-500">Images, Videos, Audio, or Text files up to 50MB</p>
+                <p className="text-sm text-gray-500">PNG, JPG, GIF up to 10MB</p>
               </div>
             ) : (
               <div className="relative">
-                {previewUrl ? (
-                  <img
-                    src={previewUrl}
-                    alt="Preview"
-                    className="w-full h-64 object-cover rounded-lg"
-                  />
-                ) : (
-                  <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <div className="text-center">
-                      <Upload className="mx-auto h-12 w-12 text-gray-400 mb-2" />
-                      <p className="text-sm font-medium">{selectedFile.name}</p>
-                      <p className="text-xs text-gray-500">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
-                    </div>
-                  </div>
-                )}
+                <img
+                  src={previewUrl!}
+                  alt="Preview"
+                  className="w-full h-64 object-cover rounded-lg"
+                />
                 <Button
                   type="button"
                   variant="destructive"
@@ -280,39 +149,37 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
                 </Button>
               </div>
             )}
-            {errors.file && <p className="text-sm text-red-500">{errors.file}</p>}
           </div>
 
+          {/* Title */}
           <div className="space-y-2">
-            <Label htmlFor="title">Title *</Label>
+            <Label htmlFor="title">Title</Label>
             <Input
               id="title"
               value={formData.title}
-              onChange={(e) => handleInputChange('title', e.target.value)}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              required
               placeholder="Enter artwork title"
-              className={errors.title ? 'border-red-500' : ''}
             />
-            {errors.title && <p className="text-sm text-red-500">{errors.title}</p>}
           </div>
 
+          {/* Description */}
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
               value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Describe your artwork"
               rows={3}
             />
           </div>
 
+          {/* Category */}
           <div className="space-y-2">
-            <Label>Category *</Label>
-            <Select 
-              value={formData.category} 
-              onValueChange={(value) => handleInputChange('category', value)}
-            >
-              <SelectTrigger className={errors.category ? 'border-red-500' : ''}>
+            <Label>Category</Label>
+            <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+              <SelectTrigger>
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
@@ -323,26 +190,26 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
                 ))}
               </SelectContent>
             </Select>
-            {errors.category && <p className="text-sm text-red-500">{errors.category}</p>}
           </div>
 
+          {/* Tags */}
           <div className="space-y-2">
             <Label htmlFor="tags">Tags</Label>
             <Input
               id="tags"
               value={formData.tags}
-              onChange={(e) => handleInputChange('tags', e.target.value)}
-              placeholder="Enter tags separated by commas (e.g., abstract, colorful, modern)"
+              onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+              placeholder="Enter tags separated by commas"
             />
-            <p className="text-xs text-gray-500">Separate multiple tags with commas</p>
           </div>
 
+          {/* Price and For Sale */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="is_for_sale"
                 checked={formData.is_for_sale}
-                onCheckedChange={(checked) => handleInputChange('is_for_sale', !!checked)}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_for_sale: !!checked })}
               />
               <Label htmlFor="is_for_sale">For Sale</Label>
             </div>
@@ -353,41 +220,36 @@ const ArtworkUpload = ({ onClose, onUploadSuccess }: ArtworkUploadProps) => {
                   step="0.01"
                   min="0"
                   value={formData.price}
-                  onChange={(e) => handleInputChange('price', e.target.value)}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                   placeholder="Price ($)"
-                  className={errors.price ? 'border-red-500' : ''}
                 />
-                {errors.price && <p className="text-sm text-red-500">{errors.price}</p>}
               </div>
             )}
           </div>
 
+          {/* Pin Artwork */}
           <div className="flex items-center space-x-2">
             <Checkbox
               id="is_pinned"
               checked={formData.is_pinned}
-              onCheckedChange={(checked) => handleInputChange('is_pinned', !!checked)}
+              onCheckedChange={(checked) => setFormData({ ...formData, is_pinned: !!checked })}
             />
             <Label htmlFor="is_pinned">Pin to top of profile</Label>
           </div>
 
+          {/* Release Date */}
           <div className="space-y-2">
             <Label htmlFor="release_date">Release Date (Optional)</Label>
             <Input
               id="release_date"
               type="datetime-local"
               value={formData.release_date}
-              onChange={(e) => handleInputChange('release_date', e.target.value)}
+              onChange={(e) => setFormData({ ...formData, release_date: e.target.value })}
             />
-            <p className="text-xs text-gray-500">Leave empty to publish immediately</p>
           </div>
 
-          <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={isUploading}
-          >
-            {isUploading ? 'Uploading...' : 'Upload Artwork'}
+          <Button type="submit" className="w-full" disabled={loading || !selectedFile}>
+            {loading ? 'Uploading...' : 'Upload Artwork'}
           </Button>
         </form>
       </CardContent>

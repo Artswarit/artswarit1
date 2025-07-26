@@ -9,24 +9,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import LogoWithName from "@/components/LogoWithName";
-import { Eye, EyeOff, Mail } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { signIn, signInWithGoogle, resendVerification, loading } = useAuth();
+  const { signIn, signInWithGoogle, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showVerificationHelp, setShowVerificationHelp] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const { error } = await signIn(email, password);
-    
     if (!error) {
       navigate("/");
-    } else if (error.message?.includes('Email not verified')) {
-      setShowVerificationHelp(true);
     }
   };
 
@@ -34,12 +30,6 @@ const Login = () => {
     const { error } = await signInWithGoogle();
     if (!error) {
       navigate("/");
-    }
-  };
-
-  const handleResendVerification = async () => {
-    if (email) {
-      await resendVerification(email);
     }
   };
 
@@ -105,28 +95,6 @@ const Login = () => {
                     </button>
                   </div>
                 </div>
-
-                {showVerificationHelp && (
-                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Mail className="h-4 w-4 text-orange-500" />
-                      <span className="text-sm font-medium text-orange-800">Email Verification Required</span>
-                    </div>
-                    <p className="text-sm text-orange-700 mb-3">
-                      Please verify your email before signing in. Check your inbox for the verification link.
-                    </p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleResendVerification}
-                      disabled={loading || !email}
-                      className="text-orange-700 border-orange-300 hover:bg-orange-100"
-                    >
-                      Resend Verification Email
-                    </Button>
-                  </div>
-                )}
 
                 <Button
                   type="submit"

@@ -1,181 +1,359 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, Grid, List, TrendingUp, Calendar, Star } from 'lucide-react';
-import Navbar from '@/components/Navbar';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import ArtworkCard from '@/components/artwork/ArtworkCard';
-import ExploreFilters from '@/components/explore/ExploreFilters';
-import TopFilters from '@/components/explore/TopFilters';
 import { useArtworks } from '@/hooks/useArtworks';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import ArtworkCard from '@/components/artwork/ArtworkCard';
+import TopFilters from '@/components/explore/TopFilters';
+import GlassCard from '@/components/ui/glass-card';
+import { 
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import ChatbotBubble from '@/components/explore/ChatbotBubble';
+
 const Explore = () => {
-  const {
-    artworks,
-    loading,
-    error,
-    fetchArtworks
-  } = useArtworks();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedType, setSelectedType] = useState('all');
-  const [priceRange, setPriceRange] = useState('all');
-  const [sortBy, setSortBy] = useState('recent');
-  const [viewMode, setViewMode] = useState('grid');
-  const [showFilters, setShowFilters] = useState(false);
-  const categories = ['all', 'Digital Art', 'Photography', 'Painting', 'Illustration', 'Sculpture', 'Mixed Media', 'Abstract', 'Portrait', 'Landscape', 'Street Art', 'Music', 'Audio', 'Video', 'Film', 'Writing', 'Literature', 'Poetry'];
-  const types = ['all', 'image', 'video', 'music', 'text'];
-  const filteredArtworks = artworks.filter(artwork => {
-    const matchesSearch = artwork.title.toLowerCase().includes(searchQuery.toLowerCase()) || artwork.artist.toLowerCase().includes(searchQuery.toLowerCase()) || artwork.category?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || artwork.category === selectedCategory;
-    const matchesType = selectedType === 'all' || artwork.type === selectedType;
-    let matchesPrice = true;
-    if (priceRange !== 'all') {
-      const price = artwork.price || 0;
-      switch (priceRange) {
-        case 'free':
-          matchesPrice = price === 0;
-          break;
-        case 'under50':
-          matchesPrice = price > 0 && price < 50;
-          break;
-        case 'under100':
-          matchesPrice = price >= 50 && price < 100;
-          break;
-        case 'over100':
-          matchesPrice = price >= 100;
-          break;
-      }
+  console.log('Explore page rendering');
+  
+  const { artworks, loading, error } = useArtworks();
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [filteredArtworks, setFilteredArtworks] = useState(artworks || []);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
+
+  const trendingArtworks = [...(artworks || [])]
+    .sort((a, b) => ((b.views || 0) + (b.likes || 0) * 5) - ((a.views || 0) + (a.likes || 0) * 5))
+    .slice(0, 4);
+
+  console.log('Explore state:', { artworks: artworks?.length, loading, error, filteredArtworks: filteredArtworks?.length });
+
+  // Pagination logic
+  const totalPages = Math.ceil((filteredArtworks?.length || 0) / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentArtworks = (filteredArtworks || []).slice(startIndex, endIndex);
+
+  const handleFiltersChange = (filters: {
+    search: string;
+    category: string;
+    artworkType: string;
+    priceRange: string;
+    tags: string[];
+    sortBy: string;
+    location: string;
+    approvalStatus?: string;
+    minLikes?: number;
+    minViews?: number;
+    hasAudio?: boolean;
+    hasVideo?: boolean;
+    forSaleOnly?: boolean;
+  }) => {
+    console.log('Filters changed:', filters);
+    let filtered = [...(artworks || [])];
+
+    // Search filter - prioritize artist name matches
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      filtered = filtered.filter(artwork => {
+        const artistName = artwork.artist?.toLowerCase() || '';
+        const title = artwork.title.toLowerCase();
+        const category = artwork.category?.toLowerCase() || '';
+        
+        // Prioritize artist name matches
+        return artistName.includes(searchTerm) || 
+               title.includes(searchTerm) || 
+               category.includes(searchTerm);
+      });
     }
-    return matchesSearch && matchesCategory && matchesType && matchesPrice;
-  });
-  const sortedArtworks = [...filteredArtworks].sort((a, b) => {
-    switch (sortBy) {
-      case 'popular':
-        return (b.likes || 0) - (a.likes || 0);
-      case 'views':
-        return (b.views || 0) - (a.views || 0);
-      case 'price-low':
-        return (a.price || 0) - (b.price || 0);
-      case 'price-high':
-        return (b.price || 0) - (a.price || 0);
-      case 'recent':
+
+    // Category filter (artist category)
+    if (filters.category && filters.category !== 'all') {
+      filtered = filtered.filter(artwork => artwork.category === filters.category);
+    }
+
+    // Artwork type filter
+    if (filters.artworkType && filters.artworkType !== 'all') {
+      filtered = filtered.filter(artwork => artwork.type === filters.artworkType);
+    }
+
+    // Price range filter
+    if (filters.priceRange !== 'all') {
+      filtered = filtered.filter(artwork => {
+        if (!artwork.price && filters.priceRange === 'free') return true;
+        if (!artwork.price) return filters.priceRange === 'all';
+        
+        switch (filters.priceRange) {
+          case 'free':
+            return artwork.price === 0;
+          case '0-50':
+            return artwork.price > 0 && artwork.price <= 50;
+          case '50-100':
+            return artwork.price > 50 && artwork.price <= 100;
+          case '100-500':
+            return artwork.price > 100 && artwork.price <= 500;
+          case '500+':
+            return artwork.price > 500;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Tags filter
+    if (filters.tags.length > 0) {
+      filtered = filtered.filter(artwork =>
+        filters.tags.some(tag =>
+          artwork.tags && artwork.tags.some(artworkTag =>
+            artworkTag.toLowerCase().includes(tag.toLowerCase())
+          )
+        )
+      );
+    }
+
+    // Approval Status filter (NEW)
+    if (filters.approvalStatus && filters.approvalStatus !== "all") {
+      filtered = filtered.filter(
+        artwork =>
+          (artwork.approval_status || "").toLowerCase() === filters.approvalStatus
+      );
+    }
+
+    // Minimum Likes filter (NEW)
+    if (typeof filters.minLikes === "number" && filters.minLikes > 0) {
+      filtered = filtered.filter(artwork => (artwork.likes || 0) >= filters.minLikes);
+    }
+
+    // Minimum Views filter (NEW)
+    if (typeof filters.minViews === "number" && filters.minViews > 0) {
+      filtered = filtered.filter(artwork => (artwork.views || 0) >= filters.minViews);
+    }
+
+    // Has Audio filter (NEW)
+    if (filters.hasAudio) {
+      filtered = filtered.filter(artwork => !!artwork.audioUrl);
+    }
+
+    // Has Video filter (NEW)
+    if (filters.hasVideo) {
+      filtered = filtered.filter(artwork => !!artwork.videoUrl);
+    }
+
+    // For Sale Only filter (NEW)
+    if (filters.forSaleOnly) {
+      filtered = filtered.filter(artwork => artwork.is_for_sale === true);
+    }
+
+    // Sort filter
+    switch (filters.sortBy) {
+      case 'artist_name':
+        filtered.sort((a, b) => {
+          const nameA = a.artist || '';
+          const nameB = b.artist || '';
+          return nameA.localeCompare(nameB);
+        });
+        break;
+      case 'most_viewed':
+        filtered.sort((a, b) => b.views - a.views);
+        break;
+      case 'most_liked':
+        filtered.sort((a, b) => b.likes - a.likes);
+        break;
+      case 'top_rated':
+        filtered.sort((a, b) => (b.views + b.likes) - (a.views + a.likes));
+        break;
+      case 'price_low':
+        filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
+        break;
+      case 'price_high':
+        filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
+        break;
+      case 'most_recent':
       default:
-        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+        // Keep original order for mock data
+        break;
     }
-  });
+
+    console.log('Filtered artworks:', filtered.length);
+    setFilteredArtworks(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
   useEffect(() => {
-    fetchArtworks();
-  }, []);
+    console.log('Artworks data updated:', artworks?.length);
+    if (artworks) {
+      setFilteredArtworks(artworks);
+    }
+  }, [artworks]);
+
   if (loading) {
-    return <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {[...Array(8)].map((_, i) => <Card key={i} className="animate-pulse">
-              <div className="aspect-square bg-gray-200 rounded-t-lg"></div>
-              <CardContent className="p-4">
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-              </CardContent>
-            </Card>)}
-        </div>
-      </div>;
-  }
-  if (error) {
-    return <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <p className="text-red-500 mb-4">Error loading artworks: {error}</p>
-          <Button onClick={fetchArtworks}>Try Again</Button>
-        </div>
-      </div>;
-  }
-  return <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar Filters */}
-          <div className={`lg:w-80 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-            <ExploreFilters categories={categories} types={types} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} selectedType={selectedType} setSelectedType={setSelectedType} priceRange={priceRange} setPriceRange={setPriceRange} />
-          </div>
-
-          {/* Main Content */}
-          <div className="flex-1">
-            {/* Top Bar */}
-            <div className="bg-white rounded-xl shadow-sm p-6 mb-6 mx-0 my-[30px]">
-              <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-                <div className="flex-1 max-w-md">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input placeholder="Search artworks, artists, or tags..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)} className="lg:hidden">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filters
-                  </Button>
-
-                  <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="w-40">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="recent">Most Recent</SelectItem>
-                      <SelectItem value="popular">Most Popular</SelectItem>
-                      <SelectItem value="views">Most Viewed</SelectItem>
-                      <SelectItem value="price-low">Price: Low to High</SelectItem>
-                      <SelectItem value="price-high">Price: High to Low</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <div className="flex border rounded-lg overflow-hidden">
-                    <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('grid')} className="rounded-none">
-                      <Grid className="h-4 w-4" />
-                    </Button>
-                    <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('list')} className="rounded-none">
-                      <List className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <TopFilters categories={categories} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} />
-            </div>
-
-            {/* Results */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">
-                  {sortedArtworks.length} artworks found
-                </h2>
-                {searchQuery && <Badge variant="secondary" className="text-sm">
-                    Search: "{searchQuery}"
-                  </Badge>}
-              </div>
-
-              {sortedArtworks.length === 0 ? <div className="text-center py-12">
-                  <div className="text-gray-400 mb-4">
-                    <Search className="h-16 w-16 mx-auto mb-4" />
-                    <p className="text-lg">No artworks found</p>
-                    <p className="text-sm">Try adjusting your search or filters</p>
-                  </div>
-                  <Button onClick={() => {
-                setSearchQuery('');
-                setSelectedCategory('all');
-                setSelectedType('all');
-                setPriceRange('all');
-              }} variant="outline">
-                    Clear Filters
-                  </Button>
-                </div> : <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
-                  {sortedArtworks.map(artwork => <ArtworkCard key={artwork.id} id={artwork.id} title={artwork.title} artist={artwork.artist} artistId={artwork.artistId} type={artwork.type} imageUrl={artwork.imageUrl} likes={artwork.likes} views={artwork.views} price={artwork.price} category={artwork.category} audioUrl={artwork.audioUrl} videoUrl={artwork.videoUrl} />)}
-                </div>}
-            </div>
-          </div>
+    console.log('Explore showing loading state');
+    return (
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <GlassCard className="p-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+            <p className="mt-4 text-muted-foreground text-center">Loading artworks...</p>
+          </GlassCard>
         </div>
       </div>
-    </div>;
+    );
+  }
+
+  if (error) {
+    console.error('Explore error:', error);
+  }
+
+  console.log('Explore rendering main content with:', currentArtworks?.length, 'artworks');
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+      <Navbar />
+      
+      {/* Hero Section */}
+      <div className="pt-16 pb-8 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-600/10">
+        <div className="container mx-auto px-4 py-12 text-center">
+          <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            Explore Artworks
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Discover amazing artworks from talented artists around the world
+          </p>
+        </div>
+      </div>
+
+      {/* Trending Section */}
+      {trendingArtworks.length > 0 && !loading && (
+        <div className="container mx-auto px-4 pt-8">
+          <h2 className="text-3xl font-bold mb-6 text-gray-800">Trending Now</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {trendingArtworks.map((artwork) => (
+              <div 
+                key={`trending-${artwork.id}`}
+                className="group"
+              >
+                <ArtworkCard
+                  id={artwork.id}
+                  title={artwork.title}
+                  artist={artwork.artist}
+                  artistId={artwork.artistId}
+                  type={artwork.type}
+                  imageUrl={artwork.imageUrl}
+                  likes={artwork.likes}
+                  views={artwork.views}
+                  price={artwork.price}
+                  category={artwork.category}
+                  audioUrl={artwork.audioUrl}
+                  videoUrl={artwork.videoUrl}
+                />
+              </div>
+            ))}
+          </div>
+          <hr className="my-12 border-gray-200" />
+        </div>
+      )}
+
+      {/* Filters */}
+      <TopFilters
+        onFiltersChange={handleFiltersChange}
+        onViewModeChange={setViewMode}
+        viewMode={viewMode}
+        resultsCount={filteredArtworks?.length || 0}
+      />
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        {currentArtworks && currentArtworks.length > 0 ? (
+          <div>
+            {/* Artworks Grid */}
+            <div className={`mb-8 ${
+              viewMode === 'grid'
+                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+                : 'space-y-4'
+            }`}>
+              {currentArtworks.map((artwork) => (
+                <div 
+                  key={artwork.id}
+                  className="group"
+                >
+                  <ArtworkCard
+                    id={artwork.id}
+                    title={artwork.title}
+                    artist={artwork.artist}
+                    artistId={artwork.artistId}
+                    type={artwork.type}
+                    imageUrl={artwork.imageUrl}
+                    likes={artwork.likes}
+                    views={artwork.views}
+                    price={artwork.price}
+                    category={artwork.category}
+                    audioUrl={artwork.audioUrl}
+                    videoUrl={artwork.videoUrl}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center">
+                <GlassCard className="p-4">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                          className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:bg-white/20'}
+                        />
+                      </PaginationItem>
+                      
+                      {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                        const pageNum = i + 1;
+                        return (
+                          <PaginationItem key={pageNum}>
+                            <PaginationLink
+                              onClick={() => setCurrentPage(pageNum)}
+                              isActive={currentPage === pageNum}
+                              className="cursor-pointer hover:bg-white/20"
+                            >
+                              {pageNum}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      })}
+                      
+                      <PaginationItem>
+                        <PaginationNext 
+                          onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                          className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:bg-white/20'}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </GlassCard>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-center py-16">
+            <GlassCard className="p-12 max-w-md mx-auto">
+              <div className="text-6xl mb-4">🎨</div>
+              <h3 className="text-xl font-semibold mb-2">No artworks found</h3>
+              <p className="text-gray-500">Try adjusting your filters or search terms to discover amazing artworks.</p>
+            </GlassCard>
+          </div>
+        )}
+      </main>
+
+      <Footer />
+
+      {/* Floating ChatbotBubble for artist discovery */}
+      <ChatbotBubble />
+    </div>
+  );
 };
+
 export default Explore;

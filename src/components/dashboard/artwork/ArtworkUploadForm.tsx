@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -28,12 +27,7 @@ const visibilityOptions = [
   { id: "followers", label: "Followers Only - Visible to your followers" },
 ];
 
-interface ArtworkUploadFormProps {
-  onSuccess?: () => void;
-  uploadArtwork?: (artworkData: any) => Promise<{ error: any; artwork?: any }>;
-}
-
-const ArtworkUploadForm = ({ onSuccess, uploadArtwork }: ArtworkUploadFormProps = {}) => {
+const ArtworkUploadForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [selectedType, setSelectedType] = useState("image");
@@ -48,58 +42,11 @@ const ArtworkUploadForm = ({ onSuccess, uploadArtwork }: ArtworkUploadFormProps 
   const [isUploading, setIsUploading] = useState(false);
   const [detectionResults, setDetectionResults] = useState<any[]>([]);
   const [hasAiContent, setHasAiContent] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!title.trim()) {
-      newErrors.title = 'Title is required';
-    }
-    
-    if (selectedFiles.length === 0) {
-      newErrors.files = 'Please select at least one file';
-    }
-    
-    if (visibilityType !== "free" && !price) {
-      newErrors.price = 'Price is required for premium/exclusive content';
-    }
-    
-    if (price && isNaN(parseFloat(price))) {
-      newErrors.price = 'Please enter a valid price';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const fileArray = Array.from(e.target.files);
-      
-      // Validate file types and sizes
-      const invalidFiles = fileArray.filter(file => {
-        const maxSize = 50 * 1024 * 1024; // 50MB
-        return file.size > maxSize;
-      });
-      
-      if (invalidFiles.length > 0) {
-        toast({
-          title: "File too large",
-          description: `Some files exceed the 50MB limit. Please select smaller files.`,
-          variant: "destructive",
-        });
-        return;
-      }
-      
       setSelectedFiles(fileArray);
-      setDetectionResults([]);
-      setHasAiContent(false);
-      
-      // Clear file error
-      if (errors.files) {
-        setErrors(prev => ({ ...prev, files: '' }));
-      }
     }
   };
 
@@ -115,17 +62,38 @@ const ArtworkUploadForm = ({ onSuccess, uploadArtwork }: ArtworkUploadFormProps 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
+    setIsUploading(true);
+
+    // Validation
+    if (!title.trim()) {
       toast({
-        title: "Validation Error",
-        description: "Please fix the errors in the form.",
+        title: "Error",
+        description: "Please enter a title for your artwork.",
         variant: "destructive",
       });
+      setIsUploading(false);
       return;
     }
 
-    setIsUploading(true);
+    if (selectedFiles.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one file to upload.",
+        variant: "destructive",
+      });
+      setIsUploading(false);
+      return;
+    }
+
+    if (visibilityType !== "free" && !price) {
+      toast({
+        title: "Error",
+        description: "Please enter a price for your premium/exclusive content.",
+        variant: "destructive",
+      });
+      setIsUploading(false);
+      return;
+    }
 
     // Additional validation for AI content
     if (hasAiContent) {
@@ -138,76 +106,15 @@ const ArtworkUploadForm = ({ onSuccess, uploadArtwork }: ArtworkUploadFormProps 
       }
     }
 
-    try {
-      if (uploadArtwork) {
-        const artworkData = {
-          title,
-          description,
-          category: selectedType,
-          price: price ? parseFloat(price) : null,
-          is_for_sale: visibilityType !== "free",
-          file: selectedFiles[0],
-          tags: [],
-          release_date: scheduleRelease ? releaseDate : null
-        };
-
-        const result = await uploadArtwork(artworkData);
-        
-        if (result.error) {
-          throw new Error(result.error);
-        }
-        
-        // Clear form
-        setTitle("");
-        setDescription("");
-        setPrice("");
-        setSelectedFiles([]);
-        setDetectionResults([]);
-        setHasAiContent(false);
-        setErrors({});
-        
-        if (onSuccess) {
-          onSuccess();
-        } else {
-          navigate("/artist-dashboard");
-        }
-      } else {
-        // Fallback to mock upload
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        
-        toast({
-          title: "Success",
-          description: "Your artwork has been uploaded successfully!",
-        });
-        
-        // Clear form
-        setTitle("");
-        setDescription("");
-        setPrice("");
-        setSelectedFiles([]);
-        setDetectionResults([]);
-        setHasAiContent(false);
-        setErrors({});
-        
-        navigate("/artist-dashboard");
-      }
-    } catch (error: any) {
-      console.error('Upload error:', error);
+    // Simulate upload process
+    setTimeout(() => {
       toast({
-        title: "Upload Failed",
-        description: error.message || "Failed to upload artwork. Please try again.",
-        variant: "destructive",
+        title: "Success",
+        description: "Your artwork has been uploaded successfully!",
       });
-    } finally {
       setIsUploading(false);
-    }
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
+      navigate("/artist-dashboard");
+    }, 2000);
   };
 
   return (
@@ -246,18 +153,14 @@ const ArtworkUploadForm = ({ onSuccess, uploadArtwork }: ArtworkUploadFormProps 
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Title *</Label>
+              <Label htmlFor="title">Title*</Label>
               <Input 
                 id="title" 
                 value={title} 
-                onChange={(e) => {
-                  setTitle(e.target.value);
-                  handleInputChange('title', e.target.value);
-                }} 
+                onChange={(e) => setTitle(e.target.value)} 
                 placeholder="Enter artwork title"
-                className={errors.title ? 'border-red-500' : ''}
+                required
               />
-              {errors.title && <p className="text-sm text-red-500">{errors.title}</p>}
             </div>
             
             <div className="space-y-2">
@@ -272,7 +175,7 @@ const ArtworkUploadForm = ({ onSuccess, uploadArtwork }: ArtworkUploadFormProps 
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="upload">Upload {selectedType === "image" ? "Images" : selectedType === "audio" ? "Audio Files" : selectedType === "video" ? "Videos" : "Documents"} *</Label>
+              <Label htmlFor="upload">Upload {selectedType === "image" ? "Images" : selectedType === "audio" ? "Audio Files" : selectedType === "video" ? "Videos" : "Documents"}*</Label>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors">
                 <Input 
                   id="upload" 
@@ -298,7 +201,6 @@ const ArtworkUploadForm = ({ onSuccess, uploadArtwork }: ArtworkUploadFormProps 
                     <div>
                       <p className="text-primary font-medium">Click to upload</p>
                       <p className="text-sm text-gray-500 mt-1">or drag and drop</p>
-                      <p className="text-xs text-gray-400 mt-2">Max file size: 50MB</p>
                     </div>
                   ) : (
                     <div>
@@ -308,7 +210,6 @@ const ArtworkUploadForm = ({ onSuccess, uploadArtwork }: ArtworkUploadFormProps 
                   )}
                 </Label>
               </div>
-              {errors.files && <p className="text-sm text-red-500">{errors.files}</p>}
               
               {/* AI Content Detection for uploaded files */}
               {selectedFiles.length > 0 && (
@@ -406,21 +307,16 @@ const ArtworkUploadForm = ({ onSuccess, uploadArtwork }: ArtworkUploadFormProps 
 
             {(visibilityType === "premium" || visibilityType === "exclusive") && (
               <div className="space-y-2">
-                <Label htmlFor="price">Price (₹) *</Label>
+                <Label htmlFor="price">Price (₹)*</Label>
                 <Input 
                   id="price" 
                   value={price} 
-                  onChange={(e) => {
-                    setPrice(e.target.value);
-                    handleInputChange('price', e.target.value);
-                  }} 
+                  onChange={(e) => setPrice(e.target.value)} 
                   placeholder="Enter price"
                   type="number"
                   min="0"
                   step="0.01"
-                  className={errors.price ? 'border-red-500' : ''}
                 />
-                {errors.price && <p className="text-sm text-red-500">{errors.price}</p>}
               </div>
             )}
 

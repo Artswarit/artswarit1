@@ -524,95 +524,6 @@ export type Database = {
           },
         ]
       }
-      subscriptions: {
-        Row: {
-          amount: number
-          artist_id: string | null
-          created_at: string | null
-          id: string
-          next_billing: string | null
-          status: string | null
-          tier: string
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          amount: number
-          artist_id?: string | null
-          created_at?: string | null
-          id?: string
-          next_billing?: string | null
-          status?: string | null
-          tier: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          amount?: number
-          artist_id?: string | null
-          created_at?: string | null
-          id?: string
-          next_billing?: string | null
-          status?: string | null
-          tier?: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      transactions: {
-        Row: {
-          amount: number
-          artwork_id: string | null
-          created_at: string | null
-          currency: string | null
-          from_user_id: string | null
-          id: string
-          message: string | null
-          metadata: Json | null
-          status: string | null
-          to_user_id: string | null
-          type: string
-          updated_at: string | null
-        }
-        Insert: {
-          amount: number
-          artwork_id?: string | null
-          created_at?: string | null
-          currency?: string | null
-          from_user_id?: string | null
-          id?: string
-          message?: string | null
-          metadata?: Json | null
-          status?: string | null
-          to_user_id?: string | null
-          type: string
-          updated_at?: string | null
-        }
-        Update: {
-          amount?: number
-          artwork_id?: string | null
-          created_at?: string | null
-          currency?: string | null
-          from_user_id?: string | null
-          id?: string
-          message?: string | null
-          metadata?: Json | null
-          status?: string | null
-          to_user_id?: string | null
-          type?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "transactions_artwork_id_fkey"
-            columns: ["artwork_id"]
-            isOneToOne: false
-            referencedRelation: "artworks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_roles: {
         Row: {
           created_at: string
@@ -641,39 +552,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      withdrawals: {
-        Row: {
-          amount: number
-          created_at: string | null
-          id: string
-          payment_method: string
-          processed_at: string | null
-          status: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          amount: number
-          created_at?: string | null
-          id?: string
-          payment_method: string
-          processed_at?: string | null
-          status?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          amount?: number
-          created_at?: string | null
-          id?: string
-          payment_method?: string
-          processed_at?: string | null
-          status?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
       }
     }
     Views: {

@@ -16,15 +16,15 @@ interface DetectionResult {
 }
 
 interface AIContentDetectionProps {
-  fileUrl?: string;
-  contentType?: 'image' | 'video' | 'audio' | 'text';
+  fileUrl: string;
+  contentType: 'image' | 'video' | 'audio' | 'text';
   onDetectionComplete?: (result: DetectionResult) => void;
   autoDetect?: boolean;
 }
 
 const AIContentDetection = ({ 
-  fileUrl = "", 
-  contentType = "image", 
+  fileUrl, 
+  contentType, 
   onDetectionComplete,
   autoDetect = false 
 }: AIContentDetectionProps) => {
@@ -33,15 +33,6 @@ const AIContentDetection = ({
   const { toast } = useToast();
 
   const analyzeContent = async () => {
-    if (!fileUrl) {
-      toast({
-        title: "No content to analyze",
-        description: "Please upload content first.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsAnalyzing(true);
     setResult(null);
 
@@ -72,7 +63,7 @@ const AIContentDetection = ({
           description: `Content analysis finished. ${data.isAiGenerated ? 'Possible AI content detected.' : 'No AI generation detected.'}`,
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('AI detection error:', error);
       const errorResult = {
         isAiGenerated: false,
@@ -93,6 +84,13 @@ const AIContentDetection = ({
     }
   };
 
+  // Auto-detect on mount if enabled
+  useState(() => {
+    if (autoDetect && fileUrl) {
+      analyzeContent();
+    }
+  });
+
   const getStatusIcon = () => {
     if (isAnalyzing) return <Loader2 className="h-4 w-4 animate-spin" />;
     if (!result) return <Shield className="h-4 w-4" />;
@@ -103,8 +101,8 @@ const AIContentDetection = ({
   const getStatusColor = () => {
     if (!result || result.error) return "secondary";
     if (result.flagged) return "destructive";
-    if (result.isAiGenerated) return "default";
-    return "default";
+    if (result.isAiGenerated) return "warning";
+    return "success";
   };
 
   const getStatusText = () => {
@@ -117,69 +115,63 @@ const AIContentDetection = ({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">AI Content Detection</h2>
-      </div>
+    <Card className="w-full">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-sm">
+          {getStatusIcon()}
+          AI Content Detection
+        </CardTitle>
+        <CardDescription>
+          Analyze {contentType} content for AI generation
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Badge variant={getStatusColor() as any} className="flex items-center gap-1">
+            {getStatusText()}
+          </Badge>
+          {result && result.confidence > 0 && (
+            <span className="text-sm text-muted-foreground">
+              {Math.round(result.confidence * 100)}% confidence
+            </span>
+          )}
+        </div>
 
-      <Card className="w-full">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-sm">
-            {getStatusIcon()}
-            AI Content Detection
-          </CardTitle>
-          <CardDescription>
-            Analyze {contentType} content for AI generation
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Badge variant={getStatusColor() as any} className="flex items-center gap-1">
-              {getStatusText()}
-            </Badge>
-            {result && result.confidence > 0 && (
-              <span className="text-sm text-muted-foreground">
-                {Math.round(result.confidence * 100)}% confidence
-              </span>
+        {!autoDetect && (
+          <Button 
+            onClick={analyzeContent} 
+            disabled={isAnalyzing || !fileUrl}
+            className="w-full"
+            variant="outline"
+          >
+            {isAnalyzing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Analyzing Content...
+              </>
+            ) : (
+              <>
+                <Shield className="mr-2 h-4 w-4" />
+                Analyze for AI Content
+              </>
             )}
+          </Button>
+        )}
+
+        {result && result.error && (
+          <div className="text-sm text-red-500 bg-red-50 p-2 rounded">
+            Error: {result.error}
           </div>
+        )}
 
-          {!autoDetect && (
-            <Button 
-              onClick={analyzeContent} 
-              disabled={isAnalyzing || !fileUrl}
-              className="w-full"
-              variant="outline"
-            >
-              {isAnalyzing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Analyzing Content...
-                </>
-              ) : (
-                <>
-                  <Shield className="mr-2 h-4 w-4" />
-                  Analyze for AI Content
-                </>
-              )}
-            </Button>
-          )}
-
-          {result && result.error && (
-            <div className="text-sm text-red-500 bg-red-50 p-2 rounded">
-              Error: {result.error}
-            </div>
-          )}
-
-          {result && result.flagged && (
-            <div className="text-sm text-amber-700 bg-amber-50 p-2 rounded">
-              <strong>Warning:</strong> This content has been flagged as likely AI-generated. 
-              Please review before publishing.
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+        {result && result.flagged && (
+          <div className="text-sm text-amber-700 bg-amber-50 p-2 rounded">
+            <strong>Warning:</strong> This content has been flagged as likely AI-generated. 
+            Please review before publishing.
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

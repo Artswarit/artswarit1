@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { useArtistArtworks } from '@/hooks/useArtistArtworks';
+import { useArtworks } from '@/hooks/useArtworks';
 import { Grid, List, Plus, BarChart3 } from 'lucide-react';
 import ArtworkUploadForm from './artwork/ArtworkUploadForm';
 import ArtworkEditModal from './artwork/ArtworkEditModal';
@@ -14,7 +14,7 @@ import ArtworkBulkActions from './artwork/ArtworkBulkActions';
 import ArtworkAnalytics from './artwork/ArtworkAnalytics';
 
 const ArtworkManagement = () => {
-  const { artworks, loading, uploadArtwork, refetch } = useArtistArtworks();
+  const { artworks, loading } = useArtworks();
   const { toast } = useToast();
   
   const [selectedArtworks, setSelectedArtworks] = useState<string[]>([]);
@@ -365,13 +365,7 @@ const ArtworkManagement = () => {
                 ×
               </Button>
             </div>
-            <ArtworkUploadForm 
-              onSuccess={() => {
-                setShowUploadForm(false);
-                refetch();
-              }}
-              uploadArtwork={uploadArtwork}
-            />
+            <ArtworkUploadForm />
           </div>
         </div>
       )}
