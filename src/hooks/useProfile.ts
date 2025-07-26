@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +14,7 @@ interface Profile {
   website: string | null;
   social_links: any;
   is_verified: boolean;
+  account_status: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -82,6 +82,7 @@ export const useProfile = () => {
             email: user.email || '',
             full_name: user.user_metadata?.full_name || null,
             role: user.user_metadata?.role || 'client',
+            account_status: 'approved',
           }])
           .select()
           .single();

@@ -5,11 +5,7 @@ import ProfileEditor from "./profile/ProfileEditor";
 import ProfileImages from "./profile/ProfileImages";
 import TagManager from "./profile/TagManager";
 
-interface ArtistProfileProps {
-  isLoading: boolean;
-}
-
-const ArtistProfile = ({ isLoading }: ArtistProfileProps) => {
+const ArtistProfile = () => {
   const { profile, loading } = useProfile();
   const [isEditing, setIsEditing] = useState(false);
   const [tags, setTags] = useState({
@@ -49,7 +45,7 @@ const ArtistProfile = ({ isLoading }: ArtistProfileProps) => {
     }));
   }, []);
 
-  if (isLoading || loading) {
+  if (loading) {
     return (
       <div className="space-y-6">
         <div className="h-10 w-48 bg-gray-200 animate-pulse rounded-md"></div>

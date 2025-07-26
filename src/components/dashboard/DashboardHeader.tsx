@@ -1,19 +1,26 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PlusCircle, TrendingUp, Calendar, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
 interface DashboardHeaderProps {
   user?: any;
   profile?: any;
   title: string;
   subtitle: string;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
+
 const DashboardHeader = ({
   user,
   profile,
   title,
-  subtitle
+  subtitle,
+  activeTab,
+  onTabChange
 }: DashboardHeaderProps) => {
   const navigate = useNavigate();
   const [artistStats, setArtistStats] = useState({
@@ -22,7 +29,9 @@ const DashboardHeader = ({
     totalArtworks: 32,
     followers: 548
   });
-  return <div className="space-y-4 sm:space-y-6 py-3 sm:py-[18px] my-6 sm:my-[49px]">
+
+  return (
+    <div className="space-y-4 sm:space-y-6 py-3 sm:py-[18px] my-6 sm:my-[49px]">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{title}</h1>
@@ -30,8 +39,6 @@ const DashboardHeader = ({
             {subtitle}
           </p>
         </div>
-        
-        
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
@@ -85,6 +92,8 @@ const DashboardHeader = ({
           </CardContent>
         </Card>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default DashboardHeader;

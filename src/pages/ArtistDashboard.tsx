@@ -90,7 +90,8 @@ const ArtistDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <DashboardHeader 
-        userRole="artist" 
+        title="Artist Dashboard"
+        subtitle="Manage your artworks, profile, and earnings"
         activeTab={activeTab} 
         onTabChange={handleTabChange}
       />
