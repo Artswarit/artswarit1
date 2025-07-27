@@ -765,6 +765,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_artist_dashboard_stats: {
+        Args: { artist_uuid: string }
+        Returns: Json
+      }
       get_artist_stats: {
         Args: { artist_uuid: string }
         Returns: Json
