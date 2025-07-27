@@ -473,6 +473,50 @@ export type Database = {
           },
         ]
       }
+      sales: {
+        Row: {
+          amount: number
+          artist_id: string
+          artwork_id: string | null
+          buyer_id: string | null
+          created_at: string
+          currency: string | null
+          id: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          artist_id: string
+          artwork_id?: string | null
+          buyer_id?: string | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          artist_id?: string
+          artwork_id?: string | null
+          buyer_id?: string | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_artwork_id_fkey"
+            columns: ["artwork_id"]
+            isOneToOne: false
+            referencedRelation: "artworks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_artists: {
         Row: {
           artist_id: string
