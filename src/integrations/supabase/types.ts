@@ -781,6 +781,10 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      record_artwork_sale: {
+        Args: { artwork_uuid: string; buyer_uuid: string; sale_amount: number }
+        Returns: string
+      }
     }
     Enums: {
       account_status: "pending" | "approved" | "rejected"

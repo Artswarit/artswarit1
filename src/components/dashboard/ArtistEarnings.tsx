@@ -3,6 +3,8 @@ import { useState, lazy, Suspense, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
+import { useSales } from "@/hooks/useSales";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
 
 // Lazy load heavy chart components
 const LazyEarningsChart = lazy(() => import("./earnings/EarningsChart"));
@@ -12,95 +14,57 @@ interface ArtistEarningsProps {
   isLoading: boolean;
 }
 
-// Sample data
-const monthlyData = [
-  { name: "Jan", earnings: 12000 },
-  { name: "Feb", earnings: 15000 },
-  { name: "Mar", earnings: 18000 },
-  { name: "Apr", earnings: 16000 },
-  { name: "May", earnings: 21000 },
-  { name: "Jun", earnings: 19000 },
-  { name: "Jul", earnings: 22000 },
-  { name: "Aug", earnings: 25000 },
-  { name: "Sep", earnings: 27000 },
-  { name: "Oct", earnings: 29000 },
-  { name: "Nov", earnings: 31000 },
-  { name: "Dec", earnings: 35000 },
-];
-
-const transactionData = [
-  {
-    id: "1",
-    artworkTitle: "Mystic Mountains",
-    artworkType: "image",
-    amount: 4500,
-    status: "completed",
-    date: "2023-11-15T14:30:00",
-    buyerName: "Rajiv Kumar"
-  },
-  {
-    id: "2",
-    artworkTitle: "Urban Dreams",
-    artworkType: "video",
-    amount: 6200,
-    status: "completed",
-    date: "2023-11-10T09:15:00",
-    buyerName: "Priya Sharma"
-  },
-  {
-    id: "3",
-    artworkTitle: "Ambient Waves",
-    artworkType: "audio",
-    amount: 3800,
-    status: "pending",
-    date: "2023-11-18T16:45:00",
-    buyerName: "Ankit Patel"
-  },
-  {
-    id: "4",
-    artworkTitle: "Whispers of Time",
-    artworkType: "text",
-    amount: 1500,
-    status: "completed",
-    date: "2023-11-05T11:20:00",
-    buyerName: "Meera Joshi"
-  },
-  {
-    id: "5",
-    artworkTitle: "Digital Renaissance",
-    artworkType: "image",
-    amount: 8900,
-    status: "completed",
-    date: "2023-10-28T13:50:00",
-    buyerName: "Vikram Singh"
-  },
-];
 
 const ArtistEarnings = ({ isLoading }: ArtistEarningsProps) => {
   const [period, setPeriod] = useState("year");
+  const { sales, loading: salesLoading } = useSales();
+  const { stats } = useDashboardStats();
   
-  // Memoize expensive calculations
+  // Calculate real earnings from sales data
   const { totalEarnings, pendingEarnings, avgPerSale } = useMemo(() => {
-    const total = transactionData.reduce((sum, transaction) => sum + transaction.amount, 0);
-    const pending = transactionData
-      .filter(transaction => transaction.status === "pending")
-      .reduce((sum, transaction) => sum + transaction.amount, 0);
-    const avg = Math.round(total / transactionData.length);
+    if (sales.length === 0) {
+      return {
+        totalEarnings: 0,
+        pendingEarnings: 0,
+        avgPerSale: 0
+      };
+    }
+
+    const total = sales.reduce((sum, sale) => sum + sale.amount, 0);
+    const pending = sales
+      .filter(sale => sale.status === "pending")
+      .reduce((sum, sale) => sum + sale.amount, 0);
+    const avg = Math.round(total / sales.length);
     
     return {
       totalEarnings: total,
       pendingEarnings: pending,
       avgPerSale: avg
     };
-  }, []);
+  }, [sales]);
 
-  if (isLoading) {
+  if (isLoading || salesLoading) {
     return (
       <div className="space-y-6">
         <div className="h-10 w-48 bg-gray-200 animate-pulse rounded-md"></div>
         <div className="h-64 bg-gray-200 animate-pulse rounded-md"></div>
         <div className="h-64 bg-gray-200 animate-pulse rounded-md"></div>
       </div>
+    );
+  }
+
+  // Show empty state if no sales data
+  if (sales.length === 0) {
+    return (
+      <Card className="bg-white/60 backdrop-blur-sm">
+        <CardContent className="p-8 text-center">
+          <Download className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">No Earnings Yet</h3>
+          <p className="text-gray-600">
+            Your earnings will appear here once you start making sales.
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -153,18 +117,10 @@ const ArtistEarnings = ({ isLoading }: ArtistEarningsProps) => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">₹{avgPerSale.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground mt-1">From {transactionData.length} sales</p>
+            <p className="text-xs text-muted-foreground mt-1">From {sales.length} sales</p>
           </CardContent>
         </Card>
       </div>
-
-      <Suspense fallback={<div className="h-[350px] bg-gray-100 animate-pulse rounded-lg flex items-center justify-center">Loading chart...</div>}>
-        <LazyEarningsChart
-          data={monthlyData}
-          period={period}
-          onPeriodChange={setPeriod}
-        />
-      </Suspense>
 
       <Card>
         <CardHeader>
@@ -184,19 +140,19 @@ const ArtistEarnings = ({ isLoading }: ArtistEarningsProps) => {
                 </tr>
               </thead>
               <tbody>
-                {transactionData.map((transaction) => (
-                  <tr key={transaction.id} className="border-b hover:bg-muted/50">
-                    <td className="p-4">{transaction.artworkTitle}</td>
-                    <td className="p-4">{transaction.buyerName}</td>
-                    <td className="p-4">{new Date(transaction.date).toLocaleDateString()}</td>
-                    <td className="p-4 font-medium">₹{transaction.amount.toLocaleString()}</td>
+                {sales.slice(0, 10).map((sale) => (
+                  <tr key={sale.id} className="border-b hover:bg-muted/50">
+                    <td className="p-4">{sale.artwork?.title || 'Unknown Artwork'}</td>
+                    <td className="p-4">Customer</td>
+                    <td className="p-4">{new Date(sale.created_at).toLocaleDateString()}</td>
+                    <td className="p-4 font-medium">₹{sale.amount.toLocaleString()}</td>
                     <td className="p-4">
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        transaction.status === "completed"
+                        sale.status === "completed"
                           ? "bg-green-100 text-green-800"
                           : "bg-yellow-100 text-yellow-800"
                       }`}>
-                        {transaction.status === "completed" ? "Completed" : "Pending"}
+                        {sale.status === "completed" ? "Completed" : "Pending"}
                       </span>
                     </td>
                   </tr>

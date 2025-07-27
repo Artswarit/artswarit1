@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useArtworks } from '@/hooks/useArtworks';
 import { useProjects } from '@/hooks/useProjects';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -13,6 +14,7 @@ import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import ArtworkManagement from '@/components/dashboard/ArtworkManagement';
 import ArtistProfile from '@/components/dashboard/ArtistProfile';
 import ArtistEarnings from '@/components/dashboard/ArtistEarnings';
+import DashboardAnalytics from '@/components/dashboard/DashboardAnalytics';
 import MessagingModule from '@/components/dashboard/messages/MessagingModule';
 import ArtistSettings from '@/components/dashboard/ArtistSettings';
 import PremiumMembership from '@/components/premium/PremiumMembership';
@@ -20,7 +22,7 @@ import NotificationCenter from '@/components/notifications/NotificationCenter';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Palette, User, DollarSign, MessageSquare, Settings, Crown, Bell, FolderUp, Briefcase, Plus } from 'lucide-react';
+import { Palette, User, DollarSign, MessageSquare, Settings, Crown, Bell, FolderUp, Briefcase, Plus, BarChart3 } from 'lucide-react';
 import ArtworkUpload from '@/components/artwork/ArtworkUpload';
 import ProjectManagement from '@/components/dashboard/projects/ProjectManagement';
 import ArtistNotifications from '@/components/dashboard/ArtistNotifications';
@@ -90,7 +92,7 @@ const ArtistDashboard = () => {
 
           <Tabs defaultValue={defaultTab} className="w-full">
             <div className="overflow-x-auto mb-6 sm:mb-8">
-              <TabsList className="grid grid-cols-4 sm:grid-cols-8 w-full min-w-[600px] sm:min-w-0 bg-white/60 backdrop-blur-sm">
+              <TabsList className="grid grid-cols-4 sm:grid-cols-9 w-full min-w-[700px] sm:min-w-0 bg-white/60 backdrop-blur-sm">
                 <TabsTrigger value="artworks" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
                   <Palette className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="hidden xs:inline">Artworks</span>
@@ -110,6 +112,11 @@ const ArtistDashboard = () => {
                   <Crown className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="hidden xs:inline">Premium</span>
                   <span className="xs:hidden">Prem</span>
+                </TabsTrigger>
+                <TabsTrigger value="analytics" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                  <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Analytics</span>
+                  <span className="xs:hidden">Stats</span>
                 </TabsTrigger>
                 <TabsTrigger value="earnings" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
                   <DollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -157,6 +164,9 @@ const ArtistDashboard = () => {
             </TabsContent>
             <TabsContent value="premium" className="space-y-6">
               <PremiumMembership />
+            </TabsContent>
+            <TabsContent value="analytics" className="space-y-6">
+              <DashboardAnalytics />
             </TabsContent>
             <TabsContent value="earnings" className="space-y-6">
               <ArtistEarnings isLoading={profileLoading} />
