@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Card, CardContent, CardDescription, CardFooter, 
@@ -7,91 +6,27 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bell, DollarSign, Award, MessageSquare } from "lucide-react";
+import { useNotifications } from "@/hooks/useNotifications";
 
 interface ArtistNotificationsProps {
   isLoading: boolean;
 }
 
-// Sample notification data
-const NOTIFICATION_DATA = [
-  {
-    id: "1",
-    type: "payment",
-    title: "Payment Received",
-    message: "You've received a payment of ₹4,500 for 'Mystic Mountains'",
-    timestamp: "2023-11-15T14:30:00",
-    isRead: false
-  },
-  {
-    id: "2",
-    type: "comment",
-    title: "New Comment",
-    message: "Priya Sharma commented on your artwork 'Urban Dreams'",
-    timestamp: "2023-11-14T09:15:00",
-    isRead: false
-  },
-  {
-    id: "3",
-    type: "achievement",
-    title: "Milestone Reached",
-    message: "Congratulations! Your artwork 'Ambient Waves' has reached 1,000 views",
-    timestamp: "2023-11-12T16:45:00",
-    isRead: false
-  },
-  {
-    id: "4",
-    type: "admin",
-    title: "From Artswarit Team",
-    message: "Your application for featured artist status is being reviewed",
-    timestamp: "2023-11-10T11:20:00",
-    isRead: true
-  },
-  {
-    id: "5",
-    type: "payment",
-    title: "Payment Received",
-    message: "You've received a payment of ₹3,800 for 'Digital Renaissance'",
-    timestamp: "2023-11-08T13:50:00",
-    isRead: true
-  },
-  {
-    id: "6",
-    type: "comment",
-    title: "New Comment",
-    message: "Ankit Patel commented on your artwork 'Ocean Dreams'",
-    timestamp: "2023-11-05T17:30:00",
-    isRead: true
-  },
-  {
-    id: "7",
-    type: "achievement",
-    title: "Milestone Reached",
-    message: "Your profile has reached 500 followers! Keep up the great work",
-    timestamp: "2023-11-02T10:15:00",
-    isRead: true
-  }
-];
-
 const ArtistNotifications = ({ isLoading }: ArtistNotificationsProps) => {
-  const [notifications, setNotifications] = useState(NOTIFICATION_DATA);
+  const { 
+    notifications, 
+    loading: notificationsLoading, 
+    unreadCount, 
+    markAsRead, 
+    markAllAsRead,
+    deleteNotification 
+  } = useNotifications();
   const [activeTab, setActiveTab] = useState("all");
-  
-  const unreadCount = notifications.filter(n => !n.isRead).length;
   
   const filterNotifications = () => {
     if (activeTab === "all") return notifications;
-    if (activeTab === "unread") return notifications.filter(n => !n.isRead);
+    if (activeTab === "unread") return notifications.filter(n => !n.is_read);
     return notifications.filter(n => n.type === activeTab);
-  };
-  
-  const markAsRead = (id: string) => {
-    setNotifications(prev => prev.map(n => 
-      n.id === id ? { ...n, isRead: true } : n
-    ));
-  };
-  
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
   };
 
   const getNotificationIcon = (type: string) => {
@@ -130,7 +65,7 @@ const ArtistNotifications = ({ isLoading }: ArtistNotificationsProps) => {
     return date.toLocaleDateString();
   };
 
-  if (isLoading) {
+  if (isLoading || notificationsLoading) {
     return (
       <div className="space-y-6">
         <div className="h-10 w-48 bg-gray-200 animate-pulse rounded-md"></div>
@@ -171,10 +106,10 @@ const ArtistNotifications = ({ isLoading }: ArtistNotificationsProps) => {
             )}
           </TabsTrigger>
           <TabsTrigger value="unread">Unread</TabsTrigger>
-          <TabsTrigger value="payment">Payments</TabsTrigger>
-          <TabsTrigger value="comment">Comments</TabsTrigger>
-          <TabsTrigger value="achievement">Milestones</TabsTrigger>
-          <TabsTrigger value="admin">Admin</TabsTrigger>
+          <TabsTrigger value="success">Payments</TabsTrigger>
+          <TabsTrigger value="info">Comments</TabsTrigger>
+          <TabsTrigger value="warning">Milestones</TabsTrigger>
+          <TabsTrigger value="error">Admin</TabsTrigger>
         </TabsList>
         
         <Card>
@@ -182,10 +117,10 @@ const ArtistNotifications = ({ isLoading }: ArtistNotificationsProps) => {
             <CardTitle className="text-lg">
               {activeTab === "all" && "All Notifications"}
               {activeTab === "unread" && "Unread Notifications"}
-              {activeTab === "payment" && "Payment Notifications"}
-              {activeTab === "comment" && "Comment Notifications"}
-              {activeTab === "achievement" && "Milestone Notifications"}
-              {activeTab === "admin" && "Admin Notifications"}
+              {activeTab === "success" && "Payment Notifications"}
+              {activeTab === "info" && "Comment Notifications"}
+              {activeTab === "warning" && "Milestone Notifications"}
+              {activeTab === "error" && "Admin Notifications"}
             </CardTitle>
             <CardDescription>
               {activeTab === "all" 
@@ -204,7 +139,7 @@ const ArtistNotifications = ({ isLoading }: ArtistNotificationsProps) => {
                 filterNotifications().map((notification) => (
                   <div 
                     key={notification.id} 
-                    className={`px-6 py-4 hover:bg-muted/50 ${!notification.isRead ? "bg-muted/30" : ""}`}
+                    className={`px-6 py-4 hover:bg-muted/50 ${!notification.is_read ? "bg-muted/30" : ""}`}
                     onClick={() => markAsRead(notification.id)}
                   >
                     <div className="flex gap-4">
@@ -215,14 +150,14 @@ const ArtistNotifications = ({ isLoading }: ArtistNotificationsProps) => {
                         <div className="flex justify-between items-start">
                           <h4 className="font-medium">{notification.title}</h4>
                           <span className="text-xs text-muted-foreground">
-                            {formatTime(notification.timestamp)}
+                            {formatTime(notification.created_at)}
                           </span>
                         </div>
                         <p className="text-sm text-muted-foreground mt-1">
                           {notification.message}
                         </p>
                       </div>
-                      {!notification.isRead && (
+                      {!notification.is_read && (
                         <div className="h-2 w-2 mt-2 rounded-full bg-blue-500"></div>
                       )}
                     </div>
