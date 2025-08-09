@@ -29,6 +29,7 @@ import Recommendations from "./pages/Recommendations";
 import Commissions from "./pages/Commissions";
 import Events from "./pages/Events";
 import Merchandise from "./pages/Merchandise";
+import ArtistDashboardRest from "./pages/ArtistDashboardRest";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,7 @@ const App = () => (
             <Route path="/commissions" element={<Commissions />} />
             <Route path="/events" element={<Events />} />
             <Route path="/merchandise" element={<Merchandise />} />
+            <Route path="/artist-dashboard-rest" element={<ArtistDashboardRest />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
