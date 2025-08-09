@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Rest } from "@/integrations/supabase/restClient";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 // Minimal artwork type
 interface Artwork {
@@ -14,6 +18,10 @@ const ArtistDashboardRest: React.FC = () => {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [title, setTitle] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     // Basic SEO
@@ -60,6 +68,33 @@ const ArtistDashboardRest: React.FC = () => {
     fetchArtworks();
   }, []);
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const created = await Rest.insert<Artwork[]>("artworks", [
+        { title, image_url: imageUrl },
+      ]);
+      if (created && Array.isArray(created) && created[0]) {
+        setArtworks((prev) => [created[0] as Artwork, ...prev]);
+      }
+      toast({
+        title: "Artwork submitted",
+        description: "Your artwork was created successfully.",
+      });
+      setTitle("");
+      setImageUrl("");
+    } catch (e: any) {
+      toast({
+        title: "Submission failed",
+        description: e?.message || "Failed to create artwork.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <header>
@@ -67,6 +102,38 @@ const ArtistDashboardRest: React.FC = () => {
       </header>
       <main className="flex-1 container mx-auto px-4 md:px-6 py-24">
         <h1 className="text-2xl md:text-3xl font-semibold tracking-tight mb-6">Artist Dashboard</h1>
+        <section aria-labelledby="create-artwork">
+          <h2 id="create-artwork" className="sr-only">Create Artwork</h2>
+          <form onSubmit={handleSubmit} className="mb-8 grid gap-4 max-w-xl">
+            <div className="grid gap-2">
+              <Label htmlFor="title">Title</Label>
+              <Input
+                id="title"
+                name="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Enter title"
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="image_url">Image URL</Label>
+              <Input
+                id="image_url"
+                name="image_url"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="https://..."
+                required
+              />
+            </div>
+            <div>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? "Submitting..." : "Create Artwork"}
+              </Button>
+            </div>
+          </form>
+        </section>
         <section aria-labelledby="artworks-list">
           <h2 id="artworks-list" className="sr-only">Artworks</h2>
           {loading && (
