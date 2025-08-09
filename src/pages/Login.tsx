@@ -22,14 +22,14 @@ const Login = () => {
     event.preventDefault();
     const { error } = await signIn(email, password);
     if (!error) {
-      navigate("/");
+      navigate("/artist-dashboard-rest");
     }
   };
 
   const handleGoogleSignIn = async () => {
     const { error } = await signInWithGoogle();
     if (!error) {
-      navigate("/");
+      navigate("/artist-dashboard-rest");
     }
   };
 

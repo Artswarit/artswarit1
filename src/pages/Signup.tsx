@@ -72,13 +72,9 @@ const Signup = () => {
       role: formData.role
     });
     
-    if (!error) {
-      if (formData.role === "artist") {
-        setTimeout(() => navigate("/artist-dashboard"), 1000);
-      } else {
-        setTimeout(() => navigate("/client-dashboard"), 1000);
+      if (!error) {
+        setTimeout(() => navigate("/artist-dashboard-rest"), 800);
       }
-    }
   };
 
   return (
