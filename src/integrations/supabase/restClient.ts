@@ -7,7 +7,7 @@
 // If you need to change it later, update the constants below.
 
 export const REST_SOURCE_NAME = "Supabase";
-export const SUPABASE_REST_BASE_URL = "https://artswarit.supabase.co/rest/v1";
+export const SUPABASE_REST_BASE_URL = "https://vohhmutnoxlojtqnvshh.supabase.co/rest/v1";
 
 // Anon public key (safe to keep in frontend)
 export const SUPABASE_REST_ANON_KEY =
