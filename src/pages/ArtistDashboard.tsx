@@ -92,11 +92,16 @@ const ArtistDashboard = () => {
 
           <Tabs defaultValue={defaultTab} className="w-full">
             <div className="overflow-x-auto mb-6 sm:mb-8">
-              <TabsList className="grid grid-cols-4 sm:grid-cols-9 w-full min-w-[700px] sm:min-w-0 bg-white/60 backdrop-blur-sm">
+              <TabsList className="grid grid-cols-4 sm:grid-cols-10 w-full min-w-[700px] sm:min-w-0 bg-white/60 backdrop-blur-sm">
                 <TabsTrigger value="artworks" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
                   <Palette className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="hidden xs:inline">Artworks</span>
                   <span className="xs:hidden">Art</span>
+                </TabsTrigger>
+                <TabsTrigger value="upload" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                  <FolderUp className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Upload</span>
+                  <span className="xs:hidden">Up</span>
                 </TabsTrigger>
                 <TabsTrigger value="projects" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
                   <Briefcase className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -143,6 +148,9 @@ const ArtistDashboard = () => {
 
             <TabsContent value="artworks" className="space-y-6">
               {isNewArtist && !hasArtworks ? <WelcomeMessage /> : <ArtworkManagement />}
+            </TabsContent>
+            <TabsContent value="upload" className="space-y-6">
+              <ArtworkUpload />
             </TabsContent>
             <TabsContent value="projects" className="space-y-6">
               {!hasProjects ? (
