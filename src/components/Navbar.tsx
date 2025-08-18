@@ -21,6 +21,10 @@ const menuItems = [{
   path: "/explore",
   icon: <SearchIcon size={18} />
 }, {
+  name: "Live",
+  path: "/live-streaming",
+  icon: <Video size={18} />
+}, {
   name: "Trending",
   path: "/trending",
   icon: <TrendingUp size={18} />

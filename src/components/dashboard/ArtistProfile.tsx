@@ -1,60 +1,64 @@
+
 import { useState, useCallback, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import ProfileForm from "./profile/ProfileForm";
 import TagManager from "./profile/TagManager";
-import { useProfile } from "@/hooks/useProfile";
 
 interface ArtistProfileProps {
   isLoading: boolean;
 }
 
 const ArtistProfile = ({ isLoading }: ArtistProfileProps) => {
-  const { profile: userProfile, loading: profileLoading, updateProfile } = useProfile();
   const [isEditing, setIsEditing] = useState(false);
-  
-  // Convert userProfile to local profile format
-  const profile = useMemo(() => ({
-    displayName: userProfile?.full_name || "",
-    tagName: userProfile?.email?.split('@')[0] || "",
-    bio: userProfile?.bio || "",
-    profileImage: userProfile?.avatar_url || "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
+  const [profile, setProfile] = useState({
+    displayName: "Ananya Sharma",
+    tagName: "cosmic_canvas",
+    bio: "Contemporary visual artist specializing in abstract expressionism and digital art. Exploring the intersection of tradition and technology in Indian visual storytelling.",
+    profileImage: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
     coverImage: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
-    artBioTags: [],
-    artStyleTags: []
-  }), [userProfile]);
+    artBioTags: ["Abstract", "Digital", "Expressionism", "Contemporary"],
+    artStyleTags: ["Bold colors", "Geometric", "Cultural fusion", "Minimalist"]
+  });
 
-  const handleChange = useCallback(async (field: string, value: string) => {
-    const updateData: any = {};
-    if (field === 'displayName') updateData.full_name = value;
-    if (field === 'bio') updateData.bio = value;
-    if (field === 'profileImage') updateData.avatar_url = value;
-    
-    if (Object.keys(updateData).length > 0) {
-      await updateProfile(updateData);
-    }
-  }, [updateProfile]);
-
-  const addArtBioTag = useCallback(async (tag: string) => {
-    // For now, just log since tags are not in the profile table
-    console.log('Adding tag:', tag);
+  const handleChange = useCallback((field: string, value: string) => {
+    setProfile(prev => ({
+      ...prev,
+      [field]: value
+    }));
   }, []);
 
-  const removeArtBioTag = useCallback(async (tag: string) => {
-    // For now, just log since tags are not in the profile table
-    console.log('Removing tag:', tag);
+  const addArtBioTag = useCallback((tag: string) => {
+    setProfile(prev => ({
+      ...prev,
+      artBioTags: [...prev.artBioTags, tag]
+    }));
+  }, []);
+
+  const removeArtBioTag = useCallback((tag: string) => {
+    setProfile(prev => ({
+      ...prev,
+      artBioTags: prev.artBioTags.filter(t => t !== tag)
+    }));
   }, []);
 
   const addArtStyleTag = useCallback((tag: string) => {
-    console.log('Adding style tag:', tag);
+    setProfile(prev => ({
+      ...prev,
+      artStyleTags: [...prev.artStyleTags, tag]
+    }));
   }, []);
 
   const removeArtStyleTag = useCallback((tag: string) => {
-    console.log('Removing style tag:', tag);
+    setProfile(prev => ({
+      ...prev,
+      artStyleTags: prev.artStyleTags.filter(t => t !== tag)
+    }));
   }, []);
 
   const saveProfile = useCallback(() => {
+    console.log("Saving profile:", profile);
     setIsEditing(false);
-  }, []);
+  }, [profile]);
 
   const toggleEdit = useCallback(() => {
     setIsEditing(prev => !prev);
@@ -121,7 +125,7 @@ const ArtistProfile = ({ isLoading }: ArtistProfileProps) => {
     </div>
   ), [profile.profileImage, profile.coverImage, profile.displayName, profile.tagName, isEditing]);
 
-  if (isLoading || profileLoading) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="h-10 w-48 bg-gray-200 animate-pulse rounded-md"></div>
