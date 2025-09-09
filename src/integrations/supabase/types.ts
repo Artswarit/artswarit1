@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -94,6 +94,35 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      artwork_views: {
+        Row: {
+          artwork_id: string | null
+          created_at: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          artwork_id?: string | null
+          created_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          artwork_id?: string | null
+          created_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artwork_views_artwork_id_fkey"
+            columns: ["artwork_id"]
+            isOneToOne: false
+            referencedRelation: "artworks"
             referencedColumns: ["id"]
           },
         ]
@@ -337,12 +366,16 @@ export type Database = {
           bio: string | null
           created_at: string
           email: string
+          experience_years: number | null
           full_name: string | null
+          hourly_rate: number | null
           id: string
           is_verified: boolean | null
           location: string | null
+          portfolio_url: string | null
           role: string
           social_links: Json | null
+          tags: string[] | null
           updated_at: string
           website: string | null
         }
@@ -352,12 +385,16 @@ export type Database = {
           bio?: string | null
           created_at?: string
           email: string
+          experience_years?: number | null
           full_name?: string | null
+          hourly_rate?: number | null
           id: string
           is_verified?: boolean | null
           location?: string | null
+          portfolio_url?: string | null
           role?: string
           social_links?: Json | null
+          tags?: string[] | null
           updated_at?: string
           website?: string | null
         }
@@ -367,12 +404,16 @@ export type Database = {
           bio?: string | null
           created_at?: string
           email?: string
+          experience_years?: number | null
           full_name?: string | null
+          hourly_rate?: number | null
           id?: string
           is_verified?: boolean | null
           location?: string | null
+          portfolio_url?: string | null
           role?: string
           social_links?: Json | null
+          tags?: string[] | null
           updated_at?: string
           website?: string | null
         }
@@ -428,6 +469,50 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales: {
+        Row: {
+          amount: number
+          artist_id: string
+          artwork_id: string | null
+          buyer_id: string | null
+          created_at: string
+          currency: string | null
+          id: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          artist_id: string
+          artwork_id?: string | null
+          buyer_id?: string | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          artist_id?: string
+          artwork_id?: string | null
+          buyer_id?: string | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_artwork_id_fkey"
+            columns: ["artwork_id"]
+            isOneToOne: false
+            referencedRelation: "artworks"
             referencedColumns: ["id"]
           },
         ]
@@ -680,13 +765,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_artist_dashboard_stats: {
+        Args: { artist_uuid: string }
+        Returns: Json
+      }
+      get_artist_stats: {
+        Args: { artist_uuid: string }
+        Returns: Json
+      }
+      increment_artwork_views: {
+        Args: { artwork_uuid: string; user_uuid: string }
+        Returns: number
+      }
       is_admin: {
         Args: { _user_id: string }
         Returns: boolean
       }
+      record_artwork_sale: {
+        Args: { artwork_uuid: string; buyer_uuid: string; sale_amount: number }
+        Returns: string
+      }
     }
     Enums: {
+      account_status: "pending" | "approved" | "rejected"
       app_role: "admin" | "moderator" | "artist" | "client"
+      approval_status: "pending" | "approved" | "rejected"
+      notification_type: "success" | "error" | "info" | "warning"
+      project_status: "pending" | "accepted" | "completed" | "cancelled"
       subscription_tier: "monthly" | "yearly" | "lifetime"
     }
     CompositeTypes: {
@@ -815,7 +920,11 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_status: ["pending", "approved", "rejected"],
       app_role: ["admin", "moderator", "artist", "client"],
+      approval_status: ["pending", "approved", "rejected"],
+      notification_type: ["success", "error", "info", "warning"],
+      project_status: ["pending", "accepted", "completed", "cancelled"],
       subscription_tier: ["monthly", "yearly", "lifetime"],
     },
   },
