@@ -1,4 +1,3 @@
-
 import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,8 +9,9 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Eye, Heart } from "lucide-react";
+import { usePublicArtworks } from "@/hooks/usePublicArtworks";
 
-// Enhanced mock data for featured artwork with likes and views
+// Fallback mock data for demonstration when no real data exists
 const featuredArtwork = [
   {
     id: "1",
@@ -51,37 +51,48 @@ const featuredArtwork = [
   },
   {
     id: "5",
-    title: "Futuristic Melodies",
-    artist: "Emma Williams",
+    title: "Nature's Canvas",
+    artist: "Sophie Chen",
     artistId: "5",
-    imageUrl: "https://images.unsplash.com/photo-1614173188975-0e2aae485595?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80",
-    likes: 274,
-    views: 1764,
+    imageUrl: "https://images.unsplash.com/photo-1561214115-f2f134cc4912?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1074&q=80",
+    likes: 278,
+    views: 1674,
   },
-];
-
-// Helper function for scrolling
-const scrollToSection = (e: React.MouseEvent, sectionId: string) => {
-  e.preventDefault();
-  const section = document.getElementById(sectionId);
-  if (section) {
-    setTimeout(() => {
-      const yOffset = -80; // 80px offset for navbar
-      const y = section.getBoundingClientRect().top + window.pageYOffset + yOffset;
-      window.scrollTo({ top: y, behavior: 'smooth' });
-    }, 100);
+  {
+    id: "6",
+    title: "Emotional Depth",
+    artist: "Michael Torres",
+    artistId: "6",
+    imageUrl: "https://images.unsplash.com/photo-1574924480863-e6b3b8bff0e4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1074&q=80",
+    likes: 195,
+    views: 1123,
   }
-};
+];
 
 const ArtworkCarousel = () => {
   const carouselRef = useRef(null);
+  const { artworks: realArtworks, loading } = usePublicArtworks(6);
+  
+  // Use real data if available, otherwise fall back to mock data
+  const displayArtworks = realArtworks.length > 0 ? realArtworks : featuredArtwork;
+
+  if (loading) {
+    return (
+      <section id="artwork" className="py-20 bg-gradient-to-r from-violet-50 via-white to-indigo-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="artwork" className="py-20 bg-gradient-to-r from-violet-50 via-white to-indigo-50 relative overflow-hidden">
       <div className="absolute inset-0 opacity-50">
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-violet-300/20 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-indigo-300/20 rounded-full blur-3xl"></div>
-        {/* Enhanced background elements */}
         <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-blue-200/10 rounded-full blur-2xl"></div>
         <div className="absolute bottom-1/3 left-1/3 w-72 h-72 bg-purple-200/15 rounded-full blur-3xl"></div>
       </div>
@@ -107,7 +118,7 @@ const ArtworkCarousel = () => {
           className="w-full"
         >
           <CarouselContent>
-            {featuredArtwork.map((artwork) => (
+            {displayArtworks.map((artwork) => (
               <CarouselItem key={artwork.id} className="md:basis-1/2 lg:basis-1/3 pl-4">
                 <Link to={`/artist/${artwork.artistId}`} className="block h-full">
                   <div className="artwork-card group h-[450px] rounded-2xl overflow-hidden shadow-lg transition-all duration-500 neo-blur-sm relative">
@@ -120,7 +131,6 @@ const ArtworkCarousel = () => {
                       <h3 className="text-white text-2xl font-semibold">{artwork.title}</h3>
                       <p className="text-gray-200 text-lg">by {artwork.artist}</p>
                       
-                      {/* Stats display */}
                       <div className="flex items-center space-x-4 mt-3 text-gray-200">
                         <div className="flex items-center gap-1">
                           <Heart size={16} className="text-red-400" />

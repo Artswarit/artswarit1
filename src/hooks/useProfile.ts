@@ -44,11 +44,18 @@ export const useProfile = () => {
         .from('profiles')
         .select('*')
         .eq('id', user?.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching profile:', error);
         setError(error.message);
+        return;
+      }
+
+      if (!data) {
+        // Profile doesn't exist, this might be a new user
+        console.log('No profile found for user, they may need to complete signup');
+        setProfile(null);
         return;
       }
 

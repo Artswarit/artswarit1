@@ -8,8 +8,9 @@ import ArtistCard from '@/components/explore/ArtistCard';
 import { Button } from '@/components/ui/button';
 import { Grid, List, Filter } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { usePublicArtists } from '@/hooks/usePublicArtists';
 
-// Mock artist data - In production, this would come from your API
+// Fallback mock data for demonstration when no real data exists
 const mockArtists = [
   {
     id: "1",
@@ -134,12 +135,23 @@ const mockArtists = [
 ];
 
 const ExploreArtists = () => {
-  const [artists, setArtists] = useState(mockArtists);
-  const [filteredArtists, setFilteredArtists] = useState(mockArtists);
+  const isMobile = useIsMobile();
+  const { artists: realArtists, loading, error } = usePublicArtists();
+  
+  // Use real data if available, otherwise fall back to mock data
+  const allArtists = realArtists.length > 0 ? realArtists : mockArtists;
+  
+  const [artists, setArtists] = useState(allArtists);
+  const [filteredArtists, setFilteredArtists] = useState(allArtists);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const isMobile = useIsMobile();
+
+  // Update artists when real data loads
+  useEffect(() => {
+    const updatedArtists = realArtists.length > 0 ? realArtists : mockArtists;
+    setArtists(updatedArtists);
+    setFilteredArtists(updatedArtists);
+  }, [realArtists]);
 
   const handleFiltersChange = (filters: {
     search: string;

@@ -33,13 +33,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
         
+        // Handle user creation for existing accounts
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('User signed in:', session.user.email);
+          // Defer user/profile creation to avoid blocking auth flow
+          setTimeout(() => {
+            ensureUserProfileExists(session.user);
+          }, 100);
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');
         }
@@ -55,6 +60,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Function to ensure user/profile records exist for existing users
+  const ensureUserProfileExists = async (user: User) => {
+    try {
+      // Check if profile exists
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (!profile) {
+        // Profile doesn't exist, create it
+        const userData = {
+          full_name: user.user_metadata?.full_name || user.email || '',
+          role: user.user_metadata?.role || 'client'
+        };
+
+        await supabase.from('profiles').insert({
+          id: user.id,
+          email: user.email || '',
+          full_name: userData.full_name,
+          role: userData.role,
+          account_status: 'approved'
+        });
+
+        await supabase.from('users').insert({
+          id: user.id,
+          email: user.email || '',
+          name: userData.full_name,
+          role: userData.role
+        });
+
+        console.log('Created profile for existing user');
+      }
+    } catch (error) {
+      console.error('Error ensuring user profile exists:', error);
+    }
+  };
 
   const signUp = async (email: string, password: string, userData: { full_name: string; role: string }) => {
     try {
