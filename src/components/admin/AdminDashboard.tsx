@@ -123,18 +123,17 @@ const AdminDashboard = () => {
 
       setPendingArtists(pendingArtists);
 
-      // Fetch pending artworks
+      // Fetch all artworks  
       const { data: artworks } = await supabase
         .from('artworks')
         .select(`
-          id, title, artist_id, approval_status, created_at, image_url, 
+          id, title, artist_id, created_at, media_url, 
           description,
-          profiles:artist_id (
-            full_name,
+          users:artist_id (
+            name,
             email
           )
         `)
-        .eq('approval_status', 'pending')
         .order('created_at', { ascending: false });
 
       let fetchedPendingArtworks: PendingArtwork[] = (artworks as any[] || []).map(a => ({

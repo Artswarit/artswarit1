@@ -140,7 +140,7 @@ export default function ArtistProfile() {
       const { data: followers, error: countErr } = await supabase
         .from("follows")
         .select("id", { count: "exact", head: false })
-        .eq("artist_id", id);
+        .eq("following_id", id);
 
       if (!countErr && followers) {
         setFollowersCount(followers.length);
@@ -150,8 +150,8 @@ export default function ArtistProfile() {
         const { data: following, error: followErr } = await supabase
           .from("follows")
           .select("id")
-          .eq("artist_id", id)
-          .eq("client_id", user.id)
+          .eq("following_id", id)
+          .eq("follower_id", user.id)
           .maybeSingle();
         setIsFollowing(!!following);
       }
@@ -218,8 +218,8 @@ export default function ArtistProfile() {
     if (!isFollowing) {
       // follow in supabase
       const { error } = await supabase.from("follows").insert({
-        artist_id: id,
-        client_id: user.id,
+        following_id: id,
+        follower_id: user.id,
       });
       if (!error) {
         setIsFollowing(true);
@@ -240,8 +240,8 @@ export default function ArtistProfile() {
       const { error } = await supabase
         .from("follows")
         .delete()
-        .eq("artist_id", id)
-        .eq("client_id", user.id);
+        .eq("following_id", id)
+        .eq("follower_id", user.id);
       if (!error) {
         setIsFollowing(false);
         setFollowersCount((cnt) => Math.max(cnt - 1, 0));
