@@ -1,176 +1,193 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const useArtworks = () => {
-  const [artworks] = useState([
-    {
-      id: "1",
-      title: "Midnight Symphony",
-      artist: "Alex Rivera",
-      artistId: "1",
-      artist_id: "1",
-      type: "music",
-      imageUrl: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80",
-      likes: 1250,
-      views: 8900,
-      price: 50,
-      category: "Music",
-      audioUrl: "https://www.soundjay.com/misc/sounds/magic-chime-02.wav",
-      is_pinned: false,
-      is_for_sale: true,
-      tags: ["ambient", "electronic", "chill"],
-      approval_status: "approved",
-      created_at: "2024-01-15T10:30:00Z"
-    },
-    {
-      id: "2",
-      title: "Digital Dreamscape",
-      artist: "Maya Johnson",
-      artistId: "2",
-      artist_id: "2",
-      type: "image",
-      imageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80",
-      likes: 2100,
-      views: 45000,
-      price: 150,
-      category: "Digital Art",
-      is_pinned: true,
-      is_for_sale: true,
-      tags: ["digital", "surreal", "colorful"],
-      approval_status: "pending",
-      created_at: "2024-02-20T14:15:00Z"
-    },
-    {
-      id: "3",
-      title: "Street Philosophy",
-      artist: "Jordan Smith",
-      artistId: "3",
-      artist_id: "3",
-      type: "music",
-      imageUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80",
-      likes: 890,
-      views: 12000,
-      price: 25,
-      category: "Hip-Hop",
-      audioUrl: "https://www.soundjay.com/misc/sounds/magic-chime-02.wav",
-      is_pinned: false,
-      is_for_sale: true,
-      tags: ["hip-hop", "conscious", "urban"],
-      approval_status: "rejected",
-      created_at: "2024-01-08T09:45:00Z"
-    },
-    {
-      id: "4",
-      title: "Urban Vibes",
-      artist: "Alex Rivera",
-      artistId: "1",
-      artist_id: "1",
-      type: "video",
-      imageUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80",
-      likes: 3200,
-      views: 78000,
-      price: 200,
-      category: "Music Video",
-      videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-      is_pinned: false,
-      is_for_sale: true,
-      tags: ["music video", "urban", "street"],
-      approval_status: "approved",
-      created_at: "2024-03-12T16:20:00Z"
-    },
-    {
-      id: "5",
-      title: "Abstract Emotions",
-      artist: "Maya Johnson",
-      artistId: "2",
-      artist_id: "2",
-      type: "image",
-      imageUrl: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80",
-      likes: 1580,
-      views: 23400,
-      price: 120,
-      category: "Abstract Art",
-      is_pinned: false,
-      is_for_sale: true,
-      tags: ["abstract", "emotional", "expressive"],
-      approval_status: "approved",
-      created_at: "2024-02-05T11:30:00Z"
-    },
-    {
-      id: "6",
-      title: "Conscious Flow",
-      artist: "Jordan Smith",
-      artistId: "3",
-      artist_id: "3",
-      type: "music",
-      imageUrl: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80",
-      likes: 945,
-      views: 15600,
-      price: 30,
-      category: "Conscious Rap",
-      audioUrl: "https://www.soundjay.com/misc/sounds/magic-chime-02.wav",
-      is_pinned: false,
-      is_for_sale: true,
-      tags: ["conscious rap", "lyrical", "meaningful"],
-      approval_status: "pending",
-      created_at: "2024-01-28T13:45:00Z"
-    },
-    {
-      id: "7",
-      title: "Ocean Waves",
-      artist: "Serena Blue",
-      artistId: "4",
-      artist_id: "4",
-      type: "image",
-      imageUrl: "https://images.unsplash.com/photo-1439066615861-d1af74d74000?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80",
-      likes: 2800,
-      views: 35000,
-      price: 180,
-      category: "Landscape",
-      is_pinned: true,
-      is_for_sale: true,
-      tags: ["nature", "ocean", "peaceful"],
-      approval_status: "approved",
-      created_at: "2024-03-01T08:15:00Z"
-    },
-    {
-      id: "8",
-      title: "City Lights",
-      artist: "Marcus Tech",
-      artistId: "5",
-      artist_id: "5",
-      type: "video",
-      imageUrl: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80",
-      likes: 1900,
-      views: 28000,
-      price: 300,
-      category: "Urban",
-      videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-      is_pinned: false,
-      is_for_sale: true,
-      tags: ["urban", "night", "timelapse"],
-      approval_status: "approved",
-      created_at: "2024-02-18T19:30:00Z"
+  const [artworks, setArtworks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+
+  const fetchArtworks = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
     }
-  ]);
 
-  const toggleLike = (artworkId: string) => {
-    console.log(`Toggling like for artwork: ${artworkId}`);
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('artworks')
+        .select(`
+          id,
+          title,
+          description,
+          category,
+          media_type,
+          media_url,
+          price,
+          status,
+          tags,
+          metadata,
+          created_at,
+          updated_at,
+          artist_id,
+          users:artist_id (
+            name,
+            email
+          )
+        `)
+        .eq('artist_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Transform data to match component expectations
+      const transformedArtworks = (data || []).map(artwork => ({
+        id: artwork.id,
+        title: artwork.title,
+        description: artwork.description,
+        category: artwork.category,
+        type: artwork.media_type,
+        media_type: artwork.media_type,
+        imageUrl: artwork.media_url,
+        media_url: artwork.media_url,
+        price: artwork.price || 0,
+        status: artwork.status,
+        approval_status: artwork.status, // Map status to approval_status for compatibility
+        tags: artwork.tags || [],
+        metadata: artwork.metadata || {},
+        created_at: artwork.created_at,
+        updated_at: artwork.updated_at,
+        artist_id: artwork.artist_id,
+        artist: artwork.users?.name || 'Unknown Artist',
+        artistId: artwork.artist_id,
+        likes: (artwork.metadata as any)?.likes_count || 0,
+        views: (artwork.metadata as any)?.views_count || 0,
+        is_pinned: (artwork.metadata as any)?.is_pinned || false,
+        is_for_sale: !!artwork.price,
+        audioUrl: artwork.media_type === 'audio' ? artwork.media_url : null,
+        videoUrl: artwork.media_type === 'video' ? artwork.media_url : null
+      }));
+
+      setArtworks(transformedArtworks);
+    } catch (err) {
+      console.error('Error fetching artworks:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch artworks');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const fetchArtworks = () => {
-    console.log('Fetching artworks...');
+  const uploadArtwork = async (artworkData: any) => {
+    if (!user) {
+      return { error: 'User not authenticated' };
+    }
+
+    try {
+      setLoading(true);
+
+      // Upload file to Supabase Storage
+      let mediaUrl = '';
+      if (artworkData.file) {
+        const fileName = `${user.id}/${Date.now()}-${artworkData.file.name}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('artworks')
+          .upload(fileName, artworkData.file);
+
+        if (uploadError) throw uploadError;
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('artworks')
+          .getPublicUrl(uploadData.path);
+        
+        mediaUrl = urlData.publicUrl;
+      }
+
+      // Insert artwork record
+      const { data, error } = await supabase
+        .from('artworks')
+        .insert({
+          title: artworkData.title,
+          description: artworkData.description || '',
+          category: artworkData.category,
+          media_type: artworkData.media_type || 'image',
+          media_url: mediaUrl,
+          price: artworkData.price ? parseFloat(artworkData.price) : null,
+          status: 'public',
+          tags: artworkData.tags || [],
+          metadata: {
+            visibility: artworkData.visibility || 'public',
+            access_type: artworkData.access_type || 'free',
+            is_pinned: false,
+            likes_count: 0,
+            views_count: 0
+          },
+          artist_id: user.id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Refresh artworks list
+      await fetchArtworks();
+
+      return { error: null, data };
+    } catch (err) {
+      console.error('Error uploading artwork:', err);
+      return { error: err instanceof Error ? err.message : 'Failed to upload artwork' };
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const uploadArtwork = (artwork: any) => {
-    console.log('Uploading artwork:', artwork);
-    return Promise.resolve({ error: null });
+  const toggleLike = async (artworkId: string) => {
+    if (!user) return;
+
+    try {
+      // Check if user already liked this artwork
+      const { data: existingLike } = await supabase
+        .from('artwork_likes')
+        .select('id')
+        .eq('artwork_id', artworkId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existingLike) {
+        // Unlike
+        await supabase
+          .from('artwork_likes')
+          .delete()
+          .eq('artwork_id', artworkId)
+          .eq('user_id', user.id);
+      } else {
+        // Like
+        await supabase
+          .from('artwork_likes')
+          .insert({
+            artwork_id: artworkId,
+            user_id: user.id
+          });
+      }
+
+      // Refresh artworks to get updated like counts
+      await fetchArtworks();
+    } catch (err) {
+      console.error('Error toggling like:', err);
+    }
   };
+
+  useEffect(() => {
+    fetchArtworks();
+  }, [user]);
 
   return {
     artworks,
-    loading: false,
-    error: null,
+    loading,
+    error,
     fetchArtworks,
     toggleLike,
     uploadArtwork

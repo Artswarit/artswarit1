@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useArtworks } from "@/hooks/useArtworks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,6 +31,7 @@ const visibilityOptions = [
 const ArtworkUploadForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { uploadArtwork } = useArtworks();
   const [selectedType, setSelectedType] = useState("image");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -106,15 +108,45 @@ const ArtworkUploadForm = () => {
       }
     }
 
-    // Simulate upload process
-    setTimeout(() => {
+    // Create artwork data object
+    const artworkData = {
+      title: title.trim(),
+      description: description.trim(),
+      category: selectedType,
+      media_type: selectedType,
+      file: selectedFiles[0], // Use first selected file
+      price: visibilityType !== "free" ? price : null,
+      visibility,
+      access_type: visibilityType,
+      tags: []
+    };
+
+    // Upload artwork using the hook
+    const result = await uploadArtwork(artworkData);
+
+    if (result.error) {
+      toast({
+        title: "Upload Failed",
+        description: result.error,
+        variant: "destructive",
+      });
+    } else {
       toast({
         title: "Success",
         description: "Your artwork has been uploaded successfully!",
       });
-      setIsUploading(false);
+      // Reset form
+      setTitle("");
+      setDescription("");
+      setPrice("");
+      setSelectedFiles([]);
+      setVisibility("public");
+      setVisibilityType("free");
+      setScheduleRelease(false);
+      setReleaseDate(undefined);
       navigate("/artist-dashboard");
-    }, 2000);
+    }
+    setIsUploading(false);
   };
 
   return (
