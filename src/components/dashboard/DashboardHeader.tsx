@@ -1,9 +1,9 @@
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PlusCircle, TrendingUp, Calendar, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useArtistDashboardStats } from "@/hooks/useArtistDashboardStats";
 
 interface DashboardHeaderProps {
   user?: any;
@@ -14,12 +14,7 @@ interface DashboardHeaderProps {
 
 const DashboardHeader = ({ user, profile, title, subtitle }: DashboardHeaderProps) => {
   const navigate = useNavigate();
-  const [artistStats, setArtistStats] = useState({
-    totalViews: 12463,
-    monthlyEarnings: 24500,
-    totalArtworks: 32,
-    followers: 548
-  });
+  const { stats, loading } = useArtistDashboardStats();
 
   return (
     <div className="space-y-4 sm:space-y-6 py-3 sm:py-[18px] my-6 sm:my-[49px]">
@@ -48,7 +43,9 @@ const DashboardHeader = ({ user, profile, title, subtitle }: DashboardHeaderProp
             </div>
             <div>
               <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Views</p>
-              <p className="text-xl sm:text-2xl font-bold">{artistStats.totalViews.toLocaleString()}</p>
+              <p className="text-xl sm:text-2xl font-bold">
+                {loading ? '...' : stats.totalViews.toLocaleString()}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -60,7 +57,9 @@ const DashboardHeader = ({ user, profile, title, subtitle }: DashboardHeaderProp
             </div>
             <div>
               <p className="text-xs sm:text-sm font-medium text-muted-foreground">Monthly Earnings</p>
-              <p className="text-xl sm:text-2xl font-bold">₹{artistStats.monthlyEarnings.toLocaleString()}</p>
+              <p className="text-xl sm:text-2xl font-bold">
+                {loading ? '...' : `₹${stats.monthlyEarnings.toLocaleString()}`}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -72,7 +71,9 @@ const DashboardHeader = ({ user, profile, title, subtitle }: DashboardHeaderProp
             </div>
             <div>
               <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Artworks</p>
-              <p className="text-xl sm:text-2xl font-bold">{artistStats.totalArtworks}</p>
+              <p className="text-xl sm:text-2xl font-bold">
+                {loading ? '...' : stats.totalArtworks}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -86,7 +87,9 @@ const DashboardHeader = ({ user, profile, title, subtitle }: DashboardHeaderProp
             </div>
             <div>
               <p className="text-xs sm:text-sm font-medium text-muted-foreground">Followers</p>
-              <p className="text-xl sm:text-2xl font-bold">{artistStats.followers}</p>
+              <p className="text-xl sm:text-2xl font-bold">
+                {loading ? '...' : stats.followers}
+              </p>
             </div>
           </CardContent>
         </Card>
