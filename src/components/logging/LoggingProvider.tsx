@@ -24,76 +24,9 @@ export const useLogging = () => {
   return context;
 };
 
-// Higher-order component to wrap functions with logging
-export const withLogging = <T extends (...args: any[]) => any>(
-  fn: T,
-  functionName: string,
-  componentName: string,
-  actionType: string
-): T => {
-  return ((...args: Parameters<T>) => {
-    const { logAndTrack } = useLogging();
-    
-    const executeWithLogging = async () => {
-      const startTime = performance.now();
-      let result: any;
-      let error: Error | undefined;
+// Removed withLogging HOC to avoid invalid hook usage.
+// Use useLoggedFunction to wrap functions with logging.
 
-      try {
-        result = await fn(...args);
-        return result;
-      } catch (err) {
-        error = err as Error;
-        throw err;
-      } finally {
-        const executionTime = performance.now() - startTime;
-        
-        // Log the function execution
-        logAndTrack(
-          functionName,
-          componentName,
-          actionType,
-          args.length > 0 ? args : undefined,
-          result,
-          error
-        ).catch(logErr => {
-          console.error('Failed to log function execution:', logErr);
-        });
-      }
-    };
-
-    // Handle both sync and async functions
-    if (fn.constructor.name === 'AsyncFunction') {
-      return executeWithLogging();
-    } else {
-      try {
-        const result = fn(...args);
-        logAndTrack(
-          functionName,
-          componentName,
-          actionType,
-          args.length > 0 ? args : undefined,
-          result
-        ).catch(logErr => {
-          console.error('Failed to log function execution:', logErr);
-        });
-        return result;
-      } catch (error) {
-        logAndTrack(
-          functionName,
-          componentName,
-          actionType,
-          args.length > 0 ? args : undefined,
-          undefined,
-          error as Error
-        ).catch(logErr => {
-          console.error('Failed to log function execution:', logErr);
-        });
-        throw error;
-      }
-    }
-  }) as T;
-};
 
 // Hook to wrap component functions with logging
 export const useLoggedFunction = <T extends (...args: any[]) => any>(
@@ -104,10 +37,55 @@ export const useLoggedFunction = <T extends (...args: any[]) => any>(
 ): T => {
   const { logAndTrack } = useLogging();
 
-  return useCallback(
-    withLogging(fn, functionName, componentName, actionType),
-    [fn, functionName, componentName, actionType, logAndTrack]
-  ) as T;
+  return useCallback((...args: Parameters<T>) => {
+    const startTime = performance.now();
+    try {
+      const result = (fn as any)(...args);
+      if (result && typeof (result as any).then === 'function') {
+        return (result as Promise<any>)
+          .then((res) => {
+            logAndTrack(
+              functionName,
+              componentName,
+              actionType,
+              args.length > 0 ? args : undefined,
+              res
+            ).catch((logErr) => console.error('Failed to log function execution:', logErr));
+            return res as ReturnType<T>;
+          })
+          .catch((err: Error) => {
+            logAndTrack(
+              functionName,
+              componentName,
+              actionType,
+              args.length > 0 ? args : undefined,
+              undefined,
+              err
+            ).catch((logErr) => console.error('Failed to log function execution:', logErr));
+            throw err;
+          });
+      } else {
+        logAndTrack(
+          functionName,
+          componentName,
+          actionType,
+          args.length > 0 ? args : undefined,
+          result
+        ).catch((logErr) => console.error('Failed to log function execution:', logErr));
+        return result as ReturnType<T>;
+      }
+    } catch (error) {
+      logAndTrack(
+        functionName,
+        componentName,
+        actionType,
+        args.length > 0 ? args : undefined,
+        undefined,
+        error as Error
+      ).catch((logErr) => console.error('Failed to log function execution:', logErr));
+      throw error;
+    }
+  }, [fn, functionName, componentName, actionType, logAndTrack]) as T;
 };
 
 interface LoggingProviderProps {
