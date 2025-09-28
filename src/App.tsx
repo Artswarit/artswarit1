@@ -18,7 +18,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 import AIDetection from "./pages/AIDetection";
 import FeatureAudit from "./pages/FeatureAudit";
-import LiveStreaming from "./pages/LiveStreaming";
+
 import Collections from "./pages/Collections";
 import Trending from "./pages/Trending";
 import Recommendations from "./pages/Recommendations";
@@ -45,7 +45,7 @@ const App = () => (
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/ai-detection" element={<AIDetection />} />
             <Route path="/feature-audit" element={<FeatureAudit />} />
-            <Route path="/live-streaming" element={<LiveStreaming />} />
+            
             <Route path="/collections" element={<Collections />} />
             <Route path="/trending" element={<Trending />} />
             <Route path="/recommendations" element={<Recommendations />} />

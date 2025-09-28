@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { PlusCircle, TrendingUp, Calendar, Eye } from "lucide-react";
+import { PlusCircle, TrendingUp, Calendar, Eye, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useArtistDashboardStats } from "@/hooks/useArtistDashboardStats";
 
@@ -81,9 +81,7 @@ const DashboardHeader = ({ user, profile, title, subtitle }: DashboardHeaderProp
         <Card>
           <CardContent className="flex items-center p-4 sm:p-6">
             <div className="mr-3 sm:mr-4 bg-amber-100 p-2 rounded-full">
-              <svg className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
+              <Users className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600" />
             </div>
             <div>
               <p className="text-xs sm:text-sm font-medium text-muted-foreground">Followers</p>
