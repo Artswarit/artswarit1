@@ -1,11 +1,5 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
-import { LoggingProvider } from "./components/logging/LoggingProvider";
+import { Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import TasksAndLogsPage from "./pages/TasksAndLogs";
 import Login from "./pages/Login";
@@ -32,17 +26,8 @@ import Commissions from "./pages/Commissions";
 import Events from "./pages/Events";
 import Merchandise from "./pages/Merchandise";
 
-const queryClient = new QueryClient();
-
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <LoggingProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-          <Routes>
+  <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
@@ -69,12 +54,7 @@ const App = () => (
             <Route path="/merchandise" element={<Merchandise />} />
             <Route path="/tasks-and-logs" element={<TasksAndLogsPage />} />
             <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-        </LoggingProvider>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+  </Routes>
 );
 
 export default App;
