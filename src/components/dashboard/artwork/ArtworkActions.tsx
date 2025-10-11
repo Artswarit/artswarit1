@@ -1,9 +1,10 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Edit, Eye, Pin, PinOff, Trash2, DollarSign } from "lucide-react";
 import ArtworkEditModal from "./ArtworkEditModal";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface ArtworkActionsProps {
   artwork: any;
@@ -13,6 +14,7 @@ interface ArtworkActionsProps {
 
 const ArtworkActions = ({ artwork, onUpdate, onDelete }: ArtworkActionsProps) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const { toast } = useToast();
 
   const handlePinToggle = () => {
     const updatedArtwork = {
@@ -28,6 +30,36 @@ const ArtworkActions = ({ artwork, onUpdate, onDelete }: ArtworkActionsProps) =>
       is_for_sale: !artwork.is_for_sale
     };
     onUpdate(updatedArtwork);
+  };
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this artwork? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase.functions.invoke('delete-artwork-and-media', {
+        body: { artworkId: artwork.id }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Artwork Deleted",
+        description: "Your artwork has been deleted successfully.",
+      });
+
+      if (onDelete) {
+        onDelete(artwork.id);
+      }
+    } catch (error) {
+      console.error('Error deleting artwork:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete artwork.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -70,11 +102,11 @@ const ArtworkActions = ({ artwork, onUpdate, onDelete }: ArtworkActionsProps) =>
 
           {onDelete && (
             <DropdownMenuItem 
-              onClick={() => onDelete(artwork.id)}
+              onClick={handleDelete}
               className="text-red-600 cursor-pointer"
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Delete
+              Delete Artwork
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>

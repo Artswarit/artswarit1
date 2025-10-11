@@ -137,13 +137,19 @@ const ArtworkCard = ({
             <h3 className="font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors duration-300">
               {title}
             </h3>
-            <Link 
-              to={`/artist/${artistId}`}
-              className="text-sm text-gray-600 hover:text-blue-600 transition-colors duration-300"
-              onClick={e => e.stopPropagation()}
-            >
-              by {artist}
-            </Link>
+            <p className="text-sm text-gray-600">
+              by <Link 
+                to={`/artist/${artistId}`}
+                className="hover:text-blue-600 transition-colors duration-300 hover:underline"
+                onClick={e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  window.location.href = `/artist/${artistId}`;
+                }}
+              >
+                {artist}
+              </Link>
+            </p>
           </div>
           
           {category && (

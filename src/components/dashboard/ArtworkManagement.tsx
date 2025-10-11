@@ -184,6 +184,11 @@ const ArtworkManagement = () => {
     });
   };
 
+  const handleArtworkDelete = (artworkId: string) => {
+    // Refresh will happen automatically via real-time subscription
+    console.log('Artwork deleted:', artworkId);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -304,6 +309,7 @@ const ArtworkManagement = () => {
                       <ArtworkActions
                         artwork={artwork}
                         onUpdate={handleArtworkUpdate}
+                        onDelete={handleArtworkDelete}
                       />
                     </div>
                   </CardContent>
@@ -336,6 +342,7 @@ const ArtworkManagement = () => {
                       <ArtworkActions
                         artwork={artwork}
                         onUpdate={handleArtworkUpdate}
+                        onDelete={handleArtworkDelete}
                       />
                     </div>
                   </div>
