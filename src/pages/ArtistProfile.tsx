@@ -91,11 +91,8 @@ export default function ArtistProfile() {
   // DIAGNOSTIC: Show login state and preview context
   console.log("[ARTIST PROFILE] Rendered. RouteID:", routeId, "Mapped ID:", id, "User:", user);
 
-  const [profileState, setProfileState] = useState(() => {
-    // fallback demo data for local dev: artistData
-    const demoArtist = artistsData[id as keyof typeof artistsData];
-    return demoArtist;
-  });
+  const [profileState, setProfileState] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState<number>(
@@ -389,14 +386,101 @@ export default function ArtistProfile() {
   // Function to close modal
   const closeModal = () => setSelectedArtwork(null);
 
-  // Extra robust: always show demo data for /artist/1 and /artist/2, regardless of login
+  // Fetch artist profile from database
   useEffect(() => {
-    if (id === ARTIST_UUID_1 || id === ARTIST_UUID_2) {
-      setProfileState(artistsData[id]);
-      setFollowersCount(artistsData[id].followers);
-      console.log("[ARTIST PROFILE] Loaded demo artist profile, ignoring auth state");
+    async function fetchArtistProfile() {
+      if (!id) {
+        setLoading(false);
+        return;
+      }
+
+      // Check if it's a demo profile
+      if (id === ARTIST_UUID_1 || id === ARTIST_UUID_2) {
+        setProfileState(artistsData[id]);
+        setFollowersCount(artistsData[id].followers);
+        setLoading(false);
+        console.log("[ARTIST PROFILE] Loaded demo artist profile");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        
+        // Fetch from public_profiles view
+        const { data: profile, error } = await supabase
+          .from('public_profiles')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (!profile) {
+          setProfileState(null);
+          setLoading(false);
+          return;
+        }
+
+        // Fetch artworks for this artist
+        const { data: artworks, error: artworksError } = await supabase
+          .from('artworks')
+          .select('*')
+          .eq('artist_id', id)
+          .eq('status', 'public')
+          .order('created_at', { ascending: false });
+
+        if (artworksError) console.error('Error fetching artworks:', artworksError);
+
+        // Transform profile data to match expected format
+        const transformedProfile = {
+          id: profile.id,
+          name: profile.full_name || 'Artist',
+          category: profile.role || 'Artist',
+          avatar: profile.avatar_url || 'https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-4.0.0&auto=format&fit=crop&w=200&q=80',
+          bio: profile.bio || 'Creative artist',
+          followers: 0, // Will be updated by the followers fetch
+          likes: 0,
+          isVerified: profile.is_verified || false,
+          specialties: profile.tags || [],
+          location: profile.location || '',
+          cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80',
+          artworks: (artworks || []).map(artwork => ({
+            id: artwork.id,
+            title: artwork.title,
+            img: artwork.media_url,
+            category: artwork.category,
+            price: artwork.price,
+          })),
+          premium: false,
+          rating: 4.5,
+        };
+
+        setProfileState(transformedProfile);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching artist profile:', err);
+        setProfileState(null);
+        setLoading(false);
+      }
     }
+
+    fetchArtistProfile();
   }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading artist profile...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!profileState) {
     return (
