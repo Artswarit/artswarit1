@@ -57,16 +57,16 @@ const Navbar = () => {
     }
   };
   return <nav className="bg-white/70 glass-effect shadow-lg border-b border-gray-100 fixed w-full top-0 z-50 backdrop-blur-md transition-all">
-      <div className="w-full flex items-center h-12 px-0 md:px-0">
+      <div className="w-full flex items-center h-14 sm:h-12 px-2 sm:px-3 md:px-4">
         {/* Left: logo + desktop menu grouped, reduce gap for tighter alignment */}
-        <div className="flex items-center gap-x-2">
+        <div className="flex items-center gap-x-1 sm:gap-x-2">
           {/* Logo */}
-          <Link to="/" onClick={handleLogoClick} className="flex items-center font-bold text-lg text-purple-600 tracking-tight hover:opacity-80 transition-opacity" style={{
+          <Link to="/" onClick={handleLogoClick} className="flex items-center font-bold text-base sm:text-lg text-purple-600 tracking-tight hover:opacity-80 transition-opacity" style={{
           marginLeft: 0,
           marginRight: 0,
           padding: 0
         }}>
-            <img src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png" alt="Artswarit Logo" className="h-12 w-12 md:h-16 md:w-16 object-contain transition-transform duration-300 hover:scale-110" style={{
+            <img src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png" alt="Artswarit Logo" className="h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 lg:h-16 lg:w-16 object-contain transition-transform duration-300 hover:scale-110" style={{
             background: "none"
           }} />
           </Link>
@@ -74,17 +74,17 @@ const Navbar = () => {
           {/* Minimal desktop nav */}
           <div className="hidden md:flex items-center">
             {menuItems.map(item => <Link key={item.name} to={item.path} className={linkBaseClass + " " + (location.pathname === item.path ? linkActiveClass : linkInactiveClass)} style={{
-            marginLeft: "0.5rem"
+            marginLeft: "0.25rem"
           }}>
                 {item.icon}
-                <span>{item.name}</span>
+                <span className="hidden lg:inline">{item.name}</span>
               </Link>)}
           </div>
         </div>
         {/* End Left section */}
 
         {/* Right side controls */}
-        <div className="flex items-center ml-auto gap-2">
+        <div className="flex items-center ml-auto gap-1 sm:gap-2">
           {/* Dashboard link removed as requested */}
           {user ? <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -112,11 +112,10 @@ const Navbar = () => {
                 Sign Up
               </Link>
             </>}
-          {/* Remove ModeToggle component */}
         </div>
 
         {/* Mobile menu button */}
-        {isMobile && <div className="flex items-center space-x-1 ml-auto">
+        {isMobile && <div className="flex items-center gap-1 ml-2">
             {user && <Avatar className="h-8 w-8">
                 <AvatarImage src={user.user_metadata?.avatar_url} alt={user.user_metadata?.full_name || user.email} />
                 
