@@ -25,6 +25,7 @@ import Recommendations from "./pages/Recommendations";
 import Commissions from "./pages/Commissions";
 import Events from "./pages/Events";
 import Merchandise from "./pages/Merchandise";
+import TestFunctions from "./pages/TestFunctions";
 
 const App = () => (
   <Routes>
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/events" element={<Events />} />
             <Route path="/merchandise" element={<Merchandise />} />
             <Route path="/tasks-and-logs" element={<TasksAndLogsPage />} />
+            <Route path="/test-functions" element={<TestFunctions />} />
             <Route path="*" element={<NotFound />} />
   </Routes>
 );
