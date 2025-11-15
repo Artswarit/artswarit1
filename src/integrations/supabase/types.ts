@@ -325,7 +325,7 @@ export type Database = {
           function_name: string
           id: string
           input_data: Json | null
-          ip_address: unknown | null
+          ip_address: unknown
           output_data: Json | null
           session_id: string | null
           success: boolean
@@ -342,7 +342,7 @@ export type Database = {
           function_name: string
           id?: string
           input_data?: Json | null
-          ip_address?: unknown | null
+          ip_address?: unknown
           output_data?: Json | null
           session_id?: string | null
           success?: boolean
@@ -359,7 +359,7 @@ export type Database = {
           function_name?: string
           id?: string
           input_data?: Json | null
-          ip_address?: unknown | null
+          ip_address?: unknown
           output_data?: Json | null
           session_id?: string | null
           success?: boolean
@@ -1189,18 +1189,12 @@ export type Database = {
         Args: { artist_uuid: string }
         Returns: Json
       }
-      get_artist_stats: {
-        Args: { artist_uuid: string }
-        Returns: Json
-      }
+      get_artist_stats: { Args: { artist_uuid: string }; Returns: Json }
       increment_artwork_views: {
         Args: { artwork_uuid: string; user_uuid: string }
         Returns: number
       }
-      is_admin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
       record_artwork_sale: {
         Args: { artwork_uuid: string; buyer_uuid: string; sale_amount: number }
         Returns: string
