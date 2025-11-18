@@ -315,104 +315,6 @@ export type Database = {
           },
         ]
       }
-      function_logs: {
-        Row: {
-          action_type: string
-          component_name: string | null
-          created_at: string
-          error_message: string | null
-          execution_time_ms: number | null
-          function_name: string
-          id: string
-          input_data: Json | null
-          ip_address: unknown
-          output_data: Json | null
-          session_id: string | null
-          success: boolean
-          task_id: string | null
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          action_type: string
-          component_name?: string | null
-          created_at?: string
-          error_message?: string | null
-          execution_time_ms?: number | null
-          function_name: string
-          id?: string
-          input_data?: Json | null
-          ip_address?: unknown
-          output_data?: Json | null
-          session_id?: string | null
-          success?: boolean
-          task_id?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          action_type?: string
-          component_name?: string | null
-          created_at?: string
-          error_message?: string | null
-          execution_time_ms?: number | null
-          function_name?: string
-          id?: string
-          input_data?: Json | null
-          ip_address?: unknown
-          output_data?: Json | null
-          session_id?: string | null
-          success?: boolean
-          task_id?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "function_logs_task_id_fkey"
-            columns: ["task_id"]
-            isOneToOne: false
-            referencedRelation: "tasks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      function_task_mappings: {
-        Row: {
-          auto_assign: boolean
-          auto_create_task: boolean
-          component_name: string | null
-          created_at: string
-          default_priority: string
-          function_name: string
-          id: string
-          task_template: Json
-          updated_at: string
-        }
-        Insert: {
-          auto_assign?: boolean
-          auto_create_task?: boolean
-          component_name?: string | null
-          created_at?: string
-          default_priority?: string
-          function_name: string
-          id?: string
-          task_template?: Json
-          updated_at?: string
-        }
-        Update: {
-          auto_assign?: boolean
-          auto_create_task?: boolean
-          component_name?: string | null
-          created_at?: string
-          default_priority?: string
-          function_name?: string
-          id?: string
-          task_template?: Json
-          updated_at?: string
-        }
-        Relationships: []
-      }
       likes: {
         Row: {
           artwork_id: string
@@ -910,57 +812,6 @@ export type Database = {
         }
         Relationships: []
       }
-      tasks: {
-        Row: {
-          assigned_to: string | null
-          completed_at: string | null
-          component_name: string | null
-          created_at: string
-          description: string | null
-          function_name: string
-          id: string
-          metadata: Json | null
-          priority: string
-          started_at: string | null
-          status: string
-          title: string
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          assigned_to?: string | null
-          completed_at?: string | null
-          component_name?: string | null
-          created_at?: string
-          description?: string | null
-          function_name: string
-          id?: string
-          metadata?: Json | null
-          priority?: string
-          started_at?: string | null
-          status?: string
-          title: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          assigned_to?: string | null
-          completed_at?: string | null
-          component_name?: string | null
-          created_at?: string
-          description?: string | null
-          function_name?: string
-          id?: string
-          metadata?: Json | null
-          priority?: string
-          started_at?: string | null
-          status?: string
-          title?: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       transactions: {
         Row: {
           amount: number
@@ -1189,12 +1040,18 @@ export type Database = {
         Args: { artist_uuid: string }
         Returns: Json
       }
-      get_artist_stats: { Args: { artist_uuid: string }; Returns: Json }
+      get_artist_stats: {
+        Args: { artist_uuid: string }
+        Returns: Json
+      }
       increment_artwork_views: {
         Args: { artwork_uuid: string; user_uuid: string }
         Returns: number
       }
-      is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_admin: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       record_artwork_sale: {
         Args: { artwork_uuid: string; buyer_uuid: string; sale_amount: number }
         Returns: string

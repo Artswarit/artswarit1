@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { useRealTimeArtworks } from '@/hooks/useRealTimeArtworks';
+import { useArtworks } from '@/hooks/useArtworks';
 import { Grid, List, Plus, BarChart3 } from 'lucide-react';
 import ArtworkUploadForm from './artwork/ArtworkUploadForm';
 import ArtworkEditModal from './artwork/ArtworkEditModal';
@@ -14,7 +14,7 @@ import ArtworkBulkActions from './artwork/ArtworkBulkActions';
 import ArtworkAnalytics from './artwork/ArtworkAnalytics';
 
 const ArtworkManagement = () => {
-  const { artworks, loading } = useRealTimeArtworks();
+  const { artworks, loading } = useArtworks();
   const { toast } = useToast();
   
   const [selectedArtworks, setSelectedArtworks] = useState<string[]>([]);
@@ -184,11 +184,6 @@ const ArtworkManagement = () => {
     });
   };
 
-  const handleArtworkDelete = (artworkId: string) => {
-    // Refresh will happen automatically via real-time subscription
-    console.log('Artwork deleted:', artworkId);
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -309,7 +304,6 @@ const ArtworkManagement = () => {
                       <ArtworkActions
                         artwork={artwork}
                         onUpdate={handleArtworkUpdate}
-                        onDelete={handleArtworkDelete}
                       />
                     </div>
                   </CardContent>
@@ -342,7 +336,6 @@ const ArtworkManagement = () => {
                       <ArtworkActions
                         artwork={artwork}
                         onUpdate={handleArtworkUpdate}
-                        onDelete={handleArtworkDelete}
                       />
                     </div>
                   </div>

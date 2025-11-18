@@ -1,7 +1,11 @@
 
-import { Routes, Route } from "react-router-dom";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/Index";
-import TasksAndLogsPage from "./pages/TasksAndLogs";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Explore from "./pages/Explore";
@@ -18,17 +22,24 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 import AIDetection from "./pages/AIDetection";
 import FeatureAudit from "./pages/FeatureAudit";
-
+import LiveStreaming from "./pages/LiveStreaming";
 import Collections from "./pages/Collections";
 import Trending from "./pages/Trending";
 import Recommendations from "./pages/Recommendations";
 import Commissions from "./pages/Commissions";
 import Events from "./pages/Events";
 import Merchandise from "./pages/Merchandise";
-import TestFunctions from "./pages/TestFunctions";
+
+const queryClient = new QueryClient();
 
 const App = () => (
-  <Routes>
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <AuthProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
@@ -46,17 +57,19 @@ const App = () => (
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/ai-detection" element={<AIDetection />} />
             <Route path="/feature-audit" element={<FeatureAudit />} />
-            
+            <Route path="/live-streaming" element={<LiveStreaming />} />
             <Route path="/collections" element={<Collections />} />
             <Route path="/trending" element={<Trending />} />
             <Route path="/recommendations" element={<Recommendations />} />
             <Route path="/commissions" element={<Commissions />} />
             <Route path="/events" element={<Events />} />
             <Route path="/merchandise" element={<Merchandise />} />
-            <Route path="/tasks-and-logs" element={<TasksAndLogsPage />} />
-            <Route path="/test-functions" element={<TestFunctions />} />
             <Route path="*" element={<NotFound />} />
-  </Routes>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </TooltipProvider>
+  </QueryClientProvider>
 );
 
 export default App;

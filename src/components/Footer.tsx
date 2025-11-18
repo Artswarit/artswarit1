@@ -8,8 +8,8 @@ const Footer = () => {
 
   return (
     <footer className="bg-gradient-to-r from-violet-900/90 via-indigo-900/90 to-purple-900/90 text-white/90 backdrop-blur-sm">
-      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 md:py-10 lg:py-12 md:px-6 lg:px-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
+      <div className="container mx-auto px-4 py-8 sm:py-10 lg:py-12 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
           {/* Brand Section */}
           <div className="md:col-span-1 mb-6 md:mb-0">
             <button onClick={scrollToTop} className="flex items-center hover:opacity-80 transition-opacity">
@@ -78,10 +78,10 @@ const Footer = () => {
         </div>
 
         {/* Bottom Section */}
-        <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-xs sm:text-sm text-white/70 text-center sm:text-left">© 2025 Artswarit. All rights reserved.</p>
+        <div className="mt-8 pt-6 border-t border-white/10 flex flex-col md:flex-row justify-between items-center">
+          <p className="text-sm text-white/70">© 2025 Artswarit. All rights reserved.</p>
           
-          <div className="flex space-x-4 sm:space-x-6">
+          <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="text-white/70 hover:text-white transition-colors" aria-label="Twitter">
               <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />

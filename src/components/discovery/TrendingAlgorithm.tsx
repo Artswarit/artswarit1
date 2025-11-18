@@ -4,8 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TrendingUp, TrendingDown, Eye, Heart, Clock, Share } from 'lucide-react';
-import { useRealTimeTrending } from '@/hooks/useRealTimeTrending';
-import { useLogging } from '@/components/logging/LoggingProvider';
 
 interface TrendingItem {
   id: string;
@@ -23,65 +21,50 @@ interface TrendingItem {
 }
 
 const TrendingAlgorithm = () => {
-  const { trendingArtworks, loading: trendingLoading } = useRealTimeTrending();
-  const { logAndTrack } = useLogging();
   const [trendingItems, setTrendingItems] = useState<TrendingItem[]>([]);
   const [selectedTimeframe, setSelectedTimeframe] = useState<'1h' | '24h' | '7d' | '30d'>('24h');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-  // Convert real artworks to trending format
+  // Simulate dynamic trending algorithm
   useEffect(() => {
-    const convertToTrendingItems = async () => {
-      if (trendingArtworks.length === 0) {
-        // Show demo data if no real artworks exist
-        const demoItems = [
-          {
-            id: '1',
-            title: 'Midnight Symphony',
-            artist: 'Alex Rivera',
-            type: 'music' as const,
-            category: 'Electronic',
-            thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=100&h=100&fit=crop'
-          },
-          {
-            id: '2',
-            title: 'Digital Dreamscape',
-            artist: 'Maya Johnson',
-            type: 'image' as const,
-            category: 'Digital Art',
-            thumbnail: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&h=100&fit=crop'
-          }
-        ];
+    const generateTrendingData = () => {
+      const baseItems = [
+        {
+          id: '1',
+          title: 'Midnight Symphony',
+          artist: 'Alex Rivera',
+          type: 'music' as const,
+          category: 'Electronic',
+          thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=100&h=100&fit=crop'
+        },
+        {
+          id: '2',
+          title: 'Digital Dreamscape',
+          artist: 'Maya Johnson',
+          type: 'image' as const,
+          category: 'Digital Art',
+          thumbnail: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&h=100&fit=crop'
+        },
+        {
+          id: '3',
+          title: 'Urban Flow',
+          artist: 'Jordan Smith',
+          type: 'video' as const,
+          category: 'Street Art',
+          thumbnail: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=100&h=100&fit=crop'
+        },
+        {
+          id: '4',
+          title: 'Abstract Motion',
+          artist: 'Creative Studio',
+          type: 'video' as const,
+          category: 'Abstract',
+          thumbnail: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=100&h=100&fit=crop'
+        }
+      ];
 
-        const demoDemoTrending = demoItems.map(item => {
-          const timeMultiplier = {
-            '1h': 0.1,
-            '24h': 1,
-            '7d': 7,
-            '30d': 30
-          }[selectedTimeframe];
-
-          const baseViews = Math.floor(Math.random() * 1000) * timeMultiplier;
-          const baseLikes = Math.floor(baseViews * (0.1 + Math.random() * 0.2));
-          const baseShares = Math.floor(baseLikes * (0.05 + Math.random() * 0.1));
-
-          return {
-            ...item,
-            views: Math.floor(baseViews),
-            likes: Math.floor(baseLikes),
-            shares: Math.floor(baseShares),
-            trendingScore: Math.floor(Math.random() * 100),
-            trendingChange: Math.floor((Math.random() - 0.5) * 100),
-            timeframe: selectedTimeframe
-          };
-        });
-
-        setTrendingItems(demoDemoTrending);
-        return;
-      }
-
-      // Convert real artworks to trending format
-      const trending = trendingArtworks.map(artwork => {
+      const trending = baseItems.map(item => {
+        // Simulate trending metrics based on timeframe
         const timeMultiplier = {
           '1h': 0.1,
           '24h': 1,
@@ -89,61 +72,38 @@ const TrendingAlgorithm = () => {
           '30d': 30
         }[selectedTimeframe];
 
-        // Use real data where available, simulate engagement metrics
-        const views = artwork.views_count * timeMultiplier;
-        const likes = artwork.likes_count;
-        const shares = Math.floor(likes * 0.1); // Estimate shares
+        const baseViews = Math.floor(Math.random() * 10000) * timeMultiplier;
+        const baseLikes = Math.floor(baseViews * (0.1 + Math.random() * 0.3));
+        const baseShares = Math.floor(baseLikes * (0.05 + Math.random() * 0.15));
 
-        const engagementRate = views > 0 ? (likes + shares * 2) / views : 0;
-        const trendingScore = Math.floor((engagementRate * 100) + Math.random() * 20);
-
+        // Calculate trending score based on engagement velocity
+        const engagementRate = (baseLikes + baseShares * 2) / baseViews;
+        const velocityBonus = Math.random() * 2; // Simulate recent activity spike
+        const trendingScore = (engagementRate * 100) + velocityBonus;
+        
         return {
-          id: artwork.id,
-          title: artwork.title,
-          artist: artwork.artist_name,
-          type: 'image' as const, // Default to image for now
-          views: Math.floor(views),
-          likes,
-          shares,
-          trendingScore,
-          trendingChange: Math.floor((Math.random() - 0.5) * 200),
-          timeframe: selectedTimeframe,
-          category: artwork.category,
-          thumbnail: artwork.media_url
+          ...item,
+          views: Math.floor(baseViews),
+          likes: Math.floor(baseLikes),
+          shares: Math.floor(baseShares),
+          trendingScore: Math.floor(trendingScore),
+          trendingChange: Math.floor((Math.random() - 0.5) * 200), // -100% to +100%
+          timeframe: selectedTimeframe
         };
       });
 
+      // Sort by trending score
       trending.sort((a, b) => b.trendingScore - a.trendingScore);
+      
       setTrendingItems(trending);
-
-      // Log the trending update
-      await logAndTrack(
-        'updateTrendingItems',
-        'TrendingAlgorithm',
-        'data_transform',
-        { selectedTimeframe, artworkCount: trendingArtworks.length },
-        { trendingItemsCount: trending.length }
-      );
     };
 
-    convertToTrendingItems();
-  }, [trendingArtworks, selectedTimeframe]);
-
-  // Update trending data periodically
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Trigger a re-evaluation with slight randomization
-      setTrendingItems(prevItems => 
-        prevItems.map(item => ({
-          ...item,
-          trendingChange: Math.floor((Math.random() - 0.5) * 200),
-          trendingScore: Math.max(0, item.trendingScore + Math.floor((Math.random() - 0.5) * 10))
-        })).sort((a, b) => b.trendingScore - a.trendingScore)
-      );
-    }, 30000);
-
+    generateTrendingData();
+    
+    // Update trending data every 30 seconds to simulate real-time changes
+    const interval = setInterval(generateTrendingData, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedTimeframe]);
 
   const filteredItems = selectedCategory === 'all' 
     ? trendingItems 
@@ -168,15 +128,6 @@ const TrendingAlgorithm = () => {
     if (change < 0) return 'text-red-600';
     return 'text-gray-400';
   };
-
-  if (trendingLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="h-8 w-48 bg-gray-200 animate-pulse rounded-md"></div>
-        <div className="h-64 bg-gray-200 animate-pulse rounded-md"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

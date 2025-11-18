@@ -73,8 +73,11 @@ const Signup = () => {
     });
     
     if (!error) {
-      // Don't auto-navigate, let them confirm email first
-      setTimeout(() => navigate("/login"), 2000);
+      if (formData.role === "artist") {
+        setTimeout(() => navigate("/artist-dashboard"), 1000);
+      } else {
+        setTimeout(() => navigate("/client-dashboard"), 1000);
+      }
     }
   };
 

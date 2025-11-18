@@ -1,11 +1,8 @@
 
-import { useState, lazy, Suspense, useMemo, useEffect } from "react";
+import { useState, lazy, Suspense, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { useLogging } from "@/components/logging/LoggingProvider";
 
 // Lazy load heavy chart components
 const LazyEarningsChart = lazy(() => import("./earnings/EarningsChart"));
@@ -15,118 +12,89 @@ interface ArtistEarningsProps {
   isLoading: boolean;
 }
 
+// Sample data
+const monthlyData = [
+  { name: "Jan", earnings: 12000 },
+  { name: "Feb", earnings: 15000 },
+  { name: "Mar", earnings: 18000 },
+  { name: "Apr", earnings: 16000 },
+  { name: "May", earnings: 21000 },
+  { name: "Jun", earnings: 19000 },
+  { name: "Jul", earnings: 22000 },
+  { name: "Aug", earnings: 25000 },
+  { name: "Sep", earnings: 27000 },
+  { name: "Oct", earnings: 29000 },
+  { name: "Nov", earnings: 31000 },
+  { name: "Dec", earnings: 35000 },
+];
+
+const transactionData = [
+  {
+    id: "1",
+    artworkTitle: "Mystic Mountains",
+    artworkType: "image",
+    amount: 4500,
+    status: "completed",
+    date: "2023-11-15T14:30:00",
+    buyerName: "Rajiv Kumar"
+  },
+  {
+    id: "2",
+    artworkTitle: "Urban Dreams",
+    artworkType: "video",
+    amount: 6200,
+    status: "completed",
+    date: "2023-11-10T09:15:00",
+    buyerName: "Priya Sharma"
+  },
+  {
+    id: "3",
+    artworkTitle: "Ambient Waves",
+    artworkType: "audio",
+    amount: 3800,
+    status: "pending",
+    date: "2023-11-18T16:45:00",
+    buyerName: "Ankit Patel"
+  },
+  {
+    id: "4",
+    artworkTitle: "Whispers of Time",
+    artworkType: "text",
+    amount: 1500,
+    status: "completed",
+    date: "2023-11-05T11:20:00",
+    buyerName: "Meera Joshi"
+  },
+  {
+    id: "5",
+    artworkTitle: "Digital Renaissance",
+    artworkType: "image",
+    amount: 8900,
+    status: "completed",
+    date: "2023-10-28T13:50:00",
+    buyerName: "Vikram Singh"
+  },
+];
+
 const ArtistEarnings = ({ isLoading }: ArtistEarningsProps) => {
-  const { user } = useAuth();
-  const { logAndTrack } = useLogging();
   const [period, setPeriod] = useState("year");
-  const [realSales, setRealSales] = useState<any[]>([]);
-  const [realEarnings, setRealEarnings] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Fetch real sales and earnings data
-  useEffect(() => {
-    const fetchEarningsData = async () => {
-      if (!user?.id) return;
-
-      try {
-        setLoading(true);
-
-        // Fetch sales data
-        const { data: salesData, error: salesError } = await supabase
-          .from('sales')
-          .select('*')
-          .eq('artist_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (salesError) throw salesError;
-
-        setRealSales(salesData || []);
-
-        // Create monthly earnings data from sales
-        const monthlyEarnings = salesData?.reduce((acc: any[], sale) => {
-          const month = new Date(sale.created_at).getMonth();
-          const monthName = new Date(sale.created_at).toLocaleDateString('en-US', { month: 'short' });
-          
-          const existing = acc.find(item => item.name === monthName);
-          if (existing) {
-            existing.earnings += Number(sale.amount);
-          } else {
-            acc.push({ name: monthName, earnings: Number(sale.amount) });
-          }
-          return acc;
-        }, []) || [];
-
-        setRealEarnings(monthlyEarnings);
-
-        // Log successful fetch
-        await logAndTrack(
-          'fetchEarningsData',
-          'ArtistEarnings',
-          'data_fetch',
-          { artist_id: user.id },
-          { salesCount: salesData?.length || 0 }
-        );
-
-      } catch (error) {
-        console.error('Error fetching earnings data:', error);
-        await logAndTrack(
-          'fetchEarningsData',
-          'ArtistEarnings',
-          'error',
-          { artist_id: user.id },
-          undefined,
-          error instanceof Error ? error : new Error('Failed to fetch earnings')
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEarningsData();
-  }, [user?.id]);
-
-  // Real-time subscription for sales updates
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const channel = supabase
-      .channel('sales-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'sales',
-          filter: `artist_id=eq.${user.id}`
-        },
-        () => {
-          // Refetch data when sales change
-          window.location.reload(); // Simple refresh for now
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id]);
   
-  // Calculate stats from real data
+  // Memoize expensive calculations
   const { totalEarnings, pendingEarnings, avgPerSale } = useMemo(() => {
-    const total = realSales.reduce((sum, sale) => sum + Number(sale.amount), 0);
-    const pending = realSales
-      .filter(sale => sale.status === "pending")
-      .reduce((sum, sale) => sum + Number(sale.amount), 0);
-    const avg = realSales.length > 0 ? Math.round(total / realSales.length) : 0;
+    const total = transactionData.reduce((sum, transaction) => sum + transaction.amount, 0);
+    const pending = transactionData
+      .filter(transaction => transaction.status === "pending")
+      .reduce((sum, transaction) => sum + transaction.amount, 0);
+    const avg = Math.round(total / transactionData.length);
     
     return {
       totalEarnings: total,
       pendingEarnings: pending,
       avgPerSale: avg
     };
-  }, [realSales]);
+  }, []);
 
-  if (isLoading || loading) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="h-10 w-48 bg-gray-200 animate-pulse rounded-md"></div>
@@ -185,14 +153,14 @@ const ArtistEarnings = ({ isLoading }: ArtistEarningsProps) => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">₹{avgPerSale.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground mt-1">From {realSales.length} sales</p>
+            <p className="text-xs text-muted-foreground mt-1">From {transactionData.length} sales</p>
           </CardContent>
         </Card>
       </div>
 
       <Suspense fallback={<div className="h-[350px] bg-gray-100 animate-pulse rounded-lg flex items-center justify-center">Loading chart...</div>}>
         <LazyEarningsChart
-          data={realEarnings.length > 0 ? realEarnings : [{ name: "No Data", earnings: 0 }]}
+          data={monthlyData}
           period={period}
           onPeriodChange={setPeriod}
         />
@@ -204,42 +172,38 @@ const ArtistEarnings = ({ isLoading }: ArtistEarningsProps) => {
           <CardDescription>Your latest earnings from artwork sales</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          {realSales.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-4 font-medium">Sale ID</th>
-                    <th className="text-left p-4 font-medium">Date</th>
-                    <th className="text-left p-4 font-medium">Amount</th>
-                    <th className="text-left p-4 font-medium">Status</th>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-4 font-medium">Artwork</th>
+                  <th className="text-left p-4 font-medium">Buyer</th>
+                  <th className="text-left p-4 font-medium">Date</th>
+                  <th className="text-left p-4 font-medium">Amount</th>
+                  <th className="text-left p-4 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactionData.map((transaction) => (
+                  <tr key={transaction.id} className="border-b hover:bg-muted/50">
+                    <td className="p-4">{transaction.artworkTitle}</td>
+                    <td className="p-4">{transaction.buyerName}</td>
+                    <td className="p-4">{new Date(transaction.date).toLocaleDateString()}</td>
+                    <td className="p-4 font-medium">₹{transaction.amount.toLocaleString()}</td>
+                    <td className="p-4">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        transaction.status === "completed"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}>
+                        {transaction.status === "completed" ? "Completed" : "Pending"}
+                      </span>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {realSales.slice(0, 10).map((sale) => (
-                    <tr key={sale.id} className="border-b hover:bg-muted/50">
-                      <td className="p-4">{sale.id.slice(0, 8)}...</td>
-                      <td className="p-4">{new Date(sale.created_at).toLocaleDateString()}</td>
-                      <td className="p-4 font-medium">₹{Number(sale.amount).toLocaleString()}</td>
-                      <td className="p-4">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          sale.status === "completed"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}>
-                          {sale.status === "completed" ? "Completed" : "Pending"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="p-8 text-center text-gray-500">
-              No sales yet. Start creating and selling artwork to see your earnings here!
-            </div>
-          )}
+                ))}
+              </tbody>
+            </table>
+          </div>
         </CardContent>
         <CardFooter className="border-t p-4 flex justify-center">
           <Button variant="outline" className="w-full md:w-auto">View All Transactions</Button>

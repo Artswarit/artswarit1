@@ -257,7 +257,7 @@ const Index = () => {
       <AnimatedHeroSlider />
       
       {/* Featured Artists Section */}
-      <section id="featured-artists" className="container mx-auto px-3 sm:px-4 py-8 sm:py-12 md:py-16 lg:px-8 mt-16 sm:mt-20">
+      <section id="featured-artists" className="container mx-auto px-4 py-12 sm:py-16 sm:px-6 lg:px-8 mt-4 sm:mt-8">
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-artswarit-purple to-blue-500">
             Featured Artists
@@ -291,8 +291,8 @@ const Index = () => {
       <ArtworkCarousel />
 
       {/* Categories Section */}
-      <section className="py-8 sm:py-12 md:py-16 bg-gradient-to-r from-indigo-50 to-purple-50">
-        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+      <section className="py-12 sm:py-16 bg-gradient-to-r from-indigo-50 to-purple-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8 sm:mb-12">
             <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-artswarit-purple to-blue-500">
               Popular Categories
@@ -322,7 +322,7 @@ const Index = () => {
       </section>
 
       {/* How It Works Section */}
-      <section className="container mx-auto px-3 sm:px-4 py-8 sm:py-12 md:py-16 md:px-6 lg:px-8">
+      <section className="container mx-auto px-4 py-12 sm:py-16 sm:px-6 lg:px-8">
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-artswarit-purple to-blue-500">
             How Artswarit Works
@@ -368,8 +368,8 @@ const Index = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-8 sm:py-12 md:py-16 bg-gradient-to-r from-indigo-50 to-purple-50">
-        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+      <section className="py-12 sm:py-16 bg-gradient-to-r from-indigo-50 to-purple-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8 sm:mb-12">
             <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-artswarit-purple to-blue-500">
               Success Stories
@@ -398,8 +398,8 @@ const Index = () => {
       </section>
 
       {/* Enhanced CTA Section */}
-      <section className="bg-gradient-to-r from-artswarit-purple to-blue-500 text-white py-8 sm:py-12 md:py-16 relative overflow-hidden">
-        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 text-center relative z-10">
+      <section className="bg-gradient-to-r from-artswarit-purple to-blue-500 text-white py-12 sm:py-16 relative overflow-hidden">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <div className="max-w-3xl mx-auto">
             <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
               Ready to Showcase Your Talent?

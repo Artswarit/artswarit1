@@ -2,14 +2,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLogging } from '@/components/logging/LoggingProvider';
 
 export const useArtworks = () => {
   const [artworks, setArtworks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
-  const { logAndTrack } = useLogging();
 
   const fetchArtworks = async () => {
     if (!user) {
@@ -17,11 +15,8 @@ export const useArtworks = () => {
       return;
     }
 
-    const startTime = performance.now();
     try {
       setLoading(true);
-      await logAndTrack('fetchArtworks', 'useArtworks', 'data_fetch', { user_id: user.id });
-
       const { data, error } = await supabase
         .from('artworks')
         .select(`
@@ -48,6 +43,7 @@ export const useArtworks = () => {
 
       if (error) throw error;
 
+      // Transform data to match component expectations
       const transformedArtworks = (data || []).map(artwork => ({
         id: artwork.id,
         title: artwork.title,
@@ -59,7 +55,7 @@ export const useArtworks = () => {
         media_url: artwork.media_url,
         price: artwork.price || 0,
         status: artwork.status,
-        approval_status: artwork.status,
+        approval_status: artwork.status, // Map status to approval_status for compatibility
         tags: artwork.tags || [],
         metadata: artwork.metadata || {},
         created_at: artwork.created_at,
@@ -76,20 +72,8 @@ export const useArtworks = () => {
       }));
 
       setArtworks(transformedArtworks);
-      
-      const executionTime = performance.now() - startTime;
-      await logAndTrack('fetchArtworks', 'useArtworks', 'data_fetch_success', 
-        { user_id: user.id, count: transformedArtworks.length },
-        { artworks_count: transformedArtworks.length, execution_time_ms: executionTime }
-      );
     } catch (err) {
       console.error('Error fetching artworks:', err);
-      const executionTime = performance.now() - startTime;
-      await logAndTrack('fetchArtworks', 'useArtworks', 'data_fetch_error',
-        { user_id: user.id },
-        { error: err instanceof Error ? err.message : 'Unknown error', execution_time_ms: executionTime },
-        err instanceof Error ? err : undefined
-      );
       setError(err instanceof Error ? err.message : 'Failed to fetch artworks');
     } finally {
       setLoading(false);
