@@ -57,7 +57,7 @@ const Navbar = () => {
     }
   };
   return <nav className="bg-white/70 glass-effect shadow-lg border-b border-gray-100 fixed w-full top-0 z-50 backdrop-blur-md transition-all">
-      <div className="w-full flex items-center h-12 px-0 md:px-0">
+      <div className="w-full flex items-center h-14 sm:h-16 px-2 sm:px-4">
         {/* Left: logo + desktop menu grouped, reduce gap for tighter alignment */}
         <div className="flex items-center gap-x-2">
           {/* Logo */}
