@@ -214,12 +214,12 @@ const Explore = () => {
       <Navbar />
       
       {/* Hero Section */}
-      <div className="pt-16 pb-8 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-600/10">
-        <div className="container mx-auto px-4 py-12 text-center">
-          <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+      <div className="pt-16 sm:pt-20 pb-6 sm:pb-8 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-600/10">
+        <div className="container mx-auto px-4 py-8 sm:py-12 text-center">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
             Explore Artworks
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto px-4">
             Discover amazing artworks from talented artists around the world
           </p>
         </div>
@@ -227,9 +227,9 @@ const Explore = () => {
 
       {/* Trending Section */}
       {trendingArtworks.length > 0 && !loading && (
-        <div className="container mx-auto px-4 pt-8">
-          <h2 className="text-3xl font-bold mb-6 text-gray-800">Trending Now</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="container mx-auto px-4 pt-6 sm:pt-8">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-gray-800">Trending Now</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {trendingArtworks.map((artwork) => (
               <div 
                 key={`trending-${artwork.id}`}
@@ -252,7 +252,7 @@ const Explore = () => {
               </div>
             ))}
           </div>
-          <hr className="my-12 border-gray-200" />
+          <hr className="my-8 sm:my-12 border-gray-200" />
         </div>
       )}
 
@@ -265,13 +265,13 @@ const Explore = () => {
       />
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-6 sm:py-8">
         {currentArtworks && currentArtworks.length > 0 ? (
           <div>
             {/* Artworks Grid */}
-            <div className={`mb-8 ${
+            <div className={`mb-6 sm:mb-8 ${
               viewMode === 'grid'
-                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6'
                 : 'space-y-4'
             }`}>
               {currentArtworks.map((artwork) => (
