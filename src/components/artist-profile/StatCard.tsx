@@ -23,7 +23,7 @@ const StatCard: React.FC<StatCardProps> = ({ type, value, label }) => {
   };
 
   const getIcon = () => {
-    const iconProps = { size: 12, className: "text-white/70" };
+    const iconProps = { className: "text-white/70 w-3 h-3 sm:w-4 sm:h-4" };
     switch (type) {
       case "followers":
         return <Users {...iconProps} />;
@@ -39,14 +39,14 @@ const StatCard: React.FC<StatCardProps> = ({ type, value, label }) => {
   };
 
   return (
-    <div className="flex flex-col items-center text-center min-w-0 flex-1">
-      <div className="flex items-center gap-1 mb-0.5">
+    <div className="flex flex-col items-center text-center min-w-0 flex-1 px-1 sm:px-2">
+      <div className="flex items-center gap-1 sm:gap-1.5 mb-0.5">
         {getIcon()}
-        <span className="text-white font-bold text-sm sm:text-base leading-tight">
+        <span className="text-white font-bold text-xs sm:text-sm md:text-base leading-tight">
           {formatValue(value)}
         </span>
       </div>
-      <span className="text-white/80 text-xs leading-tight">{label}</span>
+      <span className="text-white/80 text-[10px] sm:text-xs leading-tight">{label}</span>
     </div>
   );
 };
