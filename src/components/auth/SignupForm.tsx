@@ -71,10 +71,10 @@ const SignupForm = ({
   };
 
   return (
-    <form className="space-y-6" onSubmit={validateAndSubmit}>
-      <div className="space-y-4">
+    <form className="space-y-4 sm:space-y-6" onSubmit={validateAndSubmit}>
+      <div className="space-y-3 sm:space-y-4">
         <div>
-          <Label htmlFor="name">Full name</Label>
+          <Label htmlFor="name" className="text-sm sm:text-base">Full name</Label>
           <Input 
             id="name" 
             name="name" 
@@ -83,12 +83,12 @@ const SignupForm = ({
             value={formData.name} 
             onChange={handleChange} 
             required 
-            className="mt-1"
+            className="mt-1 h-11 sm:h-10 text-base"
             disabled={loading}
           />
         </div>
         <div>
-          <Label htmlFor="email">Email address</Label>
+          <Label htmlFor="email" className="text-sm sm:text-base">Email address</Label>
           <Input 
             id="email" 
             name="email" 
@@ -97,12 +97,12 @@ const SignupForm = ({
             value={formData.email} 
             onChange={handleChange} 
             required 
-            className="mt-1"
+            className="mt-1 h-11 sm:h-10 text-base"
             disabled={loading}
           />
         </div>
         <div>
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password" className="text-sm sm:text-base">Password</Label>
           <Input 
             id="password" 
             name="password" 
@@ -111,12 +111,12 @@ const SignupForm = ({
             value={formData.password} 
             onChange={handleChange} 
             required 
-            className="mt-1"
+            className="mt-1 h-11 sm:h-10 text-base"
             disabled={loading}
           />
         </div>
         <div>
-          <Label htmlFor="confirmPassword">Confirm password</Label>
+          <Label htmlFor="confirmPassword" className="text-sm sm:text-base">Confirm password</Label>
           <Input 
             id="confirmPassword" 
             name="confirmPassword" 
@@ -125,47 +125,48 @@ const SignupForm = ({
             value={formData.confirmPassword} 
             onChange={handleChange} 
             required 
-            className="mt-1"
+            className="mt-1 h-11 sm:h-10 text-base"
             disabled={loading}
           />
         </div>
         <div>
           <div className="mb-2">
-            <Label>I am a</Label>
+            <Label className="text-sm sm:text-base">I am a</Label>
           </div>
-          <RadioGroup value={formData.role} onValueChange={handleRoleChange} className="flex gap-6" disabled={loading}>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="artist" id="artist" disabled={loading} />
-              <Label htmlFor="artist">Artist</Label>
+          <RadioGroup value={formData.role} onValueChange={handleRoleChange} className="flex gap-4 sm:gap-6" disabled={loading}>
+            <div className="flex items-center space-x-2 min-h-[44px]">
+              <RadioGroupItem value="artist" id="artist" disabled={loading} className="w-5 h-5" />
+              <Label htmlFor="artist" className="text-sm sm:text-base cursor-pointer">Artist</Label>
             </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="client" id="client" disabled={loading} />
-              <Label htmlFor="client">Client</Label>
+            <div className="flex items-center space-x-2 min-h-[44px]">
+              <RadioGroupItem value="client" id="client" disabled={loading} className="w-5 h-5" />
+              <Label htmlFor="client" className="text-sm sm:text-base cursor-pointer">Client</Label>
             </div>
           </RadioGroup>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-start space-x-2 py-2">
           <Checkbox 
             id="terms" 
             checked={formData.acceptTerms} 
             onCheckedChange={handleTermsChange} 
             required
             disabled={loading}
+            className="mt-0.5 w-5 h-5 flex-shrink-0"
           />
-          <Label htmlFor="terms" className="text-sm">
+          <Label htmlFor="terms" className="text-xs sm:text-sm leading-tight cursor-pointer">
             I accept the{" "}
-            <Link to="/terms" className="text-artswarit-purple hover:text-artswarit-purple-dark">
+            <Link to="/terms" className="text-artswarit-purple hover:text-artswarit-purple-dark underline">
               Terms of Service
             </Link>{" "}
             and{" "}
-            <Link to="/privacy" className="text-artswarit-purple hover:text-artswarit-purple-dark">
+            <Link to="/privacy" className="text-artswarit-purple hover:text-artswarit-purple-dark underline">
               Privacy Policy
             </Link>
           </Label>
         </div>
       </div>
 
-      <Button type="submit" className="w-full" disabled={loading}>
+      <Button type="submit" className="w-full min-h-[44px] text-base font-medium" disabled={loading}>
         {loading ? "Creating account..." : "Create account"}
       </Button>
     </form>
