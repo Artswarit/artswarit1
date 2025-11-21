@@ -63,7 +63,7 @@ const PremiumPanel = ({
             <Sparkles className="h-4 w-4 text-yellow-400 absolute -top-1 -right-1 animate-pulse" />
           </div>
           <span>Unlock</span>
-          <span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-transparent bg-clip-text">
+          <span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-transparent bg-clip-text text-left">
             Premium Access
           </span>
         </CardTitle>

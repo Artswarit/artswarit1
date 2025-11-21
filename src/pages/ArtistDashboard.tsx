@@ -45,7 +45,7 @@ const ArtistDashboard = () => {
   return <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
         <Navbar />
-        <main className="container mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-6 sm:py-8 pt-20 sm:pt-24">
+        <main className="container sm:px-4 lg:px-6 xl:px-8 sm:py-8 pt-20 sm:pt-24 py-0 mx-0 px-[10px]">
           <DashboardHeader user={user} profile={profile} title="Artist Dashboard" subtitle="Manage your artworks, projects, profile, and earnings" />
 
           <Tabs defaultValue={defaultTab} className="w-full">

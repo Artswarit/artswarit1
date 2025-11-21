@@ -185,8 +185,8 @@ const ArtworkManagement = () => {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Artwork Management</h2>
-          <p className="text-gray-600">Manage and organize your artwork collection</p>
+          <h2 className="text-2xl font-bold text-center">Artwork Management</h2>
+          <p className="text-gray-600 text-center text-xs font-medium px-0">Manage and organize your artwork collection</p>
         </div>
         <div className="gap-2 flex-wrap flex items-center justify-center">
           <Button variant="outline" onClick={() => setShowAnalytics(!showAnalytics)}>
@@ -225,7 +225,7 @@ const ArtworkManagement = () => {
       </div>
 
       {/* Select All */}
-      {filteredArtworks.length > 0 && <div className="gap-2 flex-wrap text-sm flex items-center justify-start text-slate-950">
+      {filteredArtworks.length > 0 && <div className="gap-2 flex-wrap text-sm text-slate-950 rounded-none shadow-sm items-center justify-start flex flex-row">
           <Checkbox checked={selectedArtworks.length === filteredArtworks.length} onCheckedChange={handleSelectAll} />
           <span>Select all artworks</span>
         </div>}
