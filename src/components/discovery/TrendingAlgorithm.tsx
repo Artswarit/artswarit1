@@ -130,27 +130,28 @@ const TrendingAlgorithm = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 w-full max-w-full overflow-hidden">
       {/* Header and Controls */}
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <TrendingUp className="h-6 w-6" />
-            Trending Now
+          <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" />
+            <span className="min-w-0">Trending Now</span>
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm sm:text-base mt-1">
             Real-time trending content based on engagement velocity and popularity
           </p>
         </div>
 
         {/* Timeframe Selector */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {(['1h', '24h', '7d', '30d'] as const).map((timeframe) => (
             <Button
               key={timeframe}
               variant={selectedTimeframe === timeframe ? 'default' : 'outline'}
               size="sm"
               onClick={() => setSelectedTimeframe(timeframe)}
+              className="text-xs sm:text-sm"
             >
               {timeframe === '1h' ? 'Last Hour' : 
                timeframe === '24h' ? 'Today' :
@@ -167,6 +168,7 @@ const TrendingAlgorithm = () => {
               variant={selectedCategory === category ? 'default' : 'outline'}
               size="sm"
               onClick={() => setSelectedCategory(category)}
+              className="text-xs sm:text-sm"
             >
               {category === 'all' ? 'All Categories' : category}
             </Button>
@@ -175,13 +177,13 @@ const TrendingAlgorithm = () => {
       </div>
 
       {/* Trending Items */}
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4 w-full">
         {filteredItems.map((item, index) => (
-          <Card key={item.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-4">
+          <Card key={item.id} className="hover:shadow-md transition-shadow w-full">
+            <CardContent className="p-3 sm:p-4 w-full">
+              <div className="flex items-start gap-2 sm:gap-4 w-full min-w-0">
                 {/* Ranking */}
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold text-sm">
+                <div className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold text-xs sm:text-sm flex-shrink-0">
                   {index + 1}
                 </div>
 
@@ -189,46 +191,46 @@ const TrendingAlgorithm = () => {
                 <img 
                   src={item.thumbnail} 
                   alt={item.title}
-                  className="w-16 h-16 rounded-lg object-cover"
+                  className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover flex-shrink-0"
                 />
 
                 {/* Content Info */}
-                <div className="flex-1">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-semibold">{item.title}</h3>
-                      <p className="text-sm text-muted-foreground">{item.artist}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline">{item.category}</Badge>
-                        <Badge variant="secondary">{item.type}</Badge>
+                <div className="flex-1 min-w-0 flex flex-col gap-2">
+                  <div className="flex items-start justify-between gap-2 w-full">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-sm sm:text-base truncate">{item.title}</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">{item.artist}</p>
+                      <div className="flex items-center gap-1.5 sm:gap-2 mt-1 flex-wrap">
+                        <Badge variant="outline" className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0 sm:py-0.5">{item.category}</Badge>
+                        <Badge variant="secondary" className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0 sm:py-0.5">{item.type}</Badge>
                       </div>
                     </div>
 
                     {/* Trending Indicator */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 flex-shrink-0">
                       {getTrendingIcon(item.trendingChange)}
-                      <span className={`text-sm font-medium ${getTrendingColor(item.trendingChange)}`}>
+                      <span className={`text-xs sm:text-sm font-medium ${getTrendingColor(item.trendingChange)} whitespace-nowrap`}>
                         {item.trendingChange > 0 ? '+' : ''}{item.trendingChange}%
                       </span>
                     </div>
                   </div>
 
                   {/* Metrics */}
-                  <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Eye className="h-4 w-4" />
+                  <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground flex-wrap w-full">
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
                       <span>{formatNumber(item.views)}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Heart className="h-4 w-4" />
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
                       <span>{formatNumber(item.likes)}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Share className="h-4 w-4" />
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Share className="h-3 w-3 sm:h-4 sm:w-4" />
                       <span>{formatNumber(item.shares)}</span>
                     </div>
-                    <div className="ml-auto">
-                      <Badge className="bg-gradient-to-r from-blue-500 to-purple-600">
+                    <div className="ml-auto flex-shrink-0">
+                      <Badge className="bg-gradient-to-r from-blue-500 to-purple-600 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0 sm:py-0.5 whitespace-nowrap">
                         Score: {item.trendingScore}
                       </Badge>
                     </div>

@@ -8,7 +8,7 @@ const Trending = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
       <Navbar />
       
-      <main className="container mx-auto px-4 py-8 pt-24">
+      <main className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-6 sm:py-8 pt-20 sm:pt-24">
         <TrendingAlgorithm />
       </main>
 

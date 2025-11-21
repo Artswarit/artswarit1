@@ -99,17 +99,17 @@ const ArtworkCardModern: React.FC<ArtworkCardProps> = ({
         )}
       </div>
       {/* Content */}
-      <div className="p-3 md:p-4 flex flex-col gap-2">
-        <h4 className="font-medium text-base text-gray-900 truncate">{title}</h4>
-        <div className="flex items-center gap-3 text-xs text-gray-500">
-          <span className="flex items-center gap-1">
-            <Eye size={13} /> {views}
+      <div className="p-2 sm:p-3 md:p-4 flex flex-col gap-1.5 sm:gap-2">
+        <h4 className="font-medium text-sm sm:text-base text-gray-900 truncate">{title}</h4>
+        <div className="flex items-center gap-2 sm:gap-3 text-xs text-gray-500 flex-wrap">
+          <span className="flex items-center gap-0.5 sm:gap-1">
+            <Eye size={12} className="sm:w-[13px] sm:h-[13px]" /> <span className="text-[10px] sm:text-xs">{views}</span>
           </span>
-          <span className="flex items-center gap-1">
-            <Heart size={13} /> {likes}
+          <span className="flex items-center gap-0.5 sm:gap-1">
+            <Heart size={12} className="sm:w-[13px] sm:h-[13px]" /> <span className="text-[10px] sm:text-xs">{likes}</span>
           </span>
           {typeof price !== "undefined" && (
-            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ml-auto ${isPremium ? "bg-yellow-300/40 text-yellow-800" : "bg-blue-100 text-blue-700"}`}>
+            <span className={`rounded-full px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-semibold ml-auto flex-shrink-0 ${isPremium ? "bg-yellow-300/40 text-yellow-800" : "bg-blue-100 text-blue-700"}`}>
               {price === 0 ? "Free" : `₹${price}`}
             </span>
           )}
