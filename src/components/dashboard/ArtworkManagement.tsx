@@ -5,7 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useArtworks } from '@/hooks/useArtworks';
-import { Grid, List, Plus, BarChart3 } from 'lucide-react';
+import { Grid, List, Plus, BarChart3, Heart, Eye } from 'lucide-react';
 import ArtworkUploadForm from './artwork/ArtworkUploadForm';
 import ArtworkEditModal from './artwork/ArtworkEditModal';
 import ArtworkActions from './artwork/ArtworkActions';
@@ -176,6 +176,12 @@ const ArtworkManagement = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
+  const formatPrice = (price?: number | null) => {
+    if (price === null || typeof price === 'undefined') return '—';
+    if (price === 0) return 'Free';
+    return `$${price}`;
+  };
+
   const handleArtworkUpdate = (updatedArtwork: any) => {
     console.log('Updating artwork:', updatedArtwork);
     toast({
@@ -195,12 +201,12 @@ const ArtworkManagement = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold">Artwork Management</h2>
           <p className="text-gray-600">Manage and organize your artwork collection</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap justify-end">
           <Button
             variant="outline"
             onClick={() => setShowAnalytics(!showAnalytics)}
@@ -231,7 +237,7 @@ const ArtworkManagement = () => {
       />
 
       {/* View Controls */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-gray-600">
           {filteredArtworks.length} artwork{filteredArtworks.length !== 1 ? 's' : ''} found
         </p>
@@ -255,12 +261,12 @@ const ArtworkManagement = () => {
 
       {/* Select All */}
       {filteredArtworks.length > 0 && (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap text-sm">
           <Checkbox
             checked={selectedArtworks.length === filteredArtworks.length}
             onCheckedChange={handleSelectAll}
           />
-          <span className="text-sm">Select all artworks</span>
+          <span>Select all artworks</span>
         </div>
       )}
 
@@ -268,7 +274,7 @@ const ArtworkManagement = () => {
       {filteredArtworks.length > 0 ? (
         <div className={
           viewMode === 'grid'
-            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+            ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
             : 'space-y-4'
         }>
           {filteredArtworks.map((artwork) => (
@@ -278,7 +284,7 @@ const ArtworkManagement = () => {
                   <div className="relative">
                     <img
                       src={artwork.imageUrl}
-                      alt={artwork.title}
+                      alt={artwork.title || 'Artwork image'}
                       className="w-full h-48 object-cover"
                     />
                     <div className="absolute top-2 left-2">
@@ -291,13 +297,20 @@ const ArtworkManagement = () => {
                       {getStatusBadge(artwork.approval_status)}
                     </div>
                   </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold truncate">{artwork.title}</h3>
-                    <p className="text-sm text-gray-600">{artwork.category}</p>
+                  <CardContent className="p-4 space-y-1.5">
+                    <h3 className="font-semibold truncate">{artwork.title || 'Untitled artwork'}</h3>
+                    <p className="text-sm text-gray-600">{artwork.category || 'Uncategorized'}</p>
                     <div className="flex items-center justify-between mt-2">
-                      <span className="text-lg font-bold">${artwork.price}</span>
-                      <div className="text-xs text-gray-500">
-                        {artwork.likes} ❤️ {artwork.views} 👁️
+                      <span className="text-lg font-bold">{formatPrice(artwork.price)}</span>
+                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <Heart className="w-3 h-3" />
+                          {artwork.likes}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Eye className="w-3 h-3" />
+                          {artwork.views}
+                        </span>
                       </div>
                     </div>
                     <div className="mt-3">
@@ -310,25 +323,34 @@ const ArtworkManagement = () => {
                 </>
               ) : (
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <Checkbox
-                      checked={selectedArtworks.includes(artwork.id)}
-                      onCheckedChange={(checked) => handleSelectArtwork(artwork.id, checked as boolean)}
-                    />
-                    <img
-                      src={artwork.imageUrl}
-                      alt={artwork.title}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{artwork.title}</h3>
-                      <p className="text-sm text-gray-600">{artwork.category}</p>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        checked={selectedArtworks.includes(artwork.id)}
+                        onCheckedChange={(checked) => handleSelectArtwork(artwork.id, checked as boolean)}
+                      />
+                      <img
+                        src={artwork.imageUrl}
+                        alt={artwork.title || 'Artwork image'}
+                        className="w-16 h-16 object-cover rounded"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold truncate">{artwork.title || 'Untitled artwork'}</h3>
+                      <p className="text-sm text-gray-600 truncate">{artwork.category || 'Uncategorized'}</p>
                       <p className="text-xs text-gray-500">Created: {formatDate(artwork.created_at)}</p>
                     </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold">${artwork.price}</div>
-                      <div className="text-xs text-gray-500">
-                        {artwork.likes} ❤️ {artwork.views} 👁️
+                    <div className="flex flex-col items-end gap-1 text-right">
+                      <div className="text-lg font-bold">{formatPrice(artwork.price)}</div>
+                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <Heart className="w-3 h-3" />
+                          {artwork.likes}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Eye className="w-3 h-3" />
+                          {artwork.views}
+                        </span>
                       </div>
                     </div>
                     <div className="flex flex-col gap-2">
