@@ -1,18 +1,20 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PlusCircle, TrendingUp, Calendar, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
 interface DashboardHeaderProps {
   user?: any;
   profile?: any;
   title: string;
   subtitle: string;
 }
-
-const DashboardHeader = ({ user, profile, title, subtitle }: DashboardHeaderProps) => {
+const DashboardHeader = ({
+  user,
+  profile,
+  title,
+  subtitle
+}: DashboardHeaderProps) => {
   const navigate = useNavigate();
   const [artistStats, setArtistStats] = useState({
     totalViews: 12463,
@@ -20,9 +22,7 @@ const DashboardHeader = ({ user, profile, title, subtitle }: DashboardHeaderProp
     totalArtworks: 32,
     followers: 548
   });
-
-  return (
-    <div className="space-y-4 sm:space-y-6 py-3 sm:py-[18px] my-6 sm:my-[49px]">
+  return <div className="space-y-4 sm:space-y-6 py-3 sm:py-[18px] my-6 sm:my-[49px]">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{title}</h1>
@@ -31,13 +31,7 @@ const DashboardHeader = ({ user, profile, title, subtitle }: DashboardHeaderProp
           </p>
         </div>
         
-        <Button 
-          onClick={() => navigate("/artist-dashboard/upload")} 
-          className="w-full lg:w-auto bg-gradient-to-r from-artswarit-purple to-blue-500 border-none min-h-[44px]"
-        >
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add New Artwork
-        </Button>
+        
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
@@ -91,8 +85,6 @@ const DashboardHeader = ({ user, profile, title, subtitle }: DashboardHeaderProp
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default DashboardHeader;

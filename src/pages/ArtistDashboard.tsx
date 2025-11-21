@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,39 +20,33 @@ import ArtworkUpload from '@/components/artwork/ArtworkUpload';
 import ProjectManagement from '@/components/dashboard/projects/ProjectManagement';
 import ArtistNotifications from '@/components/dashboard/ArtistNotifications';
 import UniversalChatbot from '@/components/UniversalChatbot';
-
 const ArtistDashboard = () => {
-  const { tab } = useParams();
-  const { user } = useAuth();
-  const { profile, loading: profileLoading } = useProfile();
-
+  const {
+    tab
+  } = useParams();
+  const {
+    user
+  } = useAuth();
+  const {
+    profile,
+    loading: profileLoading
+  } = useProfile();
   useEffect(() => {
     if (profile && profile.role !== 'artist' && profile.role !== 'premium') {
       window.location.href = '/client-dashboard';
     }
   }, [profile]);
-
   const defaultTab = tab || 'artworks';
-
   if (profileLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
+    return <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <ProtectedRoute>
+  return <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
         <Navbar />
         <main className="container mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-6 sm:py-8 pt-20 sm:pt-24">
-          <DashboardHeader 
-            user={user} 
-            profile={profile}
-            title="Artist Dashboard"
-            subtitle="Manage your artworks, projects, profile, and earnings"
-          />
+          <DashboardHeader user={user} profile={profile} title="Artist Dashboard" subtitle="Manage your artworks, projects, profile, and earnings" />
 
           <Tabs defaultValue={defaultTab} className="w-full">
             <div className="overflow-x-auto mb-6 sm:mb-8">
@@ -128,10 +121,8 @@ const ArtistDashboard = () => {
           </Tabs>
         </main>
         <Footer />
-        <UniversalChatbot />
+        
       </div>
-    </ProtectedRoute>
-  );
+    </ProtectedRoute>;
 };
-
 export default ArtistDashboard;
