@@ -109,7 +109,7 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
   return (
     <div>
       <Tabs value={tab} onValueChange={(v) => { setTab(v); setPage(1); }}>
-        <div className="w-full overflow-x-auto pb-2 mb-2 -mx-1 px-1">
+        <div className="w-full overflow-x-auto pb-2 mb-2 -mx-1 px-1 flex justify-center">
           <TabsList className="bg-white/40 backdrop-blur rounded-2xl glass-effect w-full sm:w-max mb-2 py-1 px-1 min-w-max">
             <TabsTrigger value="all" className="text-xs sm:text-sm px-2 sm:px-3">All Art</TabsTrigger>
             <TabsTrigger value="premium" className="text-xs sm:text-sm px-2 sm:px-3">Premium</TabsTrigger>
