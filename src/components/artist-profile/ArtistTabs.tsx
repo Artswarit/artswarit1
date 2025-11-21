@@ -109,13 +109,15 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
   return (
     <div>
       <Tabs value={tab} onValueChange={(v) => { setTab(v); setPage(1); }}>
-        <TabsList className="bg-white/40 backdrop-blur rounded-2xl glass-effect w-max mb-4 py-1 px-1">
-          <TabsTrigger value="all">All Art</TabsTrigger>
-          <TabsTrigger value="premium">Premium</TabsTrigger>
-          <TabsTrigger value="exclusive">Exclusive</TabsTrigger>
-          <TabsTrigger value="services">Services</TabsTrigger>
-          <TabsTrigger value="about">About</TabsTrigger>
-        </TabsList>
+        <div className="w-full overflow-x-auto pb-2 mb-2 -mx-1 px-1">
+          <TabsList className="bg-white/40 backdrop-blur rounded-2xl glass-effect w-full sm:w-max mb-2 py-1 px-1 min-w-max">
+            <TabsTrigger value="all" className="text-xs sm:text-sm px-2 sm:px-3">All Art</TabsTrigger>
+            <TabsTrigger value="premium" className="text-xs sm:text-sm px-2 sm:px-3">Premium</TabsTrigger>
+            <TabsTrigger value="exclusive" className="text-xs sm:text-sm px-2 sm:px-3">Exclusive</TabsTrigger>
+            <TabsTrigger value="services" className="text-xs sm:text-sm px-2 sm:px-3">Services</TabsTrigger>
+            <TabsTrigger value="about" className="text-xs sm:text-sm px-2 sm:px-3">About</TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* "All Art", "Premium", "Exclusive" tabs */}
         <TabsContent value={tab} forceMount>
