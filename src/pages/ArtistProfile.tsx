@@ -87,11 +87,12 @@ export default function ArtistProfile() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
 
   // DIAGNOSTIC: Show login state and preview context
   console.log("[ARTIST PROFILE] Rendered. RouteID:", routeId, "Mapped ID:", id, "User:", user);
 
-  const [profileState, setProfileState] = useState(() => {
+  const [profileState, setProfileState] = useState<any>(() => {
     // fallback demo data for local dev: artistData
     const demoArtist = artistsData[id as keyof typeof artistsData];
     return demoArtist;
@@ -124,6 +125,131 @@ export default function ArtistProfile() {
       setShowDiagnosticBanner(false);
     }
   }, [user]);
+
+  // Fetch real artist profile from database
+  useEffect(() => {
+    async function fetchArtistProfile() {
+      // Skip for demo profiles
+      if (!id || id === ARTIST_UUID_1 || id === ARTIST_UUID_2) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        
+        // Fetch artist info from users table
+        const { data: artistData, error: artistError } = await supabase
+          .from('users')
+          .select('id, name, email, bio, profile_pic_url, cover_photo_url, role, social_links')
+          .eq('id', id)
+          .maybeSingle();
+
+        if (artistError) {
+          console.error('Error fetching artist:', artistError);
+          setLoading(false);
+          return;
+        }
+
+        if (!artistData) {
+          // Try fetching from public_profiles as fallback
+          const { data: profileData, error: profileError } = await supabase
+            .from('public_profiles')
+            .select('*')
+            .eq('id', id)
+            .maybeSingle();
+
+          if (profileError || !profileData) {
+            console.error('Artist not found');
+            setProfileState(null);
+            setLoading(false);
+            return;
+          }
+
+          // Use profile data
+          const artistFromProfile = {
+            id: profileData.id,
+            name: profileData.full_name || 'Unknown Artist',
+            category: profileData.role || 'Artist',
+            avatar: profileData.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200',
+            bio: profileData.bio || '',
+            followers: 0,
+            likes: 0,
+            isVerified: profileData.is_verified || false,
+            specialties: profileData.tags || [],
+            location: profileData.location || '',
+            cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80',
+            artworks: [],
+          };
+
+          // Fetch artworks
+          const { data: artworksData } = await supabase
+            .from('artworks')
+            .select('*')
+            .eq('artist_id', id)
+            .eq('status', 'public')
+            .order('created_at', { ascending: false });
+
+          artistFromProfile.artworks = (artworksData || []).map(art => ({
+            id: art.id,
+            title: art.title,
+            img: art.media_url,
+            type: art.media_type,
+            likes: (art.metadata as any)?.likes_count || 0,
+            views: (art.metadata as any)?.views_count || 0,
+            price: art.price || 0,
+          }));
+
+          setProfileState(artistFromProfile);
+          setLoading(false);
+          return;
+        }
+
+        // Transform users data to profile format
+        const artistProfile = {
+          id: artistData.id,
+          name: artistData.name || 'Unknown Artist',
+          category: artistData.role || 'Artist',
+          avatar: artistData.profile_pic_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200',
+          bio: artistData.bio || '',
+          followers: 0,
+          likes: 0,
+          isVerified: false,
+          specialties: [],
+          location: '',
+          cover: artistData.cover_photo_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80',
+          artworks: [] as any[],
+        };
+
+        // Fetch artworks for this artist
+        const { data: artworksData } = await supabase
+          .from('artworks')
+          .select('*')
+          .eq('artist_id', id)
+          .eq('status', 'public')
+          .order('created_at', { ascending: false });
+
+        artistProfile.artworks = (artworksData || []).map(art => ({
+          id: art.id,
+          title: art.title,
+          img: art.media_url,
+          type: art.media_type,
+          likes: (art.metadata as any)?.likes_count || 0,
+          views: (art.metadata as any)?.views_count || 0,
+          price: art.price || 0,
+        }));
+
+        setProfileState(artistProfile);
+      } catch (err) {
+        console.error('Error fetching artist profile:', err);
+        setProfileState(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchArtistProfile();
+  }, [id]);
 
   // Get supabase user is now handled by useAuth
 
@@ -398,6 +524,22 @@ export default function ArtistProfile() {
     }
   }, [id]);
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center p-4">
+          <GlassCard className="p-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Loading artist profile...</p>
+          </GlassCard>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   if (!profileState) {
     return (
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
@@ -416,21 +558,22 @@ export default function ArtistProfile() {
     );
   }
 
-  // Demo logic: show enriched data with new followersCount from DB, not from static mock
-  const portfolio = profileState.artworks.map((a, ix) => ({
+  // Use real data for artworks, only add demo values for demo profiles
+  const isDemoProfile = id === ARTIST_UUID_1 || id === ARTIST_UUID_2;
+  const portfolio = (profileState.artworks || []).map((a: any, ix: number) => ({
     ...a,
-    likes: 100 + ix * 11,
-    views: 500 + ix * 30,
-    price: ix === 0 ? 0 : 499 + 100 * ix,
-    isPremium: ix === 1,
-    isExclusive: ix === 2,
+    likes: a.likes || (isDemoProfile ? 100 + ix * 11 : 0),
+    views: a.views || (isDemoProfile ? 500 + ix * 30 : 0),
+    price: a.price ?? (isDemoProfile ? (ix === 0 ? 0 : 499 + 100 * ix) : 0),
+    isPremium: a.isPremium ?? (isDemoProfile && ix === 1),
+    isExclusive: a.isExclusive ?? (isDemoProfile && ix === 2),
   }));
 
   const pinnedArtworks = [portfolio[0]].filter(Boolean);
-  const pinnedIds = pinnedArtworks.map((a) => a.id);
+  const pinnedIds = pinnedArtworks.map((a: any) => a.id);
 
-  const premiumArt = portfolio.filter((p) => p.isPremium);
-  const exclusiveArt = portfolio.filter((p) => p.isExclusive);
+  const premiumArt = portfolio.filter((p: any) => p.isPremium);
+  const exclusiveArt = portfolio.filter((p: any) => p.isExclusive);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-gray-100 flex flex-col">
