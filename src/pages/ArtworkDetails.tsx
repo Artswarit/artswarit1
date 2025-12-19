@@ -5,13 +5,13 @@ import Footer from "@/components/Footer";
 import GlassCard from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { Image, FileAudio, FileVideo } from "lucide-react";
-import { useArtworks } from "@/hooks/useArtworks";
+import { usePublicArtworks } from "@/hooks/usePublicArtworks";
 import ArtworkFeedback from "@/components/artwork/ArtworkFeedback";
 import SocialShareButtons from "@/components/artwork/SocialShareButtons";
 
 export default function ArtworkDetails() {
   const { id } = useParams();
-  const { artworks, loading } = useArtworks();
+  const { artworks, loading } = usePublicArtworks();
 
   if (loading) {
     return (
