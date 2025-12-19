@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useArtworks } from '@/hooks/useArtworks';
+import { usePublicArtworks } from '@/hooks/usePublicArtworks';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ArtworkCard from '@/components/artwork/ArtworkCard';
@@ -18,7 +18,7 @@ import ChatbotBubble from '@/components/explore/ChatbotBubble';
 const Explore = () => {
   console.log('Explore page rendering');
   
-  const { artworks, loading, error } = useArtworks();
+  const { artworks, loading, error } = usePublicArtworks();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filteredArtworks, setFilteredArtworks] = useState(artworks || []);
   const [currentPage, setCurrentPage] = useState(1);

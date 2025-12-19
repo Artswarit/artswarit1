@@ -15,16 +15,33 @@ export type Feedback = {
 };
 
 const fetchFeedback = async (artworkId: string): Promise<Feedback[]> => {
-  const { data, error } = await supabase
+  // First fetch feedback
+  const { data: feedbackData, error: feedbackError } = await supabase
     .from('artwork_feedback')
-    .select('id, content, rating, created_at, profiles(full_name, avatar_url)')
+    .select('id, content, rating, created_at, user_id')
     .eq('artwork_id', artworkId)
     .order('created_at', { ascending: false });
 
-  if (error) throw new Error(error.message);
-  // Supabase returns an array of objects, so this casting should be safe
-  // if the select query is correct.
-  return data as unknown as Feedback[];
+  if (feedbackError) throw new Error(feedbackError.message);
+  if (!feedbackData || feedbackData.length === 0) return [];
+
+  // Fetch user profiles for the feedback
+  const userIds = [...new Set(feedbackData.map(f => f.user_id))];
+  const { data: profilesData } = await supabase
+    .from('public_profiles')
+    .select('id, full_name, avatar_url')
+    .in('id', userIds);
+
+  // Map profiles to feedback
+  const profilesMap = new Map(profilesData?.map(p => [p.id, p]) || []);
+  
+  return feedbackData.map(f => ({
+    id: f.id,
+    content: f.content,
+    rating: f.rating,
+    created_at: f.created_at,
+    profiles: profilesMap.get(f.user_id) || { full_name: 'Anonymous', avatar_url: null }
+  }));
 };
 
 const addFeedback = async ({ artworkId, content, rating, userId }: { artworkId: string; content: string; rating: number | null, userId: string }) => {
