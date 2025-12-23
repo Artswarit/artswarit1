@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, Eye, MoreVertical, Pin, DollarSign, Edit, Trash2, ExternalLink, Globe, Lock, Archive } from 'lucide-react';
+import { Heart, Eye, MoreVertical, Pin, PinOff, DollarSign, Edit, Trash2, ExternalLink, Globe, Lock, Archive } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -102,6 +102,51 @@ const ArtworkManagementCard = ({
     if (pendingStatus) {
       handleStatusChange(pendingStatus);
       setPendingStatus(null);
+    }
+  };
+
+  const handleTogglePin = async () => {
+    try {
+      const newPinnedState = !artwork.is_pinned;
+      
+      // Get current metadata
+      const { data: currentArtwork, error: fetchError } = await supabase
+        .from('artworks')
+        .select('metadata')
+        .eq('id', artwork.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const currentMetadata = (currentArtwork?.metadata as Record<string, unknown>) || {};
+      
+      const { error } = await supabase
+        .from('artworks')
+        .update({ 
+          metadata: { 
+            ...currentMetadata, 
+            is_pinned: newPinnedState 
+          } 
+        })
+        .eq('id', artwork.id);
+
+      if (error) throw error;
+
+      toast({
+        title: newPinnedState ? 'Artwork Pinned' : 'Artwork Unpinned',
+        description: newPinnedState 
+          ? 'This artwork will appear at the top of your profile.' 
+          : 'This artwork has been unpinned.',
+      });
+
+      onUpdate({ ...artwork, is_pinned: newPinnedState });
+    } catch (err) {
+      console.error('Error toggling pin:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to update pin status.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -213,6 +258,19 @@ const ArtworkManagementCard = ({
                   <ExternalLink className="h-4 w-4 mr-2" />
                   View Public
                 </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleTogglePin}>
+                {artwork.is_pinned ? (
+                  <>
+                    <PinOff className="h-4 w-4 mr-2" />
+                    Unpin from Profile
+                  </>
+                ) : (
+                  <>
+                    <Pin className="h-4 w-4 mr-2" />
+                    Pin to Profile
+                  </>
+                )}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuSub>
@@ -341,6 +399,19 @@ const ArtworkManagementCard = ({
                     <ExternalLink className="h-4 w-4 mr-2" />
                     View Public
                   </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleTogglePin(); }}>
+                  {artwork.is_pinned ? (
+                    <>
+                      <PinOff className="h-4 w-4 mr-2" />
+                      Unpin from Profile
+                    </>
+                  ) : (
+                    <>
+                      <Pin className="h-4 w-4 mr-2" />
+                      Pin to Profile
+                    </>
+                  )}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuSub>
