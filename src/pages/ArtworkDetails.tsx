@@ -11,54 +11,143 @@ import ArtworkFeedback from "@/components/artwork/ArtworkFeedback";
 import SocialShareButtons from "@/components/artwork/SocialShareButtons";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ArtworkDetails() {
   const { id } = useParams();
   const { user } = useAuth();
+  const { toast } = useToast();
   const { artworks, loading } = usePublicArtworks();
   const [viewCount, setViewCount] = useState(0);
   const [likeCount, setLikeCount] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
 
   // Track view when page loads
   useEffect(() => {
     async function trackView() {
       if (!id) return;
 
-      // Insert view record (user_id is optional for anonymous views)
       const viewData: { artwork_id: string; user_id?: string } = { artwork_id: id };
       if (user?.id) {
         viewData.user_id = user.id;
       }
 
       await supabase.from('artwork_views').insert(viewData);
-
-      // Fetch updated view count
-      const { data: views } = await supabase
-        .from('artwork_views')
-        .select('id')
-        .eq('artwork_id', id);
-      
-      setViewCount(views?.length || 0);
     }
 
     trackView();
   }, [id, user?.id]);
 
-  // Fetch like count
+  // Fetch counts and check like status
   useEffect(() => {
-    async function fetchLikeCount() {
+    async function fetchData() {
       if (!id) return;
 
-      const { data: likes } = await supabase
-        .from('artwork_likes')
-        .select('id')
-        .eq('artwork_id', id);
-      
-      setLikeCount(likes?.length || 0);
+      const [viewsResult, likesResult] = await Promise.all([
+        supabase.from('artwork_views').select('id').eq('artwork_id', id),
+        supabase.from('artwork_likes').select('id').eq('artwork_id', id)
+      ]);
+
+      setViewCount(viewsResult.data?.length || 0);
+      setLikeCount(likesResult.data?.length || 0);
+
+      if (user?.id) {
+        const { data: userLike } = await supabase
+          .from('artwork_likes')
+          .select('id')
+          .eq('artwork_id', id)
+          .eq('user_id', user.id)
+          .maybeSingle();
+        setIsLiked(!!userLike);
+      }
     }
 
-    fetchLikeCount();
-  }, [id]);
+    fetchData();
+
+    // Subscribe to real-time updates
+    const likesChannel = supabase
+      .channel(`details-likes-${id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'artwork_likes',
+          filter: `artwork_id=eq.${id}`
+        },
+        async () => {
+          const { data } = await supabase
+            .from('artwork_likes')
+            .select('id')
+            .eq('artwork_id', id);
+          setLikeCount(data?.length || 0);
+
+          if (user?.id) {
+            const { data: userLike } = await supabase
+              .from('artwork_likes')
+              .select('id')
+              .eq('artwork_id', id)
+              .eq('user_id', user.id)
+              .maybeSingle();
+            setIsLiked(!!userLike);
+          }
+        }
+      )
+      .subscribe();
+
+    const viewsChannel = supabase
+      .channel(`details-views-${id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'artwork_views',
+          filter: `artwork_id=eq.${id}`
+        },
+        () => {
+          setViewCount(prev => prev + 1);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(likesChannel);
+      supabase.removeChannel(viewsChannel);
+    };
+  }, [id, user?.id]);
+
+  const handleLike = async () => {
+    if (!user?.id) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to like artworks.",
+      });
+      return;
+    }
+
+    if (isLiking || !id) return;
+    setIsLiking(true);
+
+    try {
+      if (isLiked) {
+        await supabase
+          .from('artwork_likes')
+          .delete()
+          .eq('artwork_id', id)
+          .eq('user_id', user.id);
+      } else {
+        await supabase
+          .from('artwork_likes')
+          .insert({ artwork_id: id, user_id: user.id });
+      }
+    } catch (err) {
+      console.error('Error toggling like:', err);
+    } finally {
+      setIsLiking(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -109,15 +198,23 @@ export default function ArtworkDetails() {
               <h1 className="font-heading text-2xl md:text-3xl font-bold text-gray-900">{artwork.title}</h1>
             </div>
             
-            {/* Stats Row */}
+            {/* Stats Row with Like Button */}
             <div className="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1">
+              <button 
+                onClick={handleLike}
+                disabled={isLiking}
+                className={`flex items-center gap-1 px-3 py-1 rounded-full transition-colors ${
+                  isLiked 
+                    ? 'bg-red-100 text-red-500' 
+                    : 'bg-muted hover:bg-red-50 hover:text-red-500'
+                }`}
+              >
+                <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                {likeCount} likes
+              </button>
+              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-muted">
                 <Eye className="w-4 h-4" />
                 {viewCount} views
-              </span>
-              <span className="flex items-center gap-1">
-                <Heart className="w-4 h-4" />
-                {likeCount} likes
               </span>
             </div>
 
