@@ -34,13 +34,12 @@ const ArtworkCard = ({
   views,
   price,
   category,
-  audioUrl,
-  videoUrl
 }: ArtworkCardProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLiked, setIsLiked] = useState(false);
   const [currentLikes, setCurrentLikes] = useState(likes);
+  const [currentViews, setCurrentViews] = useState(views);
   const [isHovered, setIsHovered] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
 
@@ -62,19 +61,75 @@ const ArtworkCard = ({
     checkLikeStatus();
   }, [id, user?.id]);
 
-  // Fetch current like count
+  // Fetch current counts and subscribe to real-time updates
   useEffect(() => {
-    async function fetchLikeCount() {
-      const { data } = await supabase
-        .from('artwork_likes')
-        .select('id')
-        .eq('artwork_id', id);
+    async function fetchCounts() {
+      const [likesResult, viewsResult] = await Promise.all([
+        supabase.from('artwork_likes').select('id').eq('artwork_id', id),
+        supabase.from('artwork_views').select('id').eq('artwork_id', id)
+      ]);
       
-      setCurrentLikes(data?.length || likes);
+      setCurrentLikes(likesResult.data?.length || 0);
+      setCurrentViews(viewsResult.data?.length || 0);
     }
     
-    fetchLikeCount();
-  }, [id, likes]);
+    fetchCounts();
+
+    // Subscribe to real-time like updates
+    const likesChannel = supabase
+      .channel(`artwork-likes-${id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'artwork_likes',
+          filter: `artwork_id=eq.${id}`
+        },
+        async () => {
+          // Refetch like count on any change
+          const { data } = await supabase
+            .from('artwork_likes')
+            .select('id')
+            .eq('artwork_id', id);
+          setCurrentLikes(data?.length || 0);
+          
+          // Check if current user's like status changed
+          if (user?.id) {
+            const { data: userLike } = await supabase
+              .from('artwork_likes')
+              .select('id')
+              .eq('artwork_id', id)
+              .eq('user_id', user.id)
+              .maybeSingle();
+            setIsLiked(!!userLike);
+          }
+        }
+      )
+      .subscribe();
+
+    // Subscribe to real-time view updates
+    const viewsChannel = supabase
+      .channel(`artwork-views-${id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'artwork_views',
+          filter: `artwork_id=eq.${id}`
+        },
+        () => {
+          setCurrentViews(prev => prev + 1);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(likesChannel);
+      supabase.removeChannel(viewsChannel);
+    };
+  }, [id, user?.id]);
 
   const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -93,27 +148,15 @@ const ArtworkCard = ({
 
     try {
       if (isLiked) {
-        // Unlike
-        const { error } = await supabase
+        await supabase
           .from('artwork_likes')
           .delete()
           .eq('artwork_id', id)
           .eq('user_id', user.id);
-
-        if (!error) {
-          setIsLiked(false);
-          setCurrentLikes(prev => Math.max(0, prev - 1));
-        }
       } else {
-        // Like
-        const { error } = await supabase
+        await supabase
           .from('artwork_likes')
           .insert({ artwork_id: id, user_id: user.id });
-
-        if (!error) {
-          setIsLiked(true);
-          setCurrentLikes(prev => prev + 1);
-        }
       }
     } catch (err) {
       console.error('Error toggling like:', err);
@@ -191,7 +234,7 @@ const ArtworkCard = ({
                   </span>
                   <span className="flex items-center gap-1">
                     <Eye className="w-3 h-3" />
-                    {views}
+                    {currentViews}
                   </span>
                 </div>
                 {price !== undefined && (
@@ -245,7 +288,7 @@ const ArtworkCard = ({
               </button>
               <span className="flex items-center gap-1">
                 <Eye className="w-3 h-3" />
-                {views}
+                {currentViews}
               </span>
             </div>
             
