@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/dialog';
 
 const ArtworkManagement = () => {
-  const { artworks, loading } = useArtworks();
+  const { artworks, loading, fetchArtworks } = useArtworks();
   const { toast } = useToast();
   const [selectedArtworks, setSelectedArtworks] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -153,6 +153,7 @@ const ArtworkManagement = () => {
   };
 
   const handleArtworkUpdate = (updatedArtwork: any) => {
+    fetchArtworks(); // Refresh the list
     toast({
       title: 'Artwork Updated',
       description: 'Your artwork has been updated successfully.',

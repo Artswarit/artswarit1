@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, Eye, MoreVertical, Pin, DollarSign, Edit, Trash2, ExternalLink } from 'lucide-react';
+import { Heart, Eye, MoreVertical, Pin, DollarSign, Edit, Trash2, ExternalLink, Globe, Lock, Archive } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -9,9 +9,15 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface ArtworkManagementCardProps {
   artwork: {
@@ -44,6 +50,33 @@ const ArtworkManagementCard = ({
   onUpdate,
   viewMode,
 }: ArtworkManagementCardProps) => {
+  const { toast } = useToast();
+
+  const handleStatusChange = async (newStatus: 'public' | 'private' | 'archived') => {
+    try {
+      const { error } = await supabase
+        .from('artworks')
+        .update({ status: newStatus })
+        .eq('id', artwork.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Status Updated',
+        description: `Artwork is now ${newStatus}.`,
+      });
+
+      onUpdate({ ...artwork, approval_status: newStatus });
+    } catch (err) {
+      console.error('Error updating status:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to update artwork status.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const [isHovered, setIsHovered] = useState(false);
 
   const getStatusConfig = (status: string) => {
@@ -156,6 +189,38 @@ const ArtworkManagementCard = ({
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Globe className="h-4 w-4 mr-2" />
+                  Change Status
+                </DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                  <DropdownMenuSubContent className="bg-popover border-border">
+                    <DropdownMenuItem 
+                      onClick={() => handleStatusChange('public')}
+                      className={artwork.approval_status === 'public' ? 'bg-accent' : ''}
+                    >
+                      <Globe className="h-4 w-4 mr-2 text-emerald-500" />
+                      Public
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => handleStatusChange('private')}
+                      className={artwork.approval_status === 'private' ? 'bg-accent' : ''}
+                    >
+                      <Lock className="h-4 w-4 mr-2 text-amber-500" />
+                      Private
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => handleStatusChange('archived')}
+                      className={artwork.approval_status === 'archived' ? 'bg-accent' : ''}
+                    >
+                      <Archive className="h-4 w-4 mr-2 text-muted-foreground" />
+                      Archived
+                    </DropdownMenuItem>
+                  </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+              </DropdownMenuSub>
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete
@@ -241,18 +306,50 @@ const ArtworkManagementCard = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 bg-popover border-border">
-                <DropdownMenuItem onClick={onEdit}>
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(); }}>
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Details
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to={`/artwork/${artwork.id}`}>
+                  <Link to={`/artwork/${artwork.id}`} onClick={(e) => e.stopPropagation()}>
                     <ExternalLink className="h-4 w-4 mr-2" />
                     View Public
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger onClick={(e) => e.stopPropagation()}>
+                    <Globe className="h-4 w-4 mr-2" />
+                    Change Status
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent className="bg-popover border-border">
+                      <DropdownMenuItem 
+                        onClick={(e) => { e.stopPropagation(); handleStatusChange('public'); }}
+                        className={artwork.approval_status === 'public' ? 'bg-accent' : ''}
+                      >
+                        <Globe className="h-4 w-4 mr-2 text-emerald-500" />
+                        Public
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={(e) => { e.stopPropagation(); handleStatusChange('private'); }}
+                        className={artwork.approval_status === 'private' ? 'bg-accent' : ''}
+                      >
+                        <Lock className="h-4 w-4 mr-2 text-amber-500" />
+                        Private
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={(e) => { e.stopPropagation(); handleStatusChange('archived'); }}
+                        className={artwork.approval_status === 'archived' ? 'bg-accent' : ''}
+                      >
+                        <Archive className="h-4 w-4 mr-2 text-muted-foreground" />
+                        Archived
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDelete(); }} className="text-destructive focus:text-destructive">
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete
                 </DropdownMenuItem>
