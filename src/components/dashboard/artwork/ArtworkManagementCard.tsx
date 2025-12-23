@@ -551,7 +551,7 @@ const ArtworkManagementCard = ({
               ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
               : 'bg-muted text-muted-foreground'
           )}>
-            {artwork.price && artwork.price > 0 && <DollarSign className="h-3.5 w-3.5" />}
+            {artwork.price != null && artwork.price > 0 && <DollarSign className="h-3.5 w-3.5" />}
             {formatPrice(artwork.price)}
           </span>
         </div>
