@@ -138,108 +138,111 @@ export default function ArtistProfile() {
       try {
         setLoading(true);
         
-        // Fetch artist info from users table
-        const { data: artistData, error: artistError } = await supabase
-          .from('users')
-          .select('id, name, email, bio, profile_pic_url, cover_photo_url, role, social_links')
-          .eq('id', id)
-          .maybeSingle();
-
-        if (artistError) {
-          console.error('Error fetching artist:', artistError);
-          setLoading(false);
-          return;
-        }
-
-        if (!artistData) {
-          // Try fetching from public_profiles as fallback
-          const { data: profileData, error: profileError } = await supabase
+        // Fetch artist info, artworks, follower count, and likes count in parallel
+        const [artistResult, profileResult, artworksResult, followersResult] = await Promise.all([
+          supabase
+            .from('users')
+            .select('id, name, email, bio, profile_pic_url, cover_photo_url, role, social_links')
+            .eq('id', id)
+            .maybeSingle(),
+          supabase
             .from('public_profiles')
             .select('*')
             .eq('id', id)
-            .maybeSingle();
-
-          if (profileError || !profileData) {
-            console.error('Artist not found');
-            setProfileState(null);
-            setLoading(false);
-            return;
-          }
-
-          // Use profile data
-          const artistFromProfile = {
-            id: profileData.id,
-            name: profileData.full_name || 'Unknown Artist',
-            category: profileData.role || 'Artist',
-            avatar: profileData.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200',
-            bio: profileData.bio || '',
-            followers: 0,
-            likes: 0,
-            isVerified: profileData.is_verified || false,
-            specialties: profileData.tags || [],
-            location: profileData.location || '',
-            cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80',
-            artworks: [],
-          };
-
-          // Fetch artworks
-          const { data: artworksData } = await supabase
+            .maybeSingle(),
+          supabase
             .from('artworks')
             .select('*')
             .eq('artist_id', id)
             .eq('status', 'public')
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('follows')
+            .select('id')
+            .eq('following_id', id)
+        ]);
 
-          artistFromProfile.artworks = (artworksData || []).map(art => ({
-            id: art.id,
-            title: art.title,
-            img: art.media_url,
-            type: art.media_type,
-            likes: (art.metadata as any)?.likes_count || 0,
-            views: (art.metadata as any)?.views_count || 0,
-            price: art.price || 0,
-          }));
+        const artistData = artistResult.data;
+        const profileData = profileResult.data;
+        const artworksData = artworksResult.data || [];
+        const followersData = followersResult.data || [];
 
-          setProfileState(artistFromProfile);
+        // Get all artwork IDs to fetch likes
+        const artworkIds = artworksData.map(a => a.id);
+        
+        // Fetch total likes for all artworks
+        let totalLikes = 0;
+        if (artworkIds.length > 0) {
+          const { data: likesData } = await supabase
+            .from('artwork_likes')
+            .select('id')
+            .in('artwork_id', artworkIds);
+          totalLikes = likesData?.length || 0;
+        }
+
+        // Get like counts per artwork
+        const likesPerArtwork: Record<string, number> = {};
+        if (artworkIds.length > 0) {
+          const { data: allLikes } = await supabase
+            .from('artwork_likes')
+            .select('artwork_id')
+            .in('artwork_id', artworkIds);
+          
+          (allLikes || []).forEach(like => {
+            if (like.artwork_id) {
+              likesPerArtwork[like.artwork_id] = (likesPerArtwork[like.artwork_id] || 0) + 1;
+            }
+          });
+        }
+
+        // Get view counts per artwork
+        const viewsPerArtwork: Record<string, number> = {};
+        if (artworkIds.length > 0) {
+          const { data: allViews } = await supabase
+            .from('artwork_views')
+            .select('artwork_id')
+            .in('artwork_id', artworkIds);
+          
+          (allViews || []).forEach(view => {
+            if (view.artwork_id) {
+              viewsPerArtwork[view.artwork_id] = (viewsPerArtwork[view.artwork_id] || 0) + 1;
+            }
+          });
+        }
+
+        if (!artistData && !profileData) {
+          console.error('Artist not found');
+          setProfileState(null);
           setLoading(false);
           return;
         }
 
-        // Transform users data to profile format
+        // Build profile from whichever source has data
         const artistProfile = {
-          id: artistData.id,
-          name: artistData.name || 'Unknown Artist',
-          category: artistData.role || 'Artist',
-          avatar: artistData.profile_pic_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200',
-          bio: artistData.bio || '',
-          followers: 0,
-          likes: 0,
-          isVerified: false,
-          specialties: [],
-          location: '',
-          cover: artistData.cover_photo_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80',
-          artworks: [] as any[],
+          id: artistData?.id || profileData?.id,
+          name: artistData?.name || profileData?.full_name || 'Unknown Artist',
+          category: artistData?.role || profileData?.role || 'Artist',
+          avatar: artistData?.profile_pic_url || profileData?.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200',
+          bio: artistData?.bio || profileData?.bio || '',
+          followers: followersData.length,
+          likes: totalLikes,
+          isVerified: profileData?.is_verified || false,
+          specialties: profileData?.tags || [],
+          location: profileData?.location || '',
+          cover: artistData?.cover_photo_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80',
+          artworks: artworksData.map(art => ({
+            id: art.id,
+            title: art.title,
+            img: art.media_url,
+            type: art.media_type,
+            likes: likesPerArtwork[art.id] || 0,
+            views: viewsPerArtwork[art.id] || 0,
+            price: art.price || 0,
+          })),
         };
 
-        // Fetch artworks for this artist
-        const { data: artworksData } = await supabase
-          .from('artworks')
-          .select('*')
-          .eq('artist_id', id)
-          .eq('status', 'public')
-          .order('created_at', { ascending: false });
-
-        artistProfile.artworks = (artworksData || []).map(art => ({
-          id: art.id,
-          title: art.title,
-          img: art.media_url,
-          type: art.media_type,
-          likes: (art.metadata as any)?.likes_count || 0,
-          views: (art.metadata as any)?.views_count || 0,
-          price: art.price || 0,
-        }));
-
         setProfileState(artistProfile);
+        setFollowersCount(followersData.length);
       } catch (err) {
         console.error('Error fetching artist profile:', err);
         setProfileState(null);
