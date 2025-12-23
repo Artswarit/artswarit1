@@ -355,43 +355,56 @@ const ArtworkManagementCard = ({
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-xl border bg-card transition-all duration-300 cursor-pointer',
-        isSelected ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary/40 hover:shadow-lg'
+        'group relative overflow-hidden rounded-2xl border bg-card transition-all duration-300 cursor-pointer',
+        'shadow-sm hover:shadow-xl hover:shadow-primary/5',
+        isSelected 
+          ? 'border-primary ring-2 ring-primary/30 scale-[0.98]' 
+          : 'border-border/50 hover:border-primary/50'
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => onSelect(!isSelected)}
     >
       {/* Image Container */}
-      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+      <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-muted to-muted/50">
         <img
           src={artwork.imageUrl}
           alt={artwork.title}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className={cn(
+            'h-full w-full object-cover transition-all duration-500',
+            isHovered ? 'scale-110 brightness-90' : 'scale-100'
+          )}
         />
+        
+        {/* Subtle gradient overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-60" />
         
         {/* Top Bar */}
         <div className="absolute inset-x-0 top-0 z-20 flex items-start justify-between p-3">
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={onSelect}
-            onClick={(e) => e.stopPropagation()}
+          <div
             className={cn(
-              'h-5 w-5 border-2 bg-background/80 backdrop-blur-sm transition-opacity data-[state=checked]:bg-primary data-[state=checked]:border-primary',
-              isHovered || isSelected ? 'opacity-100' : 'opacity-0'
+              'transition-all duration-300 transform',
+              isHovered || isSelected ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
             )}
-          />
+          >
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={onSelect}
+              onClick={(e) => e.stopPropagation()}
+              className="h-5 w-5 border-2 bg-white/90 backdrop-blur-md shadow-lg transition-all data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+            />
+          </div>
           
           <div className="flex items-center gap-2">
             {artwork.is_pinned && (
-              <div className="rounded-full bg-primary/90 backdrop-blur-sm p-1.5 shadow-md">
-                <Pin className="h-3 w-3 text-primary-foreground" />
+              <div className="rounded-full bg-gradient-to-br from-primary to-primary/80 backdrop-blur-md p-1.5 shadow-lg shadow-primary/30 animate-in fade-in zoom-in duration-300">
+                <Pin className="h-3.5 w-3.5 text-primary-foreground" />
               </div>
             )}
             <Badge 
               variant="outline" 
               className={cn(
-                'backdrop-blur-md px-2.5 py-1 text-xs font-medium flex items-center gap-1.5 border transition-all duration-200 hover:scale-105 hover:brightness-110 cursor-default',
+                'backdrop-blur-md px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5 border shadow-lg transition-all duration-200 hover:scale-105',
                 statusConfig.className
               )}
             >
@@ -401,18 +414,18 @@ const ArtworkManagementCard = ({
           </div>
         </div>
 
-        {/* Hover Overlay */}
+        {/* Hover Overlay with Actions */}
         <div
           className={cn(
-            'absolute inset-0 z-10 bg-gradient-to-t from-background/90 via-background/40 to-transparent flex flex-col justify-end p-4 transition-opacity duration-300',
-            isHovered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+            'absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-4 transition-all duration-300',
+            isHovered ? 'opacity-100' : 'opacity-0 pointer-events-none'
           )}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 transform transition-all duration-300" style={{ transform: isHovered ? 'translateY(0)' : 'translateY(10px)' }}>
             <Button
               variant="secondary"
               size="sm"
-              className="flex-1"
+              className="flex-1 bg-white/95 hover:bg-white text-foreground shadow-lg backdrop-blur-sm"
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit();
@@ -421,18 +434,29 @@ const ArtworkManagementCard = ({
               <Edit className="h-3.5 w-3.5 mr-1.5" />
               Edit
             </Button>
-            <Button variant="secondary" size="sm" asChild onClick={(e) => e.stopPropagation()}>
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              className="bg-white/95 hover:bg-white text-foreground shadow-lg backdrop-blur-sm"
+              asChild 
+              onClick={(e) => e.stopPropagation()}
+            >
               <Link to={`/artwork/${artwork.id}`}>
                 <ExternalLink className="h-3.5 w-3.5" />
               </Link>
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="secondary" size="sm" onClick={(e) => e.stopPropagation()}>
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  className="bg-white/95 hover:bg-white text-foreground shadow-lg backdrop-blur-sm"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <MoreVertical className="h-3.5 w-3.5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-popover border-border">
+              <DropdownMenuContent align="end" className="w-48 bg-popover/95 backdrop-blur-md border-border shadow-xl">
                 <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(); }}>
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Details
@@ -463,7 +487,7 @@ const ArtworkManagementCard = ({
                     Change Status
                   </DropdownMenuSubTrigger>
                   <DropdownMenuPortal>
-                    <DropdownMenuSubContent className="bg-popover border-border">
+                    <DropdownMenuSubContent className="bg-popover/95 backdrop-blur-md border-border shadow-xl">
                       <DropdownMenuItem 
                         onClick={(e) => { e.stopPropagation(); setPendingStatus('public'); }}
                         className={artwork.approval_status === 'public' ? 'bg-accent' : ''}
@@ -502,28 +526,33 @@ const ArtworkManagementCard = ({
       {/* Content */}
       <div className="p-4 space-y-3">
         <div>
-          <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+          <h3 className="font-semibold text-foreground truncate text-base group-hover:text-primary transition-colors duration-200">
             {artwork.title || 'Untitled'}
           </h3>
-          <p className="text-sm text-muted-foreground truncate mt-0.5">
-            {artwork.category || 'Uncategorized'}
+          <p className="text-sm text-muted-foreground/80 truncate mt-1">
+            {artwork.category || 'image'}
           </p>
         </div>
 
-        <div className="flex items-center justify-between pt-2 border-t border-border">
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Heart className="h-3.5 w-3.5 text-rose-400" />
-              {formatNumber(artwork.likes)}
+        <div className="flex items-center justify-between pt-3 border-t border-border/50">
+          <div className="flex items-center gap-4 text-sm">
+            <span className="flex items-center gap-1.5 text-muted-foreground hover:text-rose-500 transition-colors">
+              <Heart className="h-4 w-4 text-rose-400/80" />
+              <span className="font-medium">{formatNumber(artwork.likes)}</span>
             </span>
-            <span className="flex items-center gap-1">
-              <Eye className="h-3.5 w-3.5 text-primary/60" />
-              {formatNumber(artwork.views)}
+            <span className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
+              <Eye className="h-4 w-4 text-primary/50" />
+              <span className="font-medium">{formatNumber(artwork.views)}</span>
             </span>
           </div>
           
-          <span className="font-semibold text-foreground flex items-center gap-1">
-            {artwork.is_for_sale && <DollarSign className="h-3.5 w-3.5 text-emerald-500" />}
+          <span className={cn(
+            'font-bold text-sm flex items-center gap-1 px-2.5 py-1 rounded-full',
+            artwork.price && artwork.price > 0 
+              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+              : 'bg-muted text-muted-foreground'
+          )}>
+            {artwork.price && artwork.price > 0 && <DollarSign className="h-3.5 w-3.5" />}
             {formatPrice(artwork.price)}
           </span>
         </div>
