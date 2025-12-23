@@ -213,64 +213,8 @@ const ArtworkCard = ({
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
           
-          {/* Overlay */}
-          <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
-            {/* Play Button */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Button
-                onClick={handlePlay}
-                className="bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 transition-all duration-300 rounded-full p-4"
-              >
-                {getTypeIcon()}
-              </Button>
-            </div>
-            
-            {/* Top Actions */}
-            <div className="absolute top-4 right-4 flex gap-2">
-              <div className="relative">
-                <Button
-                  onClick={handleLike}
-                  variant="ghost"
-                  size="sm"
-                  disabled={isLiking}
-                  className={`bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 transition-all duration-300 ${
-                    isLiked ? 'text-red-500' : 'text-white'
-                  }`}
-                >
-                  <Heart className={`w-4 h-4 transition-transform duration-300 ${isLiked ? 'fill-current' : ''} ${animateLike ? 'scale-125' : 'scale-100'}`} />
-                </Button>
-                <LikeParticles trigger={animateLike} />
-              </div>
-            </div>
-            
-            {/* Bottom Info */}
-            <div className="absolute bottom-4 left-4 right-4">
-              <div className="flex items-center justify-between text-white">
-                <div className="flex items-center gap-4 text-sm">
-                  <span className="flex items-center gap-1">
-                    <Heart className={`w-3 h-3 transition-transform duration-300 ${isLiked ? 'fill-current text-red-500' : ''} ${animateLike ? 'scale-125' : 'scale-100'}`} />
-                    {currentLikes}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Eye className="w-3 h-3" />
-                    {currentViews}
-                  </span>
-                </div>
-                {price !== undefined && (
-                  <span className="bg-white/20 backdrop-blur-md px-2 py-1 rounded-full text-xs font-medium">
-                    {price === 0 ? 'Free' : `$${price}`}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          {/* Type Badge */}
-          <div className="absolute top-4 left-4">
-            <span className="bg-white/20 backdrop-blur-md border border-white/30 px-2 py-1 rounded-full text-xs font-medium text-white capitalize">
-              {type}
-            </span>
-          </div>
+          {/* Subtle gradient on hover only */}
+          <div className={`absolute inset-0 bg-gradient-to-t from-black/40 to-transparent transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`} />
         </div>
 
         {/* Content */}
