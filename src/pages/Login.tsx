@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -18,6 +18,17 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  useEffect(() => {
+    document.title = "Log in | Artswarit";
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) {
+      meta.setAttribute(
+        "content",
+        "Log in to Artswarit to manage your portfolio, publish artworks, and connect with clients."
+      );
+    }
+  }, []);
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const { error } = await signIn(email, password);
@@ -34,9 +45,10 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
-      <div className="flex-1 flex items-center justify-center px-3 sm:px-6 lg:px-8 py-[80px]">
+      <main className="flex-1 flex items-center justify-center px-3 sm:px-6 lg:px-8 py-[88px]">
+        <h1 className="sr-only">Log in to Artswarit</h1>
         <div className="w-full max-w-sm sm:max-w-md space-y-6">
           <div className="text-center">
             <LogoWithName />
@@ -88,9 +100,9 @@ const Login = () => {
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? (
-                        <EyeOff className="h-5 w-5 text-gray-400" />
+                        <EyeOff className="h-5 w-5 text-muted-foreground" />
                       ) : (
-                        <Eye className="h-5 w-5 text-gray-400" />
+                        <Eye className="h-5 w-5 text-muted-foreground" />
                       )}
                     </button>
                   </div>
@@ -98,7 +110,7 @@ const Login = () => {
 
                 <Button
                   type="submit"
-                  className="w-full h-11 bg-gradient-to-r from-artswarit-purple to-blue-500 hover:from-artswarit-purple-dark hover:to-blue-600 text-white font-medium"
+                  className="w-full h-11 font-medium btn-glow"
                   disabled={loading}
                 >
                   {loading ? "Signing in..." : "Sign In"}
@@ -120,7 +132,7 @@ const Login = () => {
                 variant="outline"
                 onClick={handleGoogleSignIn}
                 disabled={loading}
-                className="w-full h-11 border-gray-300 hover:bg-gray-50"
+                className="w-full h-11"
               >
                 <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
                   <path
@@ -144,10 +156,10 @@ const Login = () => {
               </Button>
 
               <div className="text-center text-sm">
-                <span className="text-gray-600">Don't have an account? </span>
+                <span className="text-muted-foreground">Don't have an account? </span>
                 <Link
                   to="/signup"
-                  className="font-medium text-artswarit-purple hover:text-artswarit-purple-dark"
+                  className="font-medium text-primary hover:text-primary/80"
                 >
                   Sign up
                 </Link>
@@ -155,7 +167,7 @@ const Login = () => {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </main>
       <Footer />
     </div>
   );
