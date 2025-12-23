@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -9,7 +8,7 @@ export const useArtworks = () => {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
-  const fetchArtworks = async () => {
+  const fetchArtworks = useCallback(async () => {
     if (!user) {
       setLoading(false);
       return;
@@ -78,7 +77,7 @@ export const useArtworks = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   const uploadArtwork = async (artworkData: any) => {
     if (!user) {
@@ -182,7 +181,33 @@ export const useArtworks = () => {
 
   useEffect(() => {
     fetchArtworks();
-  }, [user]);
+  }, [fetchArtworks]);
+
+  // Realtime subscription
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`artworks-realtime:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'artworks',
+          filter: `artist_id=eq.${user.id}`
+        },
+        () => {
+          console.log('Artworks realtime update received');
+          fetchArtworks();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, fetchArtworks]);
 
   return {
     artworks,

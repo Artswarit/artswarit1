@@ -1,124 +1,134 @@
-import { useState, lazy, Suspense, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Lazy load heavy chart components
 const LazyEarningsChart = lazy(() => import("./earnings/EarningsChart"));
-const LazyPieChart = lazy(() => import("./earnings/LazyPieChart"));
+
+interface Transaction {
+  id: string;
+  amount: number;
+  status: string;
+  created_at: string;
+  artwork_id: string | null;
+  buyer_id: string | null;
+}
+
 interface ArtistEarningsProps {
   isLoading: boolean;
 }
 
-// Sample data
-const monthlyData = [{
-  name: "Jan",
-  earnings: 12000
-}, {
-  name: "Feb",
-  earnings: 15000
-}, {
-  name: "Mar",
-  earnings: 18000
-}, {
-  name: "Apr",
-  earnings: 16000
-}, {
-  name: "May",
-  earnings: 21000
-}, {
-  name: "Jun",
-  earnings: 19000
-}, {
-  name: "Jul",
-  earnings: 22000
-}, {
-  name: "Aug",
-  earnings: 25000
-}, {
-  name: "Sep",
-  earnings: 27000
-}, {
-  name: "Oct",
-  earnings: 29000
-}, {
-  name: "Nov",
-  earnings: 31000
-}, {
-  name: "Dec",
-  earnings: 35000
-}];
-const transactionData = [{
-  id: "1",
-  artworkTitle: "Mystic Mountains",
-  artworkType: "image",
-  amount: 4500,
-  status: "completed",
-  date: "2023-11-15T14:30:00",
-  buyerName: "Rajiv Kumar"
-}, {
-  id: "2",
-  artworkTitle: "Urban Dreams",
-  artworkType: "video",
-  amount: 6200,
-  status: "completed",
-  date: "2023-11-10T09:15:00",
-  buyerName: "Priya Sharma"
-}, {
-  id: "3",
-  artworkTitle: "Ambient Waves",
-  artworkType: "audio",
-  amount: 3800,
-  status: "pending",
-  date: "2023-11-18T16:45:00",
-  buyerName: "Ankit Patel"
-}, {
-  id: "4",
-  artworkTitle: "Whispers of Time",
-  artworkType: "text",
-  amount: 1500,
-  status: "completed",
-  date: "2023-11-05T11:20:00",
-  buyerName: "Meera Joshi"
-}, {
-  id: "5",
-  artworkTitle: "Digital Renaissance",
-  artworkType: "image",
-  amount: 8900,
-  status: "completed",
-  date: "2023-10-28T13:50:00",
-  buyerName: "Vikram Singh"
-}];
-const ArtistEarnings = ({
-  isLoading
-}: ArtistEarningsProps) => {
+const ArtistEarnings = ({ isLoading }: ArtistEarningsProps) => {
+  const { user } = useAuth();
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("year");
 
+  const fetchTransactions = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('seller_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setTransactions(data || []);
+    } catch (err) {
+      console.error('Error fetching transactions:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
+
+  // Realtime subscription
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`transactions-realtime:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'transactions',
+          filter: `seller_id=eq.${user.id}`
+        },
+        () => {
+          console.log('Transactions realtime update received');
+          fetchTransactions();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, fetchTransactions]);
+
+  // Generate monthly data from transactions
+  const monthlyData = useMemo(() => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentYear = new Date().getFullYear();
+    
+    const monthlyTotals = months.map((name, index) => {
+      const monthTransactions = transactions.filter(t => {
+        const date = new Date(t.created_at);
+        return date.getMonth() === index && 
+               date.getFullYear() === currentYear && 
+               t.status === 'success';
+      });
+      
+      const earnings = monthTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+      return { name, earnings };
+    });
+    
+    return monthlyTotals;
+  }, [transactions]);
+
   // Memoize expensive calculations
-  const {
-    totalEarnings,
-    pendingEarnings,
-    avgPerSale
-  } = useMemo(() => {
-    const total = transactionData.reduce((sum, transaction) => sum + transaction.amount, 0);
-    const pending = transactionData.filter(transaction => transaction.status === "pending").reduce((sum, transaction) => sum + transaction.amount, 0);
-    const avg = Math.round(total / transactionData.length);
+  const { totalEarnings, pendingEarnings, avgPerSale, completedCount } = useMemo(() => {
+    const completed = transactions.filter(t => t.status === 'success');
+    const pending = transactions.filter(t => t.status === 'pending');
+    
+    const total = completed.reduce((sum, t) => sum + Number(t.amount), 0);
+    const pendingTotal = pending.reduce((sum, t) => sum + Number(t.amount), 0);
+    const avg = completed.length > 0 ? Math.round(total / completed.length) : 0;
+    
     return {
       totalEarnings: total,
-      pendingEarnings: pending,
-      avgPerSale: avg
+      pendingEarnings: pendingTotal,
+      avgPerSale: avg,
+      completedCount: completed.length
     };
-  }, []);
-  if (isLoading) {
-    return <div className="space-y-6">
-        <div className="h-10 w-48 bg-gray-200 animate-pulse rounded-md"></div>
-        <div className="h-64 bg-gray-200 animate-pulse rounded-md"></div>
-        <div className="h-64 bg-gray-200 animate-pulse rounded-md"></div>
-      </div>;
+  }, [transactions]);
+
+  if (isLoading || loading) {
+    return (
+      <div className="space-y-6">
+        <div className="h-10 w-48 bg-muted animate-pulse rounded-md"></div>
+        <div className="h-64 bg-muted animate-pulse rounded-md"></div>
+        <div className="h-64 bg-muted animate-pulse rounded-md"></div>
+      </div>
+    );
   }
-  return <div className="space-y-6">
+
+  return (
+    <div className="space-y-6">
       <div className="items-center justify-between flex flex-col">
-        <h2 className="font-semibold text-xl px-0 text-left my-0 mx-0 pl-0 pr-0 pb-[12px]">      Earnings & Analytics       </h2>
+        <h2 className="font-semibold text-xl px-0 text-left my-0 mx-0 pl-0 pr-0 pb-[12px]">
+          Earnings & Analytics
+        </h2>
         <div className="flex gap-2">
           <Button variant="outline" className="flex items-center gap-2">
             <Download className="h-4 w-4" />
@@ -164,12 +174,12 @@ const ArtistEarnings = ({
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">₹{avgPerSale.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground mt-1">From {transactionData.length} sales</p>
+            <p className="text-xs text-muted-foreground mt-1">From {completedCount} sales</p>
           </CardContent>
         </Card>
       </div>
 
-      <Suspense fallback={<div className="h-[350px] bg-gray-100 animate-pulse rounded-lg flex items-center justify-center">Loading chart...</div>}>
+      <Suspense fallback={<div className="h-[350px] bg-muted animate-pulse rounded-lg flex items-center justify-center">Loading chart...</div>}>
         <LazyEarningsChart data={monthlyData} period={period} onPeriodChange={setPeriod} />
       </Suspense>
 
@@ -183,33 +193,49 @@ const ArtistEarnings = ({
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left p-4 font-medium">Artwork</th>
-                  <th className="text-left p-4 font-medium">Buyer</th>
+                  <th className="text-left p-4 font-medium">Transaction ID</th>
                   <th className="text-left p-4 font-medium">Date</th>
                   <th className="text-left p-4 font-medium">Amount</th>
                   <th className="text-left p-4 font-medium">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {transactionData.map(transaction => <tr key={transaction.id} className="border-b hover:bg-muted/50">
-                    <td className="p-4">{transaction.artworkTitle}</td>
-                    <td className="p-4">{transaction.buyerName}</td>
-                    <td className="p-4">{new Date(transaction.date).toLocaleDateString()}</td>
-                    <td className="p-4 font-medium">₹{transaction.amount.toLocaleString()}</td>
-                    <td className="p-4">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${transaction.status === "completed" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}>
-                        {transaction.status === "completed" ? "Completed" : "Pending"}
-                      </span>
+                {transactions.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="p-8 text-center text-muted-foreground">
+                      No transactions yet
                     </td>
-                  </tr>)}
+                  </tr>
+                ) : (
+                  transactions.slice(0, 10).map(transaction => (
+                    <tr key={transaction.id} className="border-b hover:bg-muted/50">
+                      <td className="p-4 font-mono text-sm">{transaction.id.slice(0, 8)}...</td>
+                      <td className="p-4">{new Date(transaction.created_at).toLocaleDateString()}</td>
+                      <td className="p-4 font-medium">₹{Number(transaction.amount).toLocaleString()}</td>
+                      <td className="p-4">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          transaction.status === "success" 
+                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" 
+                            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                        }`}>
+                          {transaction.status === "success" ? "Completed" : "Pending"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </CardContent>
-        <CardFooter className="border-t p-4 flex justify-center">
-          <Button variant="outline" className="w-full md:w-auto">View All Transactions</Button>
-        </CardFooter>
+        {transactions.length > 10 && (
+          <CardFooter className="border-t p-4 flex justify-center">
+            <Button variant="outline" className="w-full md:w-auto">View All Transactions</Button>
+          </CardFooter>
+        )}
       </Card>
-    </div>;
+    </div>
+  );
 };
+
 export default ArtistEarnings;
