@@ -49,13 +49,13 @@ const ArtworkManagementCard = ({
   const getStatusConfig = (status: string) => {
     switch (status) {
       case 'public':
-        return { label: 'Public', className: 'bg-emerald-500 text-white border-emerald-600' };
+        return { label: 'Public', className: 'bg-primary text-primary-foreground border-primary/40' };
       case 'private':
-        return { label: 'Private', className: 'bg-amber-500 text-white border-amber-600' };
+        return { label: 'Private', className: 'bg-secondary text-secondary-foreground border-border' };
       case 'archived':
         return { label: 'Archived', className: 'bg-muted text-muted-foreground border-border' };
       default:
-        return { label: 'Public', className: 'bg-emerald-500 text-white border-emerald-600' };
+        return { label: 'Public', className: 'bg-primary text-primary-foreground border-primary/40' };
     }
   };
 
@@ -170,11 +170,12 @@ const ArtworkManagementCard = ({
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-xl border bg-card transition-all duration-300',
+        'group relative overflow-hidden rounded-xl border bg-card transition-all duration-300 cursor-pointer',
         isSelected ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary/40 hover:shadow-lg'
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={() => onSelect(!isSelected)}
     >
       {/* Image Container */}
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
@@ -185,11 +186,15 @@ const ArtworkManagementCard = ({
         />
         
         {/* Top Bar */}
-        <div className="absolute inset-x-0 top-0 flex items-start justify-between p-3">
+        <div className="absolute inset-x-0 top-0 z-20 flex items-start justify-between p-3">
           <Checkbox
             checked={isSelected}
             onCheckedChange={onSelect}
-            className="h-5 w-5 border-2 bg-background/90 backdrop-blur-sm data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+            onClick={(e) => e.stopPropagation()}
+            className={cn(
+              'h-5 w-5 border-2 bg-background/80 backdrop-blur-sm transition-opacity data-[state=checked]:bg-primary data-[state=checked]:border-primary',
+              isHovered || isSelected ? 'opacity-100' : 'opacity-0'
+            )}
           />
           
           <div className="flex items-center gap-2">
@@ -207,23 +212,31 @@ const ArtworkManagementCard = ({
         {/* Hover Overlay */}
         <div
           className={cn(
-            'absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent flex flex-col justify-end p-4 transition-opacity duration-300',
-            isHovered ? 'opacity-100' : 'opacity-0'
+            'absolute inset-0 z-10 bg-gradient-to-t from-background/90 via-background/40 to-transparent flex flex-col justify-end p-4 transition-opacity duration-300',
+            isHovered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
           )}
         >
           <div className="flex items-center gap-2">
-            <Button variant="secondary" size="sm" className="flex-1" onClick={onEdit}>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="flex-1"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+            >
               <Edit className="h-3.5 w-3.5 mr-1.5" />
               Edit
             </Button>
-            <Button variant="secondary" size="sm" asChild>
+            <Button variant="secondary" size="sm" asChild onClick={(e) => e.stopPropagation()}>
               <Link to={`/artwork/${artwork.id}`}>
                 <ExternalLink className="h-3.5 w-3.5" />
               </Link>
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="secondary" size="sm">
+                <Button variant="secondary" size="sm" onClick={(e) => e.stopPropagation()}>
                   <MoreVertical className="h-3.5 w-3.5" />
                 </Button>
               </DropdownMenuTrigger>
