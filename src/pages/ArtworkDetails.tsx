@@ -12,6 +12,7 @@ import SocialShareButtons from "@/components/artwork/SocialShareButtons";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import LikeParticles from "@/components/ui/LikeParticles";
 
 export default function ArtworkDetails() {
   const { id } = useParams();
@@ -22,6 +23,7 @@ export default function ArtworkDetails() {
   const [likeCount, setLikeCount] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
+  const [animateLike, setAnimateLike] = useState(false);
 
   // Track view when page loads
   useEffect(() => {
@@ -130,19 +132,36 @@ export default function ArtworkDetails() {
     if (isLiking || !id) return;
     setIsLiking(true);
 
+    // Optimistic update
+    const previousLiked = isLiked;
+    const previousLikes = likeCount;
+    setIsLiked(!isLiked);
+    setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
+
+    // Trigger animation only when liking
+    if (!isLiked) {
+      setAnimateLike(true);
+      setTimeout(() => setAnimateLike(false), 300);
+    }
+
     try {
-      if (isLiked) {
-        await supabase
+      if (previousLiked) {
+        const { error } = await supabase
           .from('artwork_likes')
           .delete()
           .eq('artwork_id', id)
           .eq('user_id', user.id);
+        if (error) throw error;
       } else {
-        await supabase
+        const { error } = await supabase
           .from('artwork_likes')
           .insert({ artwork_id: id, user_id: user.id });
+        if (error) throw error;
       }
     } catch (err) {
+      // Revert on error
+      setIsLiked(previousLiked);
+      setLikeCount(previousLikes);
       console.error('Error toggling like:', err);
     } finally {
       setIsLiking(false);
@@ -200,18 +219,21 @@ export default function ArtworkDetails() {
             
             {/* Stats Row with Like Button */}
             <div className="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
-              <button 
-                onClick={handleLike}
-                disabled={isLiking}
-                className={`flex items-center gap-1 px-3 py-1 rounded-full transition-colors ${
-                  isLiked 
-                    ? 'bg-red-100 text-red-500' 
-                    : 'bg-muted hover:bg-red-50 hover:text-red-500'
-                }`}
-              >
-                <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-                {likeCount} likes
-              </button>
+              <div className="relative inline-block">
+                <button 
+                  onClick={handleLike}
+                  disabled={isLiking}
+                  className={`flex items-center gap-1 px-3 py-1 rounded-full transition-colors ${
+                    isLiked 
+                      ? 'bg-red-100 text-red-500' 
+                      : 'bg-muted hover:bg-red-50 hover:text-red-500'
+                  }`}
+                >
+                  <Heart className={`w-4 h-4 transition-transform duration-300 ${isLiked ? 'fill-current' : ''} ${animateLike ? 'scale-125' : 'scale-100'}`} />
+                  {likeCount} likes
+                </button>
+                <LikeParticles trigger={animateLike} />
+              </div>
               <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-muted">
                 <Eye className="w-4 h-4" />
                 {viewCount} views
