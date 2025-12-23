@@ -67,7 +67,7 @@ export default function ArtworkDetails() {
 
     fetchData();
 
-    // Subscribe to real-time updates
+    // Subscribe to real-time updates (skip updates from current user)
     const likesChannel = supabase
       .channel(`details-likes-${id}`)
       .on(
@@ -78,22 +78,21 @@ export default function ArtworkDetails() {
           table: 'artwork_likes',
           filter: `artwork_id=eq.${id}`
         },
-        async () => {
+        async (payload) => {
+          // Skip if the change was made by current user (we handle this optimistically)
+          const newRecord = payload.new as { user_id?: string } | null;
+          const oldRecord = payload.old as { user_id?: string } | null;
+          const changedUserId = newRecord?.user_id || oldRecord?.user_id;
+          if (changedUserId === user?.id) {
+            return;
+          }
+
+          // Refetch like count on changes from other users
           const { data } = await supabase
             .from('artwork_likes')
             .select('id')
             .eq('artwork_id', id);
           setLikeCount(data?.length || 0);
-
-          if (user?.id) {
-            const { data: userLike } = await supabase
-              .from('artwork_likes')
-              .select('id')
-              .eq('artwork_id', id)
-              .eq('user_id', user.id)
-              .maybeSingle();
-            setIsLiked(!!userLike);
-          }
         }
       )
       .subscribe();
