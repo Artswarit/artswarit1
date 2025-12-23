@@ -1,9 +1,8 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Trash2, Eye, Download } from 'lucide-react';
+import { Trash2, Download } from 'lucide-react';
 
 interface BulkActionsProps {
   selectedArtworks: string[];
@@ -28,26 +27,6 @@ const ArtworkBulkActions = ({ selectedArtworks, onClearSelection, onBulkAction }
           </div>
 
           <div className="flex items-center gap-2">
-            <Select onValueChange={(value) => onBulkAction('changeStatus', { status: value })}>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="approved">Approve</SelectItem>
-                <SelectItem value="pending">Set Pending</SelectItem>
-                <SelectItem value="rejected">Reject</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onBulkAction('toggleVisibility')}
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              Toggle Visibility
-            </Button>
-
             <Button
               variant="outline"
               size="sm"
@@ -56,7 +35,6 @@ const ArtworkBulkActions = ({ selectedArtworks, onClearSelection, onBulkAction }
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
-
 
             <AlertDialog>
               <AlertDialogTrigger asChild>
