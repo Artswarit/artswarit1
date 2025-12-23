@@ -14,6 +14,16 @@ import {
   DropdownMenuSubContent,
   DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -51,6 +61,17 @@ const ArtworkManagementCard = ({
   viewMode,
 }: ArtworkManagementCardProps) => {
   const { toast } = useToast();
+  const [pendingStatus, setPendingStatus] = useState<'public' | 'private' | 'archived' | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'public': return 'Public';
+      case 'private': return 'Private';
+      case 'archived': return 'Archived';
+      default: return status;
+    }
+  };
 
   const handleStatusChange = async (newStatus: 'public' | 'private' | 'archived') => {
     try {
@@ -77,7 +98,12 @@ const ArtworkManagementCard = ({
     }
   };
 
-  const [isHovered, setIsHovered] = useState(false);
+  const confirmStatusChange = () => {
+    if (pendingStatus) {
+      handleStatusChange(pendingStatus);
+      setPendingStatus(null);
+    }
+  };
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -197,21 +223,21 @@ const ArtworkManagementCard = ({
                 <DropdownMenuPortal>
                   <DropdownMenuSubContent className="bg-popover border-border">
                     <DropdownMenuItem 
-                      onClick={() => handleStatusChange('public')}
+                      onClick={() => setPendingStatus('public')}
                       className={artwork.approval_status === 'public' ? 'bg-accent' : ''}
                     >
                       <Globe className="h-4 w-4 mr-2 text-emerald-500" />
                       Public
                     </DropdownMenuItem>
                     <DropdownMenuItem 
-                      onClick={() => handleStatusChange('private')}
+                      onClick={() => setPendingStatus('private')}
                       className={artwork.approval_status === 'private' ? 'bg-accent' : ''}
                     >
                       <Lock className="h-4 w-4 mr-2 text-amber-500" />
                       Private
                     </DropdownMenuItem>
                     <DropdownMenuItem 
-                      onClick={() => handleStatusChange('archived')}
+                      onClick={() => setPendingStatus('archived')}
                       className={artwork.approval_status === 'archived' ? 'bg-accent' : ''}
                     >
                       <Archive className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -325,21 +351,21 @@ const ArtworkManagementCard = ({
                   <DropdownMenuPortal>
                     <DropdownMenuSubContent className="bg-popover border-border">
                       <DropdownMenuItem 
-                        onClick={(e) => { e.stopPropagation(); handleStatusChange('public'); }}
+                        onClick={(e) => { e.stopPropagation(); setPendingStatus('public'); }}
                         className={artwork.approval_status === 'public' ? 'bg-accent' : ''}
                       >
                         <Globe className="h-4 w-4 mr-2 text-emerald-500" />
                         Public
                       </DropdownMenuItem>
                       <DropdownMenuItem 
-                        onClick={(e) => { e.stopPropagation(); handleStatusChange('private'); }}
+                        onClick={(e) => { e.stopPropagation(); setPendingStatus('private'); }}
                         className={artwork.approval_status === 'private' ? 'bg-accent' : ''}
                       >
                         <Lock className="h-4 w-4 mr-2 text-amber-500" />
                         Private
                       </DropdownMenuItem>
                       <DropdownMenuItem 
-                        onClick={(e) => { e.stopPropagation(); handleStatusChange('archived'); }}
+                        onClick={(e) => { e.stopPropagation(); setPendingStatus('archived'); }}
                         className={artwork.approval_status === 'archived' ? 'bg-accent' : ''}
                       >
                         <Archive className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -388,6 +414,29 @@ const ArtworkManagementCard = ({
           </span>
         </div>
       </div>
+      {/* Status Change Confirmation Dialog */}
+      <AlertDialog open={!!pendingStatus} onOpenChange={(open) => !open && setPendingStatus(null)}>
+        <AlertDialogContent className="bg-background border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change Artwork Status</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to change "{artwork.title}" from <strong>{getStatusLabel(artwork.approval_status)}</strong> to <strong>{pendingStatus ? getStatusLabel(pendingStatus) : ''}</strong>?
+              {pendingStatus === 'private' && (
+                <span className="block mt-2 text-amber-500">This will hide the artwork from public view.</span>
+              )}
+              {pendingStatus === 'archived' && (
+                <span className="block mt-2 text-muted-foreground">Archived artworks won't appear in your public profile.</span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmStatusChange}>
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
