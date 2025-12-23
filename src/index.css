@@ -339,3 +339,15 @@ body, html {
 * {
   box-sizing: border-box;
 }
+
+/* Like particle burst animation */
+@keyframes particle-burst {
+  0% {
+    transform: translate(-50%, -50%) translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) scale(var(--scale));
+    opacity: 0;
+  }
+}

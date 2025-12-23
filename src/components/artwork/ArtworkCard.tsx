@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import LikeParticles from '@/components/ui/LikeParticles';
 
 interface ArtworkCardProps {
   id: string;
@@ -229,17 +230,20 @@ const ArtworkCard = ({
             
             {/* Top Actions */}
             <div className="absolute top-4 right-4 flex gap-2">
-              <Button
-                onClick={handleLike}
-                variant="ghost"
-                size="sm"
-                disabled={isLiking}
-                className={`bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 transition-all duration-300 ${
-                  isLiked ? 'text-red-500' : 'text-white'
-                }`}
-              >
-                <Heart className={`w-4 h-4 transition-transform duration-300 ${isLiked ? 'fill-current' : ''} ${animateLike ? 'scale-125' : 'scale-100'}`} />
-              </Button>
+              <div className="relative">
+                <Button
+                  onClick={handleLike}
+                  variant="ghost"
+                  size="sm"
+                  disabled={isLiking}
+                  className={`bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 transition-all duration-300 ${
+                    isLiked ? 'text-red-500' : 'text-white'
+                  }`}
+                >
+                  <Heart className={`w-4 h-4 transition-transform duration-300 ${isLiked ? 'fill-current' : ''} ${animateLike ? 'scale-125' : 'scale-100'}`} />
+                </Button>
+                <LikeParticles trigger={animateLike} />
+              </div>
             </div>
             
             {/* Bottom Info */}
