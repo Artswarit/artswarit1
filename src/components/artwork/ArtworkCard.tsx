@@ -146,19 +146,30 @@ const ArtworkCard = ({
     if (isLiking) return;
     setIsLiking(true);
 
+    // Optimistic update
+    const previousLiked = isLiked;
+    const previousLikes = currentLikes;
+    setIsLiked(!isLiked);
+    setCurrentLikes(prev => isLiked ? prev - 1 : prev + 1);
+
     try {
-      if (isLiked) {
-        await supabase
+      if (previousLiked) {
+        const { error } = await supabase
           .from('artwork_likes')
           .delete()
           .eq('artwork_id', id)
           .eq('user_id', user.id);
+        if (error) throw error;
       } else {
-        await supabase
+        const { error } = await supabase
           .from('artwork_likes')
           .insert({ artwork_id: id, user_id: user.id });
+        if (error) throw error;
       }
     } catch (err) {
+      // Revert on error
+      setIsLiked(previousLiked);
+      setCurrentLikes(previousLikes);
       console.error('Error toggling like:', err);
     } finally {
       setIsLiking(false);
