@@ -193,8 +193,7 @@ const ArtworkManagementCard = ({
   };
 
   const formatPrice = (price?: number | null) => {
-    if (price === null || typeof price === 'undefined') return 'Not set';
-    if (price === 0) return 'Free';
+    if (price === null || price === undefined || price === 0 || price <= 0) return 'Free';
     return `$${price.toLocaleString()}`;
   };
 
