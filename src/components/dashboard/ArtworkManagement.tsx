@@ -76,6 +76,7 @@ const ArtworkManagement = () => {
       );
     }
 
+    // Apply sorting based on filter
     switch (filters.sortBy) {
       case 'oldest':
         filtered.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
@@ -96,6 +97,14 @@ const ArtworkManagement = () => {
         filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         break;
     }
+
+    // Always sort pinned artworks first
+    filtered.sort((a, b) => {
+      if (a.is_pinned && !b.is_pinned) return -1;
+      if (!a.is_pinned && b.is_pinned) return 1;
+      return 0;
+    });
+
     return filtered;
   }, [artworks, filters]);
 
