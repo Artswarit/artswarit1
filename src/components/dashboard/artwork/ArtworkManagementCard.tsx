@@ -42,6 +42,7 @@ interface ArtworkManagementCardProps {
     created_at: string;
     is_pinned?: boolean;
     is_for_sale?: boolean;
+    artist_id?: string;
   };
   isSelected: boolean;
   onSelect: (checked: boolean) => void;
@@ -49,6 +50,7 @@ interface ArtworkManagementCardProps {
   onDelete: () => void;
   onUpdate: (artwork: any) => void;
   viewMode: 'grid' | 'list';
+  pinnedCount?: number;
 }
 
 const ArtworkManagementCard = ({
@@ -59,6 +61,7 @@ const ArtworkManagementCard = ({
   onDelete,
   onUpdate,
   viewMode,
+  pinnedCount = 0,
 }: ArtworkManagementCardProps) => {
   const { toast } = useToast();
   const [pendingStatus, setPendingStatus] = useState<'public' | 'private' | 'archived' | null>(null);
@@ -109,6 +112,16 @@ const ArtworkManagementCard = ({
     try {
       const newPinnedState = !artwork.is_pinned;
       
+      // If trying to pin, check the limit first
+      if (newPinnedState && pinnedCount >= 5) {
+        toast({
+          title: 'Pin Limit Reached',
+          description: 'You can only pin up to 5 artworks. Unpin one to pin another.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       // Get current metadata
       const { data: currentArtwork, error: fetchError } = await supabase
         .from('artworks')
@@ -135,7 +148,7 @@ const ArtworkManagementCard = ({
       toast({
         title: newPinnedState ? 'Artwork Pinned' : 'Artwork Unpinned',
         description: newPinnedState 
-          ? 'This artwork will appear at the top of your profile.' 
+          ? `This artwork will appear at the top of your profile. (${pinnedCount + 1}/5 pinned)` 
           : 'This artwork has been unpinned.',
       });
 

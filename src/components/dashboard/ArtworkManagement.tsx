@@ -108,6 +108,11 @@ const ArtworkManagement = () => {
     return filtered;
   }, [artworks, filters]);
 
+  // Count pinned artworks
+  const pinnedCount = useMemo(() => {
+    return artworks.filter((artwork) => artwork.is_pinned).length;
+  }, [artworks]);
+
   const handleSelectArtwork = (artworkId: string, checked: boolean) => {
     if (checked) {
       setSelectedArtworks([...selectedArtworks, artworkId]);
@@ -283,6 +288,7 @@ const ArtworkManagement = () => {
               onDelete={() => handleDeleteArtwork(artwork.id)}
               onUpdate={handleArtworkUpdate}
               viewMode={viewMode}
+              pinnedCount={pinnedCount}
             />
           ))}
         </div>
