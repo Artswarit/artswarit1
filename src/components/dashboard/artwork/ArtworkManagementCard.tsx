@@ -166,13 +166,29 @@ const ArtworkManagementCard = ({
   const getStatusConfig = (status: string) => {
     switch (status) {
       case 'public':
-        return { label: 'Public', className: 'bg-primary text-primary-foreground border-primary/40' };
+        return { 
+          label: 'Public', 
+          icon: Globe,
+          className: 'bg-emerald-500/90 text-white border-emerald-400/50 shadow-sm shadow-emerald-500/20' 
+        };
       case 'private':
-        return { label: 'Private', className: 'bg-secondary text-secondary-foreground border-border' };
+        return { 
+          label: 'Private', 
+          icon: Lock,
+          className: 'bg-amber-500/90 text-white border-amber-400/50 shadow-sm shadow-amber-500/20' 
+        };
       case 'archived':
-        return { label: 'Archived', className: 'bg-muted text-muted-foreground border-border' };
+        return { 
+          label: 'Archived', 
+          icon: Archive,
+          className: 'bg-slate-500/90 text-white border-slate-400/50 shadow-sm shadow-slate-500/20' 
+        };
       default:
-        return { label: 'Public', className: 'bg-primary text-primary-foreground border-primary/40' };
+        return { 
+          label: 'Public', 
+          icon: Globe,
+          className: 'bg-emerald-500/90 text-white border-emerald-400/50 shadow-sm shadow-emerald-500/20' 
+        };
     }
   };
 
@@ -228,7 +244,14 @@ const ArtworkManagementCard = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-foreground truncate">{artwork.title || 'Untitled'}</h3>
-            <Badge variant="outline" className={cn('text-xs shrink-0', statusConfig.className)}>
+            <Badge 
+              variant="outline" 
+              className={cn(
+                'text-xs shrink-0 flex items-center gap-1 px-2 py-0.5',
+                statusConfig.className
+              )}
+            >
+              <statusConfig.icon className="h-3 w-3" />
               {statusConfig.label}
             </Badge>
           </div>
@@ -361,11 +384,18 @@ const ArtworkManagementCard = ({
           
           <div className="flex items-center gap-2">
             {artwork.is_pinned && (
-              <div className="rounded-full bg-primary/90 backdrop-blur-sm p-1.5">
+              <div className="rounded-full bg-primary/90 backdrop-blur-sm p-1.5 shadow-md">
                 <Pin className="h-3 w-3 text-primary-foreground" />
               </div>
             )}
-            <Badge variant="outline" className={cn('backdrop-blur-sm bg-background/80', statusConfig.className)}>
+            <Badge 
+              variant="outline" 
+              className={cn(
+                'backdrop-blur-md px-2.5 py-1 text-xs font-medium flex items-center gap-1.5 border',
+                statusConfig.className
+              )}
+            >
+              <statusConfig.icon className="h-3 w-3" />
               {statusConfig.label}
             </Badge>
           </div>
