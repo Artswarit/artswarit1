@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useArtworks } from '@/hooks/useArtworks';
-import { Grid3X3, List, Plus, BarChart3, ImagePlus, FolderOpen } from 'lucide-react';
+import { Grid3X3, List, Plus, BarChart3, ImagePlus, FolderOpen, Pin } from 'lucide-react';
 import ArtworkUploadForm from './artwork/ArtworkUploadForm';
 import ArtworkEditModal from './artwork/ArtworkEditModal';
 import ArtworkSearchFilters from './artwork/ArtworkSearchFilters';
@@ -248,6 +248,10 @@ const ArtworkManagement = () => {
           <span className="text-sm text-muted-foreground">
             {filteredArtworks.length} artwork{filteredArtworks.length !== 1 ? 's' : ''}
           </span>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
+            <Pin className="h-3.5 w-3.5" />
+            <span>Pinned {pinnedCount}/5</span>
+          </div>
         </div>
         <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/50 p-1">
           <Button
