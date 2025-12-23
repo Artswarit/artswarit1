@@ -169,25 +169,25 @@ const ArtworkManagementCard = ({
         return { 
           label: 'Public', 
           icon: Globe,
-          className: 'bg-emerald-500/90 text-white border-emerald-400/50 shadow-sm shadow-emerald-500/20' 
+          className: 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-md shadow-emerald-500/25' 
         };
       case 'private':
         return { 
           label: 'Private', 
           icon: Lock,
-          className: 'bg-amber-500/90 text-white border-amber-400/50 shadow-sm shadow-amber-500/20' 
+          className: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-md shadow-amber-500/25' 
         };
       case 'archived':
         return { 
           label: 'Archived', 
           icon: Archive,
-          className: 'bg-slate-500/90 text-white border-slate-400/50 shadow-sm shadow-slate-500/20' 
+          className: 'bg-gradient-to-r from-slate-500 to-slate-600 text-white border-0 shadow-md shadow-slate-500/25' 
         };
       default:
         return { 
           label: 'Public', 
           icon: Globe,
-          className: 'bg-emerald-500/90 text-white border-emerald-400/50 shadow-sm shadow-emerald-500/20' 
+          className: 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-md shadow-emerald-500/25' 
         };
     }
   };
