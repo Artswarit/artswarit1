@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Trash2, Eye, EyeOff, Download, Archive } from 'lucide-react';
+import { Trash2, Eye, Download } from 'lucide-react';
 
 interface BulkActionsProps {
   selectedArtworks: string[];
@@ -57,14 +57,6 @@ const ArtworkBulkActions = ({ selectedArtworks, onClearSelection, onBulkAction }
               Export
             </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onBulkAction('archive')}
-            >
-              <Archive className="h-4 w-4 mr-2" />
-              Archive
-            </Button>
 
             <AlertDialog>
               <AlertDialogTrigger asChild>
