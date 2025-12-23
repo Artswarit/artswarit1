@@ -49,47 +49,71 @@ const ArtistDashboard = () => {
           <DashboardHeader user={user} profile={profile} title="Artist Dashboard" subtitle="Manage your artworks, projects, profile, and earnings" />
 
           <Tabs defaultValue={defaultTab} className="w-full">
-            <div className="overflow-x-auto mb-6 sm:mb-8">
-              <TabsList className="grid grid-cols-4 sm:grid-cols-8 w-full min-w-[600px] sm:min-w-0 bg-white/60 backdrop-blur-sm">
-                <TabsTrigger value="artworks" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
-                  <Palette className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden xs:inline">Artworks</span>
-                  <span className="xs:hidden">Art</span>
+            <div className="overflow-x-auto mb-6 sm:mb-8 pb-1">
+              <TabsList className="inline-flex w-auto min-w-full sm:min-w-0 h-12 sm:h-14 p-1 gap-1 bg-background border border-border rounded-xl shadow-sm">
+                <TabsTrigger 
+                  value="artworks" 
+                  className="flex items-center gap-2 px-3 sm:px-5 py-2.5 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
+                >
+                  <Palette className="h-4 w-4" />
+                  <span className="hidden sm:inline">Artworks</span>
+                  <span className="sm:hidden">Art</span>
                 </TabsTrigger>
-                <TabsTrigger value="projects" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
-                  <Briefcase className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden xs:inline">Projects</span>
-                  <span className="xs:hidden">Proj</span>
+                <TabsTrigger 
+                  value="projects" 
+                  className="flex items-center gap-2 px-3 sm:px-5 py-2.5 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
+                >
+                  <Briefcase className="h-4 w-4" />
+                  <span className="hidden sm:inline">Projects</span>
+                  <span className="sm:hidden">Proj</span>
                 </TabsTrigger>
-                <TabsTrigger value="profile" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
-                  <User className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden xs:inline">Profile</span>
-                  <span className="xs:hidden">Prof</span>
+                <TabsTrigger 
+                  value="profile" 
+                  className="flex items-center gap-2 px-3 sm:px-5 py-2.5 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
+                >
+                  <User className="h-4 w-4" />
+                  <span className="hidden sm:inline">Profile</span>
+                  <span className="sm:hidden">Prof</span>
                 </TabsTrigger>
-                <TabsTrigger value="premium" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
-                  <Crown className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden xs:inline">Premium</span>
-                  <span className="xs:hidden">Prem</span>
+                <TabsTrigger 
+                  value="premium" 
+                  className="flex items-center gap-2 px-3 sm:px-5 py-2.5 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
+                >
+                  <Crown className="h-4 w-4" />
+                  <span className="hidden sm:inline">Premium</span>
+                  <span className="sm:hidden">Prem</span>
                 </TabsTrigger>
-                <TabsTrigger value="earnings" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
-                  <DollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden xs:inline">Earnings</span>
-                  <span className="xs:hidden">Earn</span>
+                <TabsTrigger 
+                  value="earnings" 
+                  className="flex items-center gap-2 px-3 sm:px-5 py-2.5 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
+                >
+                  <DollarSign className="h-4 w-4" />
+                  <span className="hidden sm:inline">Earnings</span>
+                  <span className="sm:hidden">Earn</span>
                 </TabsTrigger>
-                <TabsTrigger value="messages" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
-                  <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden xs:inline">Messages</span>
-                  <span className="xs:hidden">Msg</span>
+                <TabsTrigger 
+                  value="messages" 
+                  className="flex items-center gap-2 px-3 sm:px-5 py-2.5 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  <span className="hidden sm:inline">Messages</span>
+                  <span className="sm:hidden">Msg</span>
                 </TabsTrigger>
-                <TabsTrigger value="notifications" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
-                  <Bell className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden xs:inline">Notifications</span>
-                  <span className="xs:hidden">Bell</span>
+                <TabsTrigger 
+                  value="notifications" 
+                  className="flex items-center gap-2 px-3 sm:px-5 py-2.5 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
+                >
+                  <Bell className="h-4 w-4" />
+                  <span className="hidden sm:inline">Notifications</span>
+                  <span className="sm:hidden">Notif</span>
                 </TabsTrigger>
-                <TabsTrigger value="settings" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
-                  <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden xs:inline">Settings</span>
-                  <span className="xs:hidden">Set</span>
+                <TabsTrigger 
+                  value="settings" 
+                  className="flex items-center gap-2 px-3 sm:px-5 py-2.5 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span className="hidden sm:inline">Settings</span>
+                  <span className="sm:hidden">Set</span>
                 </TabsTrigger>
               </TabsList>
             </div>
