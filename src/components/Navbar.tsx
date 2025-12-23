@@ -41,9 +41,9 @@ const Navbar = () => {
   const toggleMenu = () => setIsOpen(!isOpen);
   const closeMenu = () => setIsOpen(false);
 
-  const linkBaseClass = "relative flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors before:absolute before:inset-x-2 before:bottom-0 before:h-0.5 before:bg-primary before:scale-x-0 hover:before:scale-x-100 before:transition-transform before:duration-300";
-  const linkActiveClass = "text-foreground before:scale-x-100";
-  const linkInactiveClass = "text-muted-foreground hover:text-foreground";
+  const linkBaseClass = "relative flex items-center gap-1 px-3 py-1.5 font-medium text-sm rounded transition-all before:absolute before:inset-x-2 before:bottom-0 before:h-0.5 before:bg-purple-600 before:scale-x-0 hover:before:scale-x-100 before:transition-transform before:duration-300";
+  const linkActiveClass = "text-purple-600 before:scale-x-100";
+  const linkInactiveClass = "text-gray-700 before:bg-gray-300 hover:text-purple-600";
 
   const handleLogoClick = (e: React.MouseEvent) => {
     window.scrollTo({
@@ -56,17 +56,17 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="glass-effect fixed w-full top-0 z-50 border-b border-border/60">
+    <nav className="bg-white/70 glass-effect shadow-lg border-b border-gray-100 fixed w-full top-0 z-50 backdrop-blur-md transition-all">
       <div className="w-full h-14 sm:h-16 px-2 sm:px-4 flex items-center justify-start">
         {/* Left: logo + desktop menu grouped */}
         <div className="flex items-center gap-x-2">
           {/* Logo */}
-          <Link to="/" onClick={handleLogoClick} className="flex items-center font-bold text-lg text-primary tracking-tight hover:opacity-80 transition-opacity" style={{
+          <Link to="/" onClick={handleLogoClick} className="flex items-center font-bold text-lg text-purple-600 tracking-tight hover:opacity-80 transition-opacity" style={{
             marginLeft: 0,
             marginRight: 0,
             padding: 0
           }}>
-            <img src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png" alt="Artswarit logo" className="h-12 w-12 md:h-16 md:w-16 object-contain transition-transform duration-300 hover:scale-110" style={{
+            <img src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png" alt="Artswarit Logo" className="h-12 w-12 md:h-16 md:w-16 object-contain transition-transform duration-300 hover:scale-110" style={{
               background: "none"
             }} />
           </Link>
@@ -100,7 +100,7 @@ const Navbar = () => {
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-44 z-50 bg-popover/95 backdrop-blur-md border border-border/60 shadow-md" align="end" forceMount>
+                <DropdownMenuContent className="w-44 z-50 bg-white backdrop-blur-sm border border-gray-200" align="end" forceMount>
                   <DropdownMenuItem asChild>
                     <Link to={isAdmin ? "/admin-dashboard" : user.user_metadata?.role === "artist" ? "/artist-dashboard" : "/client-dashboard"}>
                       Dashboard
@@ -113,12 +113,12 @@ const Navbar = () => {
             </>
           ) : (
             <>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/login">Log in</Link>
-              </Button>
-              <Button size="sm" asChild>
-                <Link to="/signup">Sign up</Link>
-              </Button>
+              <Link to="/login" className="text-gray-700 hover:text-purple-600 font-medium px-2 py-1 rounded-lg text-sm transition-colors">
+                Login
+              </Link>
+              <Link to="/signup" className="bg-purple-600 text-white rounded-lg px-3 py-1.5 font-medium text-sm hover:bg-purple-700 transition-all">
+                Sign Up
+              </Link>
             </>
           )}
         </div>
@@ -157,7 +157,7 @@ const Navbar = () => {
 
       {/* Minimal Mobile Menu */}
       {isMobile && isOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-popover/95 z-50 border-b border-border/60 shadow-sm transition-all animate-fade-in backdrop-blur">
+        <div className="md:hidden absolute top-full left-0 right-0 bg-white/90 z-50 border-b border-gray-200 shadow transition-all animate-fade-in backdrop-blur">
           <div className="px-4 py-2 space-y-1">
             {menuItems.map(item => (
               <Link to={item.path} key={item.name} className={"relative flex items-center gap-2 px-3 py-2 text-base font-medium rounded-lg transition-colors " + (location.pathname === item.path ? "text-purple-600 after:absolute after:left-3 after:right-3 after:bottom-0 after:h-0.5 after:bg-purple-600 after:rounded-full after:scale-x-100 after:transition-transform after:duration-300" : "text-gray-700 after:bg-gray-300 hover:text-purple-600 after:absolute after:left-3 after:right-3 after:bottom-0 after:h-0.5 after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300")} onClick={closeMenu} style={{

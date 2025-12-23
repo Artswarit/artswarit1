@@ -72,8 +72,8 @@ export default {
 				}
 			},
 			fontFamily: {
-				sans: ['Manrope', 'sans-serif'],
-				heading: ['Sora', 'sans-serif']
+				sans: ['Inter', 'sans-serif'],
+				heading: ['Poppins', 'sans-serif']
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

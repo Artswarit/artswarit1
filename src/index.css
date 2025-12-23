@@ -1,5 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -85,10 +85,10 @@
 
   body {
     @apply bg-background text-foreground font-sans;
-    background-image:
-      radial-gradient(circle at 0% 0%, hsl(var(--primary) / 0.10), transparent 70%),
-      radial-gradient(circle at 100% 0%, hsl(var(--accent) / 0.14), transparent 70%),
-      radial-gradient(circle at 50% 110%, hsl(var(--primary) / 0.08), transparent 65%);
+    background-image: 
+      radial-gradient(circle at 0% 0%, rgba(var(--primary) / 0.08), transparent 80%),
+      radial-gradient(circle at 100% 0%, rgba(var(--accent) / 0.08), transparent 80%),
+      radial-gradient(circle at 50% 100%, rgba(var(--primary) / 0.08), transparent 80%);
     background-attachment: fixed;
   }
 
@@ -111,12 +111,12 @@
   }
   
   .glass-effect {
-    @apply bg-background/70 backdrop-blur-md border border-border/60 shadow-sm;
+    @apply bg-white/60 backdrop-blur-md border border-white/20 shadow-lg;
   }
-
+  
   .glass-card {
-    @apply bg-card/70 backdrop-blur-md border border-border/60 shadow-sm
-           hover:shadow-md hover:bg-card/80 transition-all duration-300;
+    @apply bg-white/40 backdrop-blur-md border border-white/20 shadow-lg 
+           hover:shadow-xl hover:bg-white/50 transition-all duration-300;
   }
   
   .animation-delay-300 {
