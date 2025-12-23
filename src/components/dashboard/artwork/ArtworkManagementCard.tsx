@@ -48,14 +48,14 @@ const ArtworkManagementCard = ({
 
   const getStatusConfig = (status: string) => {
     switch (status) {
-      case 'approved':
-        return { label: 'Live', className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' };
-      case 'pending':
-        return { label: 'Pending', className: 'bg-amber-500/10 text-amber-600 border-amber-500/20' };
-      case 'rejected':
-        return { label: 'Rejected', className: 'bg-destructive/10 text-destructive border-destructive/20' };
+      case 'public':
+        return { label: 'Public', className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' };
+      case 'private':
+        return { label: 'Private', className: 'bg-amber-500/10 text-amber-600 border-amber-500/20' };
+      case 'archived':
+        return { label: 'Archived', className: 'bg-muted text-muted-foreground border-border' };
       default:
-        return { label: 'Draft', className: 'bg-muted text-muted-foreground border-border' };
+        return { label: 'Public', className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' };
     }
   };
 
