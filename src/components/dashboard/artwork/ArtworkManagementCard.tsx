@@ -49,13 +49,13 @@ const ArtworkManagementCard = ({
   const getStatusConfig = (status: string) => {
     switch (status) {
       case 'public':
-        return { label: 'Public', className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' };
+        return { label: 'Public', className: 'bg-emerald-500 text-white border-emerald-600' };
       case 'private':
-        return { label: 'Private', className: 'bg-amber-500/10 text-amber-600 border-amber-500/20' };
+        return { label: 'Private', className: 'bg-amber-500 text-white border-amber-600' };
       case 'archived':
         return { label: 'Archived', className: 'bg-muted text-muted-foreground border-border' };
       default:
-        return { label: 'Public', className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' };
+        return { label: 'Public', className: 'bg-emerald-500 text-white border-emerald-600' };
     }
   };
 
@@ -189,10 +189,7 @@ const ArtworkManagementCard = ({
           <Checkbox
             checked={isSelected}
             onCheckedChange={onSelect}
-            className={cn(
-              'h-5 w-5 border-2 bg-background/80 backdrop-blur-sm transition-opacity',
-              isHovered || isSelected ? 'opacity-100' : 'opacity-0'
-            )}
+            className="h-5 w-5 border-2 bg-background/90 backdrop-blur-sm data-[state=checked]:bg-primary data-[state=checked]:border-primary"
           />
           
           <div className="flex items-center gap-2">
