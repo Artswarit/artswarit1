@@ -42,6 +42,7 @@ const ArtworkCard = ({
   const [currentViews, setCurrentViews] = useState(views);
   const [isHovered, setIsHovered] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
+  const [animateLike, setAnimateLike] = useState(false);
 
   // Check if user has liked this artwork
   useEffect(() => {
@@ -151,6 +152,12 @@ const ArtworkCard = ({
     const previousLikes = currentLikes;
     setIsLiked(!isLiked);
     setCurrentLikes(prev => isLiked ? prev - 1 : prev + 1);
+    
+    // Trigger animation only when liking (not unliking)
+    if (!isLiked) {
+      setAnimateLike(true);
+      setTimeout(() => setAnimateLike(false), 300);
+    }
 
     try {
       if (previousLiked) {
@@ -231,7 +238,7 @@ const ArtworkCard = ({
                   isLiked ? 'text-red-500' : 'text-white'
                 }`}
               >
-                <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                <Heart className={`w-4 h-4 transition-transform duration-300 ${isLiked ? 'fill-current' : ''} ${animateLike ? 'scale-125' : 'scale-100'}`} />
               </Button>
             </div>
             
@@ -240,7 +247,7 @@ const ArtworkCard = ({
               <div className="flex items-center justify-between text-white">
                 <div className="flex items-center gap-4 text-sm">
                   <span className="flex items-center gap-1">
-                    <Heart className={`w-3 h-3 ${isLiked ? 'fill-current text-red-500' : ''}`} />
+                    <Heart className={`w-3 h-3 transition-transform duration-300 ${isLiked ? 'fill-current text-red-500' : ''} ${animateLike ? 'scale-125' : 'scale-100'}`} />
                     {currentLikes}
                   </span>
                   <span className="flex items-center gap-1">
@@ -294,7 +301,7 @@ const ArtworkCard = ({
                 disabled={isLiking}
                 className={`flex items-center gap-1 hover:text-red-500 transition-colors ${isLiked ? 'text-red-500' : ''}`}
               >
-                <Heart className={`w-3 h-3 ${isLiked ? 'fill-current' : ''}`} />
+                <Heart className={`w-3 h-3 transition-transform duration-300 ${isLiked ? 'fill-current' : ''} ${animateLike ? 'scale-125' : 'scale-100'}`} />
                 {currentLikes}
               </button>
               <span className="flex items-center gap-1">
