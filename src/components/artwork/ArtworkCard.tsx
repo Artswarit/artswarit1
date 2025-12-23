@@ -77,7 +77,7 @@ const ArtworkCard = ({
     
     fetchCounts();
 
-    // Subscribe to real-time like updates
+    // Subscribe to real-time like updates (skip updates from other users only)
     const likesChannel = supabase
       .channel(`artwork-likes-${id}`)
       .on(
@@ -88,24 +88,21 @@ const ArtworkCard = ({
           table: 'artwork_likes',
           filter: `artwork_id=eq.${id}`
         },
-        async () => {
-          // Refetch like count on any change
+        async (payload) => {
+          // Skip if the change was made by current user (we handle this optimistically)
+          const newRecord = payload.new as { user_id?: string } | null;
+          const oldRecord = payload.old as { user_id?: string } | null;
+          const changedUserId = newRecord?.user_id || oldRecord?.user_id;
+          if (changedUserId === user?.id) {
+            return;
+          }
+          
+          // Refetch like count on changes from other users
           const { data } = await supabase
             .from('artwork_likes')
             .select('id')
             .eq('artwork_id', id);
           setCurrentLikes(data?.length || 0);
-          
-          // Check if current user's like status changed
-          if (user?.id) {
-            const { data: userLike } = await supabase
-              .from('artwork_likes')
-              .select('id')
-              .eq('artwork_id', id)
-              .eq('user_id', user.id)
-              .maybeSingle();
-            setIsLiked(!!userLike);
-          }
         }
       )
       .subscribe();
