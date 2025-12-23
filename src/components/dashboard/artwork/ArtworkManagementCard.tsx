@@ -247,7 +247,7 @@ const ArtworkManagementCard = ({
             <Badge 
               variant="outline" 
               className={cn(
-                'text-xs shrink-0 flex items-center gap-1 px-2 py-0.5',
+                'text-xs shrink-0 flex items-center gap-1 px-2 py-0.5 transition-all duration-200 hover:scale-105 hover:brightness-110 cursor-default',
                 statusConfig.className
               )}
             >
@@ -391,7 +391,7 @@ const ArtworkManagementCard = ({
             <Badge 
               variant="outline" 
               className={cn(
-                'backdrop-blur-md px-2.5 py-1 text-xs font-medium flex items-center gap-1.5 border',
+                'backdrop-blur-md px-2.5 py-1 text-xs font-medium flex items-center gap-1.5 border transition-all duration-200 hover:scale-105 hover:brightness-110 cursor-default',
                 statusConfig.className
               )}
             >
