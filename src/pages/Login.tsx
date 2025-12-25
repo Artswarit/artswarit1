@@ -23,12 +23,23 @@ const Login = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
+      // Check if email is verified
+      if (!user.email_confirmed_at) {
+        navigate('/verify-email');
+        return;
+      }
       redirectBasedOnRole();
     }
   }, [user]);
 
   const redirectBasedOnRole = async () => {
     if (!user) return;
+    
+    // Double-check email verification
+    if (!user.email_confirmed_at) {
+      navigate('/verify-email');
+      return;
+    }
     
     try {
       const { data: profile } = await supabase
