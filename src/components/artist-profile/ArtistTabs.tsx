@@ -239,7 +239,7 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
                 <span className="text-gray-800">{aboutDetails.artist.bio || "No bio available."}</span>
               </div>
 
-              {/* Projects, rating, review count */}
+              {/* Projects, rating, review count - show real data or hide if zero */}
               <div className="flex flex-wrap gap-x-7 gap-y-1 mb-4">
                 <div>
                   <span className="font-semibold text-gray-700">Projects Done: </span>
@@ -247,13 +247,15 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
                     {aboutDetails.projectsCount}
                   </span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <span className="font-semibold text-gray-700">Avg. Rating:</span>
-                  <span className="text-yellow-600 font-bold">
-                    {aboutDetails.avgRating?.toFixed(1) || "—"}
-                  </span>
-                  <Star className="text-yellow-400 fill-yellow-400" size={20} />
-                </div>
+                {aboutDetails.avgRating > 0 && (
+                  <div className="flex items-center gap-1">
+                    <span className="font-semibold text-gray-700">Avg. Rating:</span>
+                    <span className="text-yellow-600 font-bold">
+                      {aboutDetails.avgRating.toFixed(1)}
+                    </span>
+                    <Star className="text-yellow-400 fill-yellow-400" size={20} />
+                  </div>
+                )}
                 <div>
                   <span className="font-semibold text-gray-700">Reviews:</span>
                   <span className="ml-1 font-bold">
@@ -264,35 +266,22 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
 
               <hr className="my-4" />
 
-              {/* Featured Top Review (demo, adjust for real data) */}
-              <div className="mb-5">
-                <h4 className="font-semibold text-lg mb-1 text-purple-900">Top Client Review</h4>
-                <div className="bg-purple-50 rounded-lg px-5 py-4 border border-purple-100 shadow flex flex-col gap-2">
-                  <div className="flex items-center gap-3 mb-1">
-                    {/* Demo avatar */}
-                    <img
-                      src="https://randomuser.me/api/portraits/women/50.jpg"
-                      alt="Client"
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                    <span className="font-semibold text-sm text-purple-700">Priya Patel</span>
-                    <span className="flex gap-0.5 ml-2">
-                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                    </span>
-                  </div>
-                  <p className="text-gray-700 italic">
-                    "Absolutely phenomenal artist! Exceeded our expectations with every project.
-                    Great communication and high professionalism. Will collaborate again!"
-                  </p>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    — Client, Apr 2025
+              {/* Show message when no reviews exist */}
+              {aboutDetails.reviewCount === 0 ? (
+                <div className="mb-5">
+                  <h4 className="font-semibold text-lg mb-1 text-purple-900">Client Reviews</h4>
+                  <div className="bg-gray-50 rounded-lg px-5 py-4 border border-gray-200 text-center text-gray-500">
+                    No reviews yet. Be the first to work with this artist!
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="mb-5">
+                  <h4 className="font-semibold text-lg mb-1 text-purple-900">Client Reviews</h4>
+                  <div className="bg-purple-50 rounded-lg px-5 py-4 border border-purple-100 shadow text-center text-gray-600">
+                    Reviews coming soon
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </TabsContent>
