@@ -45,8 +45,8 @@ serve(async (req) => {
     if (!GOOGLE_GEMINI_API_KEY) {
       console.error("GOOGLE_GEMINI_API_KEY not set");
       return new Response(
-        JSON.stringify({ error: "API key not configured" }), 
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Service temporarily unavailable" }), 
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
