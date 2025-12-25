@@ -186,14 +186,22 @@ const Login = () => {
                 Continue with Google
               </Button>
 
-              <div className="text-center text-sm">
-                <span className="text-gray-600">Don't have an account? </span>
+              <div className="flex flex-col gap-2 text-center text-sm">
                 <Link
-                  to="/signup"
-                  className="font-medium text-artswarit-purple hover:text-artswarit-purple-dark"
+                  to="/forgot-password"
+                  className="font-medium text-muted-foreground hover:text-artswarit-purple transition-colors"
                 >
-                  Sign up
+                  Forgot your password?
                 </Link>
+                <div>
+                  <span className="text-gray-600">Don't have an account? </span>
+                  <Link
+                    to="/signup"
+                    className="font-medium text-artswarit-purple hover:text-artswarit-purple-dark"
+                  >
+                    Sign up
+                  </Link>
+                </div>
               </div>
             </CardContent>
           </Card>
