@@ -1,5 +1,3 @@
-
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -10,10 +8,89 @@ const corsHeaders = {
 
 const GOOGLE_GEMINI_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY");
 
+// Input validation constants
+const MAX_MESSAGE_LENGTH = 2000;
+const MAX_MESSAGES = 50;
+const MAX_LOCATION_LENGTH = 200;
+const VALID_ROLES = ['artist', 'client', 'admin', 'general'] as const;
+
+// Input validation
+interface Message {
+  role: string;
+  content: string;
+}
+
+interface ValidatedInput {
+  messages: Message[];
+  userRole: string;
+  location: string;
+}
+
+function validateInput(input: unknown): ValidatedInput {
+  if (!input || typeof input !== 'object') {
+    throw new Error('Invalid request body');
+  }
+
+  const { messages: rawMessages, userRole: rawUserRole, location: rawLocation } = input as Record<string, unknown>;
+
+  // Validate messages
+  if (!rawMessages || !Array.isArray(rawMessages)) {
+    throw new Error('messages must be an array');
+  }
+
+  if (rawMessages.length > MAX_MESSAGES) {
+    throw new Error(`Maximum ${MAX_MESSAGES} messages allowed`);
+  }
+
+  const messages: Message[] = [];
+
+  for (let i = 0; i < rawMessages.length; i++) {
+    const msg = rawMessages[i];
+    
+    if (!msg || typeof msg !== 'object') {
+      throw new Error(`Message at index ${i} is invalid`);
+    }
+
+    const { role, content } = msg as Record<string, unknown>;
+
+    if (typeof role !== 'string' || !['user', 'assistant'].includes(role)) {
+      throw new Error(`Invalid role at message ${i}`);
+    }
+
+    if (typeof content !== 'string') {
+      throw new Error(`Invalid content at message ${i}`);
+    }
+
+    // Truncate overly long content
+    const truncatedContent = content.slice(0, MAX_MESSAGE_LENGTH);
+    messages.push({ role, content: truncatedContent });
+  }
+
+  // Validate userRole
+  let userRole = 'general';
+  if (rawUserRole !== undefined && rawUserRole !== null) {
+    if (typeof rawUserRole !== 'string') {
+      throw new Error('userRole must be a string');
+    }
+    userRole = VALID_ROLES.includes(rawUserRole as typeof VALID_ROLES[number]) ? rawUserRole : 'general';
+  }
+
+  // Validate location
+  let location = 'unknown page';
+  if (rawLocation !== undefined && rawLocation !== null) {
+    if (typeof rawLocation !== 'string') {
+      throw new Error('location must be a string');
+    }
+    location = rawLocation.slice(0, MAX_LOCATION_LENGTH);
+  }
+
+  return { messages, userRole, location };
+}
+
 async function fetchGemini(payload: any) {
   const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_GEMINI_API_KEY}`;
   
-  console.log("[edge] Sending payload to Gemini:", JSON.stringify(payload));
+  console.log("[edge] Sending request to Gemini");
   const geminiRes = await fetch(GEMINI_API_URL, {
     method: "POST",
     headers: {
@@ -22,7 +99,7 @@ async function fetchGemini(payload: any) {
     body: JSON.stringify(payload),
   });
   const data = await geminiRes.json();
-  console.log("[edge] Gemini response:", JSON.stringify(data));
+  console.log("[edge] Gemini response status:", geminiRes.status);
   return { status: geminiRes.status, data };
 }
 
@@ -37,7 +114,30 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, userRole, location } = await req.json();
+    // Parse and validate input
+    let requestBody: unknown;
+    try {
+      requestBody = await req.json();
+    } catch {
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON in request body" }), 
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    let validated: ValidatedInput;
+    try {
+      validated = validateInput(requestBody);
+    } catch (validationError) {
+      console.error("[edge] Input validation failed:", validationError);
+      return new Response(
+        JSON.stringify({ error: "Invalid request parameters" }), 
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    const { messages, userRole, location } = validated;
+
     const rolePrompts: Record<string, string> = {
       artist: "You are the Artswarit assistant for artists. Guide users about uploading, managing artworks, updating profile, earning, projects, and answering queries about the artist dashboard.",
       client: "You are the Artswarit assistant for clients. Guide users about searching artists, starting projects, messaging, and answering queries about the client dashboard.",
@@ -48,17 +148,16 @@ serve(async (req) => {
     const fullSystemPrompt = contextPrompt + ` User is currently at: ${location}.`;
 
     // Gemini requires conversation history to start with a user message and have alternating roles.
-    // 1. Find the first user message.
-    const firstUserMessageIndex = messages.findIndex((msg: { role: string }) => msg.role === 'user');
+    const firstUserMessageIndex = messages.findIndex((msg) => msg.role === 'user');
     
     if (firstUserMessageIndex === -1) {
       return new Response(JSON.stringify({ error: "No user message found in the history." }), { status: 400, headers: corsHeaders });
     }
 
-    // 2. Take only the part of conversation starting from the first user.
+    // Take only the part of conversation starting from the first user.
     const conversationMessages = messages.slice(firstUserMessageIndex);
 
-    // 3. Merge consecutive messages from the same role.
+    // Merge consecutive messages from the same role.
     const geminiContents: { role: string, parts: { text: string }[] }[] = [];
     if (conversationMessages.length > 0) {
         let lastContent = {
@@ -99,7 +198,7 @@ serve(async (req) => {
 
     const answer = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
     if (!answer) {
-      console.error("[edge] No answer returned from Gemini:", data?.error?.message || JSON.stringify(data));
+      console.error("[edge] No answer returned from Gemini");
       return new Response(
         JSON.stringify({ error: "Unable to process your request. Please try again." }),
         { status: 502, headers: corsHeaders }
@@ -111,4 +210,3 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: "An unexpected error occurred. Please try again." }), { status: 500, headers: corsHeaders });
   }
 });
-

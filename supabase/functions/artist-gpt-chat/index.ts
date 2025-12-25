@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -9,6 +8,53 @@ const corsHeaders = {
 };
 
 const GOOGLE_GEMINI_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY");
+
+// Input validation constants
+const MAX_MESSAGE_LENGTH = 2000;
+const MAX_MESSAGES = 50;
+
+// Input validation for messages
+interface Message {
+  role: string;
+  content: string;
+}
+
+function validateMessages(input: unknown): Message[] {
+  if (!input || !Array.isArray(input)) {
+    throw new Error('messages must be an array');
+  }
+
+  if (input.length > MAX_MESSAGES) {
+    throw new Error(`Maximum ${MAX_MESSAGES} messages allowed`);
+  }
+
+  const validatedMessages: Message[] = [];
+
+  for (let i = 0; i < input.length; i++) {
+    const msg = input[i];
+    
+    if (!msg || typeof msg !== 'object') {
+      throw new Error(`Message at index ${i} is invalid`);
+    }
+
+    const { role, content } = msg as Record<string, unknown>;
+
+    if (typeof role !== 'string' || !['user', 'assistant'].includes(role)) {
+      throw new Error(`Invalid role at message ${i}`);
+    }
+
+    if (typeof content !== 'string') {
+      throw new Error(`Invalid content at message ${i}`);
+    }
+
+    // Truncate overly long content
+    const truncatedContent = content.slice(0, MAX_MESSAGE_LENGTH);
+
+    validatedMessages.push({ role, content: truncatedContent });
+  }
+
+  return validatedMessages;
+}
 
 const systemPrompt = `You are Artswarit's helpful assistant. Your name is 'Artswarit Chat'.
 - Your primary goal is to help users with information about the Artswarit platform and help them find artists.
@@ -50,15 +96,38 @@ serve(async (req) => {
       );
     }
 
-    const { messages } = await req.json();
-    if (!messages || !Array.isArray(messages)) {
+    // Parse and validate input
+    let requestBody: unknown;
+    try {
+      requestBody = await req.json();
+    } catch {
       return new Response(
-        JSON.stringify({ error: "Invalid request: messages array required" }), 
+        JSON.stringify({ error: "Invalid JSON in request body" }), 
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("Received messages:", JSON.stringify(messages, null, 2));
+    if (!requestBody || typeof requestBody !== 'object') {
+      return new Response(
+        JSON.stringify({ error: "Invalid request body" }), 
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { messages: rawMessages } = requestBody as Record<string, unknown>;
+
+    let messages: Message[];
+    try {
+      messages = validateMessages(rawMessages);
+    } catch (validationError) {
+      console.error("Input validation failed:", validationError);
+      return new Response(
+        JSON.stringify({ error: "Invalid request parameters" }), 
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log("Processing chat request with", messages.length, "messages");
 
     // Clean messages and prepare for Gemini
     const cleanMessages = messages.filter(msg => {
@@ -81,7 +150,7 @@ serve(async (req) => {
     const conversationMessages = cleanMessages.slice(firstUserMessageIndex);
     
     // Convert to Gemini format
-    const geminiContents = [];
+    const geminiContents: { role: string; parts: { text: string }[] }[] = [];
     if (conversationMessages.length > 0) {
       let lastContent = {
         role: conversationMessages[0].role === 'assistant' ? 'model' : 'user',
@@ -118,7 +187,7 @@ serve(async (req) => {
       },
     };
 
-    console.log("Calling Gemini API with payload:", JSON.stringify(payload, null, 2));
+    console.log("Calling Gemini API");
 
     const geminiRes = await fetch(GEMINI_API_URL, {
       method: "POST",
@@ -129,11 +198,9 @@ serve(async (req) => {
     const geminiData = await geminiRes.json();
     
     console.log("Gemini Response Status:", geminiRes.status);
-    console.log("Gemini Response Body:", JSON.stringify(geminiData, null, 2));
 
     if (!geminiRes.ok) {
-      const error = geminiData?.error?.message || `API returned status ${geminiRes.status}`;
-      console.error("Gemini API Error:", error);
+      console.error("Gemini API Error:", geminiData?.error?.message);
       return new Response(
         JSON.stringify({ answer: "Hello! I'm Artswarit Chat. How can I help you find an artist or learn about our platform today?" }), 
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -155,7 +222,7 @@ serve(async (req) => {
     if (part.functionCall) {
       const { name, args } = part.functionCall;
       if (name === "find_artists") {
-        console.log("Function call to find_artists with args:", args);
+        console.log("Function call to find_artists");
 
         const supabaseClient = createClient(
           Deno.env.get("SUPABASE_URL")!,

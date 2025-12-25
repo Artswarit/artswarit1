@@ -1,6 +1,4 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,25 +7,90 @@ const corsHeaders = {
 
 const HIVE_API_URL = 'https://api.thehive.ai/api/v2/task/sync'
 
+// Input validation schema
+const ALLOWED_CONTENT_TYPES = ['image', 'video', 'audio', 'text'] as const
+const MAX_URL_LENGTH = 500
+
+function validateInput(input: unknown): { fileUrl: string; contentType: string } {
+  if (!input || typeof input !== 'object') {
+    throw new Error('Invalid request body')
+  }
+
+  const { fileUrl, contentType } = input as Record<string, unknown>
+
+  // Validate fileUrl
+  if (typeof fileUrl !== 'string' || !fileUrl) {
+    throw new Error('fileUrl is required and must be a string')
+  }
+  
+  if (fileUrl.length > MAX_URL_LENGTH) {
+    throw new Error('fileUrl exceeds maximum length')
+  }
+
+  // Basic URL validation
+  try {
+    const url = new URL(fileUrl)
+    if (!['http:', 'https:'].includes(url.protocol)) {
+      throw new Error('Invalid URL protocol')
+    }
+  } catch {
+    throw new Error('Invalid URL format')
+  }
+
+  // Validate contentType
+  if (typeof contentType !== 'string' || !contentType) {
+    throw new Error('contentType is required and must be a string')
+  }
+
+  const normalizedContentType = contentType.toLowerCase()
+  if (!ALLOWED_CONTENT_TYPES.includes(normalizedContentType as typeof ALLOWED_CONTENT_TYPES[number])) {
+    throw new Error('Invalid contentType. Must be one of: image, video, audio, text')
+  }
+
+  return { fileUrl, contentType: normalizedContentType }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { fileUrl, contentType } = await req.json()
+    // Parse and validate input
+    let requestBody: unknown
+    try {
+      requestBody = await req.json()
+    } catch {
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    let validated: { fileUrl: string; contentType: string }
+    try {
+      validated = validateInput(requestBody)
+    } catch (validationError) {
+      console.error('Input validation failed:', validationError)
+      return new Response(
+        JSON.stringify({ error: 'Invalid request parameters' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const { fileUrl, contentType } = validated
     const hiveApiKey = Deno.env.get('HIVE_API_KEY')
 
     if (!hiveApiKey) {
-      console.error('HIVE_API_KEY not configured');
-      throw new Error('Content analysis service unavailable');
+      console.error('HIVE_API_KEY not configured')
+      throw new Error('Content analysis service unavailable')
     }
 
-    console.log(`Analyzing ${contentType} content: ${fileUrl}`)
+    console.log(`Analyzing ${contentType} content`)
 
     // Determine which models to use based on content type
-    let models = []
-    switch (contentType.toLowerCase()) {
+    let models: string[] = []
+    switch (contentType) {
       case 'image':
         models = ['ai_generated_media']
         break
@@ -59,11 +122,11 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text()
       console.error('Content analysis API error:', response.status, errorText)
-      throw new Error('Content analysis failed');
+      throw new Error('Content analysis failed')
     }
 
     const result = await response.json()
-    console.log('Hive API response:', JSON.stringify(result, null, 2))
+    console.log('Hive API response received')
 
     // Parse the detection results
     const detectionResult = {
