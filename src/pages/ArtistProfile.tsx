@@ -266,6 +266,8 @@ export default function ArtistProfile() {
             ...rev,
             clientName: clientData?.full_name || 'Anonymous',
             clientAvatar: clientData?.avatar_url || null,
+            artist_response: rev.artist_response,
+            artist_response_at: rev.artist_response_at,
           });
         }
         setArtistReviews(enrichedReviews);
@@ -279,6 +281,42 @@ export default function ArtistProfile() {
 
     fetchArtistProfile();
   }, [id]);
+
+  // Check if current user is the artist (owner)
+  const isArtistOwner = user?.id === id;
+
+  // Refresh reviews function
+  const refreshReviews = async () => {
+    if (!id) return;
+    
+    try {
+      const { data: reviewsData } = await supabase
+        .from('project_reviews')
+        .select('*')
+        .eq('artist_id', id)
+        .order('created_at', { ascending: false });
+
+      const enrichedReviews = [];
+      for (const rev of reviewsData || []) {
+        const { data: clientData } = await supabase
+          .from('public_profiles')
+          .select('full_name, avatar_url')
+          .eq('id', rev.client_id)
+          .maybeSingle();
+
+        enrichedReviews.push({
+          ...rev,
+          clientName: clientData?.full_name || 'Anonymous',
+          clientAvatar: clientData?.avatar_url || null,
+          artist_response: rev.artist_response,
+          artist_response_at: rev.artist_response_at,
+        });
+      }
+      setArtistReviews(enrichedReviews);
+    } catch (err) {
+      console.error('Error refreshing reviews:', err);
+    }
+  };
 
   // Get supabase user is now handled by useAuth
 
@@ -663,6 +701,8 @@ export default function ArtistProfile() {
             services={artistServices}
             reviews={artistReviews}
             onArtworkClick={handleArtworkClick}
+            isArtistOwner={isArtistOwner}
+            onRefreshReviews={refreshReviews}
           />
         </GlassCard>
         

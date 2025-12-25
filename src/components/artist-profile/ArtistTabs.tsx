@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import ReviewCard from "@/components/reviews/ReviewCard";
 
 interface GalleryArtwork {
   id: string;
@@ -41,6 +42,8 @@ interface ReviewItem {
   created_at: string;
   clientName: string;
   clientAvatar: string | null;
+  artist_response?: string | null;
+  artist_response_at?: string | null;
 }
 
 interface ArtistTabsProps {
@@ -52,6 +55,8 @@ interface ArtistTabsProps {
   services?: ServiceItem[];
   reviews?: ReviewItem[];
   onArtworkClick?: (art: GalleryArtwork) => void;
+  isArtistOwner?: boolean;
+  onRefreshReviews?: () => void;
 }
 
 const PAGE_SIZE = 6;
@@ -67,6 +72,8 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
   services = [],
   reviews = [],
   onArtworkClick,
+  isArtistOwner = false,
+  onRefreshReviews,
 }) => {
   const [tab, setTab] = useState("all");
   const [page, setPage] = useState(1);
@@ -289,37 +296,19 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
                       ) : (
                         <div className="space-y-4">
                           {reviews.map((rev) => (
-                            <div
+                            <ReviewCard
                               key={rev.id}
-                              className="bg-purple-50 rounded-lg px-5 py-4 border border-purple-100 shadow flex flex-col gap-2"
-                            >
-                              <div className="flex items-center gap-3 mb-1">
-                                <img
-                                  src={rev.clientAvatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50"}
-                                  alt={rev.clientName}
-                                  className="w-8 h-8 rounded-full object-cover"
-                                />
-                                <span className="font-semibold text-sm text-purple-700">{rev.clientName}</span>
-                                <span className="flex gap-0.5 ml-2">
-                                  {[1, 2, 3, 4, 5].map((star) => (
-                                    <Star
-                                      key={star}
-                                      className={`w-4 h-4 ${
-                                        star <= rev.rating
-                                          ? "text-yellow-400 fill-yellow-400"
-                                          : "text-gray-300"
-                                      }`}
-                                    />
-                                  ))}
-                                </span>
-                              </div>
-                              {rev.review_text && (
-                                <p className="text-gray-700 italic">"{rev.review_text}"</p>
-                              )}
-                              <div className="text-xs text-muted-foreground mt-1">
-                                {new Date(rev.created_at).toLocaleDateString()}
-                              </div>
-                            </div>
+                              reviewId={rev.id}
+                              clientName={rev.clientName}
+                              clientAvatar={rev.clientAvatar}
+                              rating={rev.rating}
+                              reviewText={rev.review_text}
+                              createdAt={rev.created_at}
+                              artistResponse={rev.artist_response}
+                              artistResponseAt={rev.artist_response_at}
+                              isArtistOwner={isArtistOwner}
+                              onResponseAdded={onRefreshReviews}
+                            />
                           ))}
                         </div>
                       )}

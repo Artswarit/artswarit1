@@ -692,6 +692,8 @@ export type Database = {
       project_reviews: {
         Row: {
           artist_id: string
+          artist_response: string | null
+          artist_response_at: string | null
           client_id: string
           created_at: string
           id: string
@@ -702,6 +704,8 @@ export type Database = {
         }
         Insert: {
           artist_id: string
+          artist_response?: string | null
+          artist_response_at?: string | null
           client_id: string
           created_at?: string
           id?: string
@@ -712,6 +716,8 @@ export type Database = {
         }
         Update: {
           artist_id?: string
+          artist_response?: string | null
+          artist_response_at?: string | null
           client_id?: string
           created_at?: string
           id?: string
