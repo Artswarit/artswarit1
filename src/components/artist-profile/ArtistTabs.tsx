@@ -37,6 +37,7 @@ interface ServiceItem {
 
 interface ReviewItem {
   id: string;
+  client_id: string;
   rating: number;
   review_text: string | null;
   created_at: string;
@@ -57,6 +58,7 @@ interface ArtistTabsProps {
   onArtworkClick?: (art: GalleryArtwork) => void;
   isArtistOwner?: boolean;
   onRefreshReviews?: () => void;
+  currentUserId?: string | null;
 }
 
 const PAGE_SIZE = 6;
@@ -74,6 +76,7 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
   onArtworkClick,
   isArtistOwner = false,
   onRefreshReviews,
+  currentUserId,
 }) => {
   const [tab, setTab] = useState("all");
   const [page, setPage] = useState(1);
@@ -299,6 +302,7 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
                             <ReviewCard
                               key={rev.id}
                               reviewId={rev.id}
+                              clientId={rev.client_id}
                               clientName={rev.clientName}
                               clientAvatar={rev.clientAvatar}
                               rating={rev.rating}
@@ -307,7 +311,9 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
                               artistResponse={rev.artist_response}
                               artistResponseAt={rev.artist_response_at}
                               isArtistOwner={isArtistOwner}
+                              currentUserId={currentUserId}
                               onResponseAdded={onRefreshReviews}
+                              onReviewUpdated={onRefreshReviews}
                             />
                           ))}
                         </div>

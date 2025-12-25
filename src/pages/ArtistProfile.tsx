@@ -703,6 +703,7 @@ export default function ArtistProfile() {
             onArtworkClick={handleArtworkClick}
             isArtistOwner={isArtistOwner}
             onRefreshReviews={refreshReviews}
+            currentUserId={user?.id || null}
           />
         </GlassCard>
         
