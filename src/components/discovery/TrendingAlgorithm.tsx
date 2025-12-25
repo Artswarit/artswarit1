@@ -31,23 +31,7 @@ const TrendingAlgorithm = () => {
 
   const fetchTrendingData = async () => {
     try {
-      // Calculate time threshold based on timeframe
       const now = new Date();
-      let timeThreshold: Date;
-      switch (selectedTimeframe) {
-        case '1h':
-          timeThreshold = new Date(now.getTime() - 60 * 60 * 1000);
-          break;
-        case '24h':
-          timeThreshold = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-          break;
-        case '7d':
-          timeThreshold = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          break;
-        case '30d':
-          timeThreshold = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-          break;
-      }
 
       // Fetch public artworks with their engagement metrics
       const { data: artworks, error } = await supabase
@@ -66,10 +50,21 @@ const TrendingAlgorithm = () => {
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching artworks:', error);
+        setLoading(false);
+        return;
+      }
 
-      // Fetch artist names
-      const artistIds = [...new Set(artworks?.map(a => a.artist_id) || [])];
+      if (!artworks || artworks.length === 0) {
+        setTrendingItems([]);
+        setLoading(false);
+        setLastUpdate(new Date());
+        return;
+      }
+
+      // Fetch artist names from public_profiles view
+      const artistIds = [...new Set(artworks.map(a => a.artist_id))];
       const { data: artists } = await supabase
         .from('public_profiles')
         .select('id, full_name')
@@ -77,47 +72,49 @@ const TrendingAlgorithm = () => {
 
       const artistMap = new Map(artists?.map(a => [a.id, a.full_name]) || []);
 
-      // Fetch likes count for each artwork in the timeframe
-      const artworkIds = artworks?.map(a => a.id) || [];
+      // Fetch likes count for each artwork
+      const artworkIds = artworks.map(a => a.id);
       
       const { data: recentLikes } = await supabase
         .from('artwork_likes')
         .select('artwork_id')
-        .in('artwork_id', artworkIds)
-        .gte('created_at', timeThreshold.toISOString());
+        .in('artwork_id', artworkIds);
 
       // Count likes per artwork
       const likesCount = new Map<string, number>();
       recentLikes?.forEach(like => {
-        const count = likesCount.get(like.artwork_id) || 0;
-        likesCount.set(like.artwork_id, count + 1);
+        if (like.artwork_id) {
+          const count = likesCount.get(like.artwork_id) || 0;
+          likesCount.set(like.artwork_id, count + 1);
+        }
       });
 
       // Fetch views count for each artwork
       const { data: recentViews } = await supabase
         .from('artwork_views')
         .select('artwork_id')
-        .in('artwork_id', artworkIds)
-        .gte('created_at', timeThreshold.toISOString());
+        .in('artwork_id', artworkIds);
 
       const viewsCount = new Map<string, number>();
       recentViews?.forEach(view => {
-        const count = viewsCount.get(view.artwork_id) || 0;
-        viewsCount.set(view.artwork_id, count + 1);
+        if (view.artwork_id) {
+          const count = viewsCount.get(view.artwork_id) || 0;
+          viewsCount.set(view.artwork_id, count + 1);
+        }
       });
 
       // Calculate trending scores
-      const trending: TrendingItem[] = (artworks || []).map(artwork => {
+      const trending: TrendingItem[] = artworks.map(artwork => {
         const views = viewsCount.get(artwork.id) || 0;
         const likes = likesCount.get(artwork.id) || 0;
         const metadata = artwork.metadata as { views_count?: number; likes_count?: number } | null;
-        const totalViews = metadata?.views_count || views;
-        const totalLikes = metadata?.likes_count || likes;
+        const totalViews = metadata?.views_count || views || 0;
+        const totalLikes = metadata?.likes_count || likes || 0;
         
         // Calculate engagement rate and trending score
-        const engagementRate = totalViews > 0 ? (likes / Math.max(views, 1)) * 100 : 0;
+        const engagementRate = totalViews > 0 ? (totalLikes / Math.max(totalViews, 1)) * 100 : 0;
         const recencyBonus = Math.max(0, 10 - (now.getTime() - new Date(artwork.created_at).getTime()) / (24 * 60 * 60 * 1000));
-        const trendingScore = Math.floor(engagementRate + recencyBonus + (likes * 2) + (views * 0.1));
+        const trendingScore = Math.floor(engagementRate + recencyBonus + (totalLikes * 2) + (totalViews * 0.1));
         
         // Simulate trending change (in real app, compare to previous period)
         const trendingChange = Math.floor((Math.random() - 0.3) * 100);
@@ -130,7 +127,7 @@ const TrendingAlgorithm = () => {
           type: artwork.media_type,
           views: totalViews,
           likes: totalLikes,
-          shares: Math.floor(totalLikes * 0.1), // Estimate shares
+          shares: Math.floor(totalLikes * 0.1),
           trendingScore,
           trendingChange,
           timeframe: selectedTimeframe,
