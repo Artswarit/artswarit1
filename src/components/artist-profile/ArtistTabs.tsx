@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import ArtworkCardModern from "./ArtworkCardModern";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Star, MapPin, Mail } from "lucide-react";
+import { Star, MapPin, Mail, IndianRupee } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,25 +27,26 @@ interface AboutDetails {
   reviewCount: number;
 }
 
+interface ServiceItem {
+  id: string;
+  title: string;
+  description: string | null;
+  starting_price: number | null;
+}
+
 interface ArtistTabsProps {
   allArt: GalleryArtwork[];
   premiumArt: GalleryArtwork[];
   exclusiveArt: GalleryArtwork[];
   pinnedIds?: string[];
   aboutDetails?: AboutDetails;
+  services?: ServiceItem[];
   onArtworkClick?: (art: GalleryArtwork) => void;
 }
 
 const PAGE_SIZE = 6;
 
 const ART_TABS = ["all", "premium", "exclusive"];
-const NAV_TABS = [...ART_TABS, "services", "about"];
-
-
-/**
- * Services are not stored in the database yet.
- * Show the request form without any mock service cards.
- */
 
 const ArtistTabs: React.FC<ArtistTabsProps> = ({
   allArt,
@@ -53,6 +54,7 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
   exclusiveArt,
   pinnedIds = [],
   aboutDetails,
+  services = [],
   onArtworkClick,
 }) => {
   const [tab, setTab] = useState("all");
@@ -68,13 +70,12 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
     allWithPinnedFirst = [...pinned, ...unpinned];
   }
 
-  const displayed = {
+  const displayed: Record<string, GalleryArtwork[]> = {
     all: allWithPinnedFirst || [],
     premium: premiumArt || [],
     exclusive: exclusiveArt || [],
   };
 
-  // Only compute paged and hasMore for artworks tabs
   const isArtTab = ART_TABS.includes(tab);
   const paged = isArtTab && displayed[tab] ? displayed[tab].slice(0, PAGE_SIZE * page) : [];
   const hasMore = isArtTab && displayed[tab] && displayed[tab].length > PAGE_SIZE * page;
@@ -86,7 +87,7 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
     budget: "",
   }});
 
-  const submitRequest = (data: any) => {
+  const submitRequest = () => {
     toast({
       title: "Project request sent!",
       description: "The artist will be notified of your interest.",
@@ -146,9 +147,34 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
                 Services & Project Request
               </h3>
 
-              <div className="mb-7 rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
-                This artist hasn’t listed fixed services yet. Send a project request below.
-              </div>
+              {services.length === 0 ? (
+                <div className="mb-7 rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
+                  This artist hasn't listed fixed services yet. Send a project request below.
+                </div>
+              ) : (
+                <div className="grid gap-4 mb-7">
+                  {services.map((service) => (
+                    <div
+                      key={service.id}
+                      className="p-4 rounded-xl border bg-white/60 shadow flex flex-col md:flex-row justify-between items-start md:items-center"
+                    >
+                      <div>
+                        <div className="text-lg font-semibold text-gray-900">{service.title}</div>
+                        {service.description && (
+                          <div className="text-gray-700">{service.description}</div>
+                        )}
+                      </div>
+                      {service.starting_price !== null && (
+                        <div className="font-semibold text-amber-700 mt-2 md:mt-0 md:ml-4 flex items-center gap-0.5">
+                          <IndianRupee className="h-4 w-4" />
+                          {service.starting_price}+
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <form onSubmit={handleSubmit(submitRequest)} className="bg-white/80 rounded-xl p-6 shadow space-y-4">
                 <div>
                   <label className="font-medium text-gray-700 block mb-1">Project Title</label>
@@ -174,28 +200,22 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
             </div>
           )}
 
-          {/* Expanded "About" tab details with more info and top review */}
+          {/* Expanded "About" tab details */}
           {tab === "about" && aboutDetails && (
             <div className="my-8 px-2 max-w-xl mx-auto">
               <h3 className="font-bold text-xl text-purple-900 mb-2">
                 {aboutDetails.artist.name}
               </h3>
 
-              {/* Key profile info */}
               <div className="flex flex-col gap-2 mb-4 text-[15px]">
                 <div className="flex items-center gap-2 text-gray-600">
                   <MapPin size={18} className="text-purple-400" />
-                  <span>
-                    {aboutDetails.artist.location || "Location not specified"}
-                  </span>
+                  <span>{aboutDetails.artist.location || "Location not specified"}</span>
                 </div>
                 {aboutDetails.artist.email && (
                   <div className="flex items-center gap-2 text-gray-600">
                     <Mail size={18} className="text-blue-400" />
-                    <a 
-                      href={`mailto:${aboutDetails.artist.email}`}
-                      className="hover:underline"
-                    >
+                    <a href={`mailto:${aboutDetails.artist.email}`} className="hover:underline">
                       {aboutDetails.artist.email}
                     </a>
                   </div>
@@ -206,7 +226,8 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
                     <a
                       href={aboutDetails.artist.website}
                       className="text-blue-700 hover:underline"
-                      target="_blank" rel="noopener noreferrer"
+                      target="_blank"
+                      rel="noopener noreferrer"
                     >
                       {aboutDetails.artist.website}
                     </a>
@@ -214,40 +235,31 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
                 )}
               </div>
 
-              {/* Bio */}
               <div className="mb-3">
                 <span className="font-semibold text-gray-700 mr-2">Bio:</span>
                 <span className="text-gray-800">{aboutDetails.artist.bio || "No bio available."}</span>
               </div>
 
-              {/* Projects, rating, review count - show real data or hide if zero */}
               <div className="flex flex-wrap gap-x-7 gap-y-1 mb-4">
                 <div>
                   <span className="font-semibold text-gray-700">Projects Done: </span>
-                  <span className="text-purple-900 font-bold">
-                    {aboutDetails.projectsCount}
-                  </span>
+                  <span className="text-purple-900 font-bold">{aboutDetails.projectsCount}</span>
                 </div>
                 {aboutDetails.avgRating > 0 && (
                   <div className="flex items-center gap-1">
                     <span className="font-semibold text-gray-700">Avg. Rating:</span>
-                    <span className="text-yellow-600 font-bold">
-                      {aboutDetails.avgRating.toFixed(1)}
-                    </span>
+                    <span className="text-yellow-600 font-bold">{aboutDetails.avgRating.toFixed(1)}</span>
                     <Star className="text-yellow-400 fill-yellow-400" size={20} />
                   </div>
                 )}
                 <div>
                   <span className="font-semibold text-gray-700">Reviews:</span>
-                  <span className="ml-1 font-bold">
-                    {aboutDetails.reviewCount}
-                  </span>
+                  <span className="ml-1 font-bold">{aboutDetails.reviewCount}</span>
                 </div>
               </div>
 
               <hr className="my-4" />
 
-              {/* Show message when no reviews exist */}
               {aboutDetails.reviewCount === 0 ? (
                 <div className="mb-5">
                   <h4 className="font-semibold text-lg mb-1 text-purple-900">Client Reviews</h4>
@@ -272,4 +284,5 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
 };
 
 export default ArtistTabs;
+
 

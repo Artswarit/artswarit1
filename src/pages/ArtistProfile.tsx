@@ -98,6 +98,7 @@ export default function ArtistProfile() {
     return demoArtist;
   });
 
+  const [artistServices, setArtistServices] = useState<any[]>([]);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState<number>(
     profileState?.followers || 0
@@ -138,8 +139,8 @@ export default function ArtistProfile() {
       try {
         setLoading(true);
         
-        // Fetch artist info from public_users view (accessible without RLS), artworks, and followers in parallel
-        const [artistResult, artworksResult, followersResult] = await Promise.all([
+        // Fetch artist info from public_users view (accessible without RLS), artworks, followers, and services in parallel
+        const [artistResult, artworksResult, followersResult, servicesResult] = await Promise.all([
           supabase
             .from('public_users')
             .select('*')
@@ -154,12 +155,18 @@ export default function ArtistProfile() {
           supabase
             .from('follows')
             .select('id')
-            .eq('following_id', id)
+            .eq('following_id', id),
+          supabase
+            .from('artist_services')
+            .select('*')
+            .eq('artist_id', id)
+            .order('created_at', { ascending: false })
         ]);
 
         const artistData = artistResult.data;
         const artworksData = artworksResult.data || [];
         const followersData = followersResult.data || [];
+        const servicesData = servicesResult.data || [];
 
         // Get all artwork IDs to fetch likes
         const artworkIds = artworksData.map(a => a.id);
@@ -237,6 +244,7 @@ export default function ArtistProfile() {
 
         setProfileState(artistProfile);
         setFollowersCount(followersData.length);
+        setArtistServices(servicesData);
       } catch (err) {
         console.error('Error fetching artist profile:', err);
         setProfileState(null);
@@ -628,6 +636,7 @@ export default function ArtistProfile() {
               avgRating: 0,
               reviewCount: 0,
             }}
+            services={artistServices}
             onArtworkClick={handleArtworkClick}
           />
         </GlassCard>
