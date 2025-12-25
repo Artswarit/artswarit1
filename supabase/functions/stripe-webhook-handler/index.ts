@@ -1,9 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
 }
 
 serve(async (req) => {
@@ -13,6 +14,22 @@ serve(async (req) => {
   }
 
   try {
+    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')
+    const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')
+    
+    if (!stripeSecretKey || !webhookSecret) {
+      console.error('Missing Stripe configuration')
+      return new Response(
+        JSON.stringify({ error: 'Stripe not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const stripe = new Stripe(stripeSecretKey, {
+      apiVersion: '2023-10-16',
+      httpClient: Stripe.createFetchHttpClient(),
+    })
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -21,14 +38,30 @@ serve(async (req) => {
     const body = await req.text()
     const signature = req.headers.get('stripe-signature')
 
-    // In a real implementation, verify the webhook signature here
-    // const event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
+    if (!signature) {
+      console.error('Missing stripe-signature header')
+      return new Response(
+        JSON.stringify({ error: 'Missing signature' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
-    // For now, parse the body as JSON
-    const event = JSON.parse(body)
+    // Verify webhook signature
+    let event: Stripe.Event
+    try {
+      event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret)
+    } catch (err) {
+      console.error('Webhook signature verification failed:', err.message)
+      return new Response(
+        JSON.stringify({ error: 'Invalid signature' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    console.log('Verified webhook event:', event.type)
 
     if (event.type === 'checkout.session.completed') {
-      const session = event.data.object
+      const session = event.data.object as Stripe.Checkout.Session
       const paymentIntentId = session.payment_intent || session.id
 
       // Update transaction status to success
