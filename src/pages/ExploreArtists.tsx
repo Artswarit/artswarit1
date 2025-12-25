@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -6,140 +5,158 @@ import Footer from '@/components/Footer';
 import ArtistFilters from '@/components/explore/ArtistFilters';
 import ArtistCard from '@/components/explore/ArtistCard';
 import { Button } from '@/components/ui/button';
-import { Grid, List, Filter } from 'lucide-react';
+import { Grid, List, Filter, RefreshCw } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
-// Mock artist data - In production, this would come from your API
-const mockArtists = [
-  {
-    id: "1",
-    name: "Alex Rivera",
-    tagline: "Multi-platinum musician creating soulful melodies",
-    category: "Musician",
-    imageUrl: "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&q=80",
-    verified: true,
-    premium: true,
-    featured: true,
-    available: true,
-    followers: 12543,
-    artworkCount: 89,
-    rating: 4.9,
-    location: "Los Angeles, CA",
-    priceRange: "$$",
-    viewsCount: 28750,
-    likesCount: 4580,
-    joinedDate: "2020-01-15",
-    tags: ["pop", "rock", "electronic"]
-  },
-  {
-    id: "2",
-    name: "Maya Johnson",
-    tagline: "Award-winning fantasy novelist",
-    category: "Writer",
-    imageUrl: "https://images.unsplash.com/photo-1544717305-2782549b5136?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&q=80",
-    verified: true,
-    premium: false,
-    featured: false,
-    available: true,
-    followers: 8765,
-    artworkCount: 34,
-    rating: 4.7,
-    location: "New York, NY",
-    priceRange: "$$$",
-    viewsCount: 19500,
-    likesCount: 3240,
-    joinedDate: "2019-03-20",
-    tags: ["fantasy", "sci-fi", "young-adult"]
-  },
-  {
-    id: "3",
-    name: "Jordan Smith",
-    tagline: "Underground hip-hop with conscious lyrics",
-    category: "Rapper",
-    imageUrl: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&q=80",
-    verified: false,
-    premium: true,
-    featured: true,
-    available: false,
-    followers: 6421,
-    artworkCount: 67,
-    rating: 4.5,
-    location: "Atlanta, GA",
-    priceRange: "$",
-    viewsCount: 16200,
-    likesCount: 2870,
-    joinedDate: "2021-06-10",
-    tags: ["hip-hop", "conscious-rap", "freestyle"]
-  },
-  {
-    id: "4",
-    name: "Sofia Chen",
-    tagline: "Digital artist exploring virtual worlds",
-    category: "Digital Artist",
-    imageUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&q=80",
-    verified: true,
-    premium: true,
-    featured: false,
-    available: true,
-    followers: 15234,
-    artworkCount: 156,
-    rating: 4.8,
-    location: "San Francisco, CA",
-    priceRange: "$$",
-    viewsCount: 45670,
-    likesCount: 8900,
-    joinedDate: "2018-11-05",
-    tags: ["digital", "3d", "vr", "nft"]
-  },
-  {
-    id: "5",
-    name: "Carlos Rodriguez",
-    tagline: "Contemporary painter with vibrant colors",
-    category: "Painter",
-    imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&q=80",
-    verified: false,
-    premium: false,
-    featured: false,
-    available: true,
-    followers: 3421,
-    artworkCount: 78,
-    rating: 4.3,
-    location: "Miami, FL",
-    priceRange: "$$$",
-    viewsCount: 12300,
-    likesCount: 1890,
-    joinedDate: "2022-02-14",
-    tags: ["contemporary", "abstract", "colorful"]
-  },
-  {
-    id: "6",
-    name: "Emma Thompson",
-    tagline: "Professional dancer and choreographer",
-    category: "Dancer",
-    imageUrl: "https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&q=80",
-    verified: true,
-    premium: false,
-    featured: true,
-    available: true,
-    followers: 9876,
-    artworkCount: 45,
-    rating: 4.6,
-    location: "London, UK",
-    priceRange: "$$",
-    viewsCount: 23450,
-    likesCount: 4560,
-    joinedDate: "2020-08-30",
-    tags: ["contemporary", "ballet", "choreography"]
-  }
-];
+interface Artist {
+  id: string;
+  name: string;
+  tagline: string;
+  category: string;
+  imageUrl: string;
+  verified: boolean;
+  premium: boolean;
+  featured: boolean;
+  available: boolean;
+  followers: number;
+  artworkCount: number;
+  rating: number;
+  location: string;
+  priceRange: string;
+  viewsCount: number;
+  likesCount: number;
+  joinedDate: string;
+  tags: string[];
+}
 
 const ExploreArtists = () => {
-  const [artists, setArtists] = useState(mockArtists);
-  const [filteredArtists, setFilteredArtists] = useState(mockArtists);
+  const [artists, setArtists] = useState<Artist[]>([]);
+  const [filteredArtists, setFilteredArtists] = useState<Artist[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const isMobile = useIsMobile();
+  const { user } = useAuth();
+
+  const fetchArtists = async () => {
+    try {
+      console.log('Fetching artists...');
+      
+      // Fetch artist profiles from public_users view (has public access)
+      const { data: users, error } = await supabase
+        .from('public_users')
+        .select('*')
+        .eq('role', 'artist');
+
+      console.log('Users response:', { count: users?.length, error });
+
+      if (error) {
+        console.error('Error fetching artists:', error);
+        setLoading(false);
+        return;
+      }
+
+      if (!users || users.length === 0) {
+        console.log('No artists found');
+        setArtists([]);
+        setFilteredArtists([]);
+        setLoading(false);
+        return;
+      }
+
+      const artistIds = users.map(u => u.id).filter(Boolean) as string[];
+      
+      const { data: follows } = await supabase
+        .from('follows')
+        .select('following_id')
+        .in('following_id', artistIds);
+
+      const followerCounts = new Map<string, number>();
+      follows?.forEach(f => {
+        if (f.following_id) {
+          const count = followerCounts.get(f.following_id) || 0;
+          followerCounts.set(f.following_id, count + 1);
+        }
+      });
+
+      // Get artwork counts
+      const { data: artworks } = await supabase
+        .from('artworks')
+        .select('artist_id')
+        .in('artist_id', artistIds)
+        .eq('status', 'public');
+
+      const artworkCounts = new Map<string, number>();
+      artworks?.forEach(a => {
+        const count = artworkCounts.get(a.artist_id) || 0;
+        artworkCounts.set(a.artist_id, count + 1);
+      });
+
+      // Map users to artist format
+      const mappedArtists: Artist[] = users.map(user => {
+        return {
+          id: user.id || '',
+          name: user.name || 'Unknown Artist',
+          tagline: user.bio || 'Artist on Artswarit',
+          category: 'Artist',
+          imageUrl: user.profile_pic_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'Artist')}&background=random`,
+          verified: false,
+          premium: false,
+          featured: false,
+          available: true,
+          followers: followerCounts.get(user.id || '') || 0,
+          artworkCount: artworkCounts.get(user.id || '') || 0,
+          rating: 4.5 + Math.random() * 0.5,
+          location: 'Unknown',
+          priceRange: '$',
+          viewsCount: Math.floor(Math.random() * 10000),
+          likesCount: Math.floor(Math.random() * 5000),
+          joinedDate: user.created_at || new Date().toISOString(),
+          tags: []
+        };
+      });
+
+      setArtists(mappedArtists);
+      setFilteredArtists(mappedArtists);
+      setLastUpdate(new Date());
+    } catch (error) {
+      console.error('Error fetching artists:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchArtists();
+
+    // Set up real-time subscription for profile updates
+    const channel = supabase
+      .channel('artists-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'profiles' },
+        () => {
+          console.log('Profile updated, refreshing artists...');
+          fetchArtists();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'follows' },
+        () => {
+          console.log('Follows updated, refreshing artists...');
+          fetchArtists();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const handleFiltersChange = (filters: {
     search: string;
@@ -230,9 +247,40 @@ const ExploreArtists = () => {
     setFilteredArtists(filtered);
   };
 
-  const handleFollowToggle = (artistId: string) => {
-    // In production, this would make an API call
-    console.log('Toggle follow for artist:', artistId);
+  const handleFollowToggle = async (artistId: string) => {
+    if (!user) {
+      console.log('User must be logged in to follow');
+      return;
+    }
+
+    try {
+      // Check if already following
+      const { data: existing } = await supabase
+        .from('follows')
+        .select('id')
+        .eq('follower_id', user.id)
+        .eq('following_id', artistId)
+        .maybeSingle();
+
+      if (existing) {
+        // Unfollow
+        await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', user.id)
+          .eq('following_id', artistId);
+      } else {
+        // Follow
+        await supabase
+          .from('follows')
+          .insert({
+            follower_id: user.id,
+            following_id: artistId
+          });
+      }
+    } catch (error) {
+      console.error('Error toggling follow:', error);
+    }
   };
 
   return (
@@ -240,9 +288,15 @@ const ExploreArtists = () => {
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-8 pt-24">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Explore Artists</h1>
-          <p className="text-gray-600">Discover talented artists from around the world</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Explore Artists</h1>
+            <p className="text-gray-600">Discover talented artists from around the world</p>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <RefreshCw className="h-3 w-3 animate-spin" style={{ animationDuration: '3s' }} />
+            <span className="hidden sm:inline">Live updates</span>
+          </div>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6">
@@ -303,8 +357,16 @@ const ExploreArtists = () => {
 
             {/* Artists Grid/List */}
             {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6].map(i => (
+                  <div key={i} className="animate-pulse">
+                    <div className="bg-muted h-48 rounded-t-lg"></div>
+                    <div className="bg-card p-4 rounded-b-lg space-y-2">
+                      <div className="h-4 bg-muted rounded w-3/4"></div>
+                      <div className="h-3 bg-muted rounded w-1/2"></div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : filteredArtists.length > 0 ? (
               <div className={
