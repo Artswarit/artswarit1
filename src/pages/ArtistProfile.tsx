@@ -624,9 +624,9 @@ export default function ArtistProfile() {
             pinnedIds={pinnedIds}
             aboutDetails={{
               artist: profileState,
-              projectsCount: 19,
-              avgRating: 4.7,
-              reviewCount: 12,
+              projectsCount: 0,
+              avgRating: 0,
+              reviewCount: 0,
             }}
             onArtworkClick={handleArtworkClick}
           />

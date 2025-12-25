@@ -41,23 +41,11 @@ const PAGE_SIZE = 6;
 const ART_TABS = ["all", "premium", "exclusive"];
 const NAV_TABS = [...ART_TABS, "services", "about"];
 
-const demoServices = [
-  {
-    title: "Custom Artwork",
-    description: "Commission a unique piece tailored to your vision.",
-    price: "₹3500+",
-  },
-  {
-    title: "Album Cover Design",
-    description: "Creative visuals for music albums or singles.",
-    price: "₹5000+",
-  },
-  {
-    title: "Event Performance",
-    description: "Book the artist for live performances at your event.",
-    price: "Contact for details",
-  },
-];
+
+/**
+ * Services are not stored in the database yet.
+ * Show the request form without any mock service cards.
+ */
 
 const ArtistTabs: React.FC<ArtistTabsProps> = ({
   allArt,
@@ -157,16 +145,9 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
                 <Mail className="text-purple-500" size={22} />
                 Services & Project Request
               </h3>
-              <div className="grid gap-4 mb-7">
-                {demoServices.map((service, i) => (
-                  <div key={i} className="p-4 rounded-xl border bg-white/60 shadow flex flex-col md:flex-row justify-between items-start md:items-center">
-                    <div>
-                      <div className="text-lg font-semibold text-gray-900">{service.title}</div>
-                      <div className="text-gray-700">{service.description}</div>
-                    </div>
-                    <div className="font-semibold text-amber-700 mt-2 md:mt-0 md:ml-4">{service.price}</div>
-                  </div>
-                ))}
+
+              <div className="mb-7 rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
+                This artist hasn’t listed fixed services yet. Send a project request below.
               </div>
               <form onSubmit={handleSubmit(submitRequest)} className="bg-white/80 rounded-xl p-6 shadow space-y-4">
                 <div>
