@@ -1,90 +1,171 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Star, MessageSquare } from "lucide-react";
+import { Star, MessageSquare, Loader2 } from "lucide-react";
 
-interface CompletedProject {
+const reviewSchema = z.object({
+  rating: z.number().min(1).max(5),
+  reviewText: z.string().max(1000).optional(),
+});
+
+interface Project {
   id: string;
   title: string;
-  artistName: string;
-  artistAvatar: string;
-  completedDate: string;
-  deliverables: string[];
-  rating?: number;
-  review?: string;
-  hasRated: boolean;
+  status: string | null;
+  artist_id: string | null;
+  client_id: string | null;
+  created_at: string;
+  artistName?: string;
+  artistAvatar?: string;
+}
+
+interface Review {
+  id: string;
+  project_id: string;
+  rating: number;
+  review_text: string | null;
+  created_at: string;
+  project?: { title: string };
+  artistName?: string;
+  artistAvatar?: string;
 }
 
 const ProjectRating = () => {
-  const [completedProjects, setCompletedProjects] = useState<CompletedProject[]>([
-    {
-      id: "p1",
-      title: "Logo Design",
-      artistName: "Taylor Reed",
-      artistAvatar: "https://images.unsplash.com/photo-1573496358961-3c82861ab8f4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=688&q=80",
-      completedDate: "2025-05-10",
-      deliverables: ["Final Logo Files", "Brand Guidelines", "Color Variations"],
-      rating: 5,
-      review: "Excellent work! Taylor delivered exactly what I was looking for and more. Great communication throughout the project.",
-      hasRated: true
-    },
-    {
-      id: "p2",
-      title: "Podcast Intro Music",
-      artistName: "Alex Rivera",
-      artistAvatar: "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
-      completedDate: "2025-05-15",
-      deliverables: ["30-second Intro", "15-second Version", "Instrumental Version"],
-      hasRated: false
-    },
-    {
-      id: "p3",
-      title: "Website Content Writing",
-      artistName: "Maya Johnson",
-      artistAvatar: "https://images.unsplash.com/photo-1544717305-2782549b5136?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
-      completedDate: "2025-05-20",
-      deliverables: ["Home Page Copy", "About Page", "Service Descriptions"],
-      hasRated: false
-    }
-  ]);
+  const { user } = useAuth();
+  const { toast } = useToast();
 
-  const [selectedProject, setSelectedProject] = useState<CompletedProject | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [completedProjects, setCompletedProjects] = useState<Project[]>([]);
+  const [myReviews, setMyReviews] = useState<Review[]>([]);
+  const [reviewedProjectIds, setReviewedProjectIds] = useState<Set<string>>(new Set());
+
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [review, setReview] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmitRating = () => {
-    if (!selectedProject || rating === 0) return;
+  const fetchData = async () => {
+    if (!user?.id) return;
+    setLoading(true);
 
-    setCompletedProjects(prev => 
-      prev.map(project => 
-        project.id === selectedProject.id 
-          ? { ...project, rating, review, hasRated: true }
-          : project
-      )
-    );
+    // Fetch completed projects for this client
+    const { data: projects, error: projError } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("client_id", user.id)
+      .eq("status", "completed")
+      .order("created_at", { ascending: false });
 
-    console.log("Rating submitted:", { projectId: selectedProject.id, rating, review });
-    setSelectedProject(null);
-    setRating(0);
-    setHoverRating(0);
-    setReview("");
+    if (projError) {
+      console.error("Error fetching projects:", projError);
+    }
+
+    // Fetch reviews by this client
+    const { data: reviews, error: revError } = await supabase
+      .from("project_reviews")
+      .select("*")
+      .eq("client_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (revError) {
+      console.error("Error fetching reviews:", revError);
+    }
+
+    const reviewedIds = new Set((reviews || []).map((r) => r.project_id));
+    setReviewedProjectIds(reviewedIds);
+
+    // Enrich projects with artist info
+    const enrichedProjects: Project[] = [];
+    for (const proj of projects || []) {
+      if (proj.artist_id) {
+        const { data: artist } = await supabase
+          .from("public_profiles")
+          .select("full_name, avatar_url")
+          .eq("id", proj.artist_id)
+          .maybeSingle();
+
+        enrichedProjects.push({
+          ...proj,
+          artistName: artist?.full_name || "Unknown Artist",
+          artistAvatar: artist?.avatar_url || undefined,
+        });
+      } else {
+        enrichedProjects.push(proj);
+      }
+    }
+
+    // Enrich reviews with project/artist info
+    const enrichedReviews: Review[] = [];
+    for (const rev of reviews || []) {
+      const project = enrichedProjects.find((p) => p.id === rev.project_id);
+      enrichedReviews.push({
+        ...rev,
+        project: project ? { title: project.title } : undefined,
+        artistName: project?.artistName,
+        artistAvatar: project?.artistAvatar,
+      });
+    }
+
+    setCompletedProjects(enrichedProjects);
+    setMyReviews(enrichedReviews);
+    setLoading(false);
   };
 
-  const renderStars = (currentRating: number, interactive: boolean = false) => {
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  const handleSubmitRating = async () => {
+    if (!selectedProject || !user?.id) return;
+
+    const validation = reviewSchema.safeParse({ rating, reviewText: review.trim() || undefined });
+    if (!validation.success) {
+      toast({ variant: "destructive", title: "Please select a rating (1-5)" });
+      return;
+    }
+
+    setSubmitting(true);
+
+    const { error } = await supabase.from("project_reviews").insert({
+      project_id: selectedProject.id,
+      artist_id: selectedProject.artist_id,
+      client_id: user.id,
+      rating,
+      review_text: review.trim() || null,
+    });
+
+    if (error) {
+      toast({ variant: "destructive", title: "Failed to submit review", description: error.message });
+    } else {
+      toast({ title: "Review submitted!" });
+      setDialogOpen(false);
+      setSelectedProject(null);
+      setRating(0);
+      setHoverRating(0);
+      setReview("");
+      fetchData();
+    }
+    setSubmitting(false);
+  };
+
+  const renderStars = (currentRating: number, interactive = false) => {
     return Array.from({ length: 5 }, (_, index) => (
       <Star
         key={index}
-        className={`h-5 w-5 ${
-          interactive ? 'cursor-pointer' : ''
-        } ${
-          index < (interactive ? (hoverRating || rating) : currentRating)
-            ? 'fill-yellow-400 text-yellow-400'
-            : 'fill-gray-200 text-gray-200'
+        className={`h-5 w-5 ${interactive ? "cursor-pointer" : ""} ${
+          index < (interactive ? hoverRating || rating : currentRating)
+            ? "fill-yellow-400 text-yellow-400"
+            : "fill-gray-200 text-gray-200"
         }`}
         onClick={interactive ? () => setRating(index + 1) : undefined}
         onMouseEnter={interactive ? () => setHoverRating(index + 1) : undefined}
@@ -93,8 +174,15 @@ const ProjectRating = () => {
     ));
   };
 
-  const unratedProjects = completedProjects.filter(p => !p.hasRated);
-  const ratedProjects = completedProjects.filter(p => p.hasRated);
+  const unratedProjects = completedProjects.filter((p) => !reviewedProjectIds.has(p.id));
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-16">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -110,102 +198,36 @@ const ProjectRating = () => {
             <h3 className="text-lg font-medium">Pending Reviews</h3>
             <Badge className="bg-orange-100 text-orange-800">{unratedProjects.length}</Badge>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {unratedProjects.map((project) => (
               <Card key={project.id} className="border border-orange-200 bg-orange-50/30">
                 <CardHeader className="pb-3">
                   <div className="flex items-center gap-3">
                     <img
-                      src={project.artistAvatar}
-                      alt={project.artistName}
+                      src={project.artistAvatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50"}
+                      alt={project.artistName || "Artist"}
                       className="w-10 h-10 rounded-full object-cover"
                     />
                     <div className="flex-1">
                       <CardTitle className="text-base">{project.title}</CardTitle>
-                      <CardDescription>by {project.artistName}</CardDescription>
+                      <CardDescription>by {project.artistName || "Unknown"}</CardDescription>
                     </div>
                     <Badge variant="outline">Completed</Badge>
                   </div>
                 </CardHeader>
-                
+
                 <CardContent className="space-y-3">
-                  <div className="text-sm text-muted-foreground">
-                    Completed on {new Date(project.completedDate).toLocaleDateString()}
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm font-medium mb-1">Deliverables:</p>
-                    <ul className="text-sm text-muted-foreground space-y-1">
-                      {project.deliverables.map((item, idx) => (
-                        <li key={idx} className="flex items-center gap-2">
-                          <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button 
-                        className="w-full bg-gradient-to-r from-artswarit-purple to-blue-500"
-                        onClick={() => setSelectedProject(project)}
-                      >
-                        <Star className="h-4 w-4 mr-2" />
-                        Rate & Review
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Rate Your Experience</DialogTitle>
-                        <DialogDescription>
-                          How was your experience working with {selectedProject?.artistName} on "{selectedProject?.title}"?
-                        </DialogDescription>
-                      </DialogHeader>
-                      
-                      <div className="space-y-4">
-                        <div className="text-center">
-                          <p className="text-sm font-medium mb-2">Overall Rating</p>
-                          <div className="flex justify-center gap-1">
-                            {renderStars(rating, true)}
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {rating > 0 && (
-                              rating === 1 ? "Poor" :
-                              rating === 2 ? "Fair" :
-                              rating === 3 ? "Good" :
-                              rating === 4 ? "Very Good" : "Excellent"
-                            )}
-                          </p>
-                        </div>
-                        
-                        <div>
-                          <label className="text-sm font-medium">Write a Review (Optional)</label>
-                          <Textarea
-                            value={review}
-                            onChange={(e) => setReview(e.target.value)}
-                            placeholder="Share your experience working with this artist..."
-                            className="mt-1"
-                            rows={3}
-                          />
-                        </div>
-                      </div>
-
-                      <DialogFooter>
-                        <Button variant="outline" onClick={() => setSelectedProject(null)}>
-                          Cancel
-                        </Button>
-                        <Button 
-                          onClick={handleSubmitRating}
-                          disabled={rating === 0}
-                          className="bg-gradient-to-r from-artswarit-purple to-blue-500"
-                        >
-                          Submit Rating
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                  <Button
+                    className="w-full bg-gradient-to-r from-artswarit-purple to-blue-500"
+                    onClick={() => {
+                      setSelectedProject(project);
+                      setDialogOpen(true);
+                    }}
+                  >
+                    <Star className="h-4 w-4 mr-2" />
+                    Rate & Review
+                  </Button>
                 </CardContent>
               </Card>
             ))}
@@ -213,49 +235,45 @@ const ProjectRating = () => {
         </div>
       )}
 
-      {/* Completed Ratings */}
-      {ratedProjects.length > 0 && (
+      {/* My Reviews */}
+      {myReviews.length > 0 && (
         <div className="space-y-4">
           <h3 className="text-lg font-medium">Your Reviews</h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {ratedProjects.map((project) => (
-              <Card key={project.id}>
+            {myReviews.map((rev) => (
+              <Card key={rev.id}>
                 <CardHeader className="pb-3">
                   <div className="flex items-center gap-3">
                     <img
-                      src={project.artistAvatar}
-                      alt={project.artistName}
+                      src={rev.artistAvatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50"}
+                      alt={rev.artistName || "Artist"}
                       className="w-10 h-10 rounded-full object-cover"
                     />
                     <div className="flex-1">
-                      <CardTitle className="text-base">{project.title}</CardTitle>
-                      <CardDescription>by {project.artistName}</CardDescription>
+                      <CardTitle className="text-base">{rev.project?.title || "Project"}</CardTitle>
+                      <CardDescription>by {rev.artistName || "Unknown"}</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
-                
+
                 <CardContent className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <div className="flex gap-1">
-                      {renderStars(project.rating || 0)}
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      ({project.rating}/5)
-                    </span>
+                    <div className="flex gap-1">{renderStars(rev.rating)}</div>
+                    <span className="text-sm text-muted-foreground">({rev.rating}/5)</span>
                   </div>
-                  
-                  {project.review && (
+
+                  {rev.review_text && (
                     <div className="bg-gray-50 p-3 rounded-lg">
                       <div className="flex items-start gap-2">
                         <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                        <p className="text-sm">{project.review}</p>
+                        <p className="text-sm">{rev.review_text}</p>
                       </div>
                     </div>
                   )}
-                  
+
                   <div className="text-xs text-muted-foreground">
-                    Reviewed on {new Date(project.completedDate).toLocaleDateString()}
+                    Reviewed on {new Date(rev.created_at).toLocaleDateString()}
                   </div>
                 </CardContent>
               </Card>
@@ -264,13 +282,70 @@ const ProjectRating = () => {
         </div>
       )}
 
-      {completedProjects.length === 0 && (
+      {completedProjects.length === 0 && myReviews.length === 0 && (
         <div className="text-center py-16 bg-gray-50 rounded-lg border border-dashed">
           <Star className="mx-auto h-12 w-12 text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-600 mb-2">No completed projects yet</h3>
           <p className="text-muted-foreground">Complete projects to rate and review artists</p>
         </div>
       )}
+
+      {/* Rating Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rate Your Experience</DialogTitle>
+            <DialogDescription>
+              How was your experience working with {selectedProject?.artistName} on "{selectedProject?.title}"?
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="text-center">
+              <p className="text-sm font-medium mb-2">Overall Rating</p>
+              <div className="flex justify-center gap-1">{renderStars(rating, true)}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {rating > 0 &&
+                  (rating === 1
+                    ? "Poor"
+                    : rating === 2
+                    ? "Fair"
+                    : rating === 3
+                    ? "Good"
+                    : rating === 4
+                    ? "Very Good"
+                    : "Excellent")}
+              </p>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Write a Review (Optional)</label>
+              <Textarea
+                value={review}
+                onChange={(e) => setReview(e.target.value)}
+                placeholder="Share your experience working with this artist..."
+                className="mt-1"
+                rows={3}
+                maxLength={1000}
+              />
+              <p className="text-xs text-muted-foreground mt-1">{review.length}/1000 characters</p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={submitting}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmitRating}
+              disabled={rating === 0 || submitting}
+              className="bg-gradient-to-r from-artswarit-purple to-blue-500"
+            >
+              {submitting ? "Submitting..." : "Submit Rating"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
