@@ -1,7 +1,8 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -9,28 +10,63 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import LogoWithName from "@/components/LogoWithName";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { signIn, signInWithGoogle, loading } = useAuth();
+  const { signIn, signInWithGoogle, loading, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    const { error } = await signIn(email, password);
-    if (!error) {
-      navigate("/");
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      redirectBasedOnRole();
+    }
+  }, [user]);
+
+  const redirectBasedOnRole = async () => {
+    if (!user) return;
+    
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.role === 'artist' || profile?.role === 'premium') {
+        navigate('/artist-dashboard');
+      } else if (profile?.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/client-dashboard');
+      }
+    } catch (error) {
+      // Default to home if profile fetch fails
+      navigate('/');
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    const { error } = await signInWithGoogle();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+    
+    const { error } = await signIn(email, password);
+    
     if (!error) {
-      navigate("/");
+      // Role-based redirect will happen via useEffect when user state updates
     }
+    
+    setIsSubmitting(false);
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsSubmitting(true);
+    await signInWithGoogle();
+    setIsSubmitting(false);
   };
 
   return (
@@ -99,9 +135,16 @@ const Login = () => {
                 <Button
                   type="submit"
                   className="w-full h-11 bg-gradient-to-r from-artswarit-purple to-blue-500 hover:from-artswarit-purple-dark hover:to-blue-600 text-white font-medium"
-                  disabled={loading}
+                  disabled={loading || isSubmitting}
                 >
-                  {loading ? "Signing in..." : "Sign In"}
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    "Sign In"
+                  )}
                 </Button>
               </form>
 
@@ -119,7 +162,7 @@ const Login = () => {
               <Button
                 variant="outline"
                 onClick={handleGoogleSignIn}
-                disabled={loading}
+                disabled={loading || isSubmitting}
                 className="w-full h-11 border-gray-300 hover:bg-gray-50"
               >
                 <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
