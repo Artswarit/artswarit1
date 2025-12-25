@@ -99,6 +99,7 @@ export default function ArtistProfile() {
   });
 
   const [artistServices, setArtistServices] = useState<any[]>([]);
+  const [artistReviews, setArtistReviews] = useState<any[]>([]);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState<number>(
     profileState?.followers || 0
@@ -139,8 +140,8 @@ export default function ArtistProfile() {
       try {
         setLoading(true);
         
-        // Fetch artist info from public_users view (accessible without RLS), artworks, followers, and services in parallel
-        const [artistResult, artworksResult, followersResult, servicesResult] = await Promise.all([
+        // Fetch artist info from public_users view (accessible without RLS), artworks, followers, services, and reviews in parallel
+        const [artistResult, artworksResult, followersResult, servicesResult, reviewsResult] = await Promise.all([
           supabase
             .from('public_users')
             .select('*')
@@ -160,6 +161,11 @@ export default function ArtistProfile() {
             .from('artist_services')
             .select('*')
             .eq('artist_id', id)
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('project_reviews')
+            .select('*')
+            .eq('artist_id', id)
             .order('created_at', { ascending: false })
         ]);
 
@@ -167,6 +173,7 @@ export default function ArtistProfile() {
         const artworksData = artworksResult.data || [];
         const followersData = followersResult.data || [];
         const servicesData = servicesResult.data || [];
+        const reviewsData = reviewsResult.data || [];
 
         // Get all artwork IDs to fetch likes
         const artworkIds = artworksData.map(a => a.id);
@@ -245,6 +252,23 @@ export default function ArtistProfile() {
         setProfileState(artistProfile);
         setFollowersCount(followersData.length);
         setArtistServices(servicesData);
+
+        // Enrich reviews with client info
+        const enrichedReviews = [];
+        for (const rev of reviewsData) {
+          const { data: clientData } = await supabase
+            .from('public_profiles')
+            .select('full_name, avatar_url')
+            .eq('id', rev.client_id)
+            .maybeSingle();
+          
+          enrichedReviews.push({
+            ...rev,
+            clientName: clientData?.full_name || 'Anonymous',
+            clientAvatar: clientData?.avatar_url || null,
+          });
+        }
+        setArtistReviews(enrichedReviews);
       } catch (err) {
         console.error('Error fetching artist profile:', err);
         setProfileState(null);
@@ -637,6 +661,7 @@ export default function ArtistProfile() {
               reviewCount: 0,
             }}
             services={artistServices}
+            reviews={artistReviews}
             onArtworkClick={handleArtworkClick}
           />
         </GlassCard>

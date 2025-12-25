@@ -34,6 +34,15 @@ interface ServiceItem {
   starting_price: number | null;
 }
 
+interface ReviewItem {
+  id: string;
+  rating: number;
+  review_text: string | null;
+  created_at: string;
+  clientName: string;
+  clientAvatar: string | null;
+}
+
 interface ArtistTabsProps {
   allArt: GalleryArtwork[];
   premiumArt: GalleryArtwork[];
@@ -41,6 +50,7 @@ interface ArtistTabsProps {
   pinnedIds?: string[];
   aboutDetails?: AboutDetails;
   services?: ServiceItem[];
+  reviews?: ReviewItem[];
   onArtworkClick?: (art: GalleryArtwork) => void;
 }
 
@@ -55,6 +65,7 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
   pinnedIds = [],
   aboutDetails,
   services = [],
+  reviews = [],
   onArtworkClick,
 }) => {
   const [tab, setTab] = useState("all");
@@ -240,41 +251,82 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
                 <span className="text-gray-800">{aboutDetails.artist.bio || "No bio available."}</span>
               </div>
 
-              <div className="flex flex-wrap gap-x-7 gap-y-1 mb-4">
-                <div>
-                  <span className="font-semibold text-gray-700">Projects Done: </span>
-                  <span className="text-purple-900 font-bold">{aboutDetails.projectsCount}</span>
-                </div>
-                {aboutDetails.avgRating > 0 && (
-                  <div className="flex items-center gap-1">
-                    <span className="font-semibold text-gray-700">Avg. Rating:</span>
-                    <span className="text-yellow-600 font-bold">{aboutDetails.avgRating.toFixed(1)}</span>
-                    <Star className="text-yellow-400 fill-yellow-400" size={20} />
-                  </div>
-                )}
-                <div>
-                  <span className="font-semibold text-gray-700">Reviews:</span>
-                  <span className="ml-1 font-bold">{aboutDetails.reviewCount}</span>
-                </div>
-              </div>
+              {/* Compute stats from reviews prop */}
+              {(() => {
+                const reviewCount = reviews.length;
+                const avgRating = reviewCount > 0 
+                  ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount 
+                  : 0;
 
-              <hr className="my-4" />
+                return (
+                  <>
+                    <div className="flex flex-wrap gap-x-7 gap-y-1 mb-4">
+                      <div>
+                        <span className="font-semibold text-gray-700">Projects Done: </span>
+                        <span className="text-purple-900 font-bold">{aboutDetails.projectsCount}</span>
+                      </div>
+                      {avgRating > 0 && (
+                        <div className="flex items-center gap-1">
+                          <span className="font-semibold text-gray-700">Avg. Rating:</span>
+                          <span className="text-yellow-600 font-bold">{avgRating.toFixed(1)}</span>
+                          <Star className="text-yellow-400 fill-yellow-400" size={20} />
+                        </div>
+                      )}
+                      <div>
+                        <span className="font-semibold text-gray-700">Reviews:</span>
+                        <span className="ml-1 font-bold">{reviewCount}</span>
+                      </div>
+                    </div>
 
-              {aboutDetails.reviewCount === 0 ? (
-                <div className="mb-5">
-                  <h4 className="font-semibold text-lg mb-1 text-purple-900">Client Reviews</h4>
-                  <div className="bg-gray-50 rounded-lg px-5 py-4 border border-gray-200 text-center text-gray-500">
-                    No reviews yet. Be the first to work with this artist!
-                  </div>
-                </div>
-              ) : (
-                <div className="mb-5">
-                  <h4 className="font-semibold text-lg mb-1 text-purple-900">Client Reviews</h4>
-                  <div className="bg-purple-50 rounded-lg px-5 py-4 border border-purple-100 shadow text-center text-gray-600">
-                    Reviews coming soon
-                  </div>
-                </div>
-              )}
+                    <hr className="my-4" />
+
+                    <div className="mb-5">
+                      <h4 className="font-semibold text-lg mb-3 text-purple-900">Client Reviews</h4>
+                      {reviewCount === 0 ? (
+                        <div className="bg-gray-50 rounded-lg px-5 py-4 border border-gray-200 text-center text-gray-500">
+                          No reviews yet. Be the first to work with this artist!
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {reviews.map((rev) => (
+                            <div
+                              key={rev.id}
+                              className="bg-purple-50 rounded-lg px-5 py-4 border border-purple-100 shadow flex flex-col gap-2"
+                            >
+                              <div className="flex items-center gap-3 mb-1">
+                                <img
+                                  src={rev.clientAvatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50"}
+                                  alt={rev.clientName}
+                                  className="w-8 h-8 rounded-full object-cover"
+                                />
+                                <span className="font-semibold text-sm text-purple-700">{rev.clientName}</span>
+                                <span className="flex gap-0.5 ml-2">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <Star
+                                      key={star}
+                                      className={`w-4 h-4 ${
+                                        star <= rev.rating
+                                          ? "text-yellow-400 fill-yellow-400"
+                                          : "text-gray-300"
+                                      }`}
+                                    />
+                                  ))}
+                                </span>
+                              </div>
+                              {rev.review_text && (
+                                <p className="text-gray-700 italic">"{rev.review_text}"</p>
+                              )}
+                              <div className="text-xs text-muted-foreground mt-1">
+                                {new Date(rev.created_at).toLocaleDateString()}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           )}
         </TabsContent>
