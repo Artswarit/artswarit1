@@ -37,35 +37,29 @@ export const usePublicArtworks = () => {
     try {
       setLoading(true);
       
-      // Fetch all public artworks with artist info
-      const { data, error } = await supabase
+      // Fetch all public artworks
+      const { data: artworksData, error: artworksError } = await supabase
         .from('artworks')
-        .select(`
-          id,
-          title,
-          description,
-          category,
-          media_type,
-          media_url,
-          price,
-          status,
-          tags,
-          metadata,
-          created_at,
-          updated_at,
-          artist_id,
-          users:artist_id (
-            name,
-            email
-          )
-        `)
+        .select('*')
         .eq('status', 'public')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (artworksError) throw artworksError;
+
+      // Get unique artist IDs
+      const artistIds = [...new Set((artworksData || []).map(a => a.artist_id))];
+      
+      // Fetch artist names from public_users view (accessible without RLS)
+      const { data: artistsData } = await supabase
+        .from('public_users')
+        .select('id, name')
+        .in('id', artistIds);
+
+      // Create artist map
+      const artistMap = new Map((artistsData || []).map(a => [a.id, a.name]));
 
       // Transform data to match component expectations
-      const transformedArtworks: PublicArtwork[] = (data || []).map(artwork => ({
+      const transformedArtworks: PublicArtwork[] = (artworksData || []).map(artwork => ({
         id: artwork.id,
         title: artwork.title,
         description: artwork.description,
@@ -82,7 +76,7 @@ export const usePublicArtworks = () => {
         created_at: artwork.created_at,
         updated_at: artwork.updated_at,
         artist_id: artwork.artist_id,
-        artist: artwork.users?.name || 'Unknown Artist',
+        artist: artistMap.get(artwork.artist_id) || 'Unknown Artist',
         artistId: artwork.artist_id,
         likes: (artwork.metadata as any)?.likes_count || 0,
         views: (artwork.metadata as any)?.views_count || 0,
