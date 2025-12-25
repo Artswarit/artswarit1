@@ -163,6 +163,13 @@ export type Database = {
             foreignKeyName: "artworks_artist_id_fkey"
             columns: ["artist_id"]
             isOneToOne: false
+            referencedRelation: "public_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "artworks_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -209,6 +216,13 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_users"
             referencedColumns: ["id"]
           },
           {
@@ -303,7 +317,21 @@ export type Database = {
             foreignKeyName: "follows_follower_id_fkey"
             columns: ["follower_id"]
             isOneToOne: false
+            referencedRelation: "public_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "public_users"
             referencedColumns: ["id"]
           },
           {
@@ -444,6 +472,13 @@ export type Database = {
             foreignKeyName: "likes_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "public_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -533,6 +568,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_users"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notifications_user_id_fkey"
             columns: ["user_id"]
@@ -713,7 +755,21 @@ export type Database = {
             foreignKeyName: "reports_reporter_id_fkey"
             columns: ["reporter_id"]
             isOneToOne: false
+            referencedRelation: "public_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_users"
             referencedColumns: ["id"]
           },
           {
@@ -1007,7 +1063,21 @@ export type Database = {
             foreignKeyName: "transactions_buyer_id_fkey"
             columns: ["buyer_id"]
             isOneToOne: false
+            referencedRelation: "public_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "public_users"
             referencedColumns: ["id"]
           },
           {
@@ -1183,6 +1253,42 @@ export type Database = {
         }
         Relationships: []
       }
+      public_users: {
+        Row: {
+          bio: string | null
+          cover_photo_url: string | null
+          created_at: string | null
+          id: string | null
+          name: string | null
+          profile_pic_url: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
+          social_links: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          bio?: string | null
+          cover_photo_url?: string | null
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+          profile_pic_url?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          social_links?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          bio?: string | null
+          cover_photo_url?: string | null
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+          profile_pic_url?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          social_links?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_artist_dashboard_stats: {
@@ -1190,6 +1296,20 @@ export type Database = {
         Returns: Json
       }
       get_artist_stats: { Args: { artist_uuid: string }; Returns: Json }
+      get_public_user_info: {
+        Args: { target_user_id: string }
+        Returns: {
+          bio: string
+          cover_photo_url: string
+          created_at: string
+          id: string
+          name: string
+          profile_pic_url: string
+          role: Database["public"]["Enums"]["user_role"]
+          social_links: Json
+          updated_at: string
+        }[]
+      }
       increment_artwork_views: {
         Args: { artwork_uuid: string; user_uuid: string }
         Returns: number
