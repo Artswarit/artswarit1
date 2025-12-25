@@ -49,35 +49,35 @@ const ArtistHeader: React.FC<Props> = ({
   loadingFollow,
   loadingSave,
 }) => {
-  // Stats for dopamine effect - add mock rating
+  // Stats for dopamine effect - use real data
   const stats = [
     {
       type: "followers",
-      value: artist.followers,
+      value: artist.followers ?? 0,
       label: "Followers",
     },
     {
       type: "likes",
-      value: artist.likes,
+      value: artist.likes ?? 0,
       label: "Likes",
     },
     {
       type: "views",
-      value: artist.views,
+      value: artist.views ?? 0,
       label: "Views",
     },
     {
       type: "rating",
-      value: artist.rating ?? 4.7, // mock avg rating
+      value: artist.rating ?? 0,
       label: "Rating",
     },
   ];
 
-  // Mock data for "All" section: projects, reviews, etc
+  // Use real data for artist overview - no mock fallbacks
   const artistAllDetails = {
-    totalProjects: artist.totalProjects ?? 19,
-    avgRating: artist.rating ?? 4.7,
-    reviewCount: artist.reviewCount ?? 12,
+    totalProjects: artist.totalProjects ?? 0,
+    avgRating: artist.rating ?? 0,
+    reviewCount: artist.reviewCount ?? 0,
   };
 
   return (
