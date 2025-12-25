@@ -138,15 +138,10 @@ export default function ArtistProfile() {
       try {
         setLoading(true);
         
-        // Fetch artist info, artworks, follower count, and likes count in parallel
-        const [artistResult, profileResult, artworksResult, followersResult] = await Promise.all([
+        // Fetch artist info from public_users view (accessible without RLS), artworks, and followers in parallel
+        const [artistResult, artworksResult, followersResult] = await Promise.all([
           supabase
-            .from('users')
-            .select('id, name, email, bio, profile_pic_url, cover_photo_url, role, social_links')
-            .eq('id', id)
-            .maybeSingle(),
-          supabase
-            .from('public_profiles')
+            .from('public_users')
             .select('*')
             .eq('id', id)
             .maybeSingle(),
@@ -163,7 +158,6 @@ export default function ArtistProfile() {
         ]);
 
         const artistData = artistResult.data;
-        const profileData = profileResult.data;
         const artworksData = artworksResult.data || [];
         const followersData = followersResult.data || [];
 
@@ -210,26 +204,26 @@ export default function ArtistProfile() {
           });
         }
 
-        if (!artistData && !profileData) {
+        if (!artistData) {
           console.error('Artist not found');
           setProfileState(null);
           setLoading(false);
           return;
         }
 
-        // Build profile from whichever source has data
+        // Build profile from public_users data
         const artistProfile = {
-          id: artistData?.id || profileData?.id,
-          name: artistData?.name || profileData?.full_name || 'Unknown Artist',
-          category: artistData?.role || profileData?.role || 'Artist',
-          avatar: artistData?.profile_pic_url || profileData?.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200',
-          bio: artistData?.bio || profileData?.bio || '',
+          id: artistData.id,
+          name: artistData.name || 'Unknown Artist',
+          category: artistData.role || 'Artist',
+          avatar: artistData.profile_pic_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200',
+          bio: artistData.bio || '',
           followers: followersData.length,
           likes: totalLikes,
-          isVerified: profileData?.is_verified || false,
-          specialties: profileData?.tags || [],
-          location: profileData?.location || '',
-          cover: artistData?.cover_photo_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80',
+          isVerified: false,
+          specialties: [],
+          location: '',
+          cover: artistData.cover_photo_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80',
           artworks: artworksData.map(art => ({
             id: art.id,
             title: art.title,
