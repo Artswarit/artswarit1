@@ -19,7 +19,8 @@ serve(async (req) => {
     const hiveApiKey = Deno.env.get('HIVE_API_KEY')
 
     if (!hiveApiKey) {
-      throw new Error('HIVE_API_KEY not configured')
+      console.error('HIVE_API_KEY not configured');
+      throw new Error('Content analysis service unavailable');
     }
 
     console.log(`Analyzing ${contentType} content: ${fileUrl}`)
@@ -57,8 +58,8 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Hive API error:', errorText)
-      throw new Error(`Hive API error: ${response.status} ${response.statusText}`)
+      console.error('Content analysis API error:', response.status, errorText)
+      throw new Error('Content analysis failed');
     }
 
     const result = await response.json()
@@ -99,8 +100,7 @@ serve(async (req) => {
     console.error('Error in AI content detection:', error)
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to analyze content',
-        details: error.message,
+        error: 'Failed to analyze content. Please try again later.',
         isAiGenerated: false,
         confidence: 0,
         flagged: false

@@ -33,7 +33,7 @@ serve(async (req) => {
 
   if (!GOOGLE_GEMINI_API_KEY) {
     console.error("[edge] GOOGLE_GEMINI_API_KEY not set.");
-    return new Response(JSON.stringify({ error: "GOOGLE_GEMINI_API_KEY not set" }), { status: 500, headers: corsHeaders });
+    return new Response(JSON.stringify({ error: "Service temporarily unavailable" }), { status: 503, headers: corsHeaders });
   }
 
   try {
@@ -99,19 +99,16 @@ serve(async (req) => {
 
     const answer = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
     if (!answer) {
-      const errorMessage = data?.error?.message || JSON.stringify(data);
-      console.error("[edge] No answer returned from Gemini. (Full data follows)", errorMessage);
+      console.error("[edge] No answer returned from Gemini:", data?.error?.message || JSON.stringify(data));
       return new Response(
-        JSON.stringify({ 
-          error: "Gemini Diagnostic Output: " + errorMessage
-        }),
+        JSON.stringify({ error: "Unable to process your request. Please try again." }),
         { status: 502, headers: corsHeaders }
       );
     }
     return new Response(JSON.stringify({ answer }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("[edge] Caught error:", e);
-    return new Response(JSON.stringify({ error: e.message || e.toString() }), { status: 500, headers: corsHeaders });
+    return new Response(JSON.stringify({ error: "An unexpected error occurred. Please try again." }), { status: 500, headers: corsHeaders });
   }
 });
 
