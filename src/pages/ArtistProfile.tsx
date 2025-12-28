@@ -320,7 +320,7 @@ export default function ArtistProfile() {
 
   // Get supabase user is now handled by useAuth
 
-  // Fetch actual followers count & user following state
+  // Fetch actual followers count & user following state + Real-time subscriptions
   useEffect(() => {
     async function fetchFollowersData() {
       // skip for demo profiles
@@ -350,6 +350,52 @@ export default function ArtistProfile() {
       }
     }
     fetchFollowersData();
+
+    // Real-time subscription for follows
+    if (id && id !== ARTIST_UUID_1 && id !== ARTIST_UUID_2) {
+      const followsChannel = supabase
+        .channel(`artist-follows-${id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'follows',
+            filter: `following_id=eq.${id}`
+          },
+          async () => {
+            // Refetch followers count
+            const { data: followers } = await supabase
+              .from("follows")
+              .select("id")
+              .eq("following_id", id);
+            setFollowersCount(followers?.length || 0);
+          }
+        )
+        .subscribe();
+
+      // Real-time subscription for reviews
+      const reviewsChannel = supabase
+        .channel(`artist-reviews-${id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'project_reviews',
+            filter: `artist_id=eq.${id}`
+          },
+          () => {
+            refreshReviews();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(followsChannel);
+        supabase.removeChannel(reviewsChannel);
+      };
+    }
     // re-run when id or userId changes
   }, [id, user?.id]);
 
