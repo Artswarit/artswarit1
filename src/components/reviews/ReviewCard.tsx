@@ -79,6 +79,21 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
 
       if (error) throw error;
 
+      // Create notification for the client
+      const { error: notifError } = await supabase
+        .from("notifications")
+        .insert({
+          user_id: clientId,
+          type: "review_response",
+          title: "Artist responded to your review",
+          message: `An artist has responded to your review.`,
+          metadata: { review_id: reviewId },
+        });
+
+      if (notifError) {
+        console.error("Failed to create notification:", notifError);
+      }
+
       toast.success("Response added successfully");
       setIsReplying(false);
       onResponseAdded?.();
