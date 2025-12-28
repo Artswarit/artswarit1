@@ -51,6 +51,7 @@ const ClientDashboard = () => {
   const [selectedTab, setSelectedTab] = useState("overview");
   const [projects, setProjects] = useState<Project[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [savedArtistsCount, setSavedArtistsCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const fetchProjects = useCallback(async () => {
@@ -102,10 +103,22 @@ const ClientDashboard = () => {
     })));
   }, [user?.id]);
 
+  const fetchSavedArtistsCount = useCallback(async () => {
+    if (!user?.id) return;
+
+    const { count } = await supabase
+      .from('saved_artists')
+      .select('*', { count: 'exact', head: true })
+      .eq('client_id', user.id);
+
+    setSavedArtistsCount(count || 0);
+  }, [user?.id]);
+
   useEffect(() => {
     fetchProjects();
     fetchNotifications();
-  }, [fetchProjects, fetchNotifications]);
+    fetchSavedArtistsCount();
+  }, [fetchProjects, fetchNotifications, fetchSavedArtistsCount]);
 
   // Real-time subscription for projects
   useEffect(() => {
@@ -147,11 +160,28 @@ const ClientDashboard = () => {
       )
       .subscribe();
 
+    const savedArtistsChannel = supabase
+      .channel(`client-saved-artists-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'saved_artists',
+          filter: `client_id=eq.${user.id}`
+        },
+        () => {
+          fetchSavedArtistsCount();
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(projectsChannel);
       supabase.removeChannel(notificationsChannel);
+      supabase.removeChannel(savedArtistsChannel);
     };
-  }, [user?.id, fetchProjects, fetchNotifications]);
+  }, [user?.id, fetchProjects, fetchNotifications, fetchSavedArtistsCount]);
 
   const activeProjects = projects.filter(p => p.status === "In Progress" || p.status === "Review" || p.status === "Pending");
   const completedProjects = projects.filter(p => p.status === "Completed");
@@ -223,7 +253,7 @@ const ClientDashboard = () => {
               </div>
               <div className="bg-white/60 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-sm border border-blue-100">
                 <h3 className="font-medium text-xs sm:text-sm text-muted-foreground mb-2">Saved Artists</h3>
-                <p className="text-2xl sm:text-3xl font-bold">12</p>
+                <p className="text-2xl sm:text-3xl font-bold">{savedArtistsCount}</p>
               </div>
             </div>
 
