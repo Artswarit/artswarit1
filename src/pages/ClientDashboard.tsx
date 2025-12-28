@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,44 +10,20 @@ import ClientMessages from "@/components/dashboard/ClientMessages";
 import ProjectRating from "@/components/dashboard/ProjectRating";
 import ClientPayments from "@/components/dashboard/ClientPayments";
 import UniversalChatbot from '@/components/UniversalChatbot';
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
-// Mock data for projects
-const activeProjects = [{
-  id: "p1",
-  title: "Album Cover Design",
-  artist: "Maya Johnson",
-  dueDate: "May 28, 2025",
-  progress: 75,
-  status: "In Progress"
-}, {
-  id: "p2",
-  title: "Voice Over for Ad",
-  artist: "Alex Rivera",
-  dueDate: "May 20, 2025",
-  progress: 40,
-  status: "In Progress"
-}, {
-  id: "p3",
-  title: "Script Editing",
-  artist: "Jordan Smith",
-  dueDate: "May 25, 2025",
-  progress: 90,
-  status: "Review"
-}];
-
-const completedProjects = [{
-  id: "p4",
-  title: "Logo Design",
-  artist: "Taylor Reed",
-  completedDate: "May 10, 2025",
-  rating: 5
-}, {
-  id: "p5",
-  title: "Podcast Intro",
-  artist: "Alex Rivera",
-  completedDate: "April 30, 2025",
-  rating: 4
-}];
+interface Project {
+  id: string;
+  title: string;
+  artist: string;
+  dueDate: string;
+  completedDate?: string;
+  progress: number;
+  status: string;
+  rating?: number;
+}
 
 // Mock data for recommended artists
 const recommendedArtists = [{
@@ -70,26 +46,115 @@ const recommendedArtists = [{
   profileImage: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80"
 }];
 
-// Active notifications
-const notifications = [{
-  id: "n1",
-  content: "Maya Johnson submitted new work for 'Album Cover Design'",
-  time: "2 hours ago",
-  read: false
-}, {
-  id: "n2",
-  content: "Project deadline approaching for 'Voice Over for Ad'",
-  time: "5 hours ago",
-  read: false
-}, {
-  id: "n3",
-  content: "Jordan Smith sent you a message",
-  time: "1 day ago",
-  read: true
-}];
-
 const ClientDashboard = () => {
+  const { user } = useAuth();
   const [selectedTab, setSelectedTab] = useState("overview");
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchProjects = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select(`*, artist:artist_id(full_name)`)
+        .eq('client_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const transformedProjects: Project[] = (data || []).map((project: any) => ({
+        id: project.id,
+        title: project.title,
+        artist: project.artist?.full_name || 'Unassigned',
+        dueDate: project.deadline ? new Date(project.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No deadline',
+        completedDate: project.status === 'completed' ? new Date(project.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : undefined,
+        progress: project.status === 'completed' ? 100 : project.status === 'accepted' ? 50 : 10,
+        status: project.status === 'accepted' ? 'In Progress' : project.status === 'completed' ? 'Completed' : project.status === 'pending' ? 'Pending' : 'Review',
+        rating: 0,
+      }));
+
+      setProjects(transformedProjects);
+    } catch (err) {
+      console.error('Error fetching projects:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  const fetchNotifications = useCallback(async () => {
+    if (!user?.id) return;
+
+    const { data } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    setNotifications((data || []).map(n => ({
+      id: n.id,
+      content: n.message,
+      time: new Date(n.created_at).toLocaleDateString(),
+      read: n.is_read,
+    })));
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchProjects();
+    fetchNotifications();
+  }, [fetchProjects, fetchNotifications]);
+
+  // Real-time subscription for projects
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const projectsChannel = supabase
+      .channel(`client-projects-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'projects',
+          filter: `client_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Project update received:', payload.eventType);
+          fetchProjects();
+          if (payload.eventType === 'UPDATE') {
+            toast.success('Project status updated!');
+          }
+        }
+      )
+      .subscribe();
+
+    const notificationsChannel = supabase
+      .channel(`client-notifications-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          fetchNotifications();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(projectsChannel);
+      supabase.removeChannel(notificationsChannel);
+    };
+  }, [user?.id, fetchProjects, fetchNotifications]);
+
+  const activeProjects = projects.filter(p => p.status === "In Progress" || p.status === "Review" || p.status === "Pending");
+  const completedProjects = projects.filter(p => p.status === "Completed");
   
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
