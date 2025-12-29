@@ -8,6 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Home, Users, Search as SearchIcon, TrendingUp } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import NotificationBell from "@/components/NotificationBell";
+import MessageBadge from "@/components/MessageBadge";
 
 const menuItems = [{
   name: "Home",
@@ -88,6 +89,8 @@ const Navbar = () => {
         <div className="flex items-center ml-auto gap-2">
           {user ? (
             <>
+              {/* Message Badge */}
+              <MessageBadge />
               {/* Notification Bell */}
               <NotificationBell />
               
@@ -128,6 +131,7 @@ const Navbar = () => {
           <div className="flex items-center space-x-1 ml-auto">
             {user && (
               <>
+                <MessageBadge />
                 <NotificationBell />
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={user.user_metadata?.avatar_url} alt={user.user_metadata?.full_name || user.email} />
