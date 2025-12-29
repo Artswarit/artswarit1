@@ -131,7 +131,7 @@ export const useProfile = () => {
       const filePath = fileName;
 
       const { error: uploadError } = await supabase.storage
-        .from('media')
+        .from('avatars')
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) {
@@ -145,7 +145,7 @@ export const useProfile = () => {
       }
 
       const { data: publicUrlData } = supabase.storage
-        .from('media')
+        .from('avatars')
         .getPublicUrl(filePath);
 
       const publicUrl = publicUrlData.publicUrl;
