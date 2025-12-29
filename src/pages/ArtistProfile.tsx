@@ -140,10 +140,10 @@ export default function ArtistProfile() {
       try {
         setLoading(true);
         
-        // Fetch artist info from public_users view (accessible without RLS), artworks, followers, services, and reviews in parallel
-        const [artistResult, artworksResult, followersResult, servicesResult, reviewsResult] = await Promise.all([
+        // Fetch artist info from public_profiles view (has avatar_url and cover_url)
+        const [profileResult, artworksResult, followersResult, servicesResult, reviewsResult] = await Promise.all([
           supabase
-            .from('public_users')
+            .from('public_profiles')
             .select('*')
             .eq('id', id)
             .maybeSingle(),
@@ -169,7 +169,7 @@ export default function ArtistProfile() {
             .order('created_at', { ascending: false })
         ]);
 
-        const artistData = artistResult.data;
+        const artistData = profileResult.data;
         const artworksData = artworksResult.data || [];
         const followersData = followersResult.data || [];
         const servicesData = servicesResult.data || [];
@@ -225,19 +225,19 @@ export default function ArtistProfile() {
           return;
         }
 
-        // Build profile from public_users data
+        // Build profile from public_profiles data
         const artistProfile = {
           id: artistData.id,
-          name: artistData.name || 'Unknown Artist',
+          name: artistData.full_name || 'Unknown Artist',
           category: artistData.role || 'Artist',
-          avatar: artistData.profile_pic_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200',
+          avatar: artistData.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200',
           bio: artistData.bio || '',
           followers: followersData.length,
           likes: totalLikes,
-          isVerified: false,
-          specialties: [],
-          location: '',
-          cover: artistData.cover_photo_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80',
+          isVerified: artistData.is_verified || false,
+          specialties: artistData.tags || [],
+          location: artistData.location || '',
+          cover: (artistData as any).cover_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80',
           artworks: artworksData.map(art => ({
             id: art.id,
             title: art.title,
