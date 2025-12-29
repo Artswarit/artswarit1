@@ -191,6 +191,29 @@ export const useRealtimeMessages = () => {
     }
   }, [user, toast]);
 
+  // Play notification sound
+  const playNotificationSound = useCallback(() => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.3);
+    } catch (error) {
+      console.log('Could not play notification sound:', error);
+    }
+  }, []);
+
   // Set up real-time subscriptions
   useEffect(() => {
     if (!user) return;
@@ -228,6 +251,11 @@ export const useRealtimeMessages = () => {
                 .update({ is_read: true })
                 .eq('id', newMsg.id);
             }
+          }
+
+          // Play sound for new messages from others
+          if (newMsg.sender_id !== user.id) {
+            playNotificationSound();
           }
 
           // Update conversation list
