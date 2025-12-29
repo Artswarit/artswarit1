@@ -45,13 +45,14 @@ const ExploreArtists = () => {
     try {
       console.log('Fetching artists...');
       
-      // Fetch artist profiles from public_users view (has public access)
-      const { data: users, error } = await supabase
-        .from('public_users')
+      // Fetch artist profiles from public_profiles view (has public access and avatar_url)
+      const { data: profiles, error } = await supabase
+        .from('public_profiles')
         .select('*')
-        .eq('role', 'artist');
+        .eq('role', 'artist')
+        .eq('account_status', 'approved');
 
-      console.log('Users response:', { count: users?.length, error });
+      console.log('Profiles response:', { count: profiles?.length, error });
 
       if (error) {
         console.error('Error fetching artists:', error);
@@ -59,7 +60,7 @@ const ExploreArtists = () => {
         return;
       }
 
-      if (!users || users.length === 0) {
+      if (!profiles || profiles.length === 0) {
         console.log('No artists found');
         setArtists([]);
         setFilteredArtists([]);
@@ -67,7 +68,7 @@ const ExploreArtists = () => {
         return;
       }
 
-      const artistIds = users.map(u => u.id).filter(Boolean) as string[];
+      const artistIds = profiles.map(p => p.id).filter(Boolean) as string[];
       
       const { data: follows } = await supabase
         .from('follows')
@@ -95,27 +96,27 @@ const ExploreArtists = () => {
         artworkCounts.set(a.artist_id, count + 1);
       });
 
-      // Map users to artist format
-      const mappedArtists: Artist[] = users.map(user => {
+      // Map profiles to artist format
+      const mappedArtists: Artist[] = profiles.map(profile => {
         return {
-          id: user.id || '',
-          name: user.name || 'Unknown Artist',
-          tagline: user.bio || 'Artist on Artswarit',
+          id: profile.id || '',
+          name: profile.full_name || 'Unknown Artist',
+          tagline: profile.bio || 'Artist on Artswarit',
           category: 'Artist',
-          imageUrl: user.profile_pic_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'Artist')}&background=random`,
-          verified: false,
+          imageUrl: profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || 'Artist')}&background=random`,
+          verified: profile.is_verified || false,
           premium: false,
           featured: false,
           available: true,
-          followers: followerCounts.get(user.id || '') || 0,
-          artworkCount: artworkCounts.get(user.id || '') || 0,
+          followers: followerCounts.get(profile.id || '') || 0,
+          artworkCount: artworkCounts.get(profile.id || '') || 0,
           rating: 4.5 + Math.random() * 0.5,
-          location: 'Unknown',
-          priceRange: '$',
+          location: profile.location || 'Unknown',
+          priceRange: profile.hourly_rate ? `$${profile.hourly_rate}/hr` : '$',
           viewsCount: Math.floor(Math.random() * 10000),
           likesCount: Math.floor(Math.random() * 5000),
-          joinedDate: user.created_at || new Date().toISOString(),
-          tags: []
+          joinedDate: profile.created_at || new Date().toISOString(),
+          tags: profile.tags || []
         };
       });
 

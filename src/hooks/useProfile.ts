@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -9,12 +8,14 @@ interface Profile {
   email: string;
   full_name: string | null;
   avatar_url: string | null;
+  cover_url: string | null;
   role: string;
   bio: string | null;
   location: string | null;
   website: string | null;
   social_links: any;
   is_verified: boolean;
+  tags: string[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -26,16 +27,13 @@ export const useProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      fetchProfile();
-    } else {
+  const fetchProfile = useCallback(async () => {
+    if (!user) {
       setProfile(null);
       setLoading(false);
+      return;
     }
-  }, [user]);
 
-  const fetchProfile = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -43,7 +41,7 @@ export const useProfile = () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user?.id)
+        .eq('id', user.id)
         .single();
 
       if (error) {
@@ -59,7 +57,36 @@ export const useProfile = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  // Real-time subscription for profile updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`profile-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user.id}`
+        },
+        () => {
+          fetchProfile();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, fetchProfile]);
 
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return { error: 'No user logged in' };
@@ -95,11 +122,76 @@ export const useProfile = () => {
     }
   };
 
+  const uploadImage = async (file: File, type: 'avatar' | 'cover'): Promise<string | null> => {
+    if (!user) return null;
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${type}-${Date.now()}.${fileExt}`;
+      const filePath = fileName;
+
+      const { error: uploadError } = await supabase.storage
+        .from('media')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast({
+          title: "Upload failed",
+          description: uploadError.message,
+          variant: "destructive"
+        });
+        return null;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from('media')
+        .getPublicUrl(filePath);
+
+      const publicUrl = publicUrlData.publicUrl;
+
+      // Update profile with new image URL
+      const updateField = type === 'avatar' ? 'avatar_url' : 'cover_url';
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ [updateField]: publicUrl })
+        .eq('id', user.id);
+
+      if (updateError) {
+        console.error('Profile update error:', updateError);
+        toast({
+          title: "Update failed",
+          description: updateError.message,
+          variant: "destructive"
+        });
+        return null;
+      }
+
+      await fetchProfile();
+
+      toast({
+        title: "Image updated",
+        description: `Your ${type === 'avatar' ? 'profile' : 'cover'} image has been updated.`
+      });
+
+      return publicUrl;
+    } catch (err: any) {
+      console.error('Upload error:', err);
+      toast({
+        title: "Upload failed",
+        description: err.message,
+        variant: "destructive"
+      });
+      return null;
+    }
+  };
+
   return {
     profile,
     loading,
     error,
     updateProfile,
+    uploadImage,
     refetch: fetchProfile
   };
 };
