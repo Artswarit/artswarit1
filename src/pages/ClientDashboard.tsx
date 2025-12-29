@@ -9,10 +9,12 @@ import SavedArtists from "@/components/dashboard/SavedArtists";
 import ClientMessages from "@/components/dashboard/ClientMessages";
 import ProjectRating from "@/components/dashboard/ProjectRating";
 import ClientPayments from "@/components/dashboard/ClientPayments";
+import ClientSettings from "@/components/dashboard/ClientSettings";
 import UniversalChatbot from '@/components/UniversalChatbot';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface Project {
   id: string;
@@ -156,6 +158,7 @@ const ClientDashboard = () => {
         },
         () => {
           fetchNotifications();
+          toast.info('New notification received!');
         }
       )
       .subscribe();
@@ -186,147 +189,201 @@ const ClientDashboard = () => {
   const activeProjects = projects.filter(p => p.status === "In Progress" || p.status === "Review" || p.status === "Pending");
   const completedProjects = projects.filter(p => p.status === "Completed");
   
+  const userName = 'there';
+  
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-background dark:via-background dark:to-background">
       <Navbar />
 
-      <div className="container mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-6 sm:py-8 pt-20 sm:pt-[84px]">
-        {/* Dashboard Header */}
-        <div className="mb-6 sm:mb-8">
-          <h1 className="font-heading text-2xl sm:text-3xl font-bold mb-2">Client Dashboard</h1>
-          <p className="text-muted-foreground text-sm sm:text-base">Welcome back, Thomas! Manage your projects and discover new artists.</p>
+      <div className="container mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8 pt-16 sm:pt-20">
+        {/* Dashboard Header - Mobile optimized */}
+        <div className="mb-4 sm:mb-6 lg:mb-8 animate-fade-in">
+          <h1 className="font-heading text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">Client Dashboard</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm lg:text-base">Welcome back, {userName}! Manage your projects and discover new artists.</p>
         </div>
 
-        {/* Dashboard Navigation */}
-        <Tabs defaultValue="overview" className="mb-6 sm:mb-8" onValueChange={setSelectedTab}>
-          <div className="overflow-x-auto mb-4 sm:mb-6">
-            <TabsList className="bg-white/50 backdrop-blur-sm grid grid-cols-3 sm:grid-cols-7 min-w-[500px] sm:min-w-0">
-              <TabsTrigger value="overview" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
-                <LayoutDashboard className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden xs:inline">Overview</span>
-                <span className="xs:hidden">Home</span>
+        {/* Dashboard Navigation - Horizontal scroll on mobile */}
+        <Tabs defaultValue="overview" className="mb-4 sm:mb-6 lg:mb-8" onValueChange={setSelectedTab}>
+          <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 mb-4 sm:mb-6 scrollbar-hide">
+            <TabsList className="bg-white/50 dark:bg-card/50 backdrop-blur-sm inline-flex min-w-max sm:grid sm:grid-cols-7 gap-1 p-1">
+              <TabsTrigger 
+                value="overview" 
+                className={cn(
+                  "flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200",
+                  "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
+                  "hover:bg-muted/50"
+                )}
+              >
+                <LayoutDashboard className="h-4 w-4" />
+                <span>Overview</span>
               </TabsTrigger>
-              <TabsTrigger value="projects" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
-                <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden xs:inline">Projects</span>
-                <span className="xs:hidden">Proj</span>
+              <TabsTrigger 
+                value="projects" 
+                className={cn(
+                  "flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200",
+                  "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
+                  "hover:bg-muted/50"
+                )}
+              >
+                <FileText className="h-4 w-4" />
+                <span>Projects</span>
               </TabsTrigger>
-              <TabsTrigger value="messages" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
-                <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden xs:inline">Messages</span>
-                <span className="xs:hidden">Msg</span>
+              <TabsTrigger 
+                value="messages" 
+                className={cn(
+                  "flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200",
+                  "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
+                  "hover:bg-muted/50"
+                )}
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span>Messages</span>
               </TabsTrigger>
-              <TabsTrigger value="artists" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
-                <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden xs:inline">Saved Artists</span>
-                <span className="xs:hidden">Artists</span>
+              <TabsTrigger 
+                value="artists" 
+                className={cn(
+                  "flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200",
+                  "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
+                  "hover:bg-muted/50"
+                )}
+              >
+                <Heart className="h-4 w-4" />
+                <span>Artists</span>
               </TabsTrigger>
-              <TabsTrigger value="ratings" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
-                <Star className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden xs:inline">Reviews</span>
-                <span className="xs:hidden">Rate</span>
+              <TabsTrigger 
+                value="ratings" 
+                className={cn(
+                  "flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200",
+                  "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
+                  "hover:bg-muted/50"
+                )}
+              >
+                <Star className="h-4 w-4" />
+                <span>Reviews</span>
               </TabsTrigger>
-              <TabsTrigger value="payments" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
-                <CreditCard className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden xs:inline">Payments</span>
-                <span className="xs:hidden">Pay</span>
+              <TabsTrigger 
+                value="payments" 
+                className={cn(
+                  "flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200",
+                  "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
+                  "hover:bg-muted/50"
+                )}
+              >
+                <CreditCard className="h-4 w-4" />
+                <span>Payments</span>
               </TabsTrigger>
-              <TabsTrigger value="settings" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
-                <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden xs:inline">Settings</span>
-                <span className="xs:hidden">Set</span>
+              <TabsTrigger 
+                value="settings" 
+                className={cn(
+                  "flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200",
+                  "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
+                  "hover:bg-muted/50"
+                )}
+              >
+                <Settings className="h-4 w-4" />
+                <span>Settings</span>
               </TabsTrigger>
             </TabsList>
           </div>
 
           {/* Overview Tab Content */}
-          <TabsContent value="overview" className="space-y-6 sm:space-y-8">
-            {/* Stats Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-              <div className="bg-white/60 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-sm border border-blue-100">
-                <h3 className="font-medium text-xs sm:text-sm text-muted-foreground mb-2">Active Projects</h3>
-                <p className="text-2xl sm:text-3xl font-bold">{activeProjects.length}</p>
+          <TabsContent value="overview" className="space-y-4 sm:space-y-6 lg:space-y-8 animate-fade-in">
+            {/* Stats Row - Mobile responsive grid */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6">
+              <div className="bg-white/60 dark:bg-card/60 backdrop-blur-sm p-3 sm:p-4 lg:p-6 rounded-lg sm:rounded-xl shadow-sm border border-blue-100 dark:border-border transition-all duration-300 hover:shadow-md hover:scale-[1.02]">
+                <h3 className="font-medium text-[10px] sm:text-xs lg:text-sm text-muted-foreground mb-1 sm:mb-2">Active</h3>
+                <p className="text-lg sm:text-2xl lg:text-3xl font-bold">{activeProjects.length}</p>
               </div>
-              <div className="bg-white/60 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-sm border border-blue-100">
-                <h3 className="font-medium text-xs sm:text-sm text-muted-foreground mb-2">Completed Projects</h3>
-                <p className="text-2xl sm:text-3xl font-bold">{completedProjects.length}</p>
+              <div className="bg-white/60 dark:bg-card/60 backdrop-blur-sm p-3 sm:p-4 lg:p-6 rounded-lg sm:rounded-xl shadow-sm border border-blue-100 dark:border-border transition-all duration-300 hover:shadow-md hover:scale-[1.02]">
+                <h3 className="font-medium text-[10px] sm:text-xs lg:text-sm text-muted-foreground mb-1 sm:mb-2">Completed</h3>
+                <p className="text-lg sm:text-2xl lg:text-3xl font-bold">{completedProjects.length}</p>
               </div>
-              <div className="bg-white/60 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-sm border border-blue-100">
-                <h3 className="font-medium text-xs sm:text-sm text-muted-foreground mb-2">Saved Artists</h3>
-                <p className="text-2xl sm:text-3xl font-bold">{savedArtistsCount}</p>
+              <div className="bg-white/60 dark:bg-card/60 backdrop-blur-sm p-3 sm:p-4 lg:p-6 rounded-lg sm:rounded-xl shadow-sm border border-blue-100 dark:border-border transition-all duration-300 hover:shadow-md hover:scale-[1.02]">
+                <h3 className="font-medium text-[10px] sm:text-xs lg:text-sm text-muted-foreground mb-1 sm:mb-2">Saved</h3>
+                <p className="text-lg sm:text-2xl lg:text-3xl font-bold">{savedArtistsCount}</p>
               </div>
             </div>
 
             {/* Active Projects Section */}
-            <div>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4">
-                <h2 className="font-heading text-lg sm:text-xl font-semibold">Active Projects</h2>
-                <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
+            <div className="animate-fade-in" style={{ animationDelay: '100ms' }}>
+              <div className="flex justify-between items-center gap-2 mb-3 sm:mb-4">
+                <h2 className="font-heading text-base sm:text-lg lg:text-xl font-semibold">Active Projects</h2>
+                <Button variant="outline" size="sm" asChild className="text-xs sm:text-sm h-8 sm:h-9">
                   <Link to="/projects">View All</Link>
                 </Button>
               </div>
-              <div className="grid grid-cols-1 gap-4">
-                {activeProjects.map(project => (
-                  <div key={project.id} className="bg-white/60 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-blue-100 hover:shadow-md transition-all">
-                    <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-sm sm:text-base truncate">{project.title}</h3>
-                        <p className="text-xs sm:text-sm text-muted-foreground">Artist: {project.artist}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div 
-                              className="bg-gradient-to-r from-artswarit-purple to-blue-500 h-2 rounded-full" 
-                              style={{ width: `${project.progress}%` }}
-                            />
+              <div className="grid grid-cols-1 gap-3 sm:gap-4">
+                {activeProjects.length === 0 ? (
+                  <div className="bg-white/60 dark:bg-card/60 backdrop-blur-sm p-6 rounded-xl text-center text-muted-foreground">
+                    No active projects yet
+                  </div>
+                ) : (
+                  activeProjects.slice(0, 3).map((project, index) => (
+                    <div 
+                      key={project.id} 
+                      className="bg-white/60 dark:bg-card/60 backdrop-blur-sm p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-sm border border-blue-100 dark:border-border hover:shadow-md transition-all duration-300 hover:scale-[1.01] animate-fade-in"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <div className="flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-3">
+                        <div className="flex-1 min-w-0 w-full sm:w-auto">
+                          <h3 className="font-medium text-sm sm:text-base truncate">{project.title}</h3>
+                          <p className="text-xs sm:text-sm text-muted-foreground">Artist: {project.artist}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <div className="flex-1 bg-gray-200 dark:bg-muted rounded-full h-1.5 sm:h-2">
+                              <div 
+                                className="bg-gradient-to-r from-artswarit-purple to-blue-500 h-full rounded-full transition-all duration-500" 
+                                style={{ width: `${project.progress}%` }}
+                              />
+                            </div>
+                            <span className="text-[10px] sm:text-xs font-medium min-w-[30px]">{project.progress}%</span>
                           </div>
-                          <span className="text-xs font-medium min-w-[35px]">{project.progress}%</span>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-xs text-gray-500 block">Due: {project.dueDate}</span>
-                        <div className="mt-1">
-                          {project.status === "In Progress" ? (
-                            <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">In Progress</span>
-                          ) : (
-                            <span className="inline-block px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-full">Review</span>
-                          )}
+                        <div className="flex sm:flex-col items-center sm:items-end gap-2 sm:gap-1 w-full sm:w-auto justify-between sm:justify-start">
+                          <span className="text-[10px] sm:text-xs text-gray-500 order-2 sm:order-1">Due: {project.dueDate}</span>
+                          <span className={cn(
+                            "inline-block px-2 py-0.5 text-[10px] sm:text-xs rounded-full order-1 sm:order-2",
+                            project.status === "In Progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                          )}>
+                            {project.status}
+                          </span>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
             {/* Recommended Artists */}
-            <div>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4">
-                <h2 className="font-heading text-lg sm:text-xl font-semibold">Recommended for You</h2>
-                <Button variant="ghost" size="sm" asChild className="text-artswarit-purple w-full sm:w-auto">
-                  <Link to="/explore" className="flex items-center justify-center sm:justify-start">
-                    Explore More
-                    <ChevronRight className="h-4 w-4 ml-1" />
+            <div className="animate-fade-in" style={{ animationDelay: '200ms' }}>
+              <div className="flex justify-between items-center gap-2 mb-3 sm:mb-4">
+                <h2 className="font-heading text-base sm:text-lg lg:text-xl font-semibold">Recommended</h2>
+                <Button variant="ghost" size="sm" asChild className="text-artswarit-purple text-xs sm:text-sm h-8 sm:h-9">
+                  <Link to="/explore" className="flex items-center">
+                    Explore
+                    <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1" />
                   </Link>
                 </Button>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {recommendedArtists.map(artist => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+                {recommendedArtists.map((artist, index) => (
                   <Link 
                     key={artist.id} 
                     to={`/artist/${artist.id}`} 
-                    className="bg-white/60 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-blue-100 hover:shadow-md transition-all"
+                    className="bg-white/60 dark:bg-card/60 backdrop-blur-sm p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-sm border border-blue-100 dark:border-border hover:shadow-md transition-all duration-300 hover:scale-[1.02] animate-fade-in"
+                    style={{ animationDelay: `${index * 50}ms` }}
                   >
-                    <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="flex items-center gap-3">
                       <img 
                         src={artist.profileImage} 
                         alt={artist.name} 
-                        className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover" 
+                        className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover ring-2 ring-white dark:ring-border" 
                       />
                       <div className="flex-1 min-w-0">
                         <h3 className="font-medium text-sm sm:text-base truncate">{artist.name}</h3>
-                        <p className="text-xs sm:text-sm text-muted-foreground">{artist.profession}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground truncate">{artist.profession}</p>
                       </div>
-                      <div className="flex items-center">
+                      <div className="flex items-center shrink-0">
                         <span className="text-yellow-500">★</span>
                         <span className="text-xs sm:text-sm font-medium ml-1">{artist.rating}</span>
                       </div>
@@ -337,128 +394,163 @@ const ClientDashboard = () => {
             </div>
 
             {/* Recent Notifications */}
-            <div>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4">
-                <h2 className="font-heading text-lg sm:text-xl font-semibold">Recent Notifications</h2>
-                <Button variant="ghost" size="sm" className="w-full sm:w-auto">
-                  <Bell className="h-4 w-4 mr-1" />
-                  <span>Manage</span>
+            <div className="animate-fade-in" style={{ animationDelay: '300ms' }}>
+              <div className="flex justify-between items-center gap-2 mb-3 sm:mb-4">
+                <h2 className="font-heading text-base sm:text-lg lg:text-xl font-semibold">Notifications</h2>
+                <Button variant="ghost" size="sm" className="text-xs sm:text-sm h-8 sm:h-9">
+                  <Bell className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                  <span className="hidden sm:inline">Manage</span>
                 </Button>
               </div>
-              <div className="bg-white/60 backdrop-blur-sm rounded-xl shadow-sm border border-blue-100 divide-y">
-                {notifications.map(notification => (
-                  <div 
-                    key={notification.id} 
-                    className={`p-3 sm:p-4 flex items-start gap-3 ${notification.read ? '' : 'bg-blue-50/40'}`}
-                  >
-                    <div className={`mt-1 h-2 w-2 rounded-full ${notification.read ? 'bg-transparent' : 'bg-blue-500'}`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs sm:text-sm">{notification.content}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
-                    </div>
+              <div className="bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-lg sm:rounded-xl shadow-sm border border-blue-100 dark:border-border divide-y divide-gray-100 dark:divide-border">
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-muted-foreground text-sm">
+                    No notifications yet
                   </div>
-                ))}
+                ) : (
+                  notifications.map((notification, index) => (
+                    <div 
+                      key={notification.id} 
+                      className={cn(
+                        "p-3 sm:p-4 flex items-start gap-2 sm:gap-3 transition-colors duration-200 animate-fade-in",
+                        notification.read ? '' : 'bg-blue-50/40 dark:bg-blue-900/10'
+                      )}
+                      style={{ animationDelay: `${index * 30}ms` }}
+                    >
+                      <div className={cn(
+                        "mt-1.5 h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full shrink-0 transition-colors",
+                        notification.read ? 'bg-transparent' : 'bg-blue-500'
+                      )} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs sm:text-sm line-clamp-2">{notification.content}</p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">{notification.time}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </TabsContent>
 
           {/* Projects Tab */}
-          <TabsContent value="projects" className="space-y-6 sm:space-y-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4">
-              <h2 className="font-heading text-lg sm:text-xl font-semibold">All Projects</h2>
+          <TabsContent value="projects" className="space-y-4 sm:space-y-6 lg:space-y-8 animate-fade-in">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+              <h2 className="font-heading text-base sm:text-lg lg:text-xl font-semibold">All Projects</h2>
               <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                <div className="relative">
+                <div className="relative flex-1 sm:flex-initial">
                   <input 
                     type="text" 
                     placeholder="Search projects..." 
-                    className="w-full sm:w-auto pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/70 focus:border-transparent bg-white/80" 
+                    className="w-full sm:w-48 lg:w-64 pl-9 pr-4 py-2 border border-gray-200 dark:border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/70 focus:border-transparent bg-white/80 dark:bg-card/80" 
                   />
                   <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                     <Search size={16} />
                   </div>
                 </div>
-                <Button className="w-full sm:w-auto">New Project</Button>
+                <Button className="w-full sm:w-auto text-sm">New Project</Button>
               </div>
             </div>
             
-            <div className="grid grid-cols-1 gap-6">
-              <div className="bg-white/60 backdrop-blur-sm p-6 rounded-xl shadow-sm border border-blue-100">
-                <h3 className="font-heading text-lg font-semibold mb-4 flex items-center">
-                  <Clock className="h-5 w-5 mr-2 text-amber-600" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              <div className="bg-white/60 dark:bg-card/60 backdrop-blur-sm p-4 sm:p-6 rounded-lg sm:rounded-xl shadow-sm border border-blue-100 dark:border-border">
+                <h3 className="font-heading text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center">
+                  <Clock className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-amber-600" />
                   In Progress
                 </h3>
-                <div className="space-y-4">
-                  {activeProjects.map(project => <div key={project.id} className="p-4 border border-gray-100 rounded-lg bg-white/70">
-                      <div className="flex justify-between">
-                        <h4 className="font-medium">{project.title}</h4>
-                        <span className={`px-2 py-1 text-xs rounded-full ${project.status === "In Progress" ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"}`}>
-                          {project.status}
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">Artist: {project.artist}</p>
-                      <div className="flex items-center gap-2 mt-3">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div className="bg-gradient-to-r from-artswarit-purple to-blue-500 h-2 rounded-full" style={{
-                        width: `${project.progress}%`
-                      }}></div>
+                <div className="space-y-3 sm:space-y-4">
+                  {activeProjects.length === 0 ? (
+                    <p className="text-muted-foreground text-sm text-center py-4">No active projects</p>
+                  ) : (
+                    activeProjects.map((project, index) => (
+                      <div 
+                        key={project.id} 
+                        className="p-3 sm:p-4 border border-gray-100 dark:border-border rounded-lg bg-white/70 dark:bg-card/70 transition-all duration-300 hover:shadow-md animate-fade-in"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <div className="flex justify-between items-start gap-2">
+                          <h4 className="font-medium text-sm sm:text-base truncate flex-1">{project.title}</h4>
+                          <span className={cn(
+                            "px-2 py-0.5 text-[10px] sm:text-xs rounded-full shrink-0",
+                            project.status === "In Progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                          )}>
+                            {project.status}
+                          </span>
                         </div>
-                        <span className="text-xs font-medium">{project.progress}%</span>
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-1">Artist: {project.artist}</p>
+                        <div className="flex items-center gap-2 mt-2 sm:mt-3">
+                          <div className="flex-1 bg-gray-200 dark:bg-muted rounded-full h-1.5 sm:h-2">
+                            <div 
+                              className="bg-gradient-to-r from-artswarit-purple to-blue-500 h-full rounded-full transition-all duration-500" 
+                              style={{ width: `${project.progress}%` }}
+                            />
+                          </div>
+                          <span className="text-[10px] sm:text-xs font-medium">{project.progress}%</span>
+                        </div>
+                        <div className="mt-2 sm:mt-3 flex justify-between items-center">
+                          <span className="text-[10px] sm:text-xs text-gray-500">Due: {project.dueDate}</span>
+                          <Button size="sm" variant="outline" className="h-7 sm:h-8 text-xs">View</Button>
+                        </div>
                       </div>
-                      <div className="mt-3 flex justify-between items-center">
-                        <span className="text-xs text-gray-500">Due: {project.dueDate}</span>
-                        <Button size="sm" variant="outline">View Details</Button>
-                      </div>
-                    </div>)}
+                    ))
+                  )}
                 </div>
               </div>
               
-              <div className="bg-white/60 backdrop-blur-sm p-6 rounded-xl shadow-sm border border-blue-100">
-                <h3 className="font-heading text-lg font-semibold mb-4 flex items-center">
-                  <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
+              <div className="bg-white/60 dark:bg-card/60 backdrop-blur-sm p-4 sm:p-6 rounded-lg sm:rounded-xl shadow-sm border border-blue-100 dark:border-border">
+                <h3 className="font-heading text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center">
+                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-green-600" />
                   Completed
                 </h3>
-                <div className="space-y-4">
-                  {completedProjects.map(project => <div key={project.id} className="p-4 border border-gray-100 rounded-lg bg-white/70">
-                      <div className="flex justify-between">
-                        <h4 className="font-medium">{project.title}</h4>
-                        <div className="flex">
-                          {[...Array(project.rating)].map((_, i) => <span key={i} className="text-yellow-400">★</span>)}
+                <div className="space-y-3 sm:space-y-4">
+                  {completedProjects.length === 0 ? (
+                    <p className="text-muted-foreground text-sm text-center py-4">No completed projects</p>
+                  ) : (
+                    completedProjects.map((project, index) => (
+                      <div 
+                        key={project.id} 
+                        className="p-3 sm:p-4 border border-gray-100 dark:border-border rounded-lg bg-white/70 dark:bg-card/70 transition-all duration-300 hover:shadow-md animate-fade-in"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <div className="flex justify-between items-start gap-2">
+                          <h4 className="font-medium text-sm sm:text-base truncate flex-1">{project.title}</h4>
+                          <div className="flex shrink-0">
+                            {[...Array(project.rating || 0)].map((_, i) => (
+                              <span key={i} className="text-yellow-400 text-xs sm:text-sm">★</span>
+                            ))}
+                          </div>
+                        </div>
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-1">Artist: {project.artist}</p>
+                        <div className="mt-2 sm:mt-3 flex justify-between items-center">
+                          <span className="text-[10px] sm:text-xs text-gray-500">Completed: {project.completedDate}</span>
+                          <Button size="sm" variant="outline" className="h-7 sm:h-8 text-xs">View</Button>
                         </div>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">Artist: {project.artist}</p>
-                      <div className="mt-3 flex justify-between items-center">
-                        <span className="text-xs text-gray-500">Completed: {project.completedDate}</span>
-                        <Button size="sm" variant="outline">View Details</Button>
-                      </div>
-                    </div>)}
+                    ))
+                  )}
                 </div>
               </div>
             </div>
           </TabsContent>
           
           {/* Messages Tab */}
-          <TabsContent value="messages">
+          <TabsContent value="messages" className="animate-fade-in">
             <ClientMessages />
           </TabsContent>
           
-          <TabsContent value="artists">
+          <TabsContent value="artists" className="animate-fade-in">
             <SavedArtists />
           </TabsContent>
 
-          <TabsContent value="ratings">
+          <TabsContent value="ratings" className="animate-fade-in">
             <ProjectRating />
           </TabsContent>
           
-          <TabsContent value="payments">
+          <TabsContent value="payments" className="animate-fade-in">
             <ClientPayments />
           </TabsContent>
           
-          <TabsContent value="settings">
-            <div className="bg-white/60 backdrop-blur-sm p-6 rounded-xl shadow-sm border border-blue-100 text-center py-20">
-              <h3 className="font-heading text-xl font-semibold mb-2">Account Settings</h3>
-              <p className="text-muted-foreground mb-4">Manage your profile, preferences, and account settings.</p>
-              <Button>Edit Settings</Button>
-            </div>
+          <TabsContent value="settings" className="animate-fade-in">
+            <ClientSettings />
           </TabsContent>
         </Tabs>
       </div>
