@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutDashboard, Users, MessageSquare, FileText, Settings, CreditCard, Heart, Bell, ChevronRight, Search, CheckCircle, Clock, Star } from "lucide-react";
@@ -27,34 +27,31 @@ interface Project {
   rating?: number;
 }
 
-// Mock data for recommended artists
-const recommendedArtists = [{
-  id: "a1",
-  name: "Emma Williams",
-  profession: "Photographer",
-  rating: 4.9,
-  profileImage: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80"
-}, {
-  id: "a2",
-  name: "Daniel Chen",
-  profession: "3D Animator",
-  rating: 4.8,
-  profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80"
-}, {
-  id: "a3",
-  name: "Sophia Rodriguez",
-  profession: "Voice Artist",
-  rating: 4.7,
-  profileImage: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80"
-}];
+interface RecommendedArtist {
+  id: string;
+  name: string;
+  profession: string;
+  rating: number;
+  profileImage: string;
+}
 
 const ClientDashboard = () => {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [selectedTab, setSelectedTab] = useState("overview");
   const [projects, setProjects] = useState<Project[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [savedArtistsCount, setSavedArtistsCount] = useState(0);
+  const [recommendedArtists, setRecommendedArtists] = useState<RecommendedArtist[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Read tab from URL on mount
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['overview', 'projects', 'messages', 'artists', 'ratings', 'payments', 'settings'].includes(tabParam)) {
+      setSelectedTab(tabParam);
+    }
+  }, [searchParams]);
 
   const fetchProjects = useCallback(async () => {
     if (!user?.id) return;
@@ -116,11 +113,72 @@ const ClientDashboard = () => {
     setSavedArtistsCount(count || 0);
   }, [user?.id]);
 
+  const fetchRecommendedArtists = useCallback(async () => {
+    try {
+      // Fetch artists from profiles
+      const { data: artists, error } = await supabase
+        .from('public_profiles')
+        .select('id, full_name, avatar_url, bio, tags')
+        .eq('role', 'artist')
+        .limit(10);
+
+      if (error) throw error;
+
+      if (!artists || artists.length === 0) {
+        setRecommendedArtists([]);
+        return;
+      }
+
+      const artistIds = artists.map(a => a.id).filter(Boolean) as string[];
+
+      // Get ratings for these artists
+      const { data: reviews } = await supabase
+        .from('project_reviews')
+        .select('artist_id, rating')
+        .in('artist_id', artistIds);
+
+      const ratingMap = new Map<string, { total: number; count: number }>();
+      reviews?.forEach(r => {
+        const existing = ratingMap.get(r.artist_id) || { total: 0, count: 0 };
+        ratingMap.set(r.artist_id, {
+          total: existing.total + r.rating,
+          count: existing.count + 1
+        });
+      });
+
+      // Map to recommended artists format
+      const mapped: RecommendedArtist[] = artists
+        .filter(a => a.id)
+        .map(artist => {
+          const ratingData = ratingMap.get(artist.id!);
+          const avgRating = ratingData 
+            ? Math.round((ratingData.total / ratingData.count) * 10) / 10 
+            : 0;
+          
+          return {
+            id: artist.id!,
+            name: artist.full_name || 'Unknown Artist',
+            profession: artist.tags?.[0] || 'Artist',
+            rating: avgRating,
+            profileImage: artist.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${artist.id}`
+          };
+        })
+        // Sort by rating (highest first) then take top 3
+        .sort((a, b) => b.rating - a.rating)
+        .slice(0, 3);
+
+      setRecommendedArtists(mapped);
+    } catch (err) {
+      console.error('Error fetching recommended artists:', err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchProjects();
     fetchNotifications();
     fetchSavedArtistsCount();
-  }, [fetchProjects, fetchNotifications, fetchSavedArtistsCount]);
+    fetchRecommendedArtists();
+  }, [fetchProjects, fetchNotifications, fetchSavedArtistsCount, fetchRecommendedArtists]);
 
   // Real-time subscription for projects
   useEffect(() => {
@@ -203,7 +261,7 @@ const ClientDashboard = () => {
         </div>
 
         {/* Dashboard Navigation - Horizontal scroll on mobile */}
-        <Tabs defaultValue="overview" className="mb-4 sm:mb-6 lg:mb-8" onValueChange={setSelectedTab}>
+        <Tabs value={selectedTab} className="mb-4 sm:mb-6 lg:mb-8" onValueChange={setSelectedTab}>
           <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 mb-4 sm:mb-6 scrollbar-hide">
             <TabsList className="bg-white/50 dark:bg-card/50 backdrop-blur-sm inline-flex min-w-max sm:grid sm:grid-cols-7 gap-1 p-1">
               <TabsTrigger 
