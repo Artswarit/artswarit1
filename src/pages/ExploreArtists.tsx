@@ -96,10 +96,67 @@ const ExploreArtists = () => {
         artworkCounts.set(a.artist_id, count + 1);
       });
 
+      // Get average ratings from project_reviews
+      const { data: reviews } = await supabase
+        .from('project_reviews')
+        .select('artist_id, rating')
+        .in('artist_id', artistIds);
+
+      const ratingMap = new Map<string, { total: number; count: number }>();
+      reviews?.forEach(r => {
+        const existing = ratingMap.get(r.artist_id) || { total: 0, count: 0 };
+        ratingMap.set(r.artist_id, {
+          total: existing.total + r.rating,
+          count: existing.count + 1
+        });
+      });
+
+      // Get likes counts from artwork_likes
+      const { data: allLikes } = await supabase
+        .from('artwork_likes')
+        .select('artwork_id');
+
+      const artworkLikesMap = new Map<string, number>();
+      allLikes?.forEach(like => {
+        if (like.artwork_id) {
+          artworkLikesMap.set(like.artwork_id, (artworkLikesMap.get(like.artwork_id) || 0) + 1);
+        }
+      });
+
+      // Calculate total likes per artist
+      const artistLikesMap = new Map<string, number>();
+      artworks?.forEach(artwork => {
+        const likes = artworkLikesMap.get(artwork.artist_id) || 0;
+        artistLikesMap.set(artwork.artist_id, (artistLikesMap.get(artwork.artist_id) || 0) + likes);
+      });
+
+      // Get views counts from artwork_views
+      const { data: allViews } = await supabase
+        .from('artwork_views')
+        .select('artwork_id');
+
+      const artworkViewsMap = new Map<string, number>();
+      allViews?.forEach(view => {
+        if (view.artwork_id) {
+          artworkViewsMap.set(view.artwork_id, (artworkViewsMap.get(view.artwork_id) || 0) + 1);
+        }
+      });
+
+      // Calculate total views per artist
+      const artistViewsMap = new Map<string, number>();
+      artworks?.forEach(artwork => {
+        const views = artworkViewsMap.get(artwork.artist_id) || 0;
+        artistViewsMap.set(artwork.artist_id, (artistViewsMap.get(artwork.artist_id) || 0) + views);
+      });
+
       // Map profiles to artist format
       const mappedArtists: Artist[] = profiles.map(profile => {
+        const artistId = profile.id || '';
+        const ratingData = ratingMap.get(artistId);
+        const avgRating = ratingData ? Math.round((ratingData.total / ratingData.count) * 10) / 10 : 0;
+        
         return {
-          id: profile.id || '',
+          id: artistId,
           name: profile.full_name || 'Unknown Artist',
           tagline: profile.bio || 'Artist on Artswarit',
           category: 'Artist',
@@ -108,13 +165,13 @@ const ExploreArtists = () => {
           premium: false,
           featured: false,
           available: true,
-          followers: followerCounts.get(profile.id || '') || 0,
-          artworkCount: artworkCounts.get(profile.id || '') || 0,
-          rating: 4.5 + Math.random() * 0.5,
+          followers: followerCounts.get(artistId) || 0,
+          artworkCount: artworkCounts.get(artistId) || 0,
+          rating: avgRating,
           location: profile.location || 'Unknown',
           priceRange: profile.hourly_rate ? `$${profile.hourly_rate}/hr` : '$',
-          viewsCount: Math.floor(Math.random() * 10000),
-          likesCount: Math.floor(Math.random() * 5000),
+          viewsCount: artistViewsMap.get(artistId) || 0,
+          likesCount: artistLikesMap.get(artistId) || 0,
           joinedDate: profile.created_at || new Date().toISOString(),
           tags: profile.tags || []
         };

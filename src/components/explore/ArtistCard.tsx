@@ -106,7 +106,7 @@ const ArtistCard = ({ artist, viewMode, onFollow }: ArtistCardProps) => {
                       </div>
                       <div className="flex items-center gap-1">
                         <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                        <span>{artist.rating}</span>
+                        <span>{artist.rating > 0 ? artist.rating.toFixed(1) : 'New'}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <MapPin className="w-3 h-3" />
@@ -208,7 +208,7 @@ const ArtistCard = ({ artist, viewMode, onFollow }: ArtistCardProps) => {
             </div>
             <div className="flex items-center gap-1">
               <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-              <span>{artist.rating}</span>
+              <span>{artist.rating > 0 ? artist.rating.toFixed(1) : 'New'}</span>
             </div>
           </div>
 
