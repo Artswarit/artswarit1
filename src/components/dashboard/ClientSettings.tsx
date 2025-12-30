@@ -89,7 +89,7 @@ const ClientSettings = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id, refreshProfile]);
+  }, [user?.id]);
 
   const handleSettingChange = (key: string, value: boolean) => {
     setSettings(prev => ({ ...prev, [key]: value }));
