@@ -85,8 +85,8 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Right side controls */}
-        <div className="flex items-center ml-auto gap-2">
+        {/* Right side controls - hidden on mobile, shown on desktop */}
+        <div className="hidden md:flex items-center ml-auto gap-2">
           {user ? (
             <>
               {/* Message Badge */}
@@ -96,7 +96,7 @@ const Navbar = () => {
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-8 w-8 p-0">
+                  <Button variant="ghost" className="h-8 w-8 p-0 transition-transform duration-200 hover:scale-105">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={user.user_metadata?.avatar_url} alt={user.user_metadata?.full_name || user.email} />
                       <AvatarFallback>{user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0)}</AvatarFallback>
@@ -126,37 +126,51 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Mobile menu button */}
-        {isMobile && (
-          <div className="flex items-center space-x-1 ml-auto">
-            {user && (
-              <>
-                <MessageBadge />
-                <NotificationBell />
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.user_metadata?.avatar_url} alt={user.user_metadata?.full_name || user.email} />
-                </Avatar>
-              </>
-            )}
-            <Button variant="ghost" onClick={toggleMenu} className="h-8 w-8 p-0">
-              <span className="sr-only">Toggle Menu</span>
-              <svg width="21" height="21" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6" viewBox="0 0 24 24">
-                {isOpen ? (
-                  <>
-                    <line x1="4" y1="4" x2="20" y2="20" />
-                    <line x1="20" y1="4" x2="4" y2="20" />
-                  </>
-                ) : (
-                  <>
-                    <line x1="4" y1="7" x2="20" y2="7" />
-                    <line x1="4" y1="12" x2="20" y2="12" />
-                    <line x1="4" y1="17" x2="20" y2="17" />
-                  </>
-                )}
-              </svg>
-            </Button>
-          </div>
-        )}
+        {/* Mobile controls - shown only on mobile */}
+        <div className="flex md:hidden items-center ml-auto gap-1">
+          {user && (
+            <>
+              <MessageBadge />
+              <NotificationBell />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-8 w-8 p-0 transition-transform duration-200 active:scale-95">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.user_metadata?.avatar_url} alt={user.user_metadata?.full_name || user.email} />
+                      <AvatarFallback>{user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-44 z-50 bg-white backdrop-blur-sm border border-gray-200" align="end" forceMount>
+                  <DropdownMenuItem asChild>
+                    <Link to={isAdmin ? "/admin-dashboard" : user.user_metadata?.role === "artist" ? "/artist-dashboard" : "/client-dashboard"}>
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={signOut}>Logout</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          )}
+          <Button variant="ghost" onClick={toggleMenu} className="h-8 w-8 p-0 transition-transform duration-200 active:scale-95">
+            <span className="sr-only">Toggle Menu</span>
+            <svg width="21" height="21" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6" viewBox="0 0 24 24">
+              {isOpen ? (
+                <>
+                  <line x1="4" y1="4" x2="20" y2="20" />
+                  <line x1="20" y1="4" x2="4" y2="20" />
+                </>
+              ) : (
+                <>
+                  <line x1="4" y1="7" x2="20" y2="7" />
+                  <line x1="4" y1="12" x2="20" y2="12" />
+                  <line x1="4" y1="17" x2="20" y2="17" />
+                </>
+              )}
+            </svg>
+          </Button>
+        </div>
       </div>
 
       {/* Minimal Mobile Menu */}
