@@ -39,7 +39,16 @@ const SignupForm = ({
   const validateAndSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     
-    // Validation
+    // Validation - Role selection is mandatory
+    if (!formData.role) {
+      toast({
+        title: "Please select a role",
+        description: "You must choose either Artist or Client to continue.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Passwords do not match",
@@ -52,7 +61,7 @@ const SignupForm = ({
     if (!formData.acceptTerms) {
       toast({
         title: "Terms not accepted",
-        description: "Please accept the terms of service.",
+        description: "Please accept the Terms of Service and Privacy Policy to continue.",
         variant: "destructive"
       });
       return;
@@ -131,7 +140,7 @@ const SignupForm = ({
         </div>
         <div>
           <div className="mb-2">
-            <Label className="text-sm sm:text-base">I am a</Label>
+            <Label className="text-sm sm:text-base">I want to join as <span className="text-destructive">*</span></Label>
           </div>
           <RadioGroup value={formData.role} onValueChange={handleRoleChange} className="flex gap-4 sm:gap-6" disabled={loading}>
             <div className="flex items-center space-x-2 min-h-[44px]">
@@ -155,13 +164,24 @@ const SignupForm = ({
           />
           <Label htmlFor="terms" className="text-xs sm:text-sm leading-tight cursor-pointer">
             I accept the{" "}
-            <Link to="/terms" className="text-artswarit-purple hover:text-artswarit-purple-dark underline">
+            <Link 
+              to="/terms-of-service" 
+              target="_blank"
+              className="text-artswarit-purple hover:text-artswarit-purple-dark underline"
+              onClick={(e) => e.stopPropagation()}
+            >
               Terms of Service
             </Link>{" "}
             and{" "}
-            <Link to="/privacy" className="text-artswarit-purple hover:text-artswarit-purple-dark underline">
+            <Link 
+              to="/privacy-policy" 
+              target="_blank"
+              className="text-artswarit-purple hover:text-artswarit-purple-dark underline"
+              onClick={(e) => e.stopPropagation()}
+            >
               Privacy Policy
             </Link>
+            <span className="text-destructive"> *</span>
           </Label>
         </div>
       </div>

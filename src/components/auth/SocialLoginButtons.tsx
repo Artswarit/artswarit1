@@ -1,20 +1,23 @@
 import { Button } from "@/components/ui/button";
-import { Chrome, Facebook } from "lucide-react";
+import { Chrome } from "lucide-react";
+
 interface SocialLoginButtonsProps {
   onSocialSignup: (provider: string) => void;
 }
+
 const SocialLoginButtons = ({
   onSocialSignup
 }: SocialLoginButtonsProps) => {
-  return <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-        <Button variant="outline" onClick={() => onSocialSignup("Google")} className="w-full flex items-center justify-center gap-2 border-gray-300 hover:bg-gray-50 text-xs sm:text-sm min-h-[44px] px-4">
-          <Chrome className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 flex-shrink-0" />
-          <span className="truncate">Sign up with Google</span>
-        </Button>
-        <Button variant="outline" onClick={() => onSocialSignup("Facebook")} className="w-full flex items-center justify-center gap-2 border-gray-300 hover:bg-blue-50 text-xs sm:text-sm min-h-[44px] px-4">
-          <Facebook className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" />
-          <span className="truncate">Sign up with Facebook</span>
+  return (
+    <>
+      <div className="mb-6">
+        <Button 
+          variant="outline" 
+          onClick={() => onSocialSignup("Google")} 
+          className="w-full flex items-center justify-center gap-2 border-gray-300 hover:bg-gray-50 text-sm min-h-[44px] px-4"
+        >
+          <Chrome className="w-5 h-5 text-red-500 flex-shrink-0" />
+          <span>Sign up with Google</span>
         </Button>
       </div>
 
@@ -23,6 +26,8 @@ const SocialLoginButtons = ({
         <div className="px-3 text-xs sm:text-sm text-gray-500 whitespace-nowrap">Or sign up with email</div>
         <div className="flex-1 border-t border-gray-300"></div>
       </div>
-    </>;
+    </>
+  );
 };
+
 export default SocialLoginButtons;
