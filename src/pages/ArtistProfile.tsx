@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Heart, Eye } from "lucide-react";
+import MessageArtistDialog from "@/components/artist-profile/MessageArtistDialog";
 
 // --- Demo Data for fallback ---
 const ARTIST_UUID_1 = "11111111-1111-1111-1111-111111111111";
@@ -117,6 +118,9 @@ export default function ArtistProfile() {
     budget: "",
     deadline: "",
   });
+
+  // State for message dialog
+  const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
 
   // Add a flag to show diagnostic banner for NOT logged in state
   const [showDiagnosticBanner, setShowDiagnosticBanner] = useState(false);
@@ -526,12 +530,9 @@ export default function ArtistProfile() {
         title: "Demo Message",
         description: `This is a demo profile. In a real app, you would be able to message ${profileState?.name}.`,
       });
-    } else {
-      toast({
-        title: "Coming soon!",
-        description: "Messaging will be available in a future update.",
-      });
+      return;
     }
+    setIsMessageDialogOpen(true);
   };
 
   // Save handler
@@ -893,6 +894,18 @@ export default function ArtistProfile() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Message Artist Dialog */}
+      {user && id && id !== ARTIST_UUID_1 && id !== ARTIST_UUID_2 && (
+        <MessageArtistDialog
+          open={isMessageDialogOpen}
+          onOpenChange={setIsMessageDialogOpen}
+          artistId={id}
+          artistName={profileState?.name || "Artist"}
+          artistAvatar={profileState?.avatar}
+          currentUserId={user.id}
+        />
+      )}
       
       <Footer />
     </div>
