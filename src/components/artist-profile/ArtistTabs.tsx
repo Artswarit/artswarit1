@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import ArtworkCardModern from "./ArtworkCardModern";
+import ArtworkCard from "@/components/artwork/ArtworkCard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Star, MapPin, Mail, IndianRupee } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +19,10 @@ interface GalleryArtwork {
   price?: number;
   isPremium?: boolean;
   isExclusive?: boolean;
+  type?: string;
+  artistId?: string;
+  artistName?: string;
+  category?: string;
 }
 
 interface AboutDetails {
@@ -133,12 +137,20 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
         <TabsContent value={tab} forceMount>
           {isArtTab && (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 my-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 my-4">
                 {paged.map((art) => (
-                  <ArtworkCardModern
+                  <ArtworkCard
                     key={art.id}
-                    {...art}
-                    onViewFull={() => onArtworkClick?.(art)}
+                    id={art.id}
+                    title={art.title}
+                    artist={art.artistName || "Artist"}
+                    artistId={art.artistId || ""}
+                    type={art.type || "image"}
+                    imageUrl={art.img}
+                    likes={art.likes}
+                    views={art.views}
+                    price={art.price}
+                    category={art.category}
                   />
                 ))}
               </div>

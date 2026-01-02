@@ -1,6 +1,6 @@
 
 import React from "react";
-import { MessageCircle, Save, FilePlus, UserPlus } from "lucide-react";
+import { MessageCircle, Save, FilePlus, UserPlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ArtistActionsBarProps {
@@ -10,6 +10,7 @@ interface ArtistActionsBarProps {
   isSaved: boolean;
   onSave: () => void;
   onRequest: () => void;
+  loadingFollow?: boolean;
   loadingSave: boolean;
 }
 
@@ -20,6 +21,7 @@ const ArtistActionsBar: React.FC<ArtistActionsBarProps> = ({
   isSaved,
   onSave,
   onRequest,
+  loadingFollow = false,
   loadingSave,
 }) => {
   return (
@@ -27,6 +29,7 @@ const ArtistActionsBar: React.FC<ArtistActionsBarProps> = ({
       {/* Primary Follow Button - Full width responsive */}
       <Button
         onClick={onFollow}
+        disabled={loadingFollow}
         variant={isFollowing ? "secondary" : "default"}
         className={`w-full relative font-semibold transition-all text-sm min-h-[44px] ${
           isFollowing
@@ -34,7 +37,11 @@ const ArtistActionsBar: React.FC<ArtistActionsBarProps> = ({
             : "bg-gradient-to-r from-violet-600 to-indigo-500 text-white shadow-xl"
         } hover:scale-105`}
       >
-        <UserPlus className="mr-2" size={16} />
+        {loadingFollow ? (
+          <Loader2 className="mr-2 animate-spin" size={16} />
+        ) : (
+          <UserPlus className="mr-2" size={16} />
+        )}
         {isFollowing ? "Unfollow" : "Follow"}
       </Button>
 

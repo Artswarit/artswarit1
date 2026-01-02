@@ -187,6 +187,7 @@ const ArtistHeader: React.FC<Props> = ({
               isSaved={isSaved}
               onSave={onSave}
               onRequest={onRequest}
+              loadingFollow={loadingFollow}
               loadingSave={loadingSave}
             />
           </div>
