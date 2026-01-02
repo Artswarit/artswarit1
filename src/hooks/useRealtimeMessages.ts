@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { Attachment } from '@/components/messages/MessageAttachments';
 
 interface Message {
   id: string;
@@ -9,7 +10,21 @@ interface Message {
   text: string;
   timestamp: Date;
   read: boolean;
+  attachments?: Attachment[];
 }
+
+const parseAttachments = (data: unknown): Attachment[] => {
+  if (!Array.isArray(data)) return [];
+  return data.filter(
+    (item): item is Attachment =>
+      typeof item === "object" &&
+      item !== null &&
+      "name" in item &&
+      "url" in item &&
+      "type" in item &&
+      "size" in item
+  );
+};
 
 interface Conversation {
   id: string;
@@ -132,7 +147,8 @@ export const useRealtimeMessages = () => {
         senderId: msg.sender_id || '',
         text: msg.content,
         timestamp: new Date(msg.created_at),
-        read: msg.is_read || false
+        read: msg.is_read || false,
+        attachments: parseAttachments(msg.attachments)
       }));
 
       setMessages(formattedMessages);
@@ -156,8 +172,8 @@ export const useRealtimeMessages = () => {
   }, [user]);
 
   // Send a new message
-  const sendMessage = useCallback(async (conversationId: string, content: string) => {
-    if (!user || !content.trim()) return;
+  const sendMessage = useCallback(async (conversationId: string, content: string, attachments?: Attachment[]) => {
+    if (!user || (!content.trim() && (!attachments || attachments.length === 0))) return;
 
     try {
       const { data, error } = await supabase
@@ -165,8 +181,9 @@ export const useRealtimeMessages = () => {
         .insert({
           conversation_id: conversationId,
           sender_id: user.id,
-          content: content.trim(),
-          is_read: false
+          content: content.trim() || (attachments && attachments.length > 0 ? '📎 Attachment' : ''),
+          is_read: false,
+          attachments: attachments && attachments.length > 0 ? JSON.parse(JSON.stringify(attachments)) : []
         })
         .select()
         .single();

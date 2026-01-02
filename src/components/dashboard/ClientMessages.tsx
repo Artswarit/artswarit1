@@ -11,8 +11,27 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Send, Search, Paperclip, MoreVertical, Loader2, MessageSquare, ArrowLeft } from "lucide-react";
+import { Send, Search, MoreVertical, Loader2, MessageSquare, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  AttachmentInput,
+  AttachmentPreview,
+  AttachmentDisplay,
+  Attachment,
+} from "@/components/messages/MessageAttachments";
+
+const parseAttachments = (data: unknown): Attachment[] => {
+  if (!Array.isArray(data)) return [];
+  return data.filter(
+    (item): item is Attachment =>
+      typeof item === "object" &&
+      item !== null &&
+      "name" in item &&
+      "url" in item &&
+      "type" in item &&
+      "size" in item
+  );
+};
 
 interface Message {
   id: string;
@@ -20,7 +39,7 @@ interface Message {
   content: string;
   created_at: string;
   is_read: boolean;
-  attachments?: any;
+  attachments?: Attachment[];
 }
 
 interface Conversation {
@@ -49,6 +68,7 @@ const ClientMessages = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [showConversationList, setShowConversationList] = useState(true);
+  const [pendingAttachments, setPendingAttachments] = useState<Attachment[]>([]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -129,7 +149,11 @@ const ClientMessages = () => {
 
       if (error) throw error;
 
-      setMessages(data || []);
+      const parsedMessages = (data || []).map((msg) => ({
+        ...msg,
+        attachments: parseAttachments(msg.attachments),
+      }));
+      setMessages(parsedMessages);
       
       // Mark messages as read
       await supabase
@@ -213,7 +237,7 @@ const ClientMessages = () => {
   }, [user?.id, selectedConversation, fetchConversations]);
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation || !user?.id) return;
+    if ((!newMessage.trim() && pendingAttachments.length === 0) || !selectedConversation || !user?.id) return;
 
     setSending(true);
     try {
@@ -222,8 +246,9 @@ const ClientMessages = () => {
         .insert({
           conversation_id: selectedConversation.id,
           sender_id: user.id,
-          content: newMessage.trim(),
+          content: newMessage.trim() || (pendingAttachments.length > 0 ? '📎 Attachment' : ''),
           is_read: false,
+          attachments: pendingAttachments.length > 0 ? JSON.parse(JSON.stringify(pendingAttachments)) : [],
         });
 
       if (error) throw error;
@@ -235,6 +260,7 @@ const ClientMessages = () => {
         .eq('id', selectedConversation.id);
 
       setNewMessage("");
+      setPendingAttachments([]);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Failed to send message", description: error.message });
     } finally {
@@ -436,7 +462,13 @@ const ClientMessages = () => {
                                 : "bg-muted"
                             )}
                           >
-                            <p className="text-xs sm:text-sm break-words">{message.content}</p>
+                            {message.content && message.content !== '📎 Attachment' && (
+                              <p className="text-xs sm:text-sm break-words">{message.content}</p>
+                            )}
+                            <AttachmentDisplay
+                              attachments={message.attachments || []}
+                              isOwnMessage={message.sender_id === user?.id}
+                            />
                             <p className={cn(
                               "text-[10px] mt-1",
                               message.sender_id === user?.id ? "text-primary-foreground/70" : "text-muted-foreground"
@@ -458,11 +490,25 @@ const ClientMessages = () => {
                 
                 <Separator />
                 
+                {/* Pending attachments preview */}
+                {pendingAttachments.length > 0 && (
+                  <div className="px-3 sm:px-4 pt-2 flex flex-wrap gap-2">
+                    {pendingAttachments.map((attachment, index) => (
+                      <AttachmentPreview
+                        key={index}
+                        attachment={attachment}
+                        onRemove={() => setPendingAttachments((prev) => prev.filter((_, i) => i !== index))}
+                      />
+                    ))}
+                  </div>
+                )}
+                
                 <div className="p-3 sm:p-4">
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="h-9 w-9 p-0 shrink-0 hidden sm:flex">
-                      <Paperclip className="h-4 w-4" />
-                    </Button>
+                    <AttachmentInput 
+                      onAttach={(attachment) => setPendingAttachments((prev) => [...prev, attachment])} 
+                      disabled={sending} 
+                    />
                     <div className="flex-1 flex gap-2">
                       <Textarea
                         placeholder="Type your message..."
@@ -478,7 +524,7 @@ const ClientMessages = () => {
                       />
                       <Button 
                         onClick={handleSendMessage} 
-                        disabled={!newMessage.trim() || sending}
+                        disabled={(!newMessage.trim() && pendingAttachments.length === 0) || sending}
                         size="sm"
                         className="h-9 w-9 p-0 shrink-0"
                       >

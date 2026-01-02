@@ -8,6 +8,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
+import {
+  AttachmentInput,
+  AttachmentPreview,
+  AttachmentDisplay,
+  Attachment,
+} from "@/components/messages/MessageAttachments";
 
 interface Message {
   id: string;
@@ -15,6 +21,7 @@ interface Message {
   sender_id: string;
   created_at: string;
   is_read: boolean;
+  attachments?: Attachment[];
 }
 
 interface MessageArtistDialogProps {
@@ -25,6 +32,19 @@ interface MessageArtistDialogProps {
   artistAvatar?: string;
   currentUserId: string;
 }
+
+const parseAttachments = (data: unknown): Attachment[] => {
+  if (!Array.isArray(data)) return [];
+  return data.filter(
+    (item): item is Attachment =>
+      typeof item === "object" &&
+      item !== null &&
+      "name" in item &&
+      "url" in item &&
+      "type" in item &&
+      "size" in item
+  );
+};
 
 const MessageArtistDialog: React.FC<MessageArtistDialogProps> = ({
   open,
@@ -40,6 +60,7 @@ const MessageArtistDialog: React.FC<MessageArtistDialogProps> = ({
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [pendingAttachments, setPendingAttachments] = useState<Attachment[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -74,7 +95,11 @@ const MessageArtistDialog: React.FC<MessageArtistDialogProps> = ({
             .eq("conversation_id", existingConv.id)
             .order("created_at", { ascending: true });
 
-          setMessages(messagesData || []);
+          const parsedMessages = (messagesData || []).map((msg) => ({
+            ...msg,
+            attachments: parseAttachments(msg.attachments),
+          }));
+          setMessages(parsedMessages);
 
           // Mark messages as read
           await supabase
@@ -111,19 +136,23 @@ const MessageArtistDialog: React.FC<MessageArtistDialogProps> = ({
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
-          const newMsg = payload.new as Message;
+          const newMsg = payload.new as any;
+          const parsedMsg: Message = {
+            ...newMsg,
+            attachments: parseAttachments(newMsg.attachments),
+          };
           setMessages((prev) => {
             // Avoid duplicates
-            if (prev.some((m) => m.id === newMsg.id)) return prev;
-            return [...prev, newMsg];
+            if (prev.some((m) => m.id === parsedMsg.id)) return prev;
+            return [...prev, parsedMsg];
           });
 
           // Mark as read if from artist
-          if (newMsg.sender_id !== currentUserId) {
+          if (parsedMsg.sender_id !== currentUserId) {
             supabase
               .from("messages")
               .update({ is_read: true })
-              .eq("id", newMsg.id);
+              .eq("id", parsedMsg.id);
           }
         }
       )
@@ -135,7 +164,7 @@ const MessageArtistDialog: React.FC<MessageArtistDialogProps> = ({
   }, [conversationId, currentUserId]);
 
   const handleSend = async () => {
-    if (!message.trim()) return;
+    if (!message.trim() && pendingAttachments.length === 0) return;
 
     setSending(true);
     try {
@@ -164,8 +193,9 @@ const MessageArtistDialog: React.FC<MessageArtistDialogProps> = ({
         .insert({
           conversation_id: convId,
           sender_id: currentUserId,
-          content: message.trim(),
+          content: message.trim() || (pendingAttachments.length > 0 ? "📎 Attachment" : ""),
           is_read: false,
+          attachments: pendingAttachments.length > 0 ? JSON.parse(JSON.stringify(pendingAttachments)) : [],
         })
         .select()
         .single();
@@ -179,8 +209,13 @@ const MessageArtistDialog: React.FC<MessageArtistDialogProps> = ({
         .eq("id", convId);
 
       // Add to local state immediately for better UX
-      setMessages((prev) => [...prev, newMessage]);
+      const parsedNewMessage: Message = {
+        ...newMessage,
+        attachments: parseAttachments(newMessage.attachments),
+      };
+      setMessages((prev) => [...prev, parsedNewMessage]);
       setMessage("");
+      setPendingAttachments([]);
 
       toast({
         title: "Message sent!",
@@ -203,6 +238,14 @@ const MessageArtistDialog: React.FC<MessageArtistDialogProps> = ({
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const handleAttach = (attachment: Attachment) => {
+    setPendingAttachments((prev) => [...prev, attachment]);
+  };
+
+  const handleRemoveAttachment = (index: number) => {
+    setPendingAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -244,9 +287,15 @@ const MessageArtistDialog: React.FC<MessageArtistDialogProps> = ({
                             : "bg-muted"
                         }`}
                       >
-                        <p className="text-sm whitespace-pre-wrap break-words">
-                          {msg.content}
-                        </p>
+                        {msg.content && msg.content !== "📎 Attachment" && (
+                          <p className="text-sm whitespace-pre-wrap break-words">
+                            {msg.content}
+                          </p>
+                        )}
+                        <AttachmentDisplay
+                          attachments={msg.attachments || []}
+                          isOwnMessage={isOwnMessage}
+                        />
                         <p
                           className={`text-xs mt-1 ${
                             isOwnMessage
@@ -266,7 +315,21 @@ const MessageArtistDialog: React.FC<MessageArtistDialogProps> = ({
           </ScrollArea>
         </div>
 
+        {/* Pending attachments preview */}
+        {pendingAttachments.length > 0 && (
+          <div className="flex flex-wrap gap-2 pb-2">
+            {pendingAttachments.map((attachment, index) => (
+              <AttachmentPreview
+                key={index}
+                attachment={attachment}
+                onRemove={() => handleRemoveAttachment(index)}
+              />
+            ))}
+          </div>
+        )}
+
         <div className="flex gap-2 pt-2 border-t">
+          <AttachmentInput onAttach={handleAttach} disabled={sending} />
           <Textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -277,7 +340,7 @@ const MessageArtistDialog: React.FC<MessageArtistDialogProps> = ({
           />
           <Button
             onClick={handleSend}
-            disabled={sending || !message.trim()}
+            disabled={sending || (!message.trim() && pendingAttachments.length === 0)}
             size="icon"
             className="h-[60px] w-[60px] shrink-0"
           >
