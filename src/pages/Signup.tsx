@@ -21,7 +21,7 @@ const Signup = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "artist",
+    role: "",
     acceptTerms: false
   });
   
