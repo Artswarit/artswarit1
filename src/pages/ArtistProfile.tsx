@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Heart, Eye } from "lucide-react";
 
 // --- Demo Data for fallback ---
 const ARTIST_UUID_1 = "11111111-1111-1111-1111-111111111111";
@@ -363,13 +364,25 @@ export default function ArtistProfile() {
             table: 'follows',
             filter: `following_id=eq.${id}`
           },
-          async () => {
+          async (payload) => {
             // Refetch followers count
             const { data: followers } = await supabase
               .from("follows")
               .select("id")
               .eq("following_id", id);
             setFollowersCount(followers?.length || 0);
+            
+            // Also update the current user's following status
+            if (user?.id) {
+              const newRecord = payload.new as { follower_id?: string } | null;
+              const oldRecord = payload.old as { follower_id?: string } | null;
+              
+              if (payload.eventType === 'INSERT' && newRecord?.follower_id === user.id) {
+                setIsFollowing(true);
+              } else if (payload.eventType === 'DELETE' && oldRecord?.follower_id === user.id) {
+                setIsFollowing(false);
+              }
+            }
           }
         )
         .subscribe();
@@ -680,6 +693,10 @@ export default function ArtistProfile() {
     price: a.price ?? (isDemoProfile ? (ix === 0 ? 0 : 499 + 100 * ix) : 0),
     isPremium: a.isPremium ?? (isDemoProfile && ix === 1),
     isExclusive: a.isExclusive ?? (isDemoProfile && ix === 2),
+    artistId: id,
+    artistName: profileState.name,
+    category: profileState.category,
+    type: a.type || 'image',
   }));
 
   const pinnedArtworks = [portfolio[0]].filter(Boolean);
@@ -777,8 +794,14 @@ export default function ArtistProfile() {
               />
               <h3 className="text-base sm:text-lg lg:text-xl font-bold mb-2">{selectedArtwork.title}</h3>
               <div className="flex flex-wrap gap-2 sm:gap-4 text-gray-600 text-xs sm:text-sm mb-2">
-                <span>❤️ {selectedArtwork.likes}</span>
-                <span>👁 {selectedArtwork.views}</span>
+                <span className="flex items-center gap-1">
+                  <Heart className="w-4 h-4 text-red-500" />
+                  {selectedArtwork.likes}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Eye className="w-4 h-4 text-blue-500" />
+                  {selectedArtwork.views}
+                </span>
                 {selectedArtwork.price !== undefined && (
                   <span>
                     {selectedArtwork.price === 0 ? "Free" : `₹${selectedArtwork.price}`}
