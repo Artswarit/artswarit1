@@ -40,6 +40,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('User signed in:', session.user.email);
+          
+          // Check if there's a pending signup role (from Google OAuth signup)
+          const pendingRole = localStorage.getItem('pendingSignupRole');
+          if (pendingRole) {
+            // Clear the pending role immediately
+            localStorage.removeItem('pendingSignupRole');
+            
+            // Check if profile already exists
+            setTimeout(async () => {
+              const { data: existingProfile } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('id', session.user.id)
+                .single();
+              
+              // If no profile exists, create one with the selected role
+              if (!existingProfile) {
+                const { error: profileError } = await supabase
+                  .from('profiles')
+                  .insert({
+                    id: session.user.id,
+                    email: session.user.email || '',
+                    full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || '',
+                    role: pendingRole,
+                    avatar_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || ''
+                  });
+                  
+                if (profileError) {
+                  console.error('Error creating profile for Google user:', profileError);
+                }
+              }
+            }, 0);
+          }
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');
         }

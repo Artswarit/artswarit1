@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SignupHeader from "@/components/auth/SignupHeader";
@@ -13,6 +14,7 @@ import LogoWithName from "@/components/LogoWithName";
 const Signup = () => {
   const navigate = useNavigate();
   const { signUp, signInWithGoogle, loading } = useAuth();
+  const { toast } = useToast();
   
   const [formData, setFormData] = useState<SignupFormData>({
     name: "",
@@ -47,6 +49,19 @@ const Signup = () => {
 
   const handleSocialSignup = async (provider: string) => {
     if (provider === "Google") {
+      // Check if role is selected
+      if (!formData.role) {
+        toast({
+          title: "Please select a role",
+          description: "You must choose either Artist or Client before signing up with Google.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Store the selected role in localStorage for use after OAuth completes
+      localStorage.setItem('pendingSignupRole', formData.role);
+      
       const { error } = await signInWithGoogle();
       if (!error) {
         // Redirect will happen automatically via auth state change

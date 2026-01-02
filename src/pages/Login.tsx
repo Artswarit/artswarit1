@@ -11,10 +11,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import LogoWithName from "@/components/LogoWithName";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const navigate = useNavigate();
   const { signIn, signInWithGoogle, loading, user } = useAuth();
+  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -75,6 +77,20 @@ const Login = () => {
   };
 
   const handleGoogleSignIn = async () => {
+    // Check if there's a pending signup role (user came from signup page)
+    const pendingRole = localStorage.getItem('pendingSignupRole');
+    
+    if (!pendingRole) {
+      // No pending role means user should sign up first to select a role
+      toast({
+        title: "Please Sign Up First",
+        description: "New users need to sign up and select their role (Artist or Client) before using Google sign-in.",
+        variant: "destructive"
+      });
+      navigate('/signup');
+      return;
+    }
+    
     setIsSubmitting(true);
     await signInWithGoogle();
     setIsSubmitting(false);
