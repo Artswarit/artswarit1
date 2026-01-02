@@ -3,12 +3,18 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { SearchIcon, Send, PaperclipIcon, ImageIcon, FileIcon, Smile, Loader2 } from "lucide-react";
+import { SearchIcon, Send, Smile, Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { useRealtimeMessages } from "@/hooks/useRealtimeMessages";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  AttachmentInput,
+  AttachmentPreview,
+  AttachmentDisplay,
+  Attachment,
+} from "@/components/messages/MessageAttachments";
 
 const MessagingModule = () => {
   const { toast } = useToast();
@@ -24,6 +30,7 @@ const MessagingModule = () => {
 
   const [messageInput, setMessageInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [pendingAttachments, setPendingAttachments] = useState<Attachment[]>([]);
   const messageEndRef = useRef<HTMLDivElement>(null);
 
   // Get active conversation details
@@ -64,12 +71,15 @@ const MessagingModule = () => {
 
   // Handle sending a new message
   const handleSendMessage = async () => {
-    if (!messageInput.trim() || !activeConversationId) return;
+    if (!messageInput.trim() && pendingAttachments.length === 0) return;
+    if (!activeConversationId) return;
     
     const content = messageInput;
+    const attachments = [...pendingAttachments];
     setMessageInput("");
+    setPendingAttachments([]);
     
-    await sendMessage(activeConversationId, content);
+    await sendMessage(activeConversationId, content, attachments);
     
     // Scroll to the new message
     setTimeout(() => {
@@ -78,11 +88,12 @@ const MessagingModule = () => {
   };
 
   // Handle file attachment
-  const handleAttachFile = () => {
-    toast({
-      title: "File attachment",
-      description: "File attachment functionality will be implemented soon.",
-    });
+  const handleAttach = (attachment: Attachment) => {
+    setPendingAttachments((prev) => [...prev, attachment]);
+  };
+
+  const handleRemoveAttachment = (index: number) => {
+    setPendingAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
   if (loading) {
@@ -250,7 +261,11 @@ const MessagingModule = () => {
                                 ? "bg-primary text-primary-foreground" 
                                 : "bg-background border"
                             }`}>
-                              {message.text}
+                              {message.text && message.text !== '📎 Attachment' && message.text}
+                              <AttachmentDisplay
+                                attachments={message.attachments || []}
+                                isOwnMessage={isSender}
+                              />
                             </div>
                             
                             <div className="flex justify-end items-center gap-1 mt-1">
@@ -280,12 +295,23 @@ const MessagingModule = () => {
                 <div ref={messageEndRef} />
               </ScrollArea>
               
+              {/* Pending attachments preview */}
+              {pendingAttachments.length > 0 && (
+                <div className="px-4 pt-2 flex flex-wrap gap-2">
+                  {pendingAttachments.map((attachment, index) => (
+                    <AttachmentPreview
+                      key={index}
+                      attachment={attachment}
+                      onRemove={() => handleRemoveAttachment(index)}
+                    />
+                  ))}
+                </div>
+              )}
+              
               {/* Message input */}
               <div className="p-4 border-t bg-background">
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" onClick={handleAttachFile}>
-                    <PaperclipIcon size={20} />
-                  </Button>
+                  <AttachmentInput onAttach={handleAttach} disabled={false} />
                   <Input 
                     placeholder="Type your message..." 
                     value={messageInput}
@@ -301,19 +327,13 @@ const MessagingModule = () => {
                     variant="default" 
                     size="icon"
                     onClick={handleSendMessage}
-                    disabled={!messageInput.trim()}
+                    disabled={!messageInput.trim() && pendingAttachments.length === 0}
                     className="bg-primary hover:bg-primary/90"
                   >
                     <Send size={18} />
                   </Button>
                 </div>
                 <div className="flex items-center gap-2 mt-2">
-                  <Button variant="ghost" size="icon" className="h-7 w-7">
-                    <ImageIcon size={16} />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7">
-                    <FileIcon size={16} />
-                  </Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7">
                     <Smile size={16} />
                   </Button>
@@ -413,7 +433,11 @@ const MessagingModule = () => {
                             ? "bg-primary text-primary-foreground" 
                             : "bg-background border"
                         }`}>
-                          {message.text}
+                          {message.text && message.text !== '📎 Attachment' && message.text}
+                          <AttachmentDisplay
+                            attachments={message.attachments || []}
+                            isOwnMessage={isSender}
+                          />
                         </div>
                         
                         <div className="flex justify-end items-center gap-1 mt-1">
@@ -442,12 +466,25 @@ const MessagingModule = () => {
               <div ref={messageEndRef} />
             </div>
             
+            {/* Mobile pending attachments */}
+            {pendingAttachments.length > 0 && (
+              <div className="fixed bottom-[80px] left-0 right-0 p-4 bg-background border-t">
+                <div className="flex flex-wrap gap-2">
+                  {pendingAttachments.map((attachment, index) => (
+                    <AttachmentPreview
+                      key={index}
+                      attachment={attachment}
+                      onRemove={() => handleRemoveAttachment(index)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            
             {/* Mobile message input */}
             <div className="border-t pt-4 bg-background fixed bottom-0 left-0 right-0 p-4">
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" onClick={handleAttachFile}>
-                  <PaperclipIcon size={20} />
-                </Button>
+                <AttachmentInput onAttach={handleAttach} disabled={false} />
                 <Input 
                   placeholder="Type your message..." 
                   value={messageInput}
@@ -463,7 +500,7 @@ const MessagingModule = () => {
                   variant="default" 
                   size="icon"
                   onClick={handleSendMessage}
-                  disabled={!messageInput.trim()}
+                  disabled={!messageInput.trim() && pendingAttachments.length === 0}
                 >
                   <Send size={18} />
                 </Button>
