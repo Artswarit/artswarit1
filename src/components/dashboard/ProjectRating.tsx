@@ -122,7 +122,51 @@ const ProjectRating = () => {
 
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // Real-time subscription for reviews updates
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const reviewsChannel = supabase
+      .channel(`client-reviews-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'project_reviews',
+          filter: `client_id=eq.${user.id}`
+        },
+        () => {
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    const projectsChannel = supabase
+      .channel(`client-projects-reviews-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'projects',
+          filter: `client_id=eq.${user.id}`
+        },
+        (payload) => {
+          // Refetch when a project status changes to completed
+          if ((payload.new as any)?.status === 'completed') {
+            fetchData();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(reviewsChannel);
+      supabase.removeChannel(projectsChannel);
+    };
   }, [user?.id]);
 
   const handleSubmitRating = async () => {
