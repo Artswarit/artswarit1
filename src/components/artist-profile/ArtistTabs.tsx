@@ -52,6 +52,7 @@ interface ReviewItem {
 }
 
 interface ArtistTabsProps {
+  artistId: string;
   allArt: GalleryArtwork[];
   premiumArt: GalleryArtwork[];
   exclusiveArt: GalleryArtwork[];
@@ -70,6 +71,7 @@ const PAGE_SIZE = 6;
 const ART_TABS = ["all", "premium", "exclusive"];
 
 const ArtistTabs: React.FC<ArtistTabsProps> = ({
+  artistId,
   allArt,
   premiumArt,
   exclusiveArt,
@@ -314,6 +316,7 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
                             <ReviewCard
                               key={rev.id}
                               reviewId={rev.id}
+                              artistId={artistId}
                               clientId={rev.client_id}
                               clientName={rev.clientName}
                               clientAvatar={rev.clientAvatar}
