@@ -35,16 +35,21 @@ const Login = () => {
     try {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, full_name, bio, avatar_url, tags')
         .eq('id', user.id)
         .single();
 
+      // Check if profile is incomplete
+      const isProfileIncomplete = !profile?.full_name || !profile?.bio || !profile?.avatar_url || 
+        (profile?.role === 'artist' && (!profile?.tags || profile.tags.length === 0));
+
       if (profile?.role === 'artist' || profile?.role === 'premium') {
-        navigate('/artist-dashboard');
+        // Redirect to profile tab if incomplete, otherwise artworks
+        navigate(isProfileIncomplete ? '/artist-dashboard/profile' : '/artist-dashboard');
       } else if (profile?.role === 'admin') {
         navigate('/admin');
       } else {
-        navigate('/client-dashboard');
+        navigate(isProfileIncomplete ? '/client-dashboard/settings' : '/client-dashboard');
       }
     } catch (error) {
       // Default to home if profile fetch fails

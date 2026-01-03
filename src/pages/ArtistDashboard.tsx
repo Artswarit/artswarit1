@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
+import { useProfileCompletion } from '@/hooks/useProfileCompletion';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -14,6 +15,7 @@ import MessagingModule from '@/components/dashboard/messages/MessagingModule';
 import ArtistSettings from '@/components/dashboard/ArtistSettings';
 import PremiumMembership from '@/components/premium/PremiumMembership';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
+import ProfileCompletionBanner from '@/components/dashboard/ProfileCompletionBanner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Palette, User, DollarSign, MessageSquare, Settings, Crown, Bell, Briefcase, Wrench } from 'lucide-react';
 import ArtworkUpload from '@/components/artwork/ArtworkUpload';
@@ -24,8 +26,11 @@ import UniversalChatbot from '@/components/UniversalChatbot';
 
 const ArtistDashboard = () => {
   const { tab } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
+  const { isComplete, loading: completionLoading } = useProfileCompletion();
+  const [activeTab, setActiveTab] = useState(tab || 'artworks');
 
   useEffect(() => {
     if (profile && profile.role !== 'artist' && profile.role !== 'premium') {
@@ -33,7 +38,23 @@ const ArtistDashboard = () => {
     }
   }, [profile]);
 
-  const defaultTab = tab || 'artworks';
+  // Redirect to profile tab if profile is incomplete (first login)
+  useEffect(() => {
+    if (!completionLoading && !isComplete && !tab) {
+      setActiveTab('profile');
+    }
+  }, [isComplete, completionLoading, tab]);
+
+  // Update active tab when URL changes
+  useEffect(() => {
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [tab]);
+
+  const handleGoToProfile = () => {
+    setActiveTab('profile');
+  };
 
   if (profileLoading) {
     return (
@@ -55,7 +76,9 @@ const ArtistDashboard = () => {
             subtitle="Manage your artworks, projects, profile, and earnings"
           />
 
-          <Tabs defaultValue={defaultTab} className="w-full">
+          <ProfileCompletionBanner onGoToProfile={handleGoToProfile} />
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <div className="overflow-x-auto mb-6 sm:mb-8 pb-1">
               <TabsList className="inline-flex w-auto min-w-full sm:min-w-0 h-12 sm:h-14 p-1 gap-1 bg-background border border-border rounded-xl shadow-sm">
                 <TabsTrigger
