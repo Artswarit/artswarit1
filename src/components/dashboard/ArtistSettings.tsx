@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { 
   Card, CardContent, CardDescription, 
   CardHeader, CardTitle 
@@ -9,13 +9,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Save, Shield, Bell, Eye, Globe } from "lucide-react";
+import { Save, Shield, Bell, Eye, Globe, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface ArtistSettingsProps {
   isLoading: boolean;
 }
 
 const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [saving, setSaving] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
+
   const [settings, setSettings] = useState({
     emailNotifications: true,
     profileVisibility: true,
@@ -30,6 +38,56 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
     newPassword: "",
     confirmPassword: ""
   });
+
+  // Fetch profile and settings on mount
+  const fetchProfile = useCallback(async () => {
+    if (!user?.id) return;
+
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+    
+    if (data) {
+      setProfile(data);
+      // Load settings from profile social_links or metadata
+      const savedSettings = (data.social_links as any)?.settings || {};
+      setSettings(prev => ({
+        ...prev,
+        ...savedSettings
+      }));
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  // Real-time subscription for profile updates
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`artist-settings-profile-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user.id}`
+        },
+        () => {
+          fetchProfile();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, fetchProfile]);
 
   const handleSettingChange = (key: string, value: boolean) => {
     setSettings(prev => ({
@@ -46,19 +104,87 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
     }));
   };
 
-  const saveSettings = () => {
-    console.log("Saving settings:", settings);
-    // In a real app, this would save to a backend
+  const saveSettings = async () => {
+    if (!user?.id) return;
+
+    setSaving(true);
+    try {
+      // Get current social_links and merge with settings
+      const currentSocialLinks = (profile?.social_links as Record<string, unknown>) || {};
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          social_links: {
+            ...currentSocialLinks,
+            settings
+          },
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Settings saved",
+        description: "Your settings have been updated successfully."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const changePassword = () => {
-    console.log("Changing password");
-    // In a real app, this would update the password
-    setPasswordData({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: ""
-    });
+  const changePassword = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast({
+        variant: "destructive",
+        title: "Passwords don't match",
+        description: "Please ensure both passwords are the same."
+      });
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast({
+        variant: "destructive",
+        title: "Password too short",
+        description: "Password must be at least 6 characters."
+      });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Password updated",
+        description: "Your password has been changed successfully."
+      });
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (isLoading) {
@@ -75,8 +201,8 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Settings</h2>
-        <Button onClick={saveSettings} className="flex items-center gap-2">
-          <Save className="h-4 w-4" />
+        <Button onClick={saveSettings} disabled={saving} className="flex items-center gap-2">
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           Save Changes
         </Button>
       </div>
@@ -203,17 +329,6 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="current-password">Current Password</Label>
-                <Input
-                  id="current-password"
-                  name="currentPassword"
-                  type="password"
-                  value={passwordData.currentPassword}
-                  onChange={handlePasswordChange}
-                />
-              </div>
-              
-              <div className="space-y-2">
                 <Label htmlFor="new-password">New Password</Label>
                 <Input
                   id="new-password"
@@ -235,7 +350,8 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
                 />
               </div>
               
-              <Button onClick={changePassword} className="w-full">
+              <Button onClick={changePassword} disabled={saving || !passwordData.newPassword} className="w-full">
+                {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                 Update Password
               </Button>
             </CardContent>
