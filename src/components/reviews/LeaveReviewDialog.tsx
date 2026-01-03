@@ -59,42 +59,48 @@ const LeaveReviewDialog: React.FC<LeaveReviewDialogProps> = ({
 
     setSaving(true);
 
-    const { error } = await supabase.from("project_reviews").insert({
-      project_id: projectId,
-      artist_id: artistId,
-      client_id: clientId,
-      rating,
-      review_text: reviewText.trim() || null,
-    });
+    const { data: newReview, error } = await supabase
+      .from("project_reviews")
+      .insert({
+        project_id: projectId,
+        artist_id: artistId,
+        client_id: clientId,
+        rating,
+        review_text: reviewText.trim() || null,
+      })
+      .select("id")
+      .single();
 
-    if (error) {
+    if (error || !newReview) {
       toast({
         variant: "destructive",
         title: "Failed to submit review",
-        description: error.message,
+        description: error?.message || "Unknown error",
       });
-    } else {
-      // Create notification for the artist
-      const { error: notifError } = await supabase
-        .from("notifications")
-        .insert({
-          user_id: artistId,
-          type: "new_review",
-          title: "New Review Received",
-          message: `A client has left a ${rating}-star review on your profile.`,
-          metadata: { project_id: projectId, rating },
-        });
-
-      if (notifError) {
-        console.error("Failed to create notification:", notifError);
-      }
-
-      toast({ title: "Review submitted!" });
-      setRating(0);
-      setReviewText("");
-      onOpenChange(false);
-      onReviewSubmitted();
+      setSaving(false);
+      return;
     }
+
+    // Create notification for the artist
+    const { error: notifError } = await supabase
+      .from("notifications")
+      .insert({
+        user_id: artistId,
+        type: "new_review",
+        title: "New Review Received",
+        message: `A client has left a ${rating}-star review on your profile.`,
+        metadata: { project_id: projectId, rating, review_id: newReview.id, artist_id: artistId },
+      });
+
+    if (notifError) {
+      console.error("Failed to create notification:", notifError);
+    }
+
+    toast({ title: "Review submitted!" });
+    setRating(0);
+    setReviewText("");
+    onOpenChange(false);
+    onReviewSubmitted();
     setSaving(false);
   };
 
