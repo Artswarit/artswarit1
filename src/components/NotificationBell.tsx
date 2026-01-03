@@ -119,6 +119,16 @@ const NotificationBell = () => {
     if (notification.type === 'follow' && notification.metadata?.follower_id) {
       return `/artist/${notification.metadata.follower_id}`;
     }
+    // Review response notifications - redirect to artist profile reviews tab
+    if (notification.type === 'review_response' && notification.metadata?.artist_id) {
+      return `/artist/${notification.metadata.artist_id}?tab=reviews`;
+    }
+    // Project-related notifications
+    if ((notification.type === 'project_accepted' || notification.type === 'project_rejected' || 
+         notification.type === 'project_progress' || notification.type === 'project_completed') && 
+        notification.metadata?.project_id) {
+      return `/client-dashboard?tab=projects`;
+    }
     return '#';
   };
 

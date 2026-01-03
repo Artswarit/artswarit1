@@ -20,6 +20,7 @@ import { StarRating } from "@/components/ui/StarRating";
 
 interface ReviewCardProps {
   reviewId: string;
+  artistId: string;
   clientId: string;
   clientName: string;
   clientAvatar?: string | null;
@@ -36,6 +37,7 @@ interface ReviewCardProps {
 
 const ReviewCard: React.FC<ReviewCardProps> = ({
   reviewId,
+  artistId,
   clientId,
   clientName,
   clientAvatar,
@@ -79,7 +81,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
 
       if (error) throw error;
 
-      // Create notification for the client
+      // Create notification for the client with artist_id for proper redirect
       const { error: notifError } = await supabase
         .from("notifications")
         .insert({
@@ -87,7 +89,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
           type: "review_response",
           title: "Artist responded to your review",
           message: `An artist has responded to your review.`,
-          metadata: { review_id: reviewId },
+          metadata: { review_id: reviewId, artist_id: artistId },
         });
 
       if (notifError) {

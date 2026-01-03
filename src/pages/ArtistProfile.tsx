@@ -817,6 +817,7 @@ export default function ArtistProfile() {
             </h2>
           </div>
           <ArtistTabs
+            artistId={id || ''}
             allArt={portfolio}
             premiumArt={premiumArt}
             exclusiveArt={exclusiveArt}
