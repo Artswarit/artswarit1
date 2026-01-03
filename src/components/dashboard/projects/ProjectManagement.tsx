@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { PlusCircle, Calendar, Clock, CheckCircle, Loader2, X } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PlusCircle, Calendar, Clock, CheckCircle, Loader2, X, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -19,11 +20,13 @@ interface Project {
   budget: number | null;
   deadline: string | null;
   created_at: string;
+  progress: number;
   client?: string;
   clientAvatar?: string;
-  progress?: number;
   payment?: string;
 }
+
+const PROGRESS_OPTIONS = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 
 const ProjectManagement = () => {
   const { user } = useAuth();
@@ -47,7 +50,7 @@ const ProjectManagement = () => {
         ...project,
         client: project.client?.full_name || 'Unknown Client',
         clientAvatar: project.client?.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
-        progress: project.status === 'completed' ? 100 : project.status === 'accepted' ? 50 : 0,
+        progress: project.progress ?? (project.status === 'completed' ? 100 : project.status === 'accepted' ? 10 : 0),
         payment: project.budget ? `₹${project.budget.toLocaleString()}` : 'Not set',
       }));
 
@@ -79,23 +82,20 @@ const ProjectManagement = () => {
     
     setActionLoading(project.id);
     try {
-      // Update project status to accepted
       const { error: updateError } = await supabase
         .from('projects')
-        .update({ status: 'accepted' })
+        .update({ status: 'accepted', progress: 10 })
         .eq('id', project.id);
 
       if (updateError) throw updateError;
 
-      // Get artist name for notification
       const { data: artistProfile } = await supabase
         .from('profiles')
         .select('full_name')
         .eq('id', user?.id)
-        .single();
+        .maybeSingle();
 
-      // Send notification to client
-      const { error: notifError } = await supabase
+      await supabase
         .from('notifications')
         .insert({
           user_id: project.client_id,
@@ -104,8 +104,6 @@ const ProjectManagement = () => {
           message: `${artistProfile?.full_name || 'The artist'} has accepted your project "${project.title}"`,
           metadata: { project_id: project.id, artist_id: user?.id }
         });
-
-      if (notifError) console.error('Notification error:', notifError);
 
       toast.success('Project accepted successfully!');
       fetchProjects();
@@ -122,23 +120,20 @@ const ProjectManagement = () => {
     
     setActionLoading(project.id);
     try {
-      // Update project status to cancelled/rejected
       const { error: updateError } = await supabase
         .from('projects')
-        .update({ status: 'cancelled' })
+        .update({ status: 'cancelled', progress: 0 })
         .eq('id', project.id);
 
       if (updateError) throw updateError;
 
-      // Get artist name for notification
       const { data: artistProfile } = await supabase
         .from('profiles')
         .select('full_name')
         .eq('id', user?.id)
-        .single();
+        .maybeSingle();
 
-      // Send notification to client
-      const { error: notifError } = await supabase
+      await supabase
         .from('notifications')
         .insert({
           user_id: project.client_id,
@@ -148,13 +143,87 @@ const ProjectManagement = () => {
           metadata: { project_id: project.id, artist_id: user?.id }
         });
 
-      if (notifError) console.error('Notification error:', notifError);
-
       toast.success('Project rejected');
       fetchProjects();
     } catch (err) {
       console.error('Error rejecting project:', err);
       toast.error('Failed to reject project');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleUpdateProgress = async (project: Project, newProgress: number) => {
+    if (!project.client_id) return;
+    
+    setActionLoading(project.id);
+    try {
+      const { error: updateError } = await supabase
+        .from('projects')
+        .update({ progress: newProgress })
+        .eq('id', project.id);
+
+      if (updateError) throw updateError;
+
+      const { data: artistProfile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user?.id)
+        .maybeSingle();
+
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: project.client_id,
+          type: 'project_progress',
+          title: 'Project Progress Updated',
+          message: `${artistProfile?.full_name || 'The artist'} updated "${project.title}" to ${newProgress}% complete`,
+          metadata: { project_id: project.id, artist_id: user?.id, progress: newProgress }
+        });
+
+      toast.success(`Progress updated to ${newProgress}%`);
+      fetchProjects();
+    } catch (err) {
+      console.error('Error updating progress:', err);
+      toast.error('Failed to update progress');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleCompleteProject = async (project: Project) => {
+    if (!project.client_id) return;
+    
+    setActionLoading(project.id);
+    try {
+      const { error: updateError } = await supabase
+        .from('projects')
+        .update({ status: 'completed', progress: 100 })
+        .eq('id', project.id);
+
+      if (updateError) throw updateError;
+
+      const { data: artistProfile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user?.id)
+        .maybeSingle();
+
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: project.client_id,
+          type: 'project_completed',
+          title: 'Project Completed! 🎉',
+          message: `${artistProfile?.full_name || 'The artist'} has completed your project "${project.title}"`,
+          metadata: { project_id: project.id, artist_id: user?.id }
+        });
+
+      toast.success('Project marked as completed!');
+      fetchProjects();
+    } catch (err) {
+      console.error('Error completing project:', err);
+      toast.error('Failed to complete project');
     } finally {
       setActionLoading(null);
     }
@@ -182,7 +251,7 @@ const ProjectManagement = () => {
         <Button><PlusCircle className="mr-2 h-4 w-4" />New Project</Button>
       </div>
 
-      <Tabs defaultValue="pending" className="w-full">
+      <Tabs defaultValue="active" className="w-full">
         <TabsList className="mb-6 grid grid-cols-3 w-full max-w-md">
           <TabsTrigger value="active"><Clock size={16} className="mr-1" />Active ({activeProjects.length})</TabsTrigger>
           <TabsTrigger value="pending"><Loader2 size={16} className="mr-1" />Pending ({pendingProjects.length})</TabsTrigger>
@@ -201,13 +270,49 @@ const ProjectManagement = () => {
                     </div>
                     <CardDescription>{project.client}</CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <Progress value={project.progress} className="h-2 mb-4" />
+                  <CardContent className="space-y-4">
+                    <div>
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="text-muted-foreground">Progress</span>
+                        <span className="font-medium">{project.progress}%</span>
+                      </div>
+                      <Progress value={project.progress} className="h-2" />
+                    </div>
                     <div className="flex gap-4 text-sm text-muted-foreground">
                       {project.deadline && <span className="flex items-center"><Calendar size={14} className="mr-1" />{new Date(project.deadline).toLocaleDateString()}</span>}
                       <span className="text-green-600 font-medium">{project.payment}</span>
                     </div>
                   </CardContent>
+                  <CardFooter className="flex flex-wrap gap-2">
+                    <Select
+                      value={project.progress.toString()}
+                      onValueChange={(value) => handleUpdateProgress(project, parseInt(value))}
+                      disabled={actionLoading === project.id}
+                    >
+                      <SelectTrigger className="w-[130px] h-9">
+                        <SelectValue placeholder="Update %" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PROGRESS_OPTIONS.map(opt => (
+                          <SelectItem key={opt} value={opt.toString()}>{opt}% Complete</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      size="sm"
+                      variant="default"
+                      className="bg-green-600 hover:bg-green-700"
+                      onClick={() => handleCompleteProject(project)}
+                      disabled={actionLoading === project.id}
+                    >
+                      {actionLoading === project.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      ) : (
+                        <Trophy className="h-4 w-4 mr-1" />
+                      )}
+                      Mark Complete
+                    </Button>
+                  </CardFooter>
                 </Card>
               ))}
             </div>
@@ -288,7 +393,13 @@ const ProjectManagement = () => {
                     <CardDescription>{project.client}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Progress value={100} className="h-2 mb-4" />
+                    <div className="mb-4">
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="text-muted-foreground">Progress</span>
+                        <span className="font-medium text-green-600">100%</span>
+                      </div>
+                      <Progress value={100} className="h-2" />
+                    </div>
                     <span className="text-green-600 font-medium text-sm">{project.payment}</span>
                   </CardContent>
                 </Card>
