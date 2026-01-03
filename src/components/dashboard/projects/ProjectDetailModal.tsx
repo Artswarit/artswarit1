@@ -61,6 +61,7 @@ interface ProjectData {
   budget: number | null;
   deadline: string | null;
   status: string | null;
+  progress: number | null;
   created_at: string;
   updated_at: string;
   artist_id: string | null;
@@ -220,9 +221,18 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
       })
       .subscribe();
 
+    // Subscribe to project updates (for progress changes)
+    const projectChannel = supabase
+      .channel(`project-detail-${projectId}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'projects', filter: `id=eq.${projectId}` }, () => {
+        fetchProjectData();
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(milestonesChannel);
       supabase.removeChannel(filesChannel);
+      supabase.removeChannel(projectChannel);
     };
   }, [open, projectId, fetchProjectData]);
 
@@ -399,8 +409,10 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
     }
   };
 
+  // Use real progress from database, fallback to milestone-based calculation
   const completedMilestones = milestones.filter(m => m.status === 'completed').length;
-  const progress = milestones.length > 0 ? Math.round((completedMilestones / milestones.length) * 100) : 0;
+  const milestoneProgress = milestones.length > 0 ? Math.round((completedMilestones / milestones.length) * 100) : 0;
+  const progress = project?.progress ?? milestoneProgress;
 
   if (loading) {
     return (

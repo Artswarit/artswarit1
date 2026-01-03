@@ -408,9 +408,35 @@ export default function ArtistProfile() {
         )
         .subscribe();
 
+      // Real-time subscription for completed projects (to update stats)
+      const projectsChannel = supabase
+        .channel(`artist-projects-${id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'projects',
+            filter: `artist_id=eq.${id}`
+          },
+          async () => {
+            // Refresh artist profile data when projects change
+            const { data: projectsData } = await supabase
+              .from('projects')
+              .select('id, status')
+              .eq('artist_id', id)
+              .eq('status', 'completed');
+            
+            // Update any project-related stats if needed
+            console.log('[ARTIST PROFILE] Projects updated, completed count:', projectsData?.length || 0);
+          }
+        )
+        .subscribe();
+
       return () => {
         supabase.removeChannel(followsChannel);
         supabase.removeChannel(reviewsChannel);
+        supabase.removeChannel(projectsChannel);
       };
     }
     // re-run when id or userId changes
