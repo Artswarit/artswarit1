@@ -85,11 +85,22 @@ const ArtworkCarousel = () => {
               <CarouselItem key={artwork.id} className="md:basis-1/2 lg:basis-1/3 pl-4">
                 <Link to={`/artwork/${artwork.id}`} className="block h-full">
                   <div className="artwork-card group h-[450px] rounded-2xl overflow-hidden shadow-lg transition-all duration-500 neo-blur-sm relative">
-                    <img 
-                      src={artwork.imageUrl} 
-                      alt={artwork.title} 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
+                    {artwork.type === 'video' ? (
+                      <video 
+                        src={artwork.imageUrl} 
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                    ) : (
+                      <img 
+                        src={artwork.imageUrl} 
+                        alt={artwork.title} 
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
                       <h3 className="text-white text-2xl font-semibold">{artwork.title}</h3>
                       <Link 

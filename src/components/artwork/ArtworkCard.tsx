@@ -205,13 +205,24 @@ const ArtworkCard = ({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Image Container */}
+        {/* Image/Video Container */}
         <div className="relative aspect-square overflow-hidden">
-          <img
-            src={imageUrl}
-            alt={title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
+          {type === 'video' ? (
+            <video
+              src={imageUrl}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+          ) : (
+            <img
+              src={imageUrl}
+              alt={title}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+          )}
           
           {/* Subtle gradient on hover only */}
           <div className={`absolute inset-0 bg-gradient-to-t from-black/40 to-transparent transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`} />
