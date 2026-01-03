@@ -95,15 +95,18 @@ const ProjectManagement = () => {
         .eq('id', user?.id)
         .maybeSingle();
 
-      await supabase
-        .from('notifications')
-        .insert({
-          user_id: project.client_id,
-          type: 'project_accepted',
-          title: 'Project Accepted!',
-          message: `${artistProfile?.full_name || 'The artist'} has accepted your project "${project.title}"`,
-          metadata: { project_id: project.id, artist_id: user?.id }
-        });
+      // Only send notification if client is different from the artist (don't notify yourself)
+      if (project.client_id !== user?.id) {
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: project.client_id,
+            type: 'project_accepted',
+            title: 'Project Accepted!',
+            message: `${artistProfile?.full_name || 'The artist'} has accepted your project "${project.title}"`,
+            metadata: { project_id: project.id, artist_id: user?.id }
+          });
+      }
 
       toast.success('Project accepted successfully!');
       fetchProjects();
@@ -133,15 +136,18 @@ const ProjectManagement = () => {
         .eq('id', user?.id)
         .maybeSingle();
 
-      await supabase
-        .from('notifications')
-        .insert({
-          user_id: project.client_id,
-          type: 'project_rejected',
-          title: 'Project Declined',
-          message: `${artistProfile?.full_name || 'The artist'} has declined your project "${project.title}"`,
-          metadata: { project_id: project.id, artist_id: user?.id }
-        });
+      // Only send notification if client is different from the artist
+      if (project.client_id !== user?.id) {
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: project.client_id,
+            type: 'project_rejected',
+            title: 'Project Declined',
+            message: `${artistProfile?.full_name || 'The artist'} has declined your project "${project.title}"`,
+            metadata: { project_id: project.id, artist_id: user?.id }
+          });
+      }
 
       toast.success('Project rejected');
       fetchProjects();
@@ -171,15 +177,18 @@ const ProjectManagement = () => {
         .eq('id', user?.id)
         .maybeSingle();
 
-      await supabase
-        .from('notifications')
-        .insert({
-          user_id: project.client_id,
-          type: 'project_progress',
-          title: 'Project Progress Updated',
-          message: `${artistProfile?.full_name || 'The artist'} updated "${project.title}" to ${newProgress}% complete`,
-          metadata: { project_id: project.id, artist_id: user?.id, progress: newProgress }
-        });
+      // Only send notification if client is different from the artist
+      if (project.client_id !== user?.id) {
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: project.client_id,
+            type: 'project_progress',
+            title: 'Project Progress Updated',
+            message: `${artistProfile?.full_name || 'The artist'} updated "${project.title}" to ${newProgress}% complete`,
+            metadata: { project_id: project.id, artist_id: user?.id, progress: newProgress }
+          });
+      }
 
       toast.success(`Progress updated to ${newProgress}%`);
       fetchProjects();
@@ -209,15 +218,18 @@ const ProjectManagement = () => {
         .eq('id', user?.id)
         .maybeSingle();
 
-      await supabase
-        .from('notifications')
-        .insert({
-          user_id: project.client_id,
-          type: 'project_completed',
-          title: 'Project Completed! 🎉',
-          message: `${artistProfile?.full_name || 'The artist'} has completed your project "${project.title}"`,
-          metadata: { project_id: project.id, artist_id: user?.id }
-        });
+      // Only send notification if client is different from the artist
+      if (project.client_id !== user?.id) {
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: project.client_id,
+            type: 'project_completed',
+            title: 'Project Completed! 🎉',
+            message: `${artistProfile?.full_name || 'The artist'} has completed your project "${project.title}"`,
+            metadata: { project_id: project.id, artist_id: user?.id }
+          });
+      }
 
       toast.success('Project marked as completed!');
       fetchProjects();
