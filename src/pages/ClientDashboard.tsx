@@ -112,7 +112,7 @@ const ClientDashboard = () => {
             day: 'numeric',
             year: 'numeric'
           }) : undefined,
-          progress: project.status === 'completed' ? 100 : project.status === 'accepted' ? 50 : project.status === 'cancelled' ? 0 : 10,
+          progress: project.progress ?? (project.status === 'completed' ? 100 : project.status === 'accepted' ? 10 : project.status === 'cancelled' ? 0 : 0),
           status: project.status === 'accepted' ? 'In Progress' : project.status === 'completed' ? 'Completed' : project.status === 'pending' ? 'Pending' : project.status === 'cancelled' ? 'Rejected' : 'Review',
           rating: ratingsMap[project.id] || 0,
           budget: project.budget || 0

@@ -867,6 +867,7 @@ export type Database = {
           deadline: string | null
           description: string | null
           id: string
+          progress: number | null
           status: string | null
           title: string
           updated_at: string
@@ -879,6 +880,7 @@ export type Database = {
           deadline?: string | null
           description?: string | null
           id?: string
+          progress?: number | null
           status?: string | null
           title: string
           updated_at?: string
@@ -891,6 +893,7 @@ export type Database = {
           deadline?: string | null
           description?: string | null
           id?: string
+          progress?: number | null
           status?: string | null
           title?: string
           updated_at?: string
