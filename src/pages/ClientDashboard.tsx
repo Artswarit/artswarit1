@@ -318,8 +318,8 @@ const ClientDashboard = () => {
           }}>
               <div className="flex justify-between items-center gap-2 mb-3 sm:mb-4">
                 <h2 className="font-heading text-base sm:text-lg lg:text-xl font-semibold">Active Projects</h2>
-                <Button variant="outline" size="sm" asChild className="text-xs sm:text-sm h-8 sm:h-9">
-                  <Link to="/projects">View All</Link>
+                <Button variant="outline" size="sm" className="text-xs sm:text-sm h-8 sm:h-9" onClick={() => setSelectedTab('projects')}>
+                  View All
                 </Button>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:gap-4">
@@ -390,7 +390,7 @@ const ClientDashboard = () => {
           }}>
               <div className="flex justify-between items-center gap-2 mb-3 sm:mb-4">
                 <h2 className="font-heading text-base sm:text-lg lg:text-xl font-semibold">Notifications</h2>
-                <Button variant="ghost" size="sm" className="text-xs sm:text-sm h-8 sm:h-9">
+                <Button variant="ghost" size="sm" className="text-xs sm:text-sm h-8 sm:h-9" onClick={() => setSelectedTab('settings')}>
                   <Bell className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                   <span className="hidden sm:inline">Manage</span>
                 </Button>

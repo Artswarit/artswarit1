@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Bot, X, SendHorizonal, Loader2 } from "lucide-react";
 import ChatMessages from "./ChatMessages";
@@ -8,6 +7,8 @@ import { Card } from "@/components/ui/card";
 import ChatbotArtistCard from "./ChatbotArtistCard";
 import { useChatbotPreferences } from "@/hooks/useChatbotPreferences";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 // Helper types
 type Message = {
@@ -30,6 +31,7 @@ const defaultQuickActions = [
 ];
 
 const ChatbotBubble = () => {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([initialBotMsg]);
   const [input, setInput] = useState("");
@@ -107,12 +109,41 @@ const ChatbotBubble = () => {
   const handleQuickAction = (prompt: string) => handleSend(prompt);
 
   // Actions for Follow/Message on artist card
-  const followArtist = (artistId: string) => {
-    // Implement follow (could hit Supabase REST or function)
-    alert("Followed artist " + artistId);
+  const followArtist = async (artistId: string) => {
+    if (!user?.id) {
+      toast.error('Please sign in to follow artists');
+      return;
+    }
+    
+    try {
+      // Check if already following
+      const { data: existing } = await supabase
+        .from('follows')
+        .select('id')
+        .eq('follower_id', user.id)
+        .eq('following_id', artistId)
+        .maybeSingle();
+      
+      if (existing) {
+        // Unfollow
+        await supabase.from('follows').delete().eq('follower_id', user.id).eq('following_id', artistId);
+        toast.success('Unfollowed artist');
+      } else {
+        // Follow
+        await supabase.from('follows').insert({ follower_id: user.id, following_id: artistId });
+        toast.success('Following artist!');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Could not follow artist');
+    }
   };
+  
   const messageArtist = (artistId: string) => {
-    alert("Message sent to artist " + artistId);
+    if (!user?.id) {
+      toast.error('Please sign in to message artists');
+      return;
+    }
+    toast.info('Navigate to artist profile to send a message');
   };
 
   return (

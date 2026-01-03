@@ -1,11 +1,13 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Users, Heart, Eye, MapPin, Star, Award, Crown, CheckCircle } from 'lucide-react';
+import { Users, Heart, Eye, MapPin, Star, Award, Crown, CheckCircle, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 interface Artist {
   id: string;
@@ -31,17 +33,67 @@ interface Artist {
 interface ArtistCardProps {
   artist: Artist;
   viewMode: 'grid' | 'list';
-  onFollow: (artistId: string) => void;
+  onFollow?: (artistId: string) => void;
 }
 
 const ArtistCard = ({ artist, viewMode, onFollow }: ArtistCardProps) => {
+  const { user } = useAuth();
   const [isFollowing, setIsFollowing] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleFollow = (e: React.MouseEvent) => {
+  // Check initial follow state
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    const checkFollowStatus = async () => {
+      const { data } = await supabase
+        .from('follows')
+        .select('id')
+        .eq('follower_id', user.id)
+        .eq('following_id', artist.id)
+        .maybeSingle();
+      
+      setIsFollowing(!!data);
+    };
+    checkFollowStatus();
+  }, [user?.id, artist.id]);
+
+  const handleFollow = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsFollowing(!isFollowing);
-    onFollow(artist.id);
+    
+    if (!user?.id) {
+      toast.error('Please sign in to follow artists');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      if (isFollowing) {
+        const { error } = await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', user.id)
+          .eq('following_id', artist.id);
+        
+        if (error) throw error;
+        setIsFollowing(false);
+        toast.success('Unfollowed artist');
+      } else {
+        const { error } = await supabase
+          .from('follows')
+          .insert({ follower_id: user.id, following_id: artist.id });
+        
+        if (error) throw error;
+        setIsFollowing(true);
+        toast.success('Following artist!');
+      }
+      onFollow?.(artist.id);
+    } catch (err: any) {
+      toast.error(err.message || 'Something went wrong');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formatNumber = (num: number) => {
@@ -132,8 +184,9 @@ const ArtistCard = ({ artist, viewMode, onFollow }: ArtistCardProps) => {
                       onClick={handleFollow}
                       size="sm"
                       variant={isFollowing ? 'secondary' : 'default'}
+                      disabled={loading}
                     >
-                      {isFollowing ? 'Following' : 'Follow'}
+                      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : isFollowing ? 'Following' : 'Follow'}
                     </Button>
                   </div>
                 </div>
@@ -222,8 +275,9 @@ const ArtistCard = ({ artist, viewMode, onFollow }: ArtistCardProps) => {
               size="sm"
               variant={isFollowing ? 'secondary' : 'default'}
               className="ml-2"
+              disabled={loading}
             >
-              {isFollowing ? 'Following' : 'Follow'}
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : isFollowing ? 'Following' : 'Follow'}
             </Button>
           </div>
         </CardContent>
