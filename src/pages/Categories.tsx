@@ -8,85 +8,81 @@ import { Music, BookOpen, Edit, Pencil, Camera, Palette, Video, Mic, Monitor } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { useCategoryCounts } from "@/hooks/useCategoryCounts";
 
-// Expanded categories list
-const allCategories = [
+// Base categories with icons
+const baseCategories = [
   {
     title: "Musicians",
     icon: <Music size={24} />,
-    count: 1245,
     slug: "musicians"
   }, 
   {
     title: "Writers",
     icon: <BookOpen size={24} />,
-    count: 873,
     slug: "writers"
   }, 
   {
     title: "Rappers",
     icon: <Mic size={24} />,
-    count: 562,
     slug: "rappers"
   }, 
   {
     title: "Editors",
     icon: <Edit size={24} />,
-    count: 421,
     slug: "editors"
   }, 
   {
     title: "Scriptwriters",
     icon: <Pencil size={24} />,
-    count: 318,
     slug: "scriptwriters"
   }, 
   {
     title: "Photographers",
     icon: <Camera size={24} />,
-    count: 756,
     slug: "photographers"
   },
   {
     title: "Illustrators",
     icon: <Palette size={24} />,
-    count: 482,
     slug: "illustrators"
   },
   {
     title: "Voice Artists",
     icon: <Mic size={24} />,
-    count: 329,
     slug: "voice-artists"
   },
   {
     title: "Animators",
     icon: <Video size={24} />,
-    count: 247,
     slug: "animators"
   },
   {
     title: "UI/UX Designers",
     icon: <Monitor size={24} />,
-    count: 368,
     slug: "designers"
   },
   {
     title: "Singers",
     icon: <Mic size={24} />,
-    count: 825,
     slug: "singers"
   },
   {
     title: "Dancers",
     icon: <Music size={24} />,
-    count: 493,
     slug: "dancers"
   }
 ];
 
 const Categories = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const { getCount } = useCategoryCounts();
+  
+  // Categories with real-time counts
+  const allCategories = baseCategories.map(cat => ({
+    ...cat,
+    count: getCount(cat.title)
+  }));
   
   // Filter categories based on search term
   const filteredCategories = allCategories.filter(category => 
