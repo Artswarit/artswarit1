@@ -112,8 +112,8 @@ const ClientDashboard = () => {
             day: 'numeric',
             year: 'numeric'
           }) : undefined,
-          progress: project.status === 'completed' ? 100 : project.status === 'accepted' ? 50 : 10,
-          status: project.status === 'accepted' ? 'In Progress' : project.status === 'completed' ? 'Completed' : project.status === 'pending' ? 'Pending' : 'Review',
+          progress: project.status === 'completed' ? 100 : project.status === 'accepted' ? 50 : project.status === 'cancelled' ? 0 : 10,
+          status: project.status === 'accepted' ? 'In Progress' : project.status === 'completed' ? 'Completed' : project.status === 'pending' ? 'Pending' : project.status === 'cancelled' ? 'Rejected' : 'Review',
           rating: ratingsMap[project.id] || 0,
           budget: project.budget || 0
         };
@@ -248,6 +248,7 @@ const ClientDashboard = () => {
   }, [user?.id, fetchProjects, fetchNotifications, fetchSavedArtistsCount]);
   const activeProjects = projects.filter(p => p.status === "In Progress" || p.status === "Review" || p.status === "Pending");
   const completedProjects = projects.filter(p => p.status === "Completed");
+  const rejectedProjects = projects.filter(p => p.status === "Rejected");
   const userName = 'there';
   return <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-background dark:via-background dark:to-background">
       <Navbar />
@@ -343,7 +344,7 @@ const ClientDashboard = () => {
                         </div>
                         <div className="flex sm:flex-col items-center sm:items-end gap-2 sm:gap-1 w-full sm:w-auto justify-between sm:justify-start">
                           <span className="text-[10px] sm:text-xs text-gray-500 order-2 sm:order-1">Due: {project.dueDate}</span>
-                          <span className={cn("inline-block px-2 py-0.5 text-[10px] sm:text-xs rounded-full order-1 sm:order-2", project.status === "In Progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300")}>
+                          <span className={cn("inline-block px-2 py-0.5 text-[10px] sm:text-xs rounded-full order-1 sm:order-2", project.status === "In Progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" : project.status === "Rejected" ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300" : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300")}>
                             {project.status}
                           </span>
                         </div>

@@ -4,9 +4,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { PlusCircle, Calendar, MessageCircle, Clock, CheckCircle, Loader2 } from "lucide-react";
+import { PlusCircle, Calendar, Clock, CheckCircle, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface Project {
   id: string;
@@ -28,6 +29,7 @@ const ProjectManagement = () => {
   const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const fetchProjects = useCallback(async () => {
     if (!user?.id) return;
@@ -72,6 +74,92 @@ const ProjectManagement = () => {
     return () => { supabase.removeChannel(channel); };
   }, [user?.id, fetchProjects]);
 
+  const handleAcceptProject = async (project: Project) => {
+    if (!project.client_id) return;
+    
+    setActionLoading(project.id);
+    try {
+      // Update project status to accepted
+      const { error: updateError } = await supabase
+        .from('projects')
+        .update({ status: 'accepted' })
+        .eq('id', project.id);
+
+      if (updateError) throw updateError;
+
+      // Get artist name for notification
+      const { data: artistProfile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user?.id)
+        .single();
+
+      // Send notification to client
+      const { error: notifError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: project.client_id,
+          type: 'project_accepted',
+          title: 'Project Accepted!',
+          message: `${artistProfile?.full_name || 'The artist'} has accepted your project "${project.title}"`,
+          metadata: { project_id: project.id, artist_id: user?.id }
+        });
+
+      if (notifError) console.error('Notification error:', notifError);
+
+      toast.success('Project accepted successfully!');
+      fetchProjects();
+    } catch (err) {
+      console.error('Error accepting project:', err);
+      toast.error('Failed to accept project');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleRejectProject = async (project: Project) => {
+    if (!project.client_id) return;
+    
+    setActionLoading(project.id);
+    try {
+      // Update project status to cancelled/rejected
+      const { error: updateError } = await supabase
+        .from('projects')
+        .update({ status: 'cancelled' })
+        .eq('id', project.id);
+
+      if (updateError) throw updateError;
+
+      // Get artist name for notification
+      const { data: artistProfile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user?.id)
+        .single();
+
+      // Send notification to client
+      const { error: notifError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: project.client_id,
+          type: 'project_rejected',
+          title: 'Project Declined',
+          message: `${artistProfile?.full_name || 'The artist'} has declined your project "${project.title}"`,
+          metadata: { project_id: project.id, artist_id: user?.id }
+        });
+
+      if (notifError) console.error('Notification error:', notifError);
+
+      toast.success('Project rejected');
+      fetchProjects();
+    } catch (err) {
+      console.error('Error rejecting project:', err);
+      toast.error('Failed to reject project');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const activeProjects = projects.filter(p => p.status === "accepted");
   const pendingProjects = projects.filter(p => p.status === "pending");
   const completedProjects = projects.filter(p => p.status === "completed");
@@ -94,7 +182,7 @@ const ProjectManagement = () => {
         <Button><PlusCircle className="mr-2 h-4 w-4" />New Project</Button>
       </div>
 
-      <Tabs defaultValue="active" className="w-full">
+      <Tabs defaultValue="pending" className="w-full">
         <TabsList className="mb-6 grid grid-cols-3 w-full max-w-md">
           <TabsTrigger value="active"><Clock size={16} className="mr-1" />Active ({activeProjects.length})</TabsTrigger>
           <TabsTrigger value="pending"><Loader2 size={16} className="mr-1" />Pending ({pendingProjects.length})</TabsTrigger>
@@ -149,8 +237,33 @@ const ProjectManagement = () => {
                       <span className="text-green-600 font-medium">{project.payment}</span>
                     </div>
                   </CardContent>
-                  <CardFooter>
-                    <Button size="sm">Accept Project</Button>
+                  <CardFooter className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleAcceptProject(project)}
+                      disabled={actionLoading === project.id}
+                    >
+                      {actionLoading === project.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      ) : (
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                      )}
+                      Accept
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      onClick={() => handleRejectProject(project)}
+                      disabled={actionLoading === project.id}
+                    >
+                      {actionLoading === project.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      ) : (
+                        <X className="h-4 w-4 mr-1" />
+                      )}
+                      Reject
+                    </Button>
                   </CardFooter>
                 </Card>
               ))}
