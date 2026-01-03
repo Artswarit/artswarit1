@@ -58,8 +58,9 @@ const SavedArtists = () => {
 
     if (artistIds.length === 0) return [];
 
+    // Use public_profiles view which has public read access
     const { data: profiles, error: profilesError } = await supabase
-      .from('profiles')
+      .from('public_profiles')
       .select('id, full_name, avatar_url, role, bio, hourly_rate')
       .in('id', artistIds);
 

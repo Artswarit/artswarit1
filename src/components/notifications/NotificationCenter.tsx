@@ -26,8 +26,32 @@ const NotificationCenter = () => {
     if (user) {
       fetchNotifications();
     }
-    // eslint-disable-next-line
   }, [user]);
+
+  // Real-time subscription for notifications
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`notification-center-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          fetchNotifications();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
 
   const fetchNotifications = async () => {
     try {
