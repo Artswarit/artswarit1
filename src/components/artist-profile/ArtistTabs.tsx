@@ -1,5 +1,6 @@
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import ArtworkCard from "@/components/artwork/ArtworkCard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Star, MapPin, Mail, IndianRupee } from "lucide-react";
@@ -86,6 +87,31 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
 }) => {
   const [tab, setTab] = useState("all");
   const [page, setPage] = useState(1);
+  const [searchParams] = useSearchParams();
+
+  // Open the right tab when arriving from a notification link
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (!tabParam) return;
+
+    const normalized = tabParam === "reviews" ? "about" : tabParam;
+    const allowed = ["all", "premium", "exclusive", "services", "about"];
+    if (allowed.includes(normalized)) {
+      setTab(normalized);
+      setPage(1);
+    }
+  }, [searchParams]);
+
+  // Auto-scroll to a specific review when ?review=<id>
+  useEffect(() => {
+    const reviewId = searchParams.get("review");
+    if (tab !== "about" || !reviewId) return;
+
+    const el = document.getElementById(`review-${reviewId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [tab, reviews, searchParams]);
 
   const { toast } = useToast();
 
@@ -312,25 +338,38 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
                         </div>
                       ) : (
                         <div className="space-y-4">
-                          {reviews.map((rev) => (
-                            <ReviewCard
-                              key={rev.id}
-                              reviewId={rev.id}
-                              artistId={artistId}
-                              clientId={rev.client_id}
-                              clientName={rev.clientName}
-                              clientAvatar={rev.clientAvatar}
-                              rating={rev.rating}
-                              reviewText={rev.review_text}
-                              createdAt={rev.created_at}
-                              artistResponse={rev.artist_response}
-                              artistResponseAt={rev.artist_response_at}
-                              isArtistOwner={isArtistOwner}
-                              currentUserId={currentUserId}
-                              onResponseAdded={onRefreshReviews}
-                              onReviewUpdated={onRefreshReviews}
-                            />
-                          ))}
+                          {reviews.map((rev) => {
+                            const isHighlighted = searchParams.get("review") === rev.id;
+
+                            return (
+                              <div
+                                key={rev.id}
+                                id={`review-${rev.id}`}
+                                className={
+                                  isHighlighted
+                                    ? "scroll-mt-24 rounded-lg ring-2 ring-primary/30"
+                                    : "scroll-mt-24"
+                                }
+                              >
+                                <ReviewCard
+                                  reviewId={rev.id}
+                                  artistId={artistId}
+                                  clientId={rev.client_id}
+                                  clientName={rev.clientName}
+                                  clientAvatar={rev.clientAvatar}
+                                  rating={rev.rating}
+                                  reviewText={rev.review_text}
+                                  createdAt={rev.created_at}
+                                  artistResponse={rev.artist_response}
+                                  artistResponseAt={rev.artist_response_at}
+                                  isArtistOwner={isArtistOwner}
+                                  currentUserId={currentUserId}
+                                  onResponseAdded={onRefreshReviews}
+                                  onReviewUpdated={onRefreshReviews}
+                                />
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>

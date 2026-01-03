@@ -16,6 +16,7 @@ import ExploreArtists from "./pages/ExploreArtists";
 import Categories from "./pages/Categories";
 import ArtistProfile from "./pages/ArtistProfile";
 import ArtworkDetails from "./pages/ArtworkDetails";
+import ReviewRedirect from "./pages/ReviewRedirect";
 import ArtistDashboard from "./pages/ArtistDashboard";
 import ClientDashboard from "./pages/ClientDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -53,8 +54,8 @@ const App = () => (
             <Route path="/explore-artists" element={<ExploreArtists />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/artist/:id" element={<ArtistProfile />} />
+            <Route path="/review/:id" element={<ReviewRedirect />} />
             <Route path="/artwork/:id" element={<ArtworkDetails />} />
-            <Route path="/artist-dashboard" element={<ArtistDashboard />} />
             <Route path="/artist-dashboard/:tab" element={<ArtistDashboard />} />
             <Route path="/client-dashboard" element={<ClientDashboard />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
