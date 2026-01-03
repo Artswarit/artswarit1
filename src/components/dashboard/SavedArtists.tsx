@@ -61,25 +61,64 @@ const SavedArtists = () => {
     // Use public_profiles view which has public read access
     const { data: profiles, error: profilesError } = await supabase
       .from('public_profiles')
-      .select('id, full_name, avatar_url, role, bio, hourly_rate')
+      .select('id, full_name, avatar_url, role, bio, hourly_rate, is_verified, tags, created_at')
       .in('id', artistIds);
 
     if (profilesError) {
       console.error("Error fetching profiles:", profilesError);
       throw new Error(profilesError.message);
     }
+
+    // Fetch real stats for each artist
+    const artistStats = await Promise.all(
+      artistIds.map(async (artistId) => {
+        // Get completed projects count
+        const { count: projectCount } = await supabase
+          .from('projects')
+          .select('*', { count: 'exact', head: true })
+          .eq('artist_id', artistId)
+          .eq('status', 'completed');
+
+        // Get average rating from project_reviews
+        const { data: reviews } = await supabase
+          .from('project_reviews')
+          .select('rating')
+          .eq('artist_id', artistId);
+
+        const avgRating = reviews && reviews.length > 0
+          ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+          : null;
+
+        return {
+          artistId,
+          completedProjects: projectCount || 0,
+          avgRating,
+          reviewCount: reviews?.length || 0
+        };
+      })
+    );
+
+    const statsMap = new Map(artistStats.map(s => [s.artistId, s]));
     
-    return profiles.map((profile): SavedArtist => ({
-      id: profile.id,
-      name: profile.full_name || 'Unnamed Artist',
-      category: profile.role || 'Artist',
-      imageUrl: profile.avatar_url,
-      avgRating: 4.7,
-      completedProjects: (profile.full_name?.length || 5) * 3,
-      hourlyRate: profile.hourly_rate ? `₹${profile.hourly_rate}/hour` : "₹2,500/hour",
-      specialties: [profile.role === 'premium' ? 'Premium' : 'Creative', 'Verified'],
-      lastActive: "Active recently",
-    }));
+    return profiles.map((profile): SavedArtist => {
+      const stats = statsMap.get(profile.id);
+      const tags = profile.tags as string[] | null;
+      
+      return {
+        id: profile.id!,
+        name: profile.full_name || 'Unnamed Artist',
+        category: profile.role || 'Artist',
+        imageUrl: profile.avatar_url,
+        avgRating: stats?.avgRating || 0,
+        completedProjects: stats?.reviewCount || 0,
+        hourlyRate: profile.hourly_rate ? `₹${Number(profile.hourly_rate).toLocaleString()}/hour` : "Not set",
+        specialties: [
+          ...(tags?.slice(0, 2) || []),
+          ...(profile.is_verified ? ['Verified'] : [])
+        ].filter(Boolean),
+        lastActive: profile.created_at ? `Joined ${new Date(profile.created_at).toLocaleDateString()}` : "Active recently",
+      };
+    });
   };
 
   const { data: savedArtists, isLoading, refetch } = useQuery({
