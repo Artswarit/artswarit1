@@ -201,8 +201,9 @@ const ClientSettings = () => {
     setLoading(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const fileName = `avatar-${Date.now()}.${fileExt}`;
+      // Use user.id as folder name to match storage RLS policy
+      const filePath = `${user.id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
@@ -221,6 +222,7 @@ const ClientSettings = () => {
 
       if (updateError) throw updateError;
 
+      setProfile((prev: any) => ({ ...prev, avatar_url: urlData.publicUrl }));
       toast({ title: "Avatar updated!" });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Upload failed", description: error.message });

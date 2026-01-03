@@ -10,6 +10,7 @@ import ClientMessages from "@/components/dashboard/ClientMessages";
 import ProjectRating from "@/components/dashboard/ProjectRating";
 import ClientPayments from "@/components/dashboard/ClientPayments";
 import ClientSettings from "@/components/dashboard/ClientSettings";
+import ProjectDetailModal from "@/components/dashboard/projects/ProjectDetailModal";
 import UniversalChatbot from '@/components/UniversalChatbot';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -48,6 +49,8 @@ const ClientDashboard = () => {
   const [savedArtistsCount, setSavedArtistsCount] = useState(0);
   const [recommendedArtists, setRecommendedArtists] = useState<RecommendedArtist[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [projectModalOpen, setProjectModalOpen] = useState(false);
 
   // Read tab from URL on mount
   useEffect(() => {
@@ -611,7 +614,17 @@ const ClientDashboard = () => {
                               </span>
                             )}
                           </div>
-                          <Button size="sm" variant="outline" className="h-7 sm:h-8 text-xs">View</Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="h-7 sm:h-8 text-xs"
+                            onClick={() => {
+                              setSelectedProjectId(project.id);
+                              setProjectModalOpen(true);
+                            }}
+                          >
+                            View
+                          </Button>
                         </div>
                       </div>
                     ))
@@ -669,7 +682,17 @@ const ClientDashboard = () => {
                               </span>
                             )}
                           </div>
-                          <Button size="sm" variant="outline" className="h-7 sm:h-8 text-xs">View</Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="h-7 sm:h-8 text-xs"
+                            onClick={() => {
+                              setSelectedProjectId(project.id);
+                              setProjectModalOpen(true);
+                            }}
+                          >
+                            View
+                          </Button>
                         </div>
                       </div>
                     ))
@@ -702,6 +725,11 @@ const ClientDashboard = () => {
         </Tabs>
       </div>
       <UniversalChatbot />
+      <ProjectDetailModal 
+        projectId={selectedProjectId}
+        open={projectModalOpen}
+        onOpenChange={setProjectModalOpen}
+      />
     </div>
   );
 };
