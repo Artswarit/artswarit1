@@ -19,12 +19,16 @@ import { cn } from "@/lib/utils";
 interface Project {
   id: string;
   title: string;
+  description: string;
   artist: string;
+  artistId: string;
+  artistAvatar: string;
   dueDate: string;
   completedDate?: string;
   progress: number;
   status: string;
   rating?: number;
+  budget: number;
 }
 
 interface RecommendedArtist {
@@ -59,21 +63,40 @@ const ClientDashboard = () => {
     try {
       const { data, error } = await supabase
         .from('projects')
-        .select(`*, artist:artist_id(full_name)`)
+        .select(`*, artist:artist_id(id, full_name, avatar_url)`)
         .eq('client_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
+      // Fetch reviews for completed projects to get ratings
+      const projectIds = (data || []).filter(p => p.status === 'completed').map(p => p.id);
+      let ratingsMap: Record<string, number> = {};
+      
+      if (projectIds.length > 0) {
+        const { data: reviews } = await supabase
+          .from('project_reviews')
+          .select('project_id, rating')
+          .in('project_id', projectIds);
+        
+        (reviews || []).forEach(r => {
+          ratingsMap[r.project_id] = r.rating;
+        });
+      }
+
       const transformedProjects: Project[] = (data || []).map((project: any) => ({
         id: project.id,
         title: project.title,
+        description: project.description || '',
         artist: project.artist?.full_name || 'Unassigned',
+        artistId: project.artist?.id || '',
+        artistAvatar: project.artist?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${project.artist_id}`,
         dueDate: project.deadline ? new Date(project.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No deadline',
         completedDate: project.status === 'completed' ? new Date(project.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : undefined,
         progress: project.status === 'completed' ? 100 : project.status === 'accepted' ? 50 : 10,
         status: project.status === 'accepted' ? 'In Progress' : project.status === 'completed' ? 'Completed' : project.status === 'pending' ? 'Pending' : 'Review',
-        rating: 0,
+        rating: ratingsMap[project.id] || 0,
+        budget: project.budget || 0,
       }));
 
       setProjects(transformedProjects);
@@ -526,7 +549,19 @@ const ClientDashboard = () => {
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
                         <div className="flex justify-between items-start gap-2">
-                          <h4 className="font-medium text-sm sm:text-base truncate flex-1">{project.title}</h4>
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <img 
+                              src={project.artistAvatar} 
+                              alt={project.artist} 
+                              className="h-8 w-8 rounded-full object-cover shrink-0" 
+                            />
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm sm:text-base truncate">{project.title}</h4>
+                              <Link to={`/artist/${project.artistId}`} className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
+                                {project.artist}
+                              </Link>
+                            </div>
+                          </div>
                           <span className={cn(
                             "px-2 py-0.5 text-[10px] sm:text-xs rounded-full shrink-0",
                             project.status === "In Progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
@@ -534,7 +569,9 @@ const ClientDashboard = () => {
                             {project.status}
                           </span>
                         </div>
-                        <p className="text-xs sm:text-sm text-muted-foreground mt-1">Artist: {project.artist}</p>
+                        {project.description && (
+                          <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{project.description}</p>
+                        )}
                         <div className="flex items-center gap-2 mt-2 sm:mt-3">
                           <div className="flex-1 bg-gray-200 dark:bg-muted rounded-full h-1.5 sm:h-2">
                             <div 
@@ -545,7 +582,14 @@ const ClientDashboard = () => {
                           <span className="text-[10px] sm:text-xs font-medium">{project.progress}%</span>
                         </div>
                         <div className="mt-2 sm:mt-3 flex justify-between items-center">
-                          <span className="text-[10px] sm:text-xs text-gray-500">Due: {project.dueDate}</span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-[10px] sm:text-xs text-gray-500">Due: {project.dueDate}</span>
+                            {project.budget > 0 && (
+                              <span className="text-[10px] sm:text-xs text-green-600 font-medium">
+                                ${project.budget.toLocaleString()}
+                              </span>
+                            )}
+                          </div>
                           <Button size="sm" variant="outline" className="h-7 sm:h-8 text-xs">View</Button>
                         </div>
                       </div>
@@ -570,16 +614,40 @@ const ClientDashboard = () => {
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
                         <div className="flex justify-between items-start gap-2">
-                          <h4 className="font-medium text-sm sm:text-base truncate flex-1">{project.title}</h4>
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <img 
+                              src={project.artistAvatar} 
+                              alt={project.artist} 
+                              className="h-8 w-8 rounded-full object-cover shrink-0" 
+                            />
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm sm:text-base truncate">{project.title}</h4>
+                              <Link to={`/artist/${project.artistId}`} className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
+                                {project.artist}
+                              </Link>
+                            </div>
+                          </div>
                           <div className="flex shrink-0">
                             {[...Array(project.rating || 0)].map((_, i) => (
                               <span key={i} className="text-yellow-400 text-xs sm:text-sm">★</span>
                             ))}
+                            {project.rating === 0 && (
+                              <span className="text-xs text-muted-foreground">No rating</span>
+                            )}
                           </div>
                         </div>
-                        <p className="text-xs sm:text-sm text-muted-foreground mt-1">Artist: {project.artist}</p>
+                        {project.description && (
+                          <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{project.description}</p>
+                        )}
                         <div className="mt-2 sm:mt-3 flex justify-between items-center">
-                          <span className="text-[10px] sm:text-xs text-gray-500">Completed: {project.completedDate}</span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-[10px] sm:text-xs text-gray-500">Completed: {project.completedDate}</span>
+                            {project.budget > 0 && (
+                              <span className="text-[10px] sm:text-xs text-green-600 font-medium">
+                                ${project.budget.toLocaleString()}
+                              </span>
+                            )}
+                          </div>
                           <Button size="sm" variant="outline" className="h-7 sm:h-8 text-xs">View</Button>
                         </div>
                       </div>

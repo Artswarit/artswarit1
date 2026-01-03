@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
@@ -174,12 +175,32 @@ const ArtworkManagement = () => {
     });
   };
 
-  const handleDeleteArtwork = (artworkId: string) => {
-    toast({
-      title: 'Artwork Deleted',
-      description: 'Your artwork has been deleted.',
-    });
+  const handleDeleteArtwork = async (artworkId: string) => {
+    try {
+      // Call the edge function to delete artwork and associated media
+      const { data, error } = await supabase.functions.invoke('delete-artwork-and-media', {
+        body: { artworkId }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Artwork Deleted',
+        description: 'Your artwork has been deleted successfully.',
+      });
+
+      // Refresh the list - real-time will also trigger this
+      fetchArtworks();
+    } catch (err: any) {
+      console.error('Error deleting artwork:', err);
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to delete artwork.',
+        variant: 'destructive',
+      });
+    }
   };
+
 
   if (loading) {
     return (
