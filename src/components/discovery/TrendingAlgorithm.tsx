@@ -309,12 +309,23 @@ const TrendingAlgorithm = () => {
                       {index + 1}
                     </div>
 
-                    {/* Thumbnail */}
-                    <img 
-                      src={item.thumbnail} 
-                      alt={item.title}
-                      className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover flex-shrink-0"
-                    />
+                    {/* Thumbnail / Video */}
+                    {item.type === 'video' ? (
+                      <video 
+                        src={item.thumbnail} 
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover flex-shrink-0"
+                      />
+                    ) : (
+                      <img 
+                        src={item.thumbnail} 
+                        alt={item.title}
+                        className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover flex-shrink-0"
+                      />
+                    )}
 
                     {/* Content Info */}
                     <div className="flex-1 min-w-0 flex flex-col gap-2">

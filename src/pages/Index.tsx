@@ -9,6 +9,7 @@ import { Music, BookOpen, Edit, Pencil, User, Briefcase, ArrowRight } from "luci
 import AnimatedHeroSlider from "@/components/AnimatedHeroSlider";
 import ArtworkCarousel from "@/components/ArtworkCarousel";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { useCategoryCounts } from "@/hooks/useCategoryCounts";
 
 // Mock data - In a real application, this would come from an API
 const allArtists = [{
@@ -150,72 +151,52 @@ const testimonials = [{
 }];
 const Index = () => {
   const [featuredArtists, setFeaturedArtists] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const { getCount } = useCategoryCounts();
 
-  // Calculate category counts dynamically
-  const calculateCategoryData = () => {
-    const categoryMap = new Map();
+  // Base categories with icons and slugs
+  const baseCategories = [{
+    title: "Musicians",
+    icon: <Music size={24} />,
+    slug: "musicians"
+  }, {
+    title: "Writers",
+    icon: <BookOpen size={24} />,
+    slug: "writers"
+  }, {
+    title: "Rappers",
+    icon: <Music size={24} />,
+    slug: "rappers"
+  }, {
+    title: "Editors",
+    icon: <Edit size={24} />,
+    slug: "editors"
+  }, {
+    title: "Photographers",
+    icon: <Edit size={24} />,
+    slug: "photographers"
+  }, {
+    title: "Illustrators",
+    icon: <Pencil size={24} />,
+    slug: "illustrators"
+  }, {
+    title: "Voice Artists",
+    icon: <Music size={24} />,
+    slug: "voice-artists"
+  }, {
+    title: "Animators",
+    icon: <Edit size={24} />,
+    slug: "animators"
+  }, {
+    title: "Scriptwriters",
+    icon: <Pencil size={24} />,
+    slug: "scriptwriters"
+  }];
 
-    // Initialize with base categories and icons
-    const baseCategories = [{
-      title: "Musicians",
-      icon: <Music size={24} />,
-      slug: "musicians"
-    }, {
-      title: "Writers",
-      icon: <BookOpen size={24} />,
-      slug: "writers"
-    }, {
-      title: "Rappers",
-      icon: <Music size={24} />,
-      slug: "rappers"
-    }, {
-      title: "Editors",
-      icon: <Edit size={24} />,
-      slug: "editors"
-    }, {
-      title: "Photographers",
-      icon: <Edit size={24} />,
-      slug: "photographers"
-    }, {
-      title: "Illustrators",
-      icon: <Pencil size={24} />,
-      slug: "illustrators"
-    }, {
-      title: "Voice Artists",
-      icon: <Music size={24} />,
-      slug: "voice-artists"
-    }, {
-      title: "Animators",
-      icon: <Edit size={24} />,
-      slug: "animators"
-    }, {
-      title: "Scriptwriters",
-      icon: <Pencil size={24} />,
-      slug: "scriptwriters"
-    }];
-    baseCategories.forEach(cat => {
-      categoryMap.set(cat.title, {
-        ...cat,
-        count: 0
-      });
-    });
-
-    // Count artists by category
-    allArtists.forEach(artist => {
-      const categoryName = artist.category === "Musician" ? "Musicians" : artist.category === "Writer" ? "Writers" : artist.category === "Rapper" ? "Rappers" : artist.category === "Editor" ? "Editors" : artist.category === "Photographer" ? "Photographers" : artist.category === "Illustrator" ? "Illustrators" : artist.category === "Voice Artist" ? "Voice Artists" : artist.category === "Animator" ? "Animators" : "Others";
-      if (categoryMap.has(categoryName)) {
-        categoryMap.get(categoryName).count++;
-      }
-    });
-
-    // Add some base numbers to make it look more realistic
-    const finalCategories = Array.from(categoryMap.values()).map(cat => ({
-      ...cat,
-      count: cat.count + Math.floor(Math.random() * 500) + 100 // Add some base count
-    }));
-    return finalCategories.filter(cat => cat.count > 0);
-  };
+  // Categories with real-time counts
+  const categories = baseCategories.map(cat => ({
+    ...cat,
+    count: getCount(cat.title)
+  }));
 
   // Effect to sort and update featured artists based on popularity metrics
   useEffect(() => {
@@ -228,27 +209,6 @@ const Index = () => {
 
     // Get top artists
     setFeaturedArtists(sortedArtists.slice(0, 6));
-
-    // Calculate and set categories
-    setCategories(calculateCategoryData());
-
-    // Update featured artists periodically (every 24 hours in production)
-    const timer = setInterval(() => {
-      // In a real app, this would fetch the latest data from an API
-      const newRanking = [...allArtists].sort((a, b) => {
-        const randomFactorA = Math.random() * 0.2;
-        const randomFactorB = Math.random() * 0.2;
-        const scoreA = a.followers * 0.4 + a.likes * 0.3 + a.views * 0.3 + randomFactorA;
-        const scoreB = b.followers * 0.4 + b.likes * 0.3 + b.views * 0.3 + randomFactorB;
-        return scoreB - scoreA;
-      });
-      setFeaturedArtists(newRanking.slice(0, 6));
-
-      // Recalculate categories with slight variations
-      setCategories(calculateCategoryData());
-    }, 60000); // Every minute for demo purposes
-
-    return () => clearInterval(timer);
   }, []);
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
