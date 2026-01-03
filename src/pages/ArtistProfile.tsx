@@ -472,6 +472,28 @@ export default function ArtistProfile() {
 
     setLoadingFollow(true);
     if (!isFollowing) {
+      // Ensure the user exists in the users table (required by foreign key)
+      const { data: existingUser } = await supabase
+        .from("users")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (!existingUser) {
+        // User doesn't exist in users table - create them
+        const { error: userError } = await supabase.from("users").insert({
+          id: user.id,
+          email: user.email || "",
+          name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
+          role: "client",
+        });
+
+        if (userError) {
+          console.error("Error creating user record:", userError);
+          // Continue anyway - they might just need to be in profiles
+        }
+      }
+
       // follow in supabase
       const { error } = await supabase.from("follows").insert({
         following_id: id,
@@ -485,10 +507,11 @@ export default function ArtistProfile() {
           description: "You are now following this artist!",
         });
       } else {
+        console.error("Follow error:", error);
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Something went wrong while following.",
+          description: error.message || "Something went wrong while following.",
         });
       }
     } else {
