@@ -43,11 +43,16 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
   const fetchProfile = useCallback(async () => {
     if (!user?.id) return;
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
+    
+    if (error) {
+      console.error('Error fetching profile:', error);
+      return;
+    }
     
     if (data) {
       setProfile(data);

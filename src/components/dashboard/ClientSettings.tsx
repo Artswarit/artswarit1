@@ -43,11 +43,19 @@ const ClientSettings = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user?.id) return;
-      const { data } = await supabase
+      setLoading(true);
+      const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error fetching profile:', error);
+        setLoading(false);
+        return;
+      }
+      
       if (data) {
         setProfile(data);
         setFormData({
@@ -56,7 +64,14 @@ const ClientSettings = () => {
           location: data.location || "",
           website: data.website || "",
         });
+        // Load settings from social_links
+        const savedSettings = (data.social_links as any)?.settings || {};
+        setSettings(prev => ({
+          ...prev,
+          ...savedSettings
+        }));
       }
+      setLoading(false);
     };
     fetchProfile();
   }, [user?.id]);
@@ -66,8 +81,21 @@ const ClientSettings = () => {
     if (!user?.id) return;
 
     const refetchProfile = async () => {
-      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-      if (data) setProfile(data);
+      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
+      if (data) {
+        setProfile(data);
+        setFormData({
+          fullName: data.full_name || "",
+          bio: data.bio || "",
+          location: data.location || "",
+          website: data.website || "",
+        });
+        const savedSettings = (data.social_links as any)?.settings || {};
+        setSettings(prev => ({
+          ...prev,
+          ...savedSettings
+        }));
+      }
     };
 
     const channel = supabase
@@ -110,6 +138,9 @@ const ClientSettings = () => {
     
     setSaving(true);
     try {
+      // Get current social_links and merge with settings
+      const currentSocialLinks = (profile?.social_links as Record<string, unknown>) || {};
+      
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -117,13 +148,17 @@ const ClientSettings = () => {
           bio: formData.bio,
           location: formData.location,
           website: formData.website,
+          social_links: {
+            ...currentSocialLinks,
+            settings
+          },
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
 
       if (error) throw error;
       
-      toast({ title: "Profile updated successfully!" });
+      toast({ title: "Profile and settings saved successfully!" });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
     } finally {

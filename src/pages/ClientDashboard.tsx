@@ -61,16 +61,34 @@ const ClientDashboard = () => {
     if (!user?.id) return;
 
     try {
-      const { data, error } = await supabase
+      // Fetch projects
+      const { data: projectsData, error } = await supabase
         .from('projects')
-        .select(`*, artist:artist_id(id, full_name, avatar_url)`)
+        .select('*')
         .eq('client_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
+      const projects = projectsData || [];
+
+      // Fetch artist profiles for all projects that have artist_id
+      const artistIds = projects.filter(p => p.artist_id).map(p => p.artist_id);
+      let artistProfiles: Record<string, any> = {};
+      
+      if (artistIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('public_profiles')
+          .select('id, full_name, avatar_url')
+          .in('id', artistIds);
+        
+        (profiles || []).forEach(p => {
+          if (p.id) artistProfiles[p.id] = p;
+        });
+      }
+
       // Fetch reviews for completed projects to get ratings
-      const projectIds = (data || []).filter(p => p.status === 'completed').map(p => p.id);
+      const projectIds = projects.filter(p => p.status === 'completed').map(p => p.id);
       let ratingsMap: Record<string, number> = {};
       
       if (projectIds.length > 0) {
@@ -84,20 +102,23 @@ const ClientDashboard = () => {
         });
       }
 
-      const transformedProjects: Project[] = (data || []).map((project: any) => ({
-        id: project.id,
-        title: project.title,
-        description: project.description || '',
-        artist: project.artist?.full_name || 'Unassigned',
-        artistId: project.artist?.id || '',
-        artistAvatar: project.artist?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${project.artist_id}`,
-        dueDate: project.deadline ? new Date(project.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No deadline',
-        completedDate: project.status === 'completed' ? new Date(project.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : undefined,
-        progress: project.status === 'completed' ? 100 : project.status === 'accepted' ? 50 : 10,
-        status: project.status === 'accepted' ? 'In Progress' : project.status === 'completed' ? 'Completed' : project.status === 'pending' ? 'Pending' : 'Review',
-        rating: ratingsMap[project.id] || 0,
-        budget: project.budget || 0,
-      }));
+      const transformedProjects: Project[] = projects.map((project: any) => {
+        const artistProfile = artistProfiles[project.artist_id] || {};
+        return {
+          id: project.id,
+          title: project.title,
+          description: project.description || '',
+          artist: artistProfile.full_name || 'Unassigned',
+          artistId: project.artist_id || '',
+          artistAvatar: artistProfile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${project.artist_id || 'default'}`,
+          dueDate: project.deadline ? new Date(project.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No deadline',
+          completedDate: project.status === 'completed' ? new Date(project.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : undefined,
+          progress: project.status === 'completed' ? 100 : project.status === 'accepted' ? 50 : 10,
+          status: project.status === 'accepted' ? 'In Progress' : project.status === 'completed' ? 'Completed' : project.status === 'pending' ? 'Pending' : 'Review',
+          rating: ratingsMap[project.id] || 0,
+          budget: project.budget || 0,
+        };
+      });
 
       setProjects(transformedProjects);
     } catch (err) {
