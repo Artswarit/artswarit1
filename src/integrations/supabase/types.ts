@@ -692,6 +692,97 @@ export type Database = {
         }
         Relationships: []
       }
+      project_files: {
+        Row: {
+          created_at: string
+          id: string
+          mime_type: string | null
+          original_name: string
+          project_id: string
+          size_bytes: number | null
+          storage_bucket: string
+          storage_path: string
+          uploader_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mime_type?: string | null
+          original_name: string
+          project_id: string
+          size_bytes?: number | null
+          storage_bucket?: string
+          storage_path: string
+          uploader_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mime_type?: string | null
+          original_name?: string
+          project_id?: string
+          size_bytes?: number | null
+          storage_bucket?: string
+          storage_path?: string
+          uploader_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_files_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_milestones: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          due_date: string | null
+          id: string
+          project_id: string
+          sort_order: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          project_id: string
+          sort_order?: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          project_id?: string
+          sort_order?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_milestones_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_reviews: {
         Row: {
           artist_id: string
@@ -1441,6 +1532,10 @@ export type Database = {
         Returns: number
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_project_participant: {
+        Args: { project_uuid: string; user_uuid: string }
+        Returns: boolean
+      }
       record_artwork_sale: {
         Args: { artwork_uuid: string; buyer_uuid: string; sale_amount: number }
         Returns: string
