@@ -102,6 +102,7 @@ export default function ArtistProfile() {
 
   const [artistServices, setArtistServices] = useState<any[]>([]);
   const [artistReviews, setArtistReviews] = useState<any[]>([]);
+  const [completedProjectsCount, setCompletedProjectsCount] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState<number>(
     profileState?.followers || 0
@@ -146,7 +147,7 @@ export default function ArtistProfile() {
         setLoading(true);
         
         // Fetch artist info from public_profiles view (has avatar_url and cover_url)
-        const [profileResult, artworksResult, followersResult, servicesResult, reviewsResult] = await Promise.all([
+        const [profileResult, artworksResult, followersResult, servicesResult, reviewsResult, projectsResult] = await Promise.all([
           supabase
             .from('public_profiles')
             .select('*')
@@ -171,7 +172,12 @@ export default function ArtistProfile() {
             .from('project_reviews')
             .select('*')
             .eq('artist_id', id)
-            .order('created_at', { ascending: false })
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('projects')
+            .select('id')
+            .eq('artist_id', id)
+            .eq('status', 'completed')
         ]);
 
         const artistData = profileResult.data;
@@ -179,6 +185,10 @@ export default function ArtistProfile() {
         const followersData = followersResult.data || [];
         const servicesData = servicesResult.data || [];
         const reviewsData = reviewsResult.data || [];
+        const completedProjects = projectsResult.data || [];
+        
+        // Set completed projects count
+        setCompletedProjectsCount(completedProjects.length);
 
         // Get all artwork IDs to fetch likes
         const artworkIds = artworksData.map(a => a.id);
@@ -420,14 +430,14 @@ export default function ArtistProfile() {
             filter: `artist_id=eq.${id}`
           },
           async () => {
-            // Refresh artist profile data when projects change
+            // Refresh completed projects count when projects change
             const { data: projectsData } = await supabase
               .from('projects')
-              .select('id, status')
+              .select('id')
               .eq('artist_id', id)
               .eq('status', 'completed');
             
-            // Update any project-related stats if needed
+            setCompletedProjectsCount(projectsData?.length || 0);
             console.log('[ARTIST PROFILE] Projects updated, completed count:', projectsData?.length || 0);
           }
         )
@@ -779,6 +789,12 @@ export default function ArtistProfile() {
             tags: [profileState.category, ...(profileState.specialties || [])],
             views: portfolio.reduce((acc, a) => acc + (a.views || 0), 0),
             tagline: profileState.bio ?? "",
+            // Real stats for Artist Overview section
+            totalProjects: completedProjectsCount,
+            rating: artistReviews.length > 0 
+              ? artistReviews.reduce((sum, r) => sum + r.rating, 0) / artistReviews.length 
+              : 0,
+            reviewCount: artistReviews.length,
           }}
           isFollowing={isFollowing}
           onFollow={handleFollow}
@@ -807,9 +823,11 @@ export default function ArtistProfile() {
             pinnedIds={pinnedIds}
             aboutDetails={{
               artist: profileState,
-              projectsCount: 0,
-              avgRating: 0,
-              reviewCount: 0,
+              projectsCount: completedProjectsCount,
+              avgRating: artistReviews.length > 0 
+                ? artistReviews.reduce((sum, r) => sum + r.rating, 0) / artistReviews.length 
+                : 0,
+              reviewCount: artistReviews.length,
             }}
             services={artistServices}
             reviews={artistReviews}
