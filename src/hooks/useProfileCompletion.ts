@@ -9,10 +9,11 @@ interface ProfileCompletionStatus {
 }
 
 export const useProfileCompletion = (): ProfileCompletionStatus & { loading: boolean } => {
-  const { profile, loading } = useProfile();
+  const { profile, loading, error } = useProfile();
 
   const completionStatus = useMemo((): ProfileCompletionStatus => {
-    if (!profile) {
+    // Return empty state while loading or if there's an error
+    if (loading || error || !profile) {
       return {
         isComplete: false,
         completionPercentage: 0,
