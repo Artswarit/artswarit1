@@ -34,9 +34,9 @@ const ArtistDashboard = () => {
 
   useEffect(() => {
     if (profile && profile.role !== 'artist' && profile.role !== 'premium') {
-      window.location.href = '/client-dashboard';
+      navigate('/client-dashboard');
     }
-  }, [profile]);
+  }, [profile, navigate]);
 
   // Redirect to profile tab if profile is incomplete (first login)
   useEffect(() => {

@@ -47,17 +47,14 @@ const Login = () => {
         return;
       }
 
-      // Check if profile is incomplete
-      const isProfileIncomplete = !profile?.full_name || !profile?.bio || !profile?.avatar_url || 
-        ((profile?.role === 'artist' || profile?.role === 'premium') && (!profile?.tags || profile.tags.length === 0));
+      // Note: profile completion enforcement is handled inside dashboards
 
       if (profile?.role === 'artist' || profile?.role === 'premium') {
-        // Redirect to profile tab if incomplete, otherwise artworks
-        navigate(isProfileIncomplete ? '/artist-dashboard' : '/artist-dashboard');
+        navigate('/artist-dashboard');
       } else if (profile?.role === 'admin') {
-        navigate('/admin');
+        navigate('/admin-dashboard');
       } else {
-        navigate(isProfileIncomplete ? '/client-dashboard' : '/client-dashboard');
+        navigate('/client-dashboard');
       }
     } catch (error) {
       console.error('Error in redirectBasedOnRole:', error);
