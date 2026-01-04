@@ -24,34 +24,43 @@ const Login = () => {
 
   // Redirect if already logged in
   useEffect(() => {
-    if (user) {
+    if (user && !loading) {
       redirectBasedOnRole();
     }
-  }, [user]);
+  }, [user, loading]);
 
   const redirectBasedOnRole = async () => {
     if (!user) return;
     
     try {
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('role, full_name, bio, avatar_url, tags')
         .eq('id', user.id)
         .single();
 
+      if (error) {
+        console.error('Error fetching profile for redirect:', error);
+        // If no profile exists, the user may need to wait for DB trigger
+        // Redirect to home and let the app handle it
+        navigate('/');
+        return;
+      }
+
       // Check if profile is incomplete
       const isProfileIncomplete = !profile?.full_name || !profile?.bio || !profile?.avatar_url || 
-        (profile?.role === 'artist' && (!profile?.tags || profile.tags.length === 0));
+        ((profile?.role === 'artist' || profile?.role === 'premium') && (!profile?.tags || profile.tags.length === 0));
 
       if (profile?.role === 'artist' || profile?.role === 'premium') {
         // Redirect to profile tab if incomplete, otherwise artworks
-        navigate(isProfileIncomplete ? '/artist-dashboard/profile' : '/artist-dashboard');
+        navigate(isProfileIncomplete ? '/artist-dashboard' : '/artist-dashboard');
       } else if (profile?.role === 'admin') {
         navigate('/admin');
       } else {
-        navigate(isProfileIncomplete ? '/client-dashboard/settings' : '/client-dashboard');
+        navigate(isProfileIncomplete ? '/client-dashboard' : '/client-dashboard');
       }
     } catch (error) {
+      console.error('Error in redirectBasedOnRole:', error);
       // Default to home if profile fetch fails
       navigate('/');
     }

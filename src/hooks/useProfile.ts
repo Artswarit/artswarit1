@@ -3,6 +3,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+interface SocialLinks {
+  instagram?: string;
+  twitter?: string;
+  linkedin?: string;
+  youtube?: string;
+  [key: string]: string | undefined;
+}
+
 interface Profile {
   id: string;
   email: string;
@@ -13,7 +21,7 @@ interface Profile {
   bio: string | null;
   location: string | null;
   website: string | null;
-  social_links: any;
+  social_links: SocialLinks | null;
   is_verified: boolean;
   tags: string[] | null;
   hourly_rate: number | null;
@@ -53,7 +61,12 @@ export const useProfile = () => {
         return;
       }
 
-      setProfile(data);
+      // Cast social_links to proper type
+      const profileData: Profile = {
+        ...data,
+        social_links: data.social_links as SocialLinks | null
+      };
+      setProfile(profileData);
     } catch (err: any) {
       console.error('Error fetching profile:', err);
       setError(err.message);

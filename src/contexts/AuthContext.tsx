@@ -31,9 +31,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener
+    // Set up auth state listener - MUST be synchronous to avoid deadlocks
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        // Only synchronous state updates here
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -47,30 +48,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Clear the pending role immediately
             localStorage.removeItem('pendingSignupRole');
             
-            // Check if profile already exists
-            setTimeout(async () => {
-              const { data: existingProfile } = await supabase
-                .from('profiles')
-                .select('id')
-                .eq('id', session.user.id)
-                .single();
-              
-              // If no profile exists, create one with the selected role
-              if (!existingProfile) {
-                const { error: profileError } = await supabase
-                  .from('profiles')
-                  .insert({
-                    id: session.user.id,
-                    email: session.user.email || '',
-                    full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || '',
-                    role: pendingRole,
-                    avatar_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || ''
-                  });
-                  
-                if (profileError) {
-                  console.error('Error creating profile for Google user:', profileError);
-                }
-              }
+            // Defer Supabase calls with setTimeout to avoid deadlock
+            setTimeout(() => {
+              handleGoogleSignupProfile(session.user, pendingRole);
             }, 0);
           }
         } else if (event === 'SIGNED_OUT') {
@@ -88,6 +68,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Handle Google signup profile creation - extracted to avoid async in callback
+  const handleGoogleSignupProfile = async (user: User, pendingRole: string) => {
+    try {
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+      
+      // If no profile exists, create one with the selected role
+      if (!existingProfile) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            email: user.email || '',
+            full_name: user.user_metadata?.full_name || user.user_metadata?.name || '',
+            role: pendingRole,
+            avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || ''
+          });
+          
+        if (profileError) {
+          console.error('Error creating profile for Google user:', profileError);
+        }
+      }
+    } catch (error) {
+      console.error('Error in handleGoogleSignupProfile:', error);
+    }
+  };
 
   const signUp = async (email: string, password: string, userData: { full_name: string; role: string }) => {
     try {
