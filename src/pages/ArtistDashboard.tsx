@@ -6,7 +6,6 @@ import { useProfileCompletion } from '@/hooks/useProfileCompletion';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import ApprovalPending from '@/components/auth/ApprovalPending';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import ArtworkManagement from '@/components/dashboard/ArtworkManagement';
 import ArtistProfile from '@/components/dashboard/ArtistProfile';
@@ -14,23 +13,26 @@ import ArtistEarnings from '@/components/dashboard/ArtistEarnings';
 import MessagingModule from '@/components/dashboard/messages/MessagingModule';
 import ArtistSettings from '@/components/dashboard/ArtistSettings';
 import PremiumMembership from '@/components/premium/PremiumMembership';
-import NotificationCenter from '@/components/notifications/NotificationCenter';
-import ProfileCompletionBanner from '@/components/dashboard/ProfileCompletionBanner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Palette, User, DollarSign, MessageSquare, Settings, Crown, Bell, Briefcase, Wrench } from 'lucide-react';
-import ArtworkUpload from '@/components/artwork/ArtworkUpload';
+import { Palette, User, DollarSign, MessageSquare, Settings, Crown, Bell, Briefcase, Wrench, Lock } from 'lucide-react';
 import ProjectManagement from '@/components/dashboard/projects/ProjectManagement';
 import ArtistNotifications from '@/components/dashboard/ArtistNotifications';
 import ServicesManagement from '@/components/dashboard/services/ServicesManagement';
-import UniversalChatbot from '@/components/UniversalChatbot';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 const ArtistDashboard = () => {
   const { tab } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
-  const { isComplete, loading: completionLoading } = useProfileCompletion();
-  const [activeTab, setActiveTab] = useState(tab || 'artworks');
+  const { isComplete, completionPercentage, missingFields, loading: completionLoading } = useProfileCompletion();
+  const [activeTab, setActiveTab] = useState('profile');
+  const { toast } = useToast();
+
+  // Check if profile is loaded and complete
+  const profileReady = !completionLoading && !profileLoading;
+  const profileIncomplete = profileReady && !isComplete;
 
   useEffect(() => {
     if (profile && profile.role !== 'artist' && profile.role !== 'premium') {
@@ -38,31 +40,55 @@ const ArtistDashboard = () => {
     }
   }, [profile, navigate]);
 
-  // Redirect to profile tab if profile is incomplete (first login)
+  // Force profile tab when profile is incomplete
   useEffect(() => {
-    if (!completionLoading && !isComplete && !tab) {
-      setActiveTab('profile');
+    if (profileReady) {
+      if (profileIncomplete) {
+        // Always force to profile tab when incomplete
+        setActiveTab('profile');
+      } else if (tab && tab !== activeTab) {
+        // Allow tab navigation when profile is complete
+        setActiveTab(tab);
+      } else if (!tab && isComplete) {
+        // Default to artworks when complete and no tab specified
+        setActiveTab('artworks');
+      }
     }
-  }, [isComplete, completionLoading, tab]);
+  }, [profileReady, profileIncomplete, isComplete, tab]);
 
-  // Update active tab when URL changes
-  useEffect(() => {
-    if (tab) {
-      setActiveTab(tab);
+  // Handle tab change with blocking logic
+  const handleTabChange = (newTab: string) => {
+    if (profileIncomplete && newTab !== 'profile') {
+      toast({
+        title: "Complete Your Profile First",
+        description: `Please fill in: ${missingFields.join(', ')} before accessing other sections.`,
+        variant: "destructive"
+      });
+      return;
     }
-  }, [tab]);
-
-  const handleGoToProfile = () => {
-    setActiveTab('profile');
+    setActiveTab(newTab);
   };
 
-  if (profileLoading) {
+  if (profileLoading || completionLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     );
   }
+
+  // Tab configuration with disabled state
+  const tabs = [
+    { value: 'artworks', label: 'Artworks', shortLabel: 'Art', icon: Palette },
+    { value: 'projects', label: 'Projects', shortLabel: 'Proj', icon: Briefcase },
+    { value: 'services', label: 'Services', shortLabel: 'Svc', icon: Wrench },
+    { value: 'profile', label: 'Profile', shortLabel: 'Prof', icon: User },
+    { value: 'premium', label: 'Premium', shortLabel: 'Prem', icon: Crown },
+    { value: 'earnings', label: 'Earnings', shortLabel: 'Earn', icon: DollarSign },
+    { value: 'messages', label: 'Messages', shortLabel: 'Msg', icon: MessageSquare },
+    { value: 'notifications', label: 'Notifications', shortLabel: 'Notif', icon: Bell },
+    { value: 'settings', label: 'Settings', shortLabel: 'Set', icon: Settings },
+  ];
 
   return (
     <ProtectedRoute>
@@ -76,83 +102,60 @@ const ArtistDashboard = () => {
             subtitle="Manage your artworks, projects, profile, and earnings"
           />
 
-          <ProfileCompletionBanner onGoToProfile={handleGoToProfile} />
+          {/* Mandatory Profile Completion Alert */}
+          {profileIncomplete && (
+            <div className="mb-6 p-4 sm:p-6 rounded-xl bg-gradient-to-r from-red-500/10 via-orange-500/10 to-amber-500/10 border-2 border-red-500/30">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex items-start gap-3 flex-1">
+                  <div className="p-2 rounded-full bg-red-500/20">
+                    <Lock className="h-5 w-5 text-red-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground text-lg">Profile Completion Required</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      You must complete your profile before accessing other dashboard features. 
+                      Your profile is currently {completionPercentage}% complete.
+                    </p>
+                    <p className="text-sm text-red-600 font-medium mt-2">
+                      Missing: {missingFields.join(', ')}
+                    </p>
+                    <div className="mt-3 bg-muted rounded-full h-3 overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-red-500 via-orange-500 to-amber-500 transition-all duration-500"
+                        style={{ width: `${completionPercentage}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <div className="overflow-x-auto mb-6 sm:mb-8 pb-1">
               <TabsList className="inline-flex w-auto min-w-full sm:min-w-0 h-12 sm:h-14 p-1 gap-1 bg-background border border-border rounded-xl shadow-sm">
-                <TabsTrigger
-                  value="artworks"
-                  className="flex items-center gap-2 px-3 sm:px-5 py-2.5 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
-                >
-                  <Palette className="h-4 w-4" />
-                  <span className="hidden sm:inline">Artworks</span>
-                  <span className="sm:hidden">Art</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="projects"
-                  className="flex items-center gap-2 px-3 sm:px-5 py-2.5 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
-                >
-                  <Briefcase className="h-4 w-4" />
-                  <span className="hidden sm:inline">Projects</span>
-                  <span className="sm:hidden">Proj</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="services"
-                  className="flex items-center gap-2 px-3 sm:px-5 py-2.5 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
-                >
-                  <Wrench className="h-4 w-4" />
-                  <span className="hidden sm:inline">Services</span>
-                  <span className="sm:hidden">Svc</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="profile"
-                  className="flex items-center gap-2 px-3 sm:px-5 py-2.5 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
-                >
-                  <User className="h-4 w-4" />
-                  <span className="hidden sm:inline">Profile</span>
-                  <span className="sm:hidden">Prof</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="premium"
-                  className="flex items-center gap-2 px-3 sm:px-5 py-2.5 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
-                >
-                  <Crown className="h-4 w-4" />
-                  <span className="hidden sm:inline">Premium</span>
-                  <span className="sm:hidden">Prem</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="earnings"
-                  className="flex items-center gap-2 px-3 sm:px-5 py-2.5 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
-                >
-                  <DollarSign className="h-4 w-4" />
-                  <span className="hidden sm:inline">Earnings</span>
-                  <span className="sm:hidden">Earn</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="messages"
-                  className="flex items-center gap-2 px-3 sm:px-5 py-2.5 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  <span className="hidden sm:inline">Messages</span>
-                  <span className="sm:hidden">Msg</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="notifications"
-                  className="flex items-center gap-2 px-3 sm:px-5 py-2.5 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
-                >
-                  <Bell className="h-4 w-4" />
-                  <span className="hidden sm:inline">Notifications</span>
-                  <span className="sm:hidden">Notif</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="settings"
-                  className="flex items-center gap-2 px-3 sm:px-5 py-2.5 text-sm font-medium rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
-                >
-                  <Settings className="h-4 w-4" />
-                  <span className="hidden sm:inline">Settings</span>
-                  <span className="sm:hidden">Set</span>
-                </TabsTrigger>
+                {tabs.map((tabItem) => {
+                  const Icon = tabItem.icon;
+                  const isDisabled = profileIncomplete && tabItem.value !== 'profile';
+                  
+                  return (
+                    <TabsTrigger
+                      key={tabItem.value}
+                      value={tabItem.value}
+                      disabled={isDisabled}
+                      className={cn(
+                        "flex items-center gap-2 px-3 sm:px-5 py-2.5 text-sm font-medium rounded-lg transition-all",
+                        "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md",
+                        isDisabled && "opacity-50 cursor-not-allowed"
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span className="hidden sm:inline">{tabItem.label}</span>
+                      <span className="sm:hidden">{tabItem.shortLabel}</span>
+                      {isDisabled && <Lock className="h-3 w-3 ml-1" />}
+                    </TabsTrigger>
+                  );
+                })}
               </TabsList>
             </div>
 
