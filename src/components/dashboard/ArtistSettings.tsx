@@ -9,20 +9,37 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Save, Shield, Bell, Eye, Globe, Loader2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Shield, Bell, Eye, Globe, Loader2, Download, UserX, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface ArtistSettingsProps {
   isLoading: boolean;
 }
 
 const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<any>(null);
+  const [downloadingData, setDownloadingData] = useState(false);
+  const [deactivating, setDeactivating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const [settings, setSettings] = useState({
     emailNotifications: true,
@@ -225,6 +242,128 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
     }
   };
 
+  // Download user data
+  const downloadUserData = async () => {
+    if (!user?.id) return;
+    
+    setDownloadingData(true);
+    try {
+      // Fetch all user data
+      const [profileRes, artworksRes, projectsRes, messagesRes] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', user.id).single(),
+        supabase.from('artworks').select('*').eq('artist_id', user.id),
+        supabase.from('projects').select('*').or(`artist_id.eq.${user.id},client_id.eq.${user.id}`),
+        supabase.from('messages').select('*').eq('sender_id', user.id)
+      ]);
+
+      const userData = {
+        exportDate: new Date().toISOString(),
+        profile: profileRes.data,
+        artworks: artworksRes.data || [],
+        projects: projectsRes.data || [],
+        messages: messagesRes.data || [],
+        settings
+      };
+
+      // Create and download JSON file
+      const blob = new Blob([JSON.stringify(userData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `my-data-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Data downloaded",
+        description: "Your data has been downloaded successfully."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Download failed",
+        description: error.message
+      });
+    } finally {
+      setDownloadingData(false);
+    }
+  };
+
+  // Deactivate account
+  const deactivateAccount = async () => {
+    if (!user?.id) return;
+    
+    setDeactivating(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          account_status: 'pending',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Account deactivated",
+        description: "Your account has been deactivated. You will be logged out."
+      });
+
+      setShowDeactivateDialog(false);
+      setTimeout(() => {
+        signOut();
+        navigate('/');
+      }, 1500);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Deactivation failed",
+        description: error.message
+      });
+    } finally {
+      setDeactivating(false);
+    }
+  };
+
+  // Delete account
+  const deleteAccount = async () => {
+    if (!user?.id) return;
+    
+    setDeleting(true);
+    try {
+      // Delete user data from tables
+      await Promise.all([
+        supabase.from('artworks').delete().eq('artist_id', user.id),
+        supabase.from('projects').delete().or(`artist_id.eq.${user.id},client_id.eq.${user.id}`),
+        supabase.from('notifications').delete().eq('user_id', user.id),
+        supabase.from('profiles').delete().eq('id', user.id),
+        supabase.from('users').delete().eq('id', user.id)
+      ]);
+
+      toast({
+        title: "Account deleted",
+        description: "Your account and all data have been permanently deleted."
+      });
+
+      setShowDeleteDialog(false);
+      setTimeout(() => {
+        signOut();
+        navigate('/');
+      }, 1500);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Deletion failed",
+        description: error.message
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -239,10 +378,6 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Settings</h2>
-        <Button onClick={saveSettings} disabled={saving} className="flex items-center gap-2">
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          Save Changes
-        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -404,21 +539,83 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
               <CardDescription>Manage your account</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button variant="outline" className="w-full">
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={downloadUserData}
+                disabled={downloadingData}
+              >
+                {downloadingData ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
                 Download My Data
               </Button>
               
-              <Button variant="outline" className="w-full">
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => setShowDeactivateDialog(true)}
+              >
+                <UserX className="h-4 w-4 mr-2" />
                 Deactivate Account
               </Button>
               
-              <Button variant="destructive" className="w-full">
+              <Button 
+                variant="destructive" 
+                className="w-full"
+                onClick={() => setShowDeleteDialog(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
                 Delete Account
               </Button>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Deactivate Confirmation Dialog */}
+      <AlertDialog open={showDeactivateDialog} onOpenChange={setShowDeactivateDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deactivate Account?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your account will be hidden and you will be logged out. You can reactivate it by contacting support.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deactivating}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={deactivateAccount} disabled={deactivating}>
+              {deactivating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              Deactivate
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Account Permanently?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. All your artworks, projects, messages, and profile data will be permanently deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={deleteAccount} 
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              Delete Forever
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
