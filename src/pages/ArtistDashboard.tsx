@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
-import { useProfileCompletion } from '@/hooks/useProfileCompletion';
+import { computeProfileCompletion } from '@/hooks/useProfileCompletion';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -25,13 +25,14 @@ const ArtistDashboard = () => {
   const { tab } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { profile, loading: profileLoading } = useProfile();
-  const { isComplete, completionPercentage, missingFields, loading: completionLoading } = useProfileCompletion();
+  const { profile, loading: profileLoading, updateProfile, uploadImage } = useProfile();
+  const completion = useMemo(() => computeProfileCompletion(profile), [profile]);
+  const { isComplete, completionPercentage, missingFields } = completion;
   const [activeTab, setActiveTab] = useState('profile');
   const { toast } = useToast();
 
   // Check if profile is loaded and complete
-  const profileReady = !completionLoading && !profileLoading;
+  const profileReady = !profileLoading;
   const profileIncomplete = profileReady && !isComplete;
 
   useEffect(() => {
@@ -69,7 +70,7 @@ const ArtistDashboard = () => {
     setActiveTab(newTab);
   };
 
-  if (profileLoading || completionLoading) {
+  if (profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
@@ -169,7 +170,12 @@ const ArtistDashboard = () => {
               <ServicesManagement />
             </TabsContent>
             <TabsContent value="profile" className="space-y-6">
-              <ArtistProfile isLoading={profileLoading} />
+              <ArtistProfile
+                isLoading={profileLoading}
+                profile={profile}
+                updateProfile={updateProfile}
+                uploadImage={uploadImage}
+              />
             </TabsContent>
             <TabsContent value="premium" className="space-y-6">
               <PremiumMembership />

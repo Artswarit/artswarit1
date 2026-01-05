@@ -1,17 +1,19 @@
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Edit, Save, Upload, Camera, Plus, X, MapPin, Globe, Briefcase, Clock, DollarSign, Instagram, Twitter, Linkedin, Youtube } from "lucide-react";
-import { useProfile } from "@/hooks/useProfile";
-import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import { useToast } from "@/hooks/use-toast";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+
+type UploadType = "avatar" | "cover";
 
 interface ArtistProfileProps {
   isLoading: boolean;
+  profile: any;
+  updateProfile: (updates: any) => Promise<any>;
+  uploadImage: (file: File, type: UploadType) => Promise<any>;
 }
 
 // Available categories for artists
@@ -24,9 +26,7 @@ const AVAILABLE_CATEGORIES = [
   "Portrait", "Landscape", "Abstract", "Surrealism", "Realism"
 ];
 
-const ArtistProfile = ({ isLoading: externalLoading }: ArtistProfileProps) => {
-  const { profile, loading, updateProfile, uploadImage } = useProfile();
-  const { completionPercentage, missingFields, isComplete } = useProfileCompletion();
+const ArtistProfile = ({ isLoading: externalLoading, profile, updateProfile, uploadImage }: ArtistProfileProps) => {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -54,7 +54,7 @@ const ArtistProfile = ({ isLoading: externalLoading }: ArtistProfileProps) => {
   });
 
   // Initialize form when profile loads
-  useMemo(() => {
+  useEffect(() => {
     if (profile) {
       const socialLinks = profile.social_links || {};
       setEditForm({
@@ -69,8 +69,8 @@ const ArtistProfile = ({ isLoading: externalLoading }: ArtistProfileProps) => {
           instagram: socialLinks.instagram || "",
           twitter: socialLinks.twitter || "",
           linkedin: socialLinks.linkedin || "",
-          youtube: socialLinks.youtube || ""
-        }
+          youtube: socialLinks.youtube || "",
+        },
       });
     }
   }, [profile]);
@@ -199,7 +199,7 @@ const ArtistProfile = ({ isLoading: externalLoading }: ArtistProfileProps) => {
   const avatarUrl = profile?.avatar_url || "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=200";
   const coverUrl = profile?.cover_url || "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=800";
 
-  if (externalLoading || loading) {
+  if (externalLoading || !profile) {
     return (
       <div className="space-y-6">
         <div className="h-10 w-48 bg-muted animate-pulse rounded-md"></div>
@@ -211,28 +211,6 @@ const ArtistProfile = ({ isLoading: externalLoading }: ArtistProfileProps) => {
 
   return (
     <div className="space-y-6">
-      {/* Profile Completion Status */}
-      {!isComplete && (
-        <Card className="border-amber-500/30 bg-gradient-to-r from-amber-500/5 to-orange-500/5">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4 mb-3">
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">Profile Completion</span>
-                  <span className="text-sm text-muted-foreground">{completionPercentage}%</span>
-                </div>
-                <Progress value={completionPercentage} className="h-2" />
-              </div>
-            </div>
-            {missingFields.length > 0 && (
-              <p className="text-sm text-amber-600">
-                Add: {missingFields.join(', ')} to complete your profile
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Artist Profile</h2>
         {isEditing ? (
