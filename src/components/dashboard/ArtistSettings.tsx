@@ -94,11 +94,44 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
     };
   }, [user?.id, fetchProfile]);
 
-  const handleSettingChange = (key: string, value: boolean) => {
-    setSettings(prev => ({
-      ...prev,
+  const handleSettingChange = async (key: string, value: boolean) => {
+    const newSettings = {
+      ...settings,
       [key]: value
-    }));
+    };
+    setSettings(newSettings);
+
+    // Auto-save to database
+    if (!user?.id) return;
+    try {
+      const currentSocialLinks = (profile?.social_links as Record<string, unknown>) || {};
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          social_links: {
+            ...currentSocialLinks,
+            settings: newSettings
+          },
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Setting updated",
+        description: `${key.replace(/([A-Z])/g, ' $1').trim()} has been ${value ? 'enabled' : 'disabled'}.`
+      });
+    } catch (error: any) {
+      // Revert on error
+      setSettings(prev => ({ ...prev, [key]: !value }));
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message
+      });
+    }
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
