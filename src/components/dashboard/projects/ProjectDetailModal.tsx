@@ -443,13 +443,24 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
           </DialogDescription>
         </DialogHeader>
 
+        {/* Project Description */}
+        <div className="bg-muted/50 rounded-lg p-4 border">
+          <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Project Description
+          </h4>
+          <p className="text-sm text-foreground whitespace-pre-wrap">
+            {project.description || 'No description provided'}
+          </p>
+        </div>
+
         {/* Project Overview */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-3 border-y">
           <div className="flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">Budget</p>
-              <p className="font-medium text-sm">${project.budget?.toLocaleString() || '0'}</p>
+              <p className="font-medium text-sm">₹{project.budget?.toLocaleString() || '0'}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -478,10 +489,6 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
             </div>
           </div>
         </div>
-
-        {project.description && (
-          <p className="text-sm text-muted-foreground py-2">{project.description}</p>
-        )}
 
         <Progress value={progress} className="h-2" />
 
