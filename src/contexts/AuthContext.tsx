@@ -193,10 +193,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error };
       }
 
+      // Clear user and session state immediately
+      setUser(null);
+      setSession(null);
+
       toast({
         title: "Signed out",
         description: "You've been successfully signed out."
       });
+
+      // Redirect to home page after logout
+      window.location.href = '/';
 
       return { error: null };
     } catch (error: any) {
