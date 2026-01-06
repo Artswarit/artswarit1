@@ -346,7 +346,7 @@ const ArtworkManagement = () => {
               Upload New Artwork
             </DialogTitle>
           </DialogHeader>
-          <ArtworkUploadForm />
+          <ArtworkUploadForm onCancel={() => setShowUploadForm(false)} onSuccess={() => { setShowUploadForm(false); fetchArtworks(); }} />
         </DialogContent>
       </Dialog>
 
