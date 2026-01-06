@@ -52,6 +52,24 @@ export const computeProfileCompletion = (
       if (!value || (Array.isArray(value) && value.length === 0)) {
         missingFields.push(field.label);
       }
+    } else if (field.key === 'avatar_url') {
+      // Avatar must exist and not be a generated placeholder
+      const avatarUrl = (typeof value === 'string' ? value.trim() : '') || '';
+      const isValidAvatar = avatarUrl !== '' && 
+        !avatarUrl.includes('ui-avatars.com') && 
+        !avatarUrl.includes('placeholder');
+      if (!isValidAvatar) {
+        missingFields.push(field.label);
+      }
+    } else if (field.key === 'bio') {
+      // Bio must exist and not be empty or default placeholder
+      const bio = (typeof value === 'string' ? value.trim() : '') || '';
+      const isValidBio = bio !== '' && 
+        bio.toLowerCase() !== 'artist on artswarit' && 
+        bio.toLowerCase() !== 'tell others about yourself and your art...';
+      if (!isValidBio) {
+        missingFields.push(field.label);
+      }
     } else if (!value || (typeof value === 'string' && value.trim() === '')) {
       missingFields.push(field.label);
     }

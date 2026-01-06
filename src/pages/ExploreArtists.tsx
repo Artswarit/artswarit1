@@ -36,9 +36,22 @@ const isProfileComplete = (profile: any): boolean => {
   if (!profile) return false;
   
   const hasDisplayName = profile.full_name && profile.full_name.trim() !== '';
-  const hasBio = profile.bio && profile.bio.trim() !== '';
-  const hasAvatar = profile.avatar_url && profile.avatar_url.trim() !== '';
+  
+  // Bio must exist and not be empty or the default placeholder
+  const bio = profile.bio?.trim() || '';
+  const hasBio = bio !== '' && 
+    bio.toLowerCase() !== 'artist on artswarit' && 
+    bio.toLowerCase() !== 'tell others about yourself and your art...';
+  
+  // Avatar must exist and not be a generated placeholder (ui-avatars.com)
+  const avatarUrl = profile.avatar_url?.trim() || '';
+  const hasAvatar = avatarUrl !== '' && 
+    !avatarUrl.includes('ui-avatars.com') && 
+    !avatarUrl.includes('placeholder');
+  
   const hasTags = profile.tags && Array.isArray(profile.tags) && profile.tags.length > 0;
+  
+  console.log(`Profile ${profile.full_name}: name=${hasDisplayName}, bio=${hasBio}, avatar=${hasAvatar}, tags=${hasTags}`);
   
   // For artists, all 4 fields are required
   return hasDisplayName && hasBio && hasAvatar && hasTags;
@@ -293,12 +306,26 @@ const ExploreArtists = () => {
       )
       .subscribe();
 
+    // Real-time updates for artworks (artwork count)
+    const artworksChannel = supabase
+      .channel('artists-artworks-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'artworks' },
+        () => {
+          console.log('Artworks updated, refreshing artists...');
+          fetchArtists();
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(profileChannel);
       supabase.removeChannel(followsChannel);
       supabase.removeChannel(likesChannel);
       supabase.removeChannel(viewsChannel);
       supabase.removeChannel(reviewsChannel);
+      supabase.removeChannel(artworksChannel);
     };
   }, [fetchArtists]);
 
