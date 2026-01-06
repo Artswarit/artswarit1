@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -31,6 +31,19 @@ interface Artist {
   tags: string[];
 }
 
+// Helper function to check if a profile is complete (matches useProfileCompletion logic)
+const isProfileComplete = (profile: any): boolean => {
+  if (!profile) return false;
+  
+  const hasDisplayName = profile.full_name && profile.full_name.trim() !== '';
+  const hasBio = profile.bio && profile.bio.trim() !== '';
+  const hasAvatar = profile.avatar_url && profile.avatar_url.trim() !== '';
+  const hasTags = profile.tags && Array.isArray(profile.tags) && profile.tags.length > 0;
+  
+  // For artists, all 4 fields are required
+  return hasDisplayName && hasBio && hasAvatar && hasTags;
+};
+
 const ExploreArtists = () => {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [filteredArtists, setFilteredArtists] = useState<Artist[]>([]);
@@ -41,7 +54,7 @@ const ExploreArtists = () => {
   const isMobile = useIsMobile();
   const { user } = useAuth();
 
-  const fetchArtists = async () => {
+  const fetchArtists = useCallback(async () => {
     try {
       console.log('Fetching artists...');
       
@@ -68,7 +81,19 @@ const ExploreArtists = () => {
         return;
       }
 
-      const artistIds = profiles.map(p => p.id).filter(Boolean) as string[];
+      // Filter only artists with complete profiles (100% completion)
+      const completeProfiles = profiles.filter(profile => isProfileComplete(profile));
+      console.log('Complete profiles:', completeProfiles.length, 'out of', profiles.length);
+
+      if (completeProfiles.length === 0) {
+        console.log('No artists with complete profiles found');
+        setArtists([]);
+        setFilteredArtists([]);
+        setLoading(false);
+        return;
+      }
+
+      const artistIds = completeProfiles.map(p => p.id).filter(Boolean) as string[];
       
       const { data: follows } = await supabase
         .from('follows')
@@ -83,18 +108,26 @@ const ExploreArtists = () => {
         }
       });
 
-      // Get artwork counts
+      // Get artwork data with IDs
       const { data: artworks } = await supabase
         .from('artworks')
-        .select('artist_id')
+        .select('id, artist_id')
         .in('artist_id', artistIds)
         .eq('status', 'public');
 
       const artworkCounts = new Map<string, number>();
+      const artworkIdsByArtist = new Map<string, string[]>();
       artworks?.forEach(a => {
         const count = artworkCounts.get(a.artist_id) || 0;
         artworkCounts.set(a.artist_id, count + 1);
+        
+        const ids = artworkIdsByArtist.get(a.artist_id) || [];
+        ids.push(a.id);
+        artworkIdsByArtist.set(a.artist_id, ids);
       });
+
+      // Get all artwork IDs for likes/views queries
+      const allArtworkIds = artworks?.map(a => a.id) || [];
 
       // Get average ratings from project_reviews
       const { data: reviews } = await supabase
@@ -112,9 +145,9 @@ const ExploreArtists = () => {
       });
 
       // Get likes counts from artwork_likes
-      const { data: allLikes } = await supabase
-        .from('artwork_likes')
-        .select('artwork_id');
+      const { data: allLikes } = allArtworkIds.length > 0 
+        ? await supabase.from('artwork_likes').select('artwork_id').in('artwork_id', allArtworkIds)
+        : { data: [] };
 
       const artworkLikesMap = new Map<string, number>();
       allLikes?.forEach(like => {
@@ -125,15 +158,18 @@ const ExploreArtists = () => {
 
       // Calculate total likes per artist
       const artistLikesMap = new Map<string, number>();
-      artworks?.forEach(artwork => {
-        const likes = artworkLikesMap.get(artwork.artist_id) || 0;
-        artistLikesMap.set(artwork.artist_id, (artistLikesMap.get(artwork.artist_id) || 0) + likes);
+      artworkIdsByArtist.forEach((artworkIds, artistId) => {
+        let totalLikes = 0;
+        artworkIds.forEach(artworkId => {
+          totalLikes += artworkLikesMap.get(artworkId) || 0;
+        });
+        artistLikesMap.set(artistId, totalLikes);
       });
 
       // Get views counts from artwork_views
-      const { data: allViews } = await supabase
-        .from('artwork_views')
-        .select('artwork_id');
+      const { data: allViews } = allArtworkIds.length > 0
+        ? await supabase.from('artwork_views').select('artwork_id').in('artwork_id', allArtworkIds)
+        : { data: [] };
 
       const artworkViewsMap = new Map<string, number>();
       allViews?.forEach(view => {
@@ -144,13 +180,16 @@ const ExploreArtists = () => {
 
       // Calculate total views per artist
       const artistViewsMap = new Map<string, number>();
-      artworks?.forEach(artwork => {
-        const views = artworkViewsMap.get(artwork.artist_id) || 0;
-        artistViewsMap.set(artwork.artist_id, (artistViewsMap.get(artwork.artist_id) || 0) + views);
+      artworkIdsByArtist.forEach((artworkIds, artistId) => {
+        let totalViews = 0;
+        artworkIds.forEach(artworkId => {
+          totalViews += artworkViewsMap.get(artworkId) || 0;
+        });
+        artistViewsMap.set(artistId, totalViews);
       });
 
-      // Map profiles to artist format
-      const mappedArtists: Artist[] = profiles.map(profile => {
+      // Map profiles to artist format - only complete profiles
+      const mappedArtists: Artist[] = completeProfiles.map(profile => {
         const artistId = profile.id || '';
         const ratingData = ratingMap.get(artistId);
         const avgRating = ratingData ? Math.round((ratingData.total / ratingData.count) * 10) / 10 : 0;
@@ -169,7 +208,7 @@ const ExploreArtists = () => {
           artworkCount: artworkCounts.get(artistId) || 0,
           rating: avgRating,
           location: profile.location || 'Unknown',
-          priceRange: profile.hourly_rate ? `$${profile.hourly_rate}/hr` : '$',
+          priceRange: profile.hourly_rate ? `₹${profile.hourly_rate}/hr` : '₹',
           viewsCount: artistViewsMap.get(artistId) || 0,
           likesCount: artistLikesMap.get(artistId) || 0,
           joinedDate: profile.created_at || new Date().toISOString(),
@@ -185,14 +224,14 @@ const ExploreArtists = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchArtists();
 
-    // Set up real-time subscription for profile updates
-    const channel = supabase
-      .channel('artists-realtime')
+    // Set up real-time subscriptions for multiple tables
+    const profileChannel = supabase
+      .channel('artists-profiles-realtime')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'profiles' },
@@ -201,6 +240,10 @@ const ExploreArtists = () => {
           fetchArtists();
         }
       )
+      .subscribe();
+
+    const followsChannel = supabase
+      .channel('artists-follows-realtime')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'follows' },
@@ -211,10 +254,53 @@ const ExploreArtists = () => {
       )
       .subscribe();
 
+    // Real-time updates for likes
+    const likesChannel = supabase
+      .channel('artists-likes-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'artwork_likes' },
+        () => {
+          console.log('Likes updated, refreshing artists...');
+          fetchArtists();
+        }
+      )
+      .subscribe();
+
+    // Real-time updates for views
+    const viewsChannel = supabase
+      .channel('artists-views-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'artwork_views' },
+        () => {
+          console.log('Views updated, refreshing artists...');
+          fetchArtists();
+        }
+      )
+      .subscribe();
+
+    // Real-time updates for reviews (ratings)
+    const reviewsChannel = supabase
+      .channel('artists-reviews-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'project_reviews' },
+        () => {
+          console.log('Reviews updated, refreshing artists...');
+          fetchArtists();
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(profileChannel);
+      supabase.removeChannel(followsChannel);
+      supabase.removeChannel(likesChannel);
+      supabase.removeChannel(viewsChannel);
+      supabase.removeChannel(reviewsChannel);
     };
-  }, []);
+  }, [fetchArtists]);
 
   const handleFiltersChange = (filters: {
     search: string;
@@ -342,14 +428,14 @@ const ExploreArtists = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-8 pt-24">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Explore Artists</h1>
-            <p className="text-gray-600">Discover talented artists from around the world</p>
+            <h1 className="text-4xl font-bold text-foreground mb-2">Explore Artists</h1>
+            <p className="text-muted-foreground">Discover talented artists from around the world</p>
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <RefreshCw className="h-3 w-3 animate-spin" style={{ animationDuration: '3s' }} />
