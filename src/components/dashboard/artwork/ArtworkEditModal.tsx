@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,8 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Plus, Save, DollarSign } from "lucide-react";
+import { X, Plus, Save, DollarSign, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ArtworkEditModalProps {
   artwork: any;
@@ -20,6 +20,7 @@ interface ArtworkEditModalProps {
 
 const ArtworkEditModal = ({ artwork, isOpen, onClose, onSave }: ArtworkEditModalProps) => {
   const { toast } = useToast();
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -69,19 +70,53 @@ const ArtworkEditModal = ({ artwork, isOpen, onClose, onSave }: ArtworkEditModal
     }));
   };
 
-  const handleSave = () => {
-    const updatedArtwork = {
-      ...artwork,
-      ...formData,
-      price: formData.price ? parseFloat(formData.price) : null
-    };
+  const handleSave = async () => {
+    if (!artwork?.id) return;
+    
+    setSaving(true);
+    try {
+      const priceValue = formData.price ? parseFloat(formData.price) : null;
+      
+      const { error } = await supabase
+        .from('artworks')
+        .update({
+          title: formData.title,
+          description: formData.description,
+          category: formData.category,
+          price: priceValue,
+          tags: formData.tags,
+          metadata: {
+            ...(artwork.metadata || {}),
+            is_pinned: formData.is_pinned,
+            is_for_sale: formData.is_for_sale
+          }
+        })
+        .eq('id', artwork.id);
 
-    onSave(updatedArtwork);
-    toast({
-      title: "Artwork updated",
-      description: "Your artwork has been updated successfully."
-    });
-    onClose();
+      if (error) throw error;
+
+      const updatedArtwork = {
+        ...artwork,
+        ...formData,
+        price: priceValue
+      };
+
+      onSave(updatedArtwork);
+      toast({
+        title: "Artwork updated",
+        description: "Your artwork has been updated successfully."
+      });
+      onClose();
+    } catch (err: any) {
+      console.error('Error updating artwork:', err);
+      toast({
+        title: "Error",
+        description: err.message || "Failed to update artwork",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const categories = [
@@ -230,12 +265,16 @@ const ArtworkEditModal = ({ artwork, isOpen, onClose, onSave }: ArtworkEditModal
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={onClose} disabled={saving}>
               Cancel
             </Button>
-            <Button onClick={handleSave} className="flex items-center gap-2">
-              <Save className="h-4 w-4" />
-              Save Changes
+            <Button onClick={handleSave} disabled={saving} className="flex items-center gap-2">
+              {saving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              {saving ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </div>
