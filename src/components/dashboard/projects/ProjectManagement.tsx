@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Calendar, Clock, CheckCircle, Loader2, X, Trophy } from "lucide-react";
+import { PlusCircle, Calendar, Clock, CheckCircle, Loader2, X, Trophy, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import ProjectDetailModal from "./ProjectDetailModal";
 
 interface Project {
   id: string;
@@ -33,6 +34,8 @@ const ProjectManagement = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
 
   const fetchProjects = useCallback(async () => {
     if (!user?.id) return;
@@ -241,6 +244,11 @@ const ProjectManagement = () => {
     }
   };
 
+  const handleViewDetails = (projectId: string) => {
+    setSelectedProjectId(projectId);
+    setDetailModalOpen(true);
+  };
+
   const activeProjects = projects.filter(p => p.status === "accepted");
   const pendingProjects = projects.filter(p => p.status === "pending");
   const completedProjects = projects.filter(p => p.status === "completed");
@@ -296,6 +304,14 @@ const ProjectManagement = () => {
                     </div>
                   </CardContent>
                   <CardFooter className="flex flex-wrap gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleViewDetails(project.id)}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      View Details
+                    </Button>
                     <Select
                       value={project.progress.toString()}
                       onValueChange={(value) => handleUpdateProgress(project, parseInt(value))}
@@ -357,6 +373,14 @@ const ProjectManagement = () => {
                   <CardFooter className="flex gap-2">
                     <Button 
                       size="sm" 
+                      variant="outline"
+                      onClick={() => handleViewDetails(project.id)}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      View Details
+                    </Button>
+                    <Button 
+                      size="sm" 
                       onClick={() => handleAcceptProject(project)}
                       disabled={actionLoading === project.id}
                     >
@@ -414,6 +438,16 @@ const ProjectManagement = () => {
                     </div>
                     <span className="text-green-600 font-medium text-sm">{project.payment}</span>
                   </CardContent>
+                  <CardFooter>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleViewDetails(project.id)}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      View Details
+                    </Button>
+                  </CardFooter>
                 </Card>
               ))}
             </div>
@@ -424,6 +458,13 @@ const ProjectManagement = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Project Detail Modal */}
+      <ProjectDetailModal
+        projectId={selectedProjectId}
+        open={detailModalOpen}
+        onOpenChange={setDetailModalOpen}
+      />
     </div>
   );
 };

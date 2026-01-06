@@ -62,6 +62,31 @@ const ServicesManagement: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
+  // Real-time subscription
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`services-realtime:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'artist_services',
+          filter: `artist_id=eq.${user.id}`
+        },
+        () => {
+          fetchServices();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
   const openCreateDialog = () => {
     setEditingService(null);
     setForm({ title: "", description: "", starting_price: "" });

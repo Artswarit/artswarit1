@@ -130,39 +130,92 @@ const ArtworkManagement = () => {
     }
   };
 
-  const handleBulkAction = (action: string, options?: any) => {
+  const handleBulkAction = async (action: string, options?: any) => {
+    if (selectedArtworks.length === 0) return;
+    
     switch (action) {
       case 'delete':
-        toast({
-          title: 'Artworks Deleted',
-          description: `${selectedArtworks.length} artwork(s) have been deleted.`,
-        });
-        setSelectedArtworks([]);
+        try {
+          // Delete each selected artwork
+          for (const artworkId of selectedArtworks) {
+            const { error } = await supabase.functions.invoke('delete-artwork-and-media', {
+              body: { artworkId }
+            });
+            if (error) throw error;
+          }
+          toast({
+            title: 'Artworks Deleted',
+            description: `${selectedArtworks.length} artwork(s) have been deleted.`,
+          });
+          setSelectedArtworks([]);
+          fetchArtworks();
+        } catch (err: any) {
+          toast({
+            title: 'Error',
+            description: err.message || 'Failed to delete artworks',
+            variant: 'destructive',
+          });
+        }
         break;
       case 'changeStatus':
-        toast({
-          title: 'Status Updated',
-          description: `${selectedArtworks.length} artwork(s) status changed to ${options.status}.`,
-        });
-        break;
-      case 'toggleVisibility':
-        toast({
-          title: 'Visibility Toggled',
-          description: `${selectedArtworks.length} artwork(s) visibility has been toggled.`,
-        });
-        break;
-      case 'export':
-        toast({
-          title: 'Export Started',
-          description: `Exporting ${selectedArtworks.length} artwork(s)...`,
-        });
+        try {
+          const { error } = await supabase
+            .from('artworks')
+            .update({ status: options.status })
+            .in('id', selectedArtworks);
+          
+          if (error) throw error;
+          
+          toast({
+            title: 'Status Updated',
+            description: `${selectedArtworks.length} artwork(s) status changed to ${options.status}.`,
+          });
+          fetchArtworks();
+        } catch (err: any) {
+          toast({
+            title: 'Error',
+            description: err.message || 'Failed to update status',
+            variant: 'destructive',
+          });
+        }
         break;
       case 'archive':
+        try {
+          const { error } = await supabase
+            .from('artworks')
+            .update({ status: 'archived' })
+            .in('id', selectedArtworks);
+          
+          if (error) throw error;
+          
+          toast({
+            title: 'Artworks Archived',
+            description: `${selectedArtworks.length} artwork(s) have been archived.`,
+          });
+          setSelectedArtworks([]);
+          fetchArtworks();
+        } catch (err: any) {
+          toast({
+            title: 'Error',
+            description: err.message || 'Failed to archive artworks',
+            variant: 'destructive',
+          });
+        }
+        break;
+      case 'export':
+        // Export artworks data as JSON
+        const exportData = artworks.filter(a => selectedArtworks.includes(a.id));
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `artworks-export-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
         toast({
-          title: 'Artworks Archived',
-          description: `${selectedArtworks.length} artwork(s) have been archived.`,
+          title: 'Export Complete',
+          description: `${selectedArtworks.length} artwork(s) exported.`,
         });
-        setSelectedArtworks([]);
         break;
     }
   };
