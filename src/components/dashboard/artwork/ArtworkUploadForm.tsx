@@ -28,7 +28,12 @@ const visibilityOptions = [
   { id: "followers", label: "Followers Only - Visible to your followers" },
 ];
 
-const ArtworkUploadForm = () => {
+interface ArtworkUploadFormProps {
+  onCancel?: () => void;
+  onSuccess?: () => void;
+}
+
+const ArtworkUploadForm = ({ onCancel, onSuccess }: ArtworkUploadFormProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { uploadArtwork } = useArtworks();
@@ -144,7 +149,12 @@ const ArtworkUploadForm = () => {
       setVisibilityType("free");
       setScheduleRelease(false);
       setReleaseDate(undefined);
-      navigate("/artist-dashboard");
+      // Close dialog or navigate
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        navigate("/artist-dashboard");
+      }
     }
     setIsUploading(false);
   };
@@ -385,7 +395,7 @@ const ArtworkUploadForm = () => {
           <Button 
             type="button" 
             variant="outline" 
-            onClick={() => navigate("/artist-dashboard")}
+            onClick={() => onCancel ? onCancel() : navigate("/artist-dashboard")}
           >
             Cancel
           </Button>
