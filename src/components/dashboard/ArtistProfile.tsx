@@ -361,15 +361,23 @@ const ArtistProfile = ({ isLoading: externalLoading, profile, updateProfile, upl
                   value={editForm.country}
                   onValueChange={(value) => handleChange('country', value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select your country" />
                   </SelectTrigger>
-                  <SelectContent className="max-h-[300px]">
-                    {countries.map((country) => (
-                      <SelectItem key={country.country_code} value={country.country_code}>
-                        {country.country_name} ({country.currency_symbol} {country.currency_code})
-                      </SelectItem>
-                    ))}
+                  <SelectContent 
+                    className="max-h-[300px] z-[9999] bg-background border border-border shadow-lg"
+                    position="popper"
+                    sideOffset={4}
+                  >
+                    {countries.length === 0 ? (
+                      <div className="p-4 text-center text-muted-foreground">Loading countries...</div>
+                    ) : (
+                      countries.map((country) => (
+                        <SelectItem key={country.country_code} value={country.country_code}>
+                          {country.country_name} ({country.currency_symbol} {country.currency_code})
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
