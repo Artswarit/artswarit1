@@ -338,6 +338,33 @@ export type Database = {
           },
         ]
       }
+      country_currencies: {
+        Row: {
+          country_code: string
+          country_name: string
+          created_at: string
+          currency_code: string
+          currency_symbol: string
+          id: string
+        }
+        Insert: {
+          country_code: string
+          country_name: string
+          created_at?: string
+          currency_code: string
+          currency_symbol: string
+          id?: string
+        }
+        Update: {
+          country_code?: string
+          country_name?: string
+          created_at?: string
+          currency_code?: string
+          currency_symbol?: string
+          id?: string
+        }
+        Relationships: []
+      }
       follows: {
         Row: {
           created_at: string
@@ -634,8 +661,11 @@ export type Database = {
           account_status: string | null
           avatar_url: string | null
           bio: string | null
+          city: string | null
+          country: string | null
           cover_url: string | null
           created_at: string
+          currency: string | null
           email: string
           experience_years: number | null
           full_name: string | null
@@ -654,8 +684,11 @@ export type Database = {
           account_status?: string | null
           avatar_url?: string | null
           bio?: string | null
+          city?: string | null
+          country?: string | null
           cover_url?: string | null
           created_at?: string
+          currency?: string | null
           email: string
           experience_years?: number | null
           full_name?: string | null
@@ -674,8 +707,11 @@ export type Database = {
           account_status?: string | null
           avatar_url?: string | null
           bio?: string | null
+          city?: string | null
+          country?: string | null
           cover_url?: string | null
           created_at?: string
+          currency?: string | null
           email?: string
           experience_years?: number | null
           full_name?: string | null

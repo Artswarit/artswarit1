@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 // Lazy load heavy chart components
 const LazyEarningsChart = lazy(() => import("./earnings/EarningsChart"));
@@ -23,6 +24,7 @@ interface ArtistEarningsProps {
 
 const ArtistEarnings = ({ isLoading }: ArtistEarningsProps) => {
   const { user } = useAuth();
+  const { formatPrice } = useCurrency();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("year");
@@ -149,7 +151,7 @@ const ArtistEarnings = ({ isLoading }: ArtistEarningsProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">₹{totalEarnings.toLocaleString()}</div>
+            <div className="text-3xl font-bold">{formatPrice(totalEarnings)}</div>
             <p className="text-xs text-muted-foreground mt-1">Lifetime earnings</p>
           </CardContent>
         </Card>
@@ -161,7 +163,7 @@ const ArtistEarnings = ({ isLoading }: ArtistEarningsProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">₹{pendingEarnings.toLocaleString()}</div>
+            <div className="text-3xl font-bold">{formatPrice(pendingEarnings)}</div>
             <p className="text-xs text-muted-foreground mt-1">To be processed</p>
           </CardContent>
         </Card>
@@ -173,7 +175,7 @@ const ArtistEarnings = ({ isLoading }: ArtistEarningsProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">₹{avgPerSale.toLocaleString()}</div>
+            <div className="text-3xl font-bold">{formatPrice(avgPerSale)}</div>
             <p className="text-xs text-muted-foreground mt-1">From {completedCount} sales</p>
           </CardContent>
         </Card>
@@ -211,7 +213,7 @@ const ArtistEarnings = ({ isLoading }: ArtistEarningsProps) => {
                     <tr key={transaction.id} className="border-b hover:bg-muted/50">
                       <td className="p-4 font-mono text-sm">{transaction.id.slice(0, 8)}...</td>
                       <td className="p-4">{new Date(transaction.created_at).toLocaleDateString()}</td>
-                      <td className="p-4 font-medium">₹{Number(transaction.amount).toLocaleString()}</td>
+                      <td className="p-4 font-medium">{formatPrice(Number(transaction.amount))}</td>
                       <td className="p-4">
                         <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                           transaction.status === "success" 

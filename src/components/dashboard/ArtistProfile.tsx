@@ -3,9 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Edit, Save, Upload, Camera, Plus, X, MapPin, Globe, Briefcase, Clock, DollarSign, Instagram, Twitter, Linkedin, Youtube } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Edit, Save, Upload, Camera, Plus, X, MapPin, Globe, Briefcase, Clock, DollarSign, Instagram, Twitter, Linkedin, Youtube, Flag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 type UploadType = "avatar" | "cover";
 
@@ -28,6 +30,7 @@ const AVAILABLE_CATEGORIES = [
 
 const ArtistProfile = ({ isLoading: externalLoading, profile, updateProfile, uploadImage }: ArtistProfileProps) => {
   const { toast } = useToast();
+  const { countries, userCurrencySymbol, formatPrice } = useCurrency();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -45,6 +48,8 @@ const ArtistProfile = ({ isLoading: externalLoading, profile, updateProfile, upl
     hourlyRate: "",
     experienceYears: "",
     tags: [] as string[],
+    country: "",
+    city: "",
     socialLinks: {
       instagram: "",
       twitter: "",
@@ -65,6 +70,8 @@ const ArtistProfile = ({ isLoading: externalLoading, profile, updateProfile, upl
         hourlyRate: profile.hourly_rate?.toString() || "",
         experienceYears: profile.experience_years?.toString() || "",
         tags: profile.tags || [],
+        country: profile.country || "",
+        city: profile.city || "",
         socialLinks: {
           instagram: socialLinks.instagram || "",
           twitter: socialLinks.twitter || "",
@@ -157,6 +164,11 @@ const ArtistProfile = ({ isLoading: externalLoading, profile, updateProfile, upl
 
   const saveProfile = useCallback(async () => {
     setIsSaving(true);
+    
+    // Find the currency for the selected country
+    const selectedCountry = countries.find(c => c.country_code === editForm.country);
+    const currency = selectedCountry?.currency_code || 'USD';
+    
     await updateProfile({
       full_name: editForm.displayName,
       bio: editForm.bio,
@@ -165,11 +177,14 @@ const ArtistProfile = ({ isLoading: externalLoading, profile, updateProfile, upl
       hourly_rate: editForm.hourlyRate ? parseFloat(editForm.hourlyRate) : null,
       experience_years: editForm.experienceYears ? parseInt(editForm.experienceYears) : null,
       tags: editForm.tags,
+      country: editForm.country || null,
+      city: editForm.city || null,
+      currency: currency,
       social_links: editForm.socialLinks
     });
     setIsSaving(false);
     setIsEditing(false);
-  }, [editForm, updateProfile]);
+  }, [editForm, updateProfile, countries]);
 
   const toggleEdit = useCallback(() => {
     if (!isEditing && profile) {
@@ -182,6 +197,8 @@ const ArtistProfile = ({ isLoading: externalLoading, profile, updateProfile, upl
         hourlyRate: profile.hourly_rate?.toString() || "",
         experienceYears: profile.experience_years?.toString() || "",
         tags: profile.tags || [],
+        country: profile.country || "",
+        city: profile.city || "",
         socialLinks: {
           instagram: socialLinks.instagram || "",
           twitter: socialLinks.twitter || "",
@@ -336,9 +353,42 @@ const ArtistProfile = ({ isLoading: externalLoading, profile, updateProfile, upl
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="country">
+                  <Flag className="h-4 w-4 inline mr-1" />
+                  Country *
+                </Label>
+                <Select
+                  value={editForm.country}
+                  onValueChange={(value) => handleChange('country', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select your country" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {countries.map((country) => (
+                      <SelectItem key={country.country_code} value={country.country_code}>
+                        {country.country_name} ({country.currency_symbol} {country.currency_code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="city">
+                  <MapPin className="h-4 w-4 inline mr-1" />
+                  City *
+                </Label>
+                <Input
+                  id="city"
+                  value={editForm.city}
+                  onChange={(e) => handleChange('city', e.target.value)}
+                  placeholder="Enter your city name"
+                />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="location">
                   <MapPin className="h-4 w-4 inline mr-1" />
-                  Location
+                  Full Address (optional)
                 </Label>
                 <Input
                   id="location"
@@ -386,7 +436,7 @@ const ArtistProfile = ({ isLoading: externalLoading, profile, updateProfile, upl
               <div className="space-y-2">
                 <Label htmlFor="hourlyRate">
                   <DollarSign className="h-4 w-4 inline mr-1" />
-                  Hourly Rate ($)
+                  Hourly Rate ({userCurrencySymbol || '$'})
                 </Label>
                 <Input
                   id="hourlyRate"
@@ -406,6 +456,13 @@ const ArtistProfile = ({ isLoading: externalLoading, profile, updateProfile, upl
               </div>
               <p className="text-sm">{bio}</p>
               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                {profile?.country && (
+                  <span className="flex items-center gap-1">
+                    <Flag className="h-4 w-4" />
+                    {countries.find(c => c.country_code === profile.country)?.country_name || profile.country}
+                    {profile?.city && `, ${profile.city}`}
+                  </span>
+                )}
                 {profile?.location && (
                   <span className="flex items-center gap-1">
                     <MapPin className="h-4 w-4" />
@@ -427,7 +484,7 @@ const ArtistProfile = ({ isLoading: externalLoading, profile, updateProfile, upl
                 {profile?.hourly_rate && (
                   <span className="flex items-center gap-1">
                     <DollarSign className="h-4 w-4" />
-                    ${profile.hourly_rate}/hour
+                    {formatPrice(profile.hourly_rate)}/hour
                   </span>
                 )}
               </div>

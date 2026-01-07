@@ -51,10 +51,14 @@ const isProfileComplete = (profile: any): boolean => {
   
   const hasTags = profile.tags && Array.isArray(profile.tags) && profile.tags.length > 0;
   
-  console.log(`Profile ${profile.full_name}: name=${hasDisplayName}, bio=${hasBio}, avatar=${hasAvatar}, tags=${hasTags}`);
+  // Country and city are now required
+  const hasCountry = profile.country && profile.country.trim() !== '';
+  const hasCity = profile.city && profile.city.trim() !== '';
   
-  // For artists, all 4 fields are required
-  return hasDisplayName && hasBio && hasAvatar && hasTags;
+  console.log(`Profile ${profile.full_name}: name=${hasDisplayName}, bio=${hasBio}, avatar=${hasAvatar}, tags=${hasTags}, country=${hasCountry}, city=${hasCity}`);
+  
+  // For artists, all fields are required including country and city
+  return hasDisplayName && hasBio && hasAvatar && hasTags && hasCountry && hasCity;
 };
 
 const ExploreArtists = () => {
