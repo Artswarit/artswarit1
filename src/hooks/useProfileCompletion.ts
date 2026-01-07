@@ -14,6 +14,8 @@ type ProfileLike = {
   bio?: string | null;
   avatar_url?: string | null;
   tags?: unknown;
+  country?: string | null;
+  city?: string | null;
 };
 
 export const computeProfileCompletion = (
@@ -33,6 +35,8 @@ export const computeProfileCompletion = (
     { key: 'full_name', label: 'Display Name' },
     { key: 'bio', label: 'Bio' },
     { key: 'avatar_url', label: 'Profile Picture' },
+    { key: 'country', label: 'Country' },
+    { key: 'city', label: 'City' },
   ];
 
   // Additional fields for artists

@@ -27,6 +27,9 @@ interface Profile {
   hourly_rate: number | null;
   experience_years: number | null;
   portfolio_url: string | null;
+  country: string | null;
+  city: string | null;
+  currency: string | null;
   created_at: string;
   updated_at: string;
 }
