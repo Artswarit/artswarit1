@@ -22,6 +22,7 @@ const Signup = () => {
     password: "",
     confirmPassword: "",
     role: "",
+    country: "",
     acceptTerms: false
   });
   
@@ -37,6 +38,13 @@ const Signup = () => {
     setFormData({
       ...formData,
       role: value
+    });
+  };
+
+  const handleCountryChange = (value: string) => {
+    setFormData({
+      ...formData,
+      country: value
     });
   };
   
@@ -84,7 +92,8 @@ const Signup = () => {
     
     const { error } = await signUp(formData.email, formData.password, {
       full_name: formData.name,
-      role: formData.role
+      role: formData.role,
+      country: formData.country
     });
     
     if (!error) {
@@ -110,6 +119,7 @@ const Signup = () => {
             formData={formData}
             handleChange={handleChange}
             handleRoleChange={handleRoleChange}
+            handleCountryChange={handleCountryChange}
             handleTermsChange={handleTermsChange}
             handleSubmit={handleSubmit}
             loading={loading}

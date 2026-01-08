@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PlusCircle, Calendar, Clock, CheckCircle, Loader2, X, Trophy, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 import { toast } from "sonner";
 import ProjectDetailModal from "./ProjectDetailModal";
 
@@ -31,6 +32,7 @@ const PROGRESS_OPTIONS = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 
 const ProjectManagement = () => {
   const { user } = useAuth();
+  const { format } = useCurrencyFormat();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -54,7 +56,7 @@ const ProjectManagement = () => {
         client: project.client?.full_name || 'Unknown Client',
         clientAvatar: project.client?.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
         progress: project.progress ?? (project.status === 'completed' ? 100 : project.status === 'accepted' ? 10 : 0),
-        payment: project.budget ? `₹${project.budget.toLocaleString()}` : 'Not set',
+        payment: project.budget ? format(project.budget) : 'Not set',
       }));
 
       setProjects(transformedProjects);

@@ -1,12 +1,21 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+
+interface CountryCurrency {
+  id: string;
+  country_code: string;
+  country_name: string;
+  currency_code: string;
+  currency_symbol: string;
+}
 
 export interface SignupFormData {
   name: string;
@@ -14,6 +23,7 @@ export interface SignupFormData {
   password: string;
   confirmPassword: string;
   role: string;
+  country: string;
   acceptTerms: boolean;
 }
 
@@ -21,6 +31,7 @@ interface SignupFormProps {
   formData: SignupFormData;
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleRoleChange: (value: string) => void;
+  handleCountryChange: (value: string) => void;
   handleTermsChange: (checked: boolean) => void;
   handleSubmit: (event: React.FormEvent) => void;
   loading?: boolean;
@@ -30,11 +41,30 @@ const SignupForm = ({
   formData,
   handleChange,
   handleRoleChange,
+  handleCountryChange,
   handleTermsChange,
   handleSubmit,
   loading = false
 }: SignupFormProps) => {
   const { toast } = useToast();
+  const [countries, setCountries] = useState<CountryCurrency[]>([]);
+  const [loadingCountries, setLoadingCountries] = useState(true);
+
+  // Fetch countries on mount
+  useEffect(() => {
+    const fetchCountries = async () => {
+      const { data, error } = await supabase
+        .from('country_currencies')
+        .select('*')
+        .order('country_name');
+      
+      if (!error && data) {
+        setCountries(data);
+      }
+      setLoadingCountries(false);
+    };
+    fetchCountries();
+  }, []);
 
   const validateAndSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -44,6 +74,16 @@ const SignupForm = ({
       toast({
         title: "Please select a role",
         description: "You must choose either Artist or Client to continue.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validation - Country selection is mandatory
+    if (!formData.country) {
+      toast({
+        title: "Please select your country",
+        description: "Country is required to set your local currency.",
         variant: "destructive"
       });
       return;
@@ -152,6 +192,32 @@ const SignupForm = ({
               <Label htmlFor="client" className="text-sm sm:text-base cursor-pointer">Client</Label>
             </div>
           </RadioGroup>
+        </div>
+        <div>
+          <Label htmlFor="country" className="text-sm sm:text-base">Country <span className="text-destructive">*</span></Label>
+          <Select 
+            value={formData.country} 
+            onValueChange={handleCountryChange}
+            disabled={loading || loadingCountries}
+          >
+            <SelectTrigger className="mt-1 h-11 sm:h-10 text-base">
+              <SelectValue placeholder={loadingCountries ? "Loading countries..." : "Select your country"} />
+            </SelectTrigger>
+            <SelectContent 
+              className="z-[200] bg-background border shadow-lg max-h-[300px]"
+              position="popper"
+              sideOffset={4}
+            >
+              {countries.map((country) => (
+                <SelectItem key={country.id} value={country.country_code}>
+                  {country.country_name} ({country.currency_symbol} {country.currency_code})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground mt-1">
+            This sets your local currency for prices across the platform
+          </p>
         </div>
         <div className="flex items-start space-x-2 py-2">
           <Checkbox 
