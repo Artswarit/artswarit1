@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +16,7 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, IndianRupee, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 
 interface Service {
   id: string;
@@ -28,6 +29,7 @@ interface Service {
 const ServicesManagement: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { formatPlus, userCurrencySymbol } = useCurrencyFormat();
 
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -211,8 +213,7 @@ const ServicesManagement: React.FC = () => {
                 )}
                 {s.starting_price !== null && (
                   <p className="text-amber-700 font-semibold flex items-center gap-0.5 mt-auto">
-                    <IndianRupee className="h-4 w-4" />
-                    {s.starting_price}+
+                    {formatPlus(s.starting_price)}
                   </p>
                 )}
               </div>
@@ -253,7 +254,7 @@ const ServicesManagement: React.FC = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="svc-price">Starting Price (₹)</Label>
+                <Label htmlFor="svc-price">Starting Price ({userCurrencySymbol} in USD equivalent)</Label>
                 <Input
                   id="svc-price"
                   type="number"
@@ -262,8 +263,11 @@ const ServicesManagement: React.FC = () => {
                   onChange={(e) =>
                     setForm({ ...form, starting_price: e.target.value })
                   }
-                  placeholder="e.g., 3500"
+                  placeholder="e.g., 50"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Enter price in USD - it will display in your local currency
+                </p>
               </div>
             </div>
             <DialogFooter className="flex-col gap-2 sm:flex-row">

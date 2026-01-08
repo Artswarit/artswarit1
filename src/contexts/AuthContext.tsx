@@ -8,7 +8,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, userData: { full_name: string; role: string }) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, userData: { full_name: string; role: string; country?: string }) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
@@ -99,7 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (email: string, password: string, userData: { full_name: string; role: string }) => {
+  const signUp = async (email: string, password: string, userData: { full_name: string; role: string; country?: string }) => {
     try {
       setLoading(true);
       const redirectUrl = `${window.location.origin}/`;
