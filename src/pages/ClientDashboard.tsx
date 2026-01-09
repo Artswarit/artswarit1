@@ -1,20 +1,25 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LayoutDashboard, Users, MessageSquare, FileText, Settings, CreditCard, Heart, Bell, ChevronRight, Search, CheckCircle, Clock, Star } from "lucide-react";
+import { LayoutDashboard, Users, MessageSquare, FileText, Settings, CreditCard, Heart, Bell, ChevronRight, Search, CheckCircle, Clock, Star, Lock, User } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import SavedArtists from "@/components/dashboard/SavedArtists";
 import ClientMessages from "@/components/dashboard/ClientMessages";
 import ProjectRating from "@/components/dashboard/ProjectRating";
 import ClientPayments from "@/components/dashboard/ClientPayments";
 import ClientSettings from "@/components/dashboard/ClientSettings";
+import ClientProfile from "@/components/dashboard/ClientProfile";
 import ProjectDetailModal from "@/components/dashboard/projects/ProjectDetailModal";
 import UniversalChatbot from '@/components/UniversalChatbot';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
+import { computeProfileCompletion } from "@/hooks/useProfileCompletion";
+import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 interface Project {
   id: string;
   title: string;
@@ -37,9 +42,17 @@ interface RecommendedArtist {
   profileImage: string;
 }
 const ClientDashboard = () => {
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
+  const { toast: hookToast } = useToast();
+  const { profile, loading: profileLoading } = useProfile();
+  const { format } = useCurrencyFormat();
+  
+  // Profile completion check
+  const completion = useMemo(() => computeProfileCompletion(profile), [profile]);
+  const { isComplete, completionPercentage, missingFields } = completion;
+  const profileReady = !profileLoading;
+  const profileIncomplete = profileReady && !isComplete;
+  
   const [searchParams] = useSearchParams();
   const [selectedTab, setSelectedTab] = useState("overview");
   const [projects, setProjects] = useState<Project[]>([]);
@@ -50,13 +63,37 @@ const ClientDashboard = () => {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [projectModalOpen, setProjectModalOpen] = useState(false);
 
+  // Force profile tab when profile is incomplete
+  useEffect(() => {
+    if (profileReady && profileIncomplete) {
+      setSelectedTab('profile');
+    }
+  }, [profileReady, profileIncomplete]);
+
+  // Handle tab change with blocking logic
+  const handleTabChange = (newTab: string) => {
+    if (profileIncomplete && newTab !== 'profile') {
+      hookToast({
+        title: "Complete Your Profile First",
+        description: `Please fill in: ${missingFields.join(', ')} before accessing other sections.`,
+        variant: "destructive"
+      });
+      return;
+    }
+    setSelectedTab(newTab);
+  };
+
   // Read tab from URL on mount
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['overview', 'projects', 'messages', 'artists', 'ratings', 'payments', 'settings'].includes(tabParam)) {
-      setSelectedTab(tabParam);
+    if (tabParam && ['overview', 'profile', 'projects', 'messages', 'artists', 'ratings', 'payments', 'settings'].includes(tabParam)) {
+      if (profileIncomplete && tabParam !== 'profile') {
+        setSelectedTab('profile');
+      } else {
+        setSelectedTab(tabParam);
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, profileIncomplete]);
   const fetchProjects = useCallback(async () => {
     if (!user?.id) return;
     try {
@@ -260,35 +297,69 @@ const ClientDashboard = () => {
           <p className="text-muted-foreground text-xs sm:text-sm lg:text-base">Welcome back, {userName}! Manage your projects and discover new artists.</p>
         </div>
 
+        {/* Mandatory Profile Completion Alert */}
+        {profileIncomplete && (
+          <div className="mb-6 p-4 sm:p-6 rounded-xl bg-gradient-to-r from-red-500/10 via-orange-500/10 to-amber-500/10 border-2 border-red-500/30">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex items-start gap-3 flex-1">
+                <div className="p-2 rounded-full bg-red-500/20">
+                  <Lock className="h-5 w-5 text-red-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground text-lg">Profile Completion Required</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Complete your profile to access all dashboard features. Your profile is {completionPercentage}% complete.
+                  </p>
+                  <p className="text-sm text-red-600 font-medium mt-2">
+                    Missing: {missingFields.join(', ')}
+                  </p>
+                  <div className="mt-3 bg-muted rounded-full h-3 overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-red-500 via-orange-500 to-amber-500 transition-all duration-500"
+                      style={{ width: `${completionPercentage}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Dashboard Navigation - Horizontal scroll on mobile */}
-        <Tabs value={selectedTab} className="mb-4 sm:mb-6 lg:mb-8" onValueChange={setSelectedTab}>
+        <Tabs value={selectedTab} className="mb-4 sm:mb-6 lg:mb-8" onValueChange={handleTabChange}>
           <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 mb-4 sm:mb-6 scrollbar-hide">
-            <TabsList className="bg-white/50 dark:bg-card/50 backdrop-blur-sm inline-flex min-w-max sm:grid sm:grid-cols-7 gap-1 p-1">
-              <TabsTrigger value="overview" className={cn("flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200", "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground", "hover:bg-muted/50")}>
+            <TabsList className="bg-white/50 dark:bg-card/50 backdrop-blur-sm inline-flex min-w-max sm:grid sm:grid-cols-8 gap-1 p-1">
+              <TabsTrigger value="overview" disabled={profileIncomplete} className={cn("flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200", "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground", "hover:bg-muted/50", profileIncomplete && "opacity-50 cursor-not-allowed")}>
                 <LayoutDashboard className="h-4 w-4" />
                 <span>Overview</span>
+                {profileIncomplete && <Lock className="h-3 w-3 ml-1" />}
               </TabsTrigger>
-              <TabsTrigger value="projects" className={cn("flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200", "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground", "hover:bg-muted/50")}>
+              <TabsTrigger value="profile" className={cn("flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200", "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground", "hover:bg-muted/50")}>
+                <User className="h-4 w-4" />
+                <span>Profile</span>
+              </TabsTrigger>
+              <TabsTrigger value="projects" disabled={profileIncomplete} className={cn("flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200", "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground", "hover:bg-muted/50", profileIncomplete && "opacity-50 cursor-not-allowed")}>
                 <FileText className="h-4 w-4" />
                 <span>Projects</span>
+                {profileIncomplete && <Lock className="h-3 w-3 ml-1" />}
               </TabsTrigger>
-              <TabsTrigger value="messages" className={cn("flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200", "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground", "hover:bg-muted/50")}>
+              <TabsTrigger value="messages" disabled={profileIncomplete} className={cn("flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200", "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground", "hover:bg-muted/50", profileIncomplete && "opacity-50 cursor-not-allowed")}>
                 <MessageSquare className="h-4 w-4" />
                 <span>Messages</span>
               </TabsTrigger>
-              <TabsTrigger value="artists" className={cn("flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200", "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground", "hover:bg-muted/50")}>
+              <TabsTrigger value="artists" disabled={profileIncomplete} className={cn("flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200", "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground", "hover:bg-muted/50", profileIncomplete && "opacity-50 cursor-not-allowed")}>
                 <Heart className="h-4 w-4" />
                 <span>Artists</span>
               </TabsTrigger>
-              <TabsTrigger value="ratings" className={cn("flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200", "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground", "hover:bg-muted/50")}>
+              <TabsTrigger value="ratings" disabled={profileIncomplete} className={cn("flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200", "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground", "hover:bg-muted/50", profileIncomplete && "opacity-50 cursor-not-allowed")}>
                 <Star className="h-4 w-4" />
                 <span>Reviews</span>
               </TabsTrigger>
-              <TabsTrigger value="payments" className={cn("flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200", "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground", "hover:bg-muted/50")}>
+              <TabsTrigger value="payments" disabled={profileIncomplete} className={cn("flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200", "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground", "hover:bg-muted/50", profileIncomplete && "opacity-50 cursor-not-allowed")}>
                 <CreditCard className="h-4 w-4" />
                 <span>Payments</span>
               </TabsTrigger>
-              <TabsTrigger value="settings" className={cn("flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200", "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground", "hover:bg-muted/50")}>
+              <TabsTrigger value="settings" disabled={profileIncomplete} className={cn("flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200", "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground", "hover:bg-muted/50", profileIncomplete && "opacity-50 cursor-not-allowed")}>
                 <Settings className="h-4 w-4" />
                 <span>Settings</span>
               </TabsTrigger>
@@ -521,6 +592,11 @@ const ClientDashboard = () => {
                 </div>
               </div>
             </div>
+          </TabsContent>
+          
+          {/* Profile Tab */}
+          <TabsContent value="profile" className="animate-fade-in">
+            <ClientProfile />
           </TabsContent>
           
           {/* Messages Tab */}

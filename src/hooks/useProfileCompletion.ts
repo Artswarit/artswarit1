@@ -30,22 +30,24 @@ export const computeProfileCompletion = (
     };
   }
 
-  // Define required fields for profile completion
-  const requiredFields = [
+  // Define required fields for profile completion - BOTH artists and clients need country
+  const baseFields = [
     { key: 'full_name', label: 'Display Name' },
     { key: 'bio', label: 'Bio' },
     { key: 'avatar_url', label: 'Profile Picture' },
     { key: 'country', label: 'Country' },
-    { key: 'city', label: 'City' },
   ];
 
-  // Additional fields for artists
-  const artistFields = [{ key: 'tags', label: 'Categories/Skills' }];
+  // Additional fields for artists only
+  const artistFields = [
+    { key: 'city', label: 'City' },
+    { key: 'tags', label: 'Categories/Skills' }
+  ];
 
   const isArtist = profile.role === 'artist' || profile.role === 'premium';
   const allRequiredFields = isArtist
-    ? [...requiredFields, ...artistFields]
-    : requiredFields;
+    ? [...baseFields, ...artistFields]
+    : baseFields;
 
   const missingFields: string[] = [];
 
