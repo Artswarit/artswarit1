@@ -3,13 +3,14 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import ArtworkCard from "@/components/artwork/ArtworkCard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Star, MapPin, Mail, IndianRupee } from "lucide-react";
+import { Star, MapPin, Mail, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import ReviewCard from "@/components/reviews/ReviewCard";
+import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 
 interface GalleryArtwork {
   id: string;
@@ -114,6 +115,7 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
   }, [tab, reviews, searchParams]);
 
   const { toast } = useToast();
+  const { formatPlus, userCurrencySymbol } = useCurrencyFormat();
 
   // Put pinned artworks at the top for "All"
   let allWithPinnedFirst = allArt;
@@ -227,8 +229,8 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
                       </div>
                       {service.starting_price !== null && (
                         <div className="font-semibold text-amber-700 mt-2 md:mt-0 md:ml-4 flex items-center gap-0.5">
-                          <IndianRupee className="h-4 w-4" />
-                          {service.starting_price}+
+                          <DollarSign className="h-4 w-4" />
+                          {formatPlus(service.starting_price)}
                         </div>
                       )}
                     </div>
@@ -246,8 +248,8 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
                   <Textarea placeholder="Describe what you want..." rows={4} required {...register("description")} />
                 </div>
                 <div>
-                  <label className="font-medium text-gray-700 block mb-1">Budget (optional)</label>
-                  <Input type="number" min={0} placeholder="Amount in ₹" {...register("budget")} />
+                  <label className="font-medium text-gray-700 block mb-1">Budget (optional, in {userCurrencySymbol})</label>
+                  <Input type="number" min={0} placeholder={`Amount in ${userCurrencySymbol}`} {...register("budget")} />
                 </div>
                 <Button
                   type="submit"

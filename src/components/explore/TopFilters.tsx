@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import GlassCard from '@/components/ui/glass-card';
 import { Search, Filter, Grid, List, SlidersHorizontal } from 'lucide-react';
+import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 
 interface FilterState {
   search: string;
@@ -23,6 +24,7 @@ interface TopFiltersProps {
 
 const TopFilters = ({ onFiltersChange, onViewModeChange, viewMode, resultsCount }: TopFiltersProps) => {
   console.log('TopFilters rendering with resultsCount:', resultsCount);
+  const { format, userCurrencySymbol } = useCurrencyFormat();
   
   const [filters, setFilters] = useState<FilterState>({
     search: '',
@@ -98,16 +100,16 @@ const TopFilters = ({ onFiltersChange, onViewModeChange, viewMode, resultsCount 
             </Select>
 
             <Select value={filters.priceRange} onValueChange={(value) => handleFilterChange('priceRange', value)}>
-              <SelectTrigger className="w-32 bg-white/80 border-white/30 backdrop-blur-sm">
+              <SelectTrigger className="w-36 bg-white/80 border-white/30 backdrop-blur-sm">
                 <SelectValue placeholder="Price" />
               </SelectTrigger>
               <SelectContent className="bg-white/95 backdrop-blur-md border-white/30">
                 <SelectItem value="all">All Prices</SelectItem>
                 <SelectItem value="free">Free</SelectItem>
-                <SelectItem value="0-50">$0-50</SelectItem>
-                <SelectItem value="50-100">$50-100</SelectItem>
-                <SelectItem value="100-500">$100-500</SelectItem>
-                <SelectItem value="500+">$500+</SelectItem>
+                <SelectItem value="0-50">{format(0)} - {format(50)}</SelectItem>
+                <SelectItem value="50-100">{format(50)} - {format(100)}</SelectItem>
+                <SelectItem value="100-500">{format(100)} - {format(500)}</SelectItem>
+                <SelectItem value="500+">{format(500)}+</SelectItem>
               </SelectContent>
             </Select>
 

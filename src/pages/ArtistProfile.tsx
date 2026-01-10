@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Heart, Eye } from "lucide-react";
 import MessageArtistDialog from "@/components/artist-profile/MessageArtistDialog";
+import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 
 // --- Demo Data for fallback ---
 const ARTIST_UUID_1 = "11111111-1111-1111-1111-111111111111";
@@ -89,6 +90,7 @@ export default function ArtistProfile() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { format, userCurrencySymbol } = useCurrencyFormat();
   const [loading, setLoading] = useState(true);
 
   // DIAGNOSTIC: Show login state and preview context
@@ -873,7 +875,7 @@ export default function ArtistProfile() {
                 </span>
                 {selectedArtwork.price !== undefined && (
                   <span>
-                    {selectedArtwork.price === 0 ? "Free" : `₹${selectedArtwork.price}`}
+                    {selectedArtwork.price === 0 ? "Free" : format(selectedArtwork.price)}
                   </span>
                 )}
                 {selectedArtwork.isPremium && (
@@ -916,13 +918,13 @@ export default function ArtistProfile() {
               />
             </div>
             <div>
-              <Label htmlFor="req-budget" className="text-sm sm:text-base">Budget (₹)</Label>
+              <Label htmlFor="req-budget" className="text-sm sm:text-base">Budget ({userCurrencySymbol})</Label>
               <Input 
                 id="req-budget" 
                 type="number" 
                 value={projectRequest.budget} 
                 onChange={(e) => setProjectRequest({...projectRequest, budget: e.target.value})} 
-                placeholder="e.g., 15000"
+                placeholder="e.g., 500"
                 className="text-sm sm:text-base min-h-[44px]"
               />
             </div>

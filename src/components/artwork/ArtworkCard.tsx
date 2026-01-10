@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import LikeParticles from '@/components/ui/LikeParticles';
+import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 
 interface ArtworkCardProps {
   id: string;
@@ -38,6 +39,7 @@ const ArtworkCard = ({
 }: ArtworkCardProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { format } = useCurrencyFormat();
   const [isLiked, setIsLiked] = useState(false);
   const [currentLikes, setCurrentLikes] = useState(likes);
   const [currentViews, setCurrentViews] = useState(views);

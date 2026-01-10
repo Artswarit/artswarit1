@@ -8,6 +8,7 @@ import { Users, Heart, Eye, MapPin, Star, Award, Crown, CheckCircle, Loader2 } f
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 
 interface Artist {
   id: string;
@@ -38,6 +39,7 @@ interface ArtistCardProps {
 
 const ArtistCard = ({ artist, viewMode, onFollow }: ArtistCardProps) => {
   const { user } = useAuth();
+  const { formatRange } = useCurrencyFormat();
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(false);
 
