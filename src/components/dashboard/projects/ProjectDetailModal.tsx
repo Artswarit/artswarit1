@@ -435,13 +435,34 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">{project.title}</DialogTitle>
-          <DialogDescription>
-            Project with{' '}
+          <DialogDescription className="flex items-center gap-2 flex-wrap">
+            <span>Client:</span>
+            {project.client_id ? (
+              <Link 
+                to={`/artist/${project.client_id}`} 
+                className="text-primary hover:underline font-medium inline-flex items-center gap-1.5"
+              >
+                <Avatar className="h-5 w-5">
+                  <AvatarImage src={project.client_avatar} />
+                  <AvatarFallback className="text-[10px]">{project.client_name?.charAt(0) || 'C'}</AvatarFallback>
+                </Avatar>
+                {project.client_name}
+              </Link>
+            ) : 'Unknown client'}
+            <span className="text-muted-foreground">•</span>
+            <span>Artist:</span>
             {project.artist_id ? (
-              <Link to={`/artist/${project.artist_id}`} className="text-primary hover:underline">
+              <Link 
+                to={`/artist/${project.artist_id}`} 
+                className="text-primary hover:underline font-medium inline-flex items-center gap-1.5"
+              >
+                <Avatar className="h-5 w-5">
+                  <AvatarImage src={project.artist_avatar} />
+                  <AvatarFallback className="text-[10px]">{project.artist_name?.charAt(0) || 'A'}</AvatarFallback>
+                </Avatar>
                 {project.artist_name}
               </Link>
-            ) : 'Unassigned artist'}
+            ) : 'Unassigned'}
           </DialogDescription>
         </DialogHeader>
 
