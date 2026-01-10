@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Calendar, Clock, CheckCircle, Loader2, X, Trophy, Eye } from "lucide-react";
+import { PlusCircle, Calendar, Clock, CheckCircle, Loader2, X, Trophy, Eye, User } from "lucide-react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
@@ -45,16 +46,31 @@ const ProjectManagement = () => {
     try {
       const { data, error } = await supabase
         .from('projects')
-        .select(`*, client:client_id(full_name, avatar_url)`)
+        .select('*')
         .eq('artist_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
+      // Fetch client profiles separately using public_profiles view
+      const clientIds = [...new Set((data || []).map(p => p.client_id).filter(Boolean))] as string[];
+      let clientProfiles: Record<string, { full_name: string | null; avatar_url: string | null }> = {};
+      
+      if (clientIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('public_profiles')
+          .select('id, full_name, avatar_url')
+          .in('id', clientIds);
+        
+        (profiles || []).forEach(p => {
+          if (p.id) clientProfiles[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url };
+        });
+      }
+
       const transformedProjects = (data || []).map((project: any) => ({
         ...project,
-        client: project.client?.full_name || 'Unknown Client',
-        clientAvatar: project.client?.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
+        client: project.client_id ? (clientProfiles[project.client_id]?.full_name || 'Unknown Client') : 'Unknown Client',
+        clientAvatar: project.client_id ? (clientProfiles[project.client_id]?.avatar_url || undefined) : undefined,
         progress: project.progress ?? (project.status === 'completed' ? 100 : project.status === 'accepted' ? 10 : 0),
         payment: project.budget ? format(project.budget) : 'Not set',
       }));
@@ -65,7 +81,7 @@ const ProjectManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, format]);
 
   useEffect(() => {
     fetchProjects();
@@ -290,7 +306,14 @@ const ProjectManagement = () => {
                       <CardTitle>{project.title}</CardTitle>
                       <Badge className="bg-blue-100 text-blue-700">Active</Badge>
                     </div>
-                    <CardDescription>{project.client}</CardDescription>
+                    <CardDescription>
+                      {project.client_id ? (
+                        <Link to={`/artist/${project.client_id}`} className="text-primary hover:underline inline-flex items-center gap-1">
+                          <User size={14} />
+                          {project.client}
+                        </Link>
+                      ) : project.client}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
@@ -363,7 +386,14 @@ const ProjectManagement = () => {
                       <CardTitle>{project.title}</CardTitle>
                       <Badge className="bg-amber-100 text-amber-700">Pending</Badge>
                     </div>
-                    <CardDescription>{project.client}</CardDescription>
+                    <CardDescription>
+                      {project.client_id ? (
+                        <Link to={`/artist/${project.client_id}`} className="text-primary hover:underline inline-flex items-center gap-1">
+                          <User size={14} />
+                          {project.client}
+                        </Link>
+                      ) : project.client}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground mb-4">{project.description?.substring(0, 100)}...</p>
@@ -428,7 +458,14 @@ const ProjectManagement = () => {
                       <CardTitle>{project.title}</CardTitle>
                       <Badge className="bg-green-100 text-green-700">Completed</Badge>
                     </div>
-                    <CardDescription>{project.client}</CardDescription>
+                    <CardDescription>
+                      {project.client_id ? (
+                        <Link to={`/artist/${project.client_id}`} className="text-primary hover:underline inline-flex items-center gap-1">
+                          <User size={14} />
+                          {project.client}
+                        </Link>
+                      ) : project.client}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="mb-4">
