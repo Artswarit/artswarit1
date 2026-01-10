@@ -16,8 +16,9 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format as formatDate } from "date-fns";
 import { Link } from "react-router-dom";
+import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 
 interface ProjectDetailModalProps {
   projectId: string | null;
@@ -74,6 +75,7 @@ interface ProjectData {
 
 const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModalProps) => {
   const { user } = useAuth();
+  const { format: formatCurrency } = useCurrencyFormat();
   const [project, setProject] = useState<ProjectData | null>(null);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [files, setFiles] = useState<ProjectFile[]>([]);
@@ -460,7 +462,7 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
             <DollarSign className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">Budget</p>
-              <p className="font-medium text-sm">₹{project.budget?.toLocaleString() || '0'}</p>
+              <p className="font-medium text-sm">{formatCurrency(project.budget)}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -468,7 +470,7 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
             <div>
               <p className="text-xs text-muted-foreground">Deadline</p>
               <p className="font-medium text-sm">
-                {project.deadline ? format(new Date(project.deadline), 'MMM d, yyyy') : 'Not set'}
+                {project.deadline ? formatDate(new Date(project.deadline), 'MMM d, yyyy') : 'Not set'}
               </p>
             </div>
           </div>
@@ -540,7 +542,7 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
                         )}
                         {milestone.due_date && (
                           <p className="text-xs text-muted-foreground mt-1">
-                            Due: {format(new Date(milestone.due_date), 'MMM d, yyyy')}
+                            Due: {formatDate(new Date(milestone.due_date), 'MMM d, yyyy')}
                           </p>
                         )}
                       </div>
@@ -603,7 +605,7 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
                         <div className="min-w-0">
                           <p className="font-medium text-sm truncate">{file.original_name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {file.size_bytes ? `${(file.size_bytes / 1024).toFixed(1)} KB` : 'Unknown size'} • {format(new Date(file.created_at), 'MMM d, yyyy')}
+                            {file.size_bytes ? `${(file.size_bytes / 1024).toFixed(1)} KB` : 'Unknown size'} • {formatDate(new Date(file.created_at), 'MMM d, yyyy')}
                           </p>
                         </div>
                       </div>
@@ -664,7 +666,7 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
                         <div className={`max-w-[70%] p-3 rounded-lg ${isMe ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
                           <p className="text-sm">{msg.content}</p>
                           <p className={`text-xs mt-1 ${isMe ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                            {format(new Date(msg.created_at), 'MMM d, h:mm a')}
+                            {formatDate(new Date(msg.created_at), 'MMM d, h:mm a')}
                           </p>
                         </div>
                       </div>

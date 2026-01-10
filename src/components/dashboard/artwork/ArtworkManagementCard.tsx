@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 
 interface ArtworkManagementCardProps {
   artwork: {
@@ -64,6 +65,7 @@ const ArtworkManagementCard = ({
   pinnedCount = 0,
 }: ArtworkManagementCardProps) => {
   const { toast } = useToast();
+  const { format } = useCurrencyFormat();
   const [pendingStatus, setPendingStatus] = useState<'public' | 'private' | 'archived' | null>(null);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -194,7 +196,7 @@ const ArtworkManagementCard = ({
 
   const formatPrice = (price?: number | null) => {
     if (price === null || price === undefined || price === 0 || price <= 0) return 'Free';
-    return `$${price.toLocaleString()}`;
+    return format(price);
   };
 
   const formatDate = (dateString: string) => {
