@@ -308,7 +308,7 @@ const ProjectManagement = () => {
                     </div>
                     <CardDescription>
                       {project.client_id ? (
-                        <Link to={`/artist/${project.client_id}`} className="text-primary hover:underline inline-flex items-center gap-1">
+                        <Link to={`/profile/${project.client_id}`} className="text-primary hover:underline inline-flex items-center gap-1">
                           <User size={14} />
                           {project.client}
                         </Link>
@@ -388,7 +388,7 @@ const ProjectManagement = () => {
                     </div>
                     <CardDescription>
                       {project.client_id ? (
-                        <Link to={`/artist/${project.client_id}`} className="text-primary hover:underline inline-flex items-center gap-1">
+                        <Link to={`/profile/${project.client_id}`} className="text-primary hover:underline inline-flex items-center gap-1">
                           <User size={14} />
                           {project.client}
                         </Link>
@@ -460,7 +460,7 @@ const ProjectManagement = () => {
                     </div>
                     <CardDescription>
                       {project.client_id ? (
-                        <Link to={`/artist/${project.client_id}`} className="text-primary hover:underline inline-flex items-center gap-1">
+                        <Link to={`/profile/${project.client_id}`} className="text-primary hover:underline inline-flex items-center gap-1">
                           <User size={14} />
                           {project.client}
                         </Link>

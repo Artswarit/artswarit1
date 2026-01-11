@@ -439,7 +439,7 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
             <span>Client:</span>
             {project.client_id ? (
               <Link 
-                to={`/artist/${project.client_id}`} 
+                to={`/profile/${project.client_id}`} 
                 className="text-primary hover:underline font-medium inline-flex items-center gap-1.5"
               >
                 <Avatar className="h-5 w-5">
