@@ -38,6 +38,7 @@ import Merchandise from "./pages/Merchandise";
 
 const queryClient = new QueryClient();
 
+// Application routes component
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
