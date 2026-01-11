@@ -1,4 +1,3 @@
-
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
@@ -13,12 +12,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import LikeParticles from "@/components/ui/LikeParticles";
-
 export default function ArtworkDetails() {
-  const { id } = useParams();
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const { artworks, loading } = usePublicArtworks();
+  const {
+    id
+  } = useParams();
+  const {
+    user
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
+  const {
+    artworks,
+    loading
+  } = usePublicArtworks();
   const [viewCount, setViewCount] = useState(0);
   const [likeCount, setLikeCount] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
@@ -29,15 +36,17 @@ export default function ArtworkDetails() {
   useEffect(() => {
     async function trackView() {
       if (!id) return;
-
-      const viewData: { artwork_id: string; user_id?: string } = { artwork_id: id };
+      const viewData: {
+        artwork_id: string;
+        user_id?: string;
+      } = {
+        artwork_id: id
+      };
       if (user?.id) {
         viewData.user_id = user.id;
       }
-
       await supabase.from('artwork_views').insert(viewData);
     }
-
     trackView();
   }, [id, user?.id]);
 
@@ -45,89 +54,64 @@ export default function ArtworkDetails() {
   useEffect(() => {
     async function fetchData() {
       if (!id) return;
-
-      const [viewsResult, likesResult] = await Promise.all([
-        supabase.from('artwork_views').select('id').eq('artwork_id', id),
-        supabase.from('artwork_likes').select('id').eq('artwork_id', id)
-      ]);
-
+      const [viewsResult, likesResult] = await Promise.all([supabase.from('artwork_views').select('id').eq('artwork_id', id), supabase.from('artwork_likes').select('id').eq('artwork_id', id)]);
       setViewCount(viewsResult.data?.length || 0);
       setLikeCount(likesResult.data?.length || 0);
-
       if (user?.id) {
-        const { data: userLike } = await supabase
-          .from('artwork_likes')
-          .select('id')
-          .eq('artwork_id', id)
-          .eq('user_id', user.id)
-          .maybeSingle();
+        const {
+          data: userLike
+        } = await supabase.from('artwork_likes').select('id').eq('artwork_id', id).eq('user_id', user.id).maybeSingle();
         setIsLiked(!!userLike);
       }
     }
-
     fetchData();
 
     // Subscribe to real-time updates (skip updates from current user)
-    const likesChannel = supabase
-      .channel(`details-likes-${id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'artwork_likes',
-          filter: `artwork_id=eq.${id}`
-        },
-        async (payload) => {
-          // Skip if the change was made by current user (we handle this optimistically)
-          const newRecord = payload.new as { user_id?: string } | null;
-          const oldRecord = payload.old as { user_id?: string } | null;
-          const changedUserId = newRecord?.user_id || oldRecord?.user_id;
-          if (changedUserId === user?.id) {
-            return;
-          }
+    const likesChannel = supabase.channel(`details-likes-${id}`).on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'artwork_likes',
+      filter: `artwork_id=eq.${id}`
+    }, async payload => {
+      // Skip if the change was made by current user (we handle this optimistically)
+      const newRecord = payload.new as {
+        user_id?: string;
+      } | null;
+      const oldRecord = payload.old as {
+        user_id?: string;
+      } | null;
+      const changedUserId = newRecord?.user_id || oldRecord?.user_id;
+      if (changedUserId === user?.id) {
+        return;
+      }
 
-          // Refetch like count on changes from other users
-          const { data } = await supabase
-            .from('artwork_likes')
-            .select('id')
-            .eq('artwork_id', id);
-          setLikeCount(data?.length || 0);
-        }
-      )
-      .subscribe();
-
-    const viewsChannel = supabase
-      .channel(`details-views-${id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'artwork_views',
-          filter: `artwork_id=eq.${id}`
-        },
-        () => {
-          setViewCount(prev => prev + 1);
-        }
-      )
-      .subscribe();
-
+      // Refetch like count on changes from other users
+      const {
+        data
+      } = await supabase.from('artwork_likes').select('id').eq('artwork_id', id);
+      setLikeCount(data?.length || 0);
+    }).subscribe();
+    const viewsChannel = supabase.channel(`details-views-${id}`).on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'artwork_views',
+      filter: `artwork_id=eq.${id}`
+    }, () => {
+      setViewCount(prev => prev + 1);
+    }).subscribe();
     return () => {
       supabase.removeChannel(likesChannel);
       supabase.removeChannel(viewsChannel);
     };
   }, [id, user?.id]);
-
   const handleLike = async () => {
     if (!user?.id) {
       toast({
         title: "Sign in required",
-        description: "Please sign in to like artworks.",
+        description: "Please sign in to like artworks."
       });
       return;
     }
-
     if (isLiking || !id) return;
     setIsLiking(true);
 
@@ -142,19 +126,19 @@ export default function ArtworkDetails() {
       setAnimateLike(true);
       setTimeout(() => setAnimateLike(false), 300);
     }
-
     try {
       if (previousLiked) {
-        const { error } = await supabase
-          .from('artwork_likes')
-          .delete()
-          .eq('artwork_id', id)
-          .eq('user_id', user.id);
+        const {
+          error
+        } = await supabase.from('artwork_likes').delete().eq('artwork_id', id).eq('user_id', user.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from('artwork_likes')
-          .insert({ artwork_id: id, user_id: user.id });
+        const {
+          error
+        } = await supabase.from('artwork_likes').insert({
+          artwork_id: id,
+          user_id: user.id
+        });
         if (error) throw error;
       }
     } catch (err) {
@@ -166,10 +150,8 @@ export default function ArtworkDetails() {
       setIsLiking(false);
     }
   };
-
   if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+    return <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
         <Navbar />
         <main className="flex-1 flex items-center justify-center">
           <GlassCard className="p-8">
@@ -178,15 +160,11 @@ export default function ArtworkDetails() {
           </GlassCard>
         </main>
         <Footer />
-      </div>
-    );
+      </div>;
   }
-
   const artwork = artworks?.find(a => a.id === id);
-  
   if (!artwork) {
-    return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+    return <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
         <Navbar />
         <main className="flex-1 flex items-center justify-center">
           <GlassCard className="p-12 text-center max-w-lg mx-auto">
@@ -199,12 +177,9 @@ export default function ArtworkDetails() {
           </GlassCard>
         </main>
         <Footer />
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+  return <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
       <Navbar />
       <main className="flex-1 py-12 px-4">
         <div className="max-w-2xl w-full mx-auto">
@@ -219,15 +194,7 @@ export default function ArtworkDetails() {
             {/* Stats Row with Like Button */}
             <div className="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
               <div className="relative inline-block">
-                <button 
-                  onClick={handleLike}
-                  disabled={isLiking}
-                  className={`flex items-center gap-1 px-3 py-1 rounded-full transition-colors ${
-                    isLiked 
-                      ? 'bg-red-100 text-red-500' 
-                      : 'bg-muted hover:bg-red-50 hover:text-red-500'
-                  }`}
-                >
+                <button onClick={handleLike} disabled={isLiking} className={`flex items-center gap-1 px-3 py-1 rounded-full transition-colors ${isLiked ? 'bg-red-100 text-red-500' : 'bg-muted hover:bg-red-50 hover:text-red-500'}`}>
                   <Heart className={`w-4 h-4 transition-transform duration-300 ${isLiked ? 'fill-current' : ''} ${animateLike ? 'scale-125' : 'scale-100'}`} />
                   {likeCount} likes
                 </button>
@@ -239,21 +206,15 @@ export default function ArtworkDetails() {
               </span>
             </div>
 
-            <div className="mb-8 rounded overflow-hidden">
-              <img src={artwork.imageUrl} alt={artwork.title} className="w-full object-cover rounded-lg" />
-            </div>
-            {(artwork.type === "audio" || artwork.type === "music") && artwork.audioUrl && (
-              <audio controls className="mb-4 w-full">
+            
+            {(artwork.type === "audio" || artwork.type === "music") && artwork.audioUrl && <audio controls className="mb-4 w-full">
                 <source src={artwork.audioUrl} type="audio/mpeg" />
                 Your browser does not support the audio tag.
-              </audio>
-            )}
-            {artwork.type === "video" && artwork.videoUrl && (
-              <video controls className="mb-4 w-full rounded-lg">
+              </audio>}
+            {artwork.type === "video" && artwork.videoUrl && <video controls className="mb-4 w-full rounded-lg px-[50px] py-0 my-0 mx-0 border-0 border-solid">
                 <source src={artwork.videoUrl} type="video/mp4" />
                 Your browser does not support the video tag.
-              </video>
-            )}
+              </video>}
             <div className="mb-6">
               <span className="text-muted-foreground text-sm">by </span>
               <Link to={`/artist/${artwork.artistId}`} className="text-blue-700 hover:underline font-medium">
@@ -261,11 +222,7 @@ export default function ArtworkDetails() {
               </Link>
             </div>
             <div className="flex items-center justify-between mt-6">
-              <SocialShareButtons
-                url={window.location.href}
-                title={artwork.title}
-                imageUrl={artwork.imageUrl}
-              />
+              <SocialShareButtons url={window.location.href} title={artwork.title} imageUrl={artwork.imageUrl} />
               <Button asChild>
                 <Link to="/explore">Back to Explore</Link>
               </Button>
@@ -276,6 +233,5 @@ export default function ArtworkDetails() {
         </div>
       </main>
       <Footer />
-    </div>
-  );
+    </div>;
 }
