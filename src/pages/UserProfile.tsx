@@ -61,9 +61,9 @@ export default function UserProfile() {
       try {
         setLoading(true);
 
-        // Fetch profile data from profiles table (includes country/city)
+        // Fetch profile data from public_profiles view (publicly accessible)
         const { data: profileData, error } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('*')
           .eq('id', id)
           .maybeSingle();
@@ -92,8 +92,8 @@ export default function UserProfile() {
           is_verified: profileData.is_verified,
           created_at: profileData.created_at,
           website: profileData.website,
-          country: profileData.country,
-          city: profileData.city,
+          country: null,
+          city: null,
         });
 
         // Fetch client statistics
