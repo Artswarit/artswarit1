@@ -148,6 +148,19 @@ export default function ArtistProfile() {
       try {
         setLoading(true);
         
+        // First check if this is actually an artist profile
+        const { data: profileCheck } = await supabase
+          .from('public_profiles')
+          .select('role')
+          .eq('id', id)
+          .maybeSingle();
+        
+        // If the profile is a client, redirect to the user profile page
+        if (profileCheck && profileCheck.role === 'client') {
+          navigate(`/profile/${id}`, { replace: true });
+          return;
+        }
+        
         // Fetch artist info from public_profiles view (has avatar_url and cover_url)
         const [profileResult, artworksResult, followersResult, servicesResult, reviewsResult, projectsResult] = await Promise.all([
           supabase
