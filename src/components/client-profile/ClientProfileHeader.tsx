@@ -62,7 +62,7 @@ const ClientProfileHeader: React.FC<ClientProfileHeaderProps> = ({
             <div className={`absolute bottom-1 right-1 w-5 h-5 rounded-full border-2 border-background ${isOnline ? 'bg-green-500' : 'bg-muted-foreground'}`} />
           </div>
           
-          <div className="flex-1 pt-4 sm:pt-8">
+          <div className="flex-1 pt-4 sm:pt-8 my-[50px]">
             <div className="flex flex-wrap items-center gap-2 mb-2">
               <h1 className="text-xl sm:text-2xl text-foreground font-semibold">
                 {profile.full_name || 'Anonymous Client'}
@@ -71,11 +71,9 @@ const ClientProfileHeader: React.FC<ClientProfileHeaderProps> = ({
             </div>
 
             {/* Bio Section */}
-            {profile.bio && (
-              <p className="text-sm text-muted-foreground mb-3 line-clamp-2 max-w-xl">
+            {profile.bio && <p className="text-sm text-muted-foreground mb-3 line-clamp-2 max-w-xl">
                 {profile.bio}
-              </p>
-            )}
+              </p>}
             
             <div className="flex flex-wrap items-center gap-2 mb-3">
               <Badge variant="secondary" className="text-xs px-2 py-1">
@@ -116,7 +114,7 @@ const ClientProfileHeader: React.FC<ClientProfileHeaderProps> = ({
 
           {/* Message Button - Desktop */}
           {isLoggedIn && <div className="hidden sm:block pt-8">
-              <Button onClick={onMessageClick} size="lg" className="gap-2">
+              <Button onClick={onMessageClick} size="lg" className="gap-2 py-0 my-[50px]">
                 <MessageSquare className="w-4 h-4" />
                 Message Client
               </Button>
