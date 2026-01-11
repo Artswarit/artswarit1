@@ -64,11 +64,18 @@ const ClientProfileHeader: React.FC<ClientProfileHeaderProps> = ({
           
           <div className="flex-1 pt-4 sm:pt-8">
             <div className="flex flex-wrap items-center gap-2 mb-2">
-              <h1 className="text-xl sm:text-2xl text-foreground my-[40px] py-0 font-extralight font-sans">
+              <h1 className="text-xl sm:text-2xl text-foreground font-semibold">
                 {profile.full_name || 'Anonymous Client'}
               </h1>
               {profile.is_verified && <CheckCircle className="w-5 h-5 text-blue-500" />}
             </div>
+
+            {/* Bio Section */}
+            {profile.bio && (
+              <p className="text-sm text-muted-foreground mb-3 line-clamp-2 max-w-xl">
+                {profile.bio}
+              </p>
+            )}
             
             <div className="flex flex-wrap items-center gap-2 mb-3">
               <Badge variant="secondary" className="text-xs px-2 py-1">
@@ -109,7 +116,7 @@ const ClientProfileHeader: React.FC<ClientProfileHeaderProps> = ({
 
           {/* Message Button - Desktop */}
           {isLoggedIn && <div className="hidden sm:block pt-8">
-              <Button onClick={onMessageClick} size="lg" className="gap-2 px-[10px] my-[50px] border border-solid">
+              <Button onClick={onMessageClick} size="lg" className="gap-2">
                 <MessageSquare className="w-4 h-4" />
                 Message Client
               </Button>

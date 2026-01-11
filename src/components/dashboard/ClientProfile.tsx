@@ -10,7 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save, Camera, Loader2, MapPin, User, ImageIcon } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Save, Camera, Loader2, MapPin, User, ImageIcon, Globe, CheckCircle2, AlertCircle } from "lucide-react";
 
 interface CountryCurrency {
   id: string;
@@ -37,7 +39,36 @@ const ClientProfile = () => {
     bio: "",
     country: "",
     city: "",
+    website: "",
   });
+
+  // Calculate profile completion
+  const calculateProfileCompletion = () => {
+    const fields = [
+      { value: formData.fullName, weight: 20, label: 'Display Name' },
+      { value: formData.bio, weight: 25, label: 'Bio' },
+      { value: formData.country, weight: 20, label: 'Country' },
+      { value: profile?.avatar_url, weight: 25, label: 'Profile Photo' },
+      { value: profile?.cover_url, weight: 10, label: 'Banner Image' },
+    ];
+    
+    let completed = 0;
+    const missing: string[] = [];
+    
+    fields.forEach(field => {
+      if (field.value && field.value.trim && field.value.trim() !== '') {
+        completed += field.weight;
+      } else if (field.value) {
+        completed += field.weight;
+      } else {
+        missing.push(field.label);
+      }
+    });
+    
+    return { percentage: completed, missing };
+  };
+
+  const profileCompletion = calculateProfileCompletion();
 
   // Fetch countries
   useEffect(() => {
@@ -79,6 +110,7 @@ const ClientProfile = () => {
           bio: data.bio || "",
           country: data.country || "",
           city: data.city || "",
+          website: data.website || "",
         });
       }
       setLoading(false);
@@ -99,6 +131,7 @@ const ClientProfile = () => {
           bio: data.bio || "",
           country: data.country || "",
           city: data.city || "",
+          website: data.website || "",
         });
       }
     };
@@ -169,6 +202,7 @@ const ClientProfile = () => {
           bio: formData.bio,
           country: formData.country,
           city: formData.city,
+          website: formData.website,
           currency: countryData?.currency_code || null,
           updated_at: new Date().toISOString(),
         })
@@ -260,6 +294,36 @@ const ClientProfile = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6 animate-fade-in">
+      {/* Profile Completion Banner */}
+      <Card className={`transition-all duration-300 ${
+        profileCompletion.percentage === 100 
+          ? 'bg-green-500/10 border-green-500/30' 
+          : 'bg-amber-500/10 border-amber-500/30'
+      }`}>
+        <CardContent className="py-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex items-center gap-2">
+              {profileCompletion.percentage === 100 ? (
+                <CheckCircle2 className="w-5 h-5 text-green-500" />
+              ) : (
+                <AlertCircle className="w-5 h-5 text-amber-500" />
+              )}
+              <span className="font-medium">
+                Profile Completion: {profileCompletion.percentage}%
+              </span>
+            </div>
+            <div className="flex-1 w-full">
+              <Progress value={profileCompletion.percentage} className="h-2" />
+            </div>
+            {profileCompletion.missing.length > 0 && (
+              <div className="text-xs text-muted-foreground">
+                Missing: {profileCompletion.missing.join(', ')}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Banner Section */}
       <Card className="overflow-hidden">
         <div className="relative h-32 sm:h-48 w-full group">
@@ -342,7 +406,9 @@ const ClientProfile = () => {
               <div className="flex-1">
                 <p className="font-medium text-sm sm:text-base">{formData.fullName || 'Your Name'}</p>
                 <p className="text-xs sm:text-sm text-muted-foreground">{user?.email}</p>
-                <p className="text-xs text-amber-600 mt-1">* Profile picture is required</p>
+                {!profile?.avatar_url && (
+                  <p className="text-xs text-amber-600 mt-1">* Profile picture is required</p>
+                )}
               </div>
             </div>
 
@@ -366,9 +432,27 @@ const ClientProfile = () => {
                   name="bio"
                   value={formData.bio}
                   onChange={handleInputChange}
-                  rows={3}
+                  rows={4}
                   className="mt-1 text-sm resize-none"
-                  placeholder="Tell us about yourself..."
+                  placeholder="Tell us about yourself, your interests, what kind of projects you're looking for..."
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {formData.bio.length}/500 characters
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="website" className="text-xs sm:text-sm flex items-center gap-2">
+                  <Globe className="w-3 h-3" />
+                  Website (Optional)
+                </Label>
+                <Input
+                  id="website"
+                  name="website"
+                  value={formData.website}
+                  onChange={handleInputChange}
+                  className="mt-1 text-sm"
+                  placeholder="https://yourwebsite.com"
                 />
               </div>
             </div>
@@ -435,6 +519,26 @@ const ClientProfile = () => {
                 </p>
               </div>
             )}
+
+            {/* Profile Preview */}
+            <div className="p-4 border rounded-lg bg-muted/20">
+              <p className="text-sm font-medium mb-2">Profile Preview</p>
+              <div className="flex items-center gap-3">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={profile?.avatar_url || ''} />
+                  <AvatarFallback>{formData.fullName?.charAt(0) || 'U'}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-sm font-medium">{formData.fullName || 'Your Name'}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {[formData.city, selectedCountry?.country_name].filter(Boolean).join(', ') || 'Location not set'}
+                  </p>
+                </div>
+              </div>
+              {formData.bio && (
+                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{formData.bio}</p>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
