@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save, Camera, Loader2, MapPin, User } from "lucide-react";
+import { Save, Camera, Loader2, MapPin, User, ImageIcon } from "lucide-react";
 
 interface CountryCurrency {
   id: string;
@@ -30,6 +30,7 @@ const ClientProfile = () => {
   
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
   
   const [formData, setFormData] = useState({
     fullName: "",
@@ -219,10 +220,83 @@ const ClientProfile = () => {
     }
   };
 
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+
+    setUploadingBanner(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `cover-${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ cover_url: urlData.publicUrl })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      setProfile((prev: any) => ({ ...prev, cover_url: urlData.publicUrl }));
+      toast({ title: "Banner updated!" });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Upload failed", description: error.message });
+    } finally {
+      setUploadingBanner(false);
+    }
+  };
+
   const selectedCountry = countries.find(c => c.country_code === formData.country);
 
   return (
     <div className="space-y-4 sm:space-y-6 animate-fade-in">
+      {/* Banner Section */}
+      <Card className="overflow-hidden">
+        <div className="relative h-32 sm:h-48 w-full group">
+          <div 
+            className="absolute inset-0 bg-cover bg-center" 
+            style={{ 
+              backgroundImage: profile?.cover_url 
+                ? `url(${profile.cover_url})` 
+                : 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.6) 100%)' 
+            }} 
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/40" />
+          <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+            {uploadingBanner ? (
+              <Loader2 className="w-8 h-8 text-white animate-spin" />
+            ) : (
+              <div className="flex flex-col items-center text-white">
+                <ImageIcon className="w-8 h-8 mb-2" />
+                <span className="text-sm font-medium">Upload Banner</span>
+              </div>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleBannerUpload}
+              disabled={uploadingBanner}
+            />
+          </label>
+        </div>
+        <CardContent className="pt-4">
+          <p className="text-xs text-muted-foreground">
+            Recommended size: 1200x300 pixels. This banner will appear on your public profile.
+          </p>
+        </CardContent>
+      </Card>
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">Complete Your Profile</h2>

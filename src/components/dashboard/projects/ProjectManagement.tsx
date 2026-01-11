@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Calendar, Clock, CheckCircle, Loader2, X, Trophy, Eye, User } from "lucide-react";
+import { PlusCircle, Calendar, Clock, CheckCircle, Loader2, X, Trophy, Eye, User, Star, Edit } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 import { toast } from "sonner";
 import ProjectDetailModal from "./ProjectDetailModal";
+import ReviewClientDialog from "./ReviewClientDialog";
 
 interface Project {
   id: string;
@@ -29,6 +30,13 @@ interface Project {
   payment?: string;
 }
 
+interface ClientReview {
+  id: string;
+  project_id: string;
+  rating: number;
+  review_text: string | null;
+}
+
 const PROGRESS_OPTIONS = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 
 const ProjectManagement = () => {
@@ -39,6 +47,9 @@ const ProjectManagement = () => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [selectedProjectForReview, setSelectedProjectForReview] = useState<Project | null>(null);
+  const [clientReviews, setClientReviews] = useState<Record<string, ClientReview>>({});
 
   const fetchProjects = useCallback(async () => {
     if (!user?.id) return;
@@ -83,20 +94,46 @@ const ProjectManagement = () => {
     }
   }, [user?.id, format]);
 
+  const fetchClientReviews = useCallback(async () => {
+    if (!user?.id) return;
+
+    const { data, error } = await supabase
+      .from('client_reviews')
+      .select('id, project_id, rating, review_text')
+      .eq('artist_id', user.id);
+
+    if (!error && data) {
+      const reviewMap: Record<string, ClientReview> = {};
+      data.forEach(review => {
+        reviewMap[review.project_id] = review;
+      });
+      setClientReviews(reviewMap);
+    }
+  }, [user?.id]);
+
   useEffect(() => {
     fetchProjects();
-  }, [fetchProjects]);
+    fetchClientReviews();
+  }, [fetchProjects, fetchClientReviews]);
 
   useEffect(() => {
     if (!user?.id) return;
 
-    const channel = supabase
+    const projectsChannel = supabase
       .channel(`projects-realtime:${user.id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'projects', filter: `artist_id=eq.${user.id}` }, () => fetchProjects())
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
-  }, [user?.id, fetchProjects]);
+    const reviewsChannel = supabase
+      .channel(`client-reviews-realtime:${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'client_reviews', filter: `artist_id=eq.${user.id}` }, () => fetchClientReviews())
+      .subscribe();
+
+    return () => { 
+      supabase.removeChannel(projectsChannel);
+      supabase.removeChannel(reviewsChannel);
+    };
+  }, [user?.id, fetchProjects, fetchClientReviews]);
 
   const handleAcceptProject = async (project: Project) => {
     if (!project.client_id) return;
@@ -266,6 +303,13 @@ const ProjectManagement = () => {
     setSelectedProjectId(projectId);
     setDetailModalOpen(true);
   };
+
+  const handleOpenReviewDialog = (project: Project) => {
+    setSelectedProjectForReview(project);
+    setReviewDialogOpen(true);
+  };
+
+  const getProjectReview = (projectId: string) => clientReviews[projectId] || null;
 
   const activeProjects = projects.filter(p => p.status === "accepted");
   const pendingProjects = projects.filter(p => p.status === "pending");
@@ -451,44 +495,84 @@ const ProjectManagement = () => {
         <TabsContent value="completed">
           {completedProjects.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {completedProjects.map(project => (
-                <Card key={project.id}>
-                  <CardHeader>
-                    <div className="flex justify-between">
-                      <CardTitle>{project.title}</CardTitle>
-                      <Badge className="bg-green-100 text-green-700">Completed</Badge>
-                    </div>
-                    <CardDescription>
-                      {project.client_id ? (
-                        <Link to={`/profile/${project.client_id}`} className="text-primary hover:underline inline-flex items-center gap-1">
-                          <User size={14} />
-                          {project.client}
-                        </Link>
-                      ) : project.client}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="mb-4">
-                      <div className="flex justify-between text-sm mb-2">
-                        <span className="text-muted-foreground">Progress</span>
-                        <span className="font-medium text-green-600">100%</span>
+              {completedProjects.map(project => {
+                const review = getProjectReview(project.id);
+                return (
+                  <Card key={project.id}>
+                    <CardHeader>
+                      <div className="flex justify-between">
+                        <CardTitle>{project.title}</CardTitle>
+                        <Badge className="bg-green-100 text-green-700">Completed</Badge>
                       </div>
-                      <Progress value={100} className="h-2" />
-                    </div>
-                    <span className="text-green-600 font-medium text-sm">{project.payment}</span>
-                  </CardContent>
-                  <CardFooter>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handleViewDetails(project.id)}
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      View Details
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+                      <CardDescription>
+                        {project.client_id ? (
+                          <Link to={`/profile/${project.client_id}`} className="text-primary hover:underline inline-flex items-center gap-1">
+                            <User size={14} />
+                            {project.client}
+                          </Link>
+                        ) : project.client}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="mb-4">
+                        <div className="flex justify-between text-sm mb-2">
+                          <span className="text-muted-foreground">Progress</span>
+                          <span className="font-medium text-green-600">100%</span>
+                        </div>
+                        <Progress value={100} className="h-2" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-green-600 font-medium text-sm">{project.payment}</span>
+                        {review && (
+                          <div className="flex items-center gap-1 text-sm">
+                            <span className="text-muted-foreground">Your rating:</span>
+                            <div className="flex items-center gap-0.5">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`w-4 h-4 ${
+                                    star <= review.rating
+                                      ? "fill-yellow-400 text-yellow-400"
+                                      : "text-muted-foreground"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                    <CardFooter className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleViewDetails(project.id)}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View Details
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={review ? "outline" : "default"}
+                        onClick={() => handleOpenReviewDialog(project)}
+                        className={review ? "" : "bg-amber-500 hover:bg-amber-600"}
+                      >
+                        {review ? (
+                          <>
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit Review
+                          </>
+                        ) : (
+                          <>
+                            <Star className="h-4 w-4 mr-1" />
+                            Rate Client
+                          </>
+                        )}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-16 bg-muted/50 rounded-lg border border-dashed">
@@ -504,6 +588,18 @@ const ProjectManagement = () => {
         open={detailModalOpen}
         onOpenChange={setDetailModalOpen}
       />
+
+      {/* Review Client Dialog */}
+      {selectedProjectForReview && user && (
+        <ReviewClientDialog
+          open={reviewDialogOpen}
+          onOpenChange={setReviewDialogOpen}
+          project={selectedProjectForReview}
+          artistId={user.id}
+          existingReview={getProjectReview(selectedProjectForReview.id)}
+          onReviewSubmitted={fetchClientReviews}
+        />
+      )}
     </div>
   );
 };

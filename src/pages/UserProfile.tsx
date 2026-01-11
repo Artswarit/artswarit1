@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -106,185 +106,240 @@ export default function UserProfile() {
     repeatHires: 0,
   });
 
-  useEffect(() => {
-    async function fetchClientProfile() {
-      if (!id) {
+  const fetchAllData = useCallback(async () => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Fetch profile from public_profiles view (accessible to all)
+      const { data: profileData, error } = await supabase
+        .from('public_profiles')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (error || !profileData) {
+        console.error('Profile not found:', error);
+        setProfile(null);
         setLoading(false);
         return;
       }
 
-      try {
-        setLoading(true);
+      // Redirect artists to artist profile page
+      if (profileData.role === 'artist') {
+        navigate(`/artist/${id}`, { replace: true });
+        return;
+      }
 
-        // Fetch profile from public_profiles view (accessible to all)
-        const { data: profileData, error } = await supabase
+      // Get country name from country_currencies table if we have a country code
+      let countryName: string | null = profileData.location;
+
+      setProfile({
+        id: profileData.id || '',
+        full_name: profileData.full_name,
+        avatar_url: profileData.avatar_url,
+        cover_url: profileData.cover_url,
+        bio: profileData.bio,
+        location: profileData.location,
+        is_verified: profileData.is_verified,
+        created_at: profileData.created_at,
+        website: profileData.website,
+        country_name: countryName,
+        city: null,
+      });
+
+      // Fetch all client statistics in parallel
+      const [
+        projectsResult,
+        clientReviewsResult,
+        conversationsResult,
+      ] = await Promise.all([
+        // Projects data
+        supabase
+          .from('projects')
+          .select('id, status, budget, created_at, updated_at, artist_id')
+          .eq('client_id', id),
+        // Reviews received BY this client FROM artists
+        supabase
+          .from('client_reviews')
+          .select(`
+            id,
+            rating,
+            review_text,
+            created_at,
+            project_id,
+            artist_id
+          `)
+          .eq('client_id', id)
+          .order('created_at', { ascending: false }),
+        // Get last activity from conversations
+        supabase
+          .from('conversations')
+          .select('updated_at')
+          .or(`client_id.eq.${id},artist_id.eq.${id}`)
+          .order('updated_at', { ascending: false })
+          .limit(1),
+      ]);
+
+      const projects = projectsResult.data || [];
+      const clientReviewsData = clientReviewsResult.data || [];
+      const lastConversation = conversationsResult.data?.[0];
+
+      // Calculate work history stats
+      const completed = projects.filter(p => p.status === 'completed').length;
+      const inProgress = projects.filter(p => p.status === 'accepted').length;
+      const cancelled = projects.filter(p => p.status === 'cancelled').length;
+      const lastActive = lastConversation?.updated_at || profileData.created_at;
+
+      setWorkHistory({
+        totalProjects: projects.length,
+        completedProjects: completed,
+        inProgressProjects: inProgress,
+        cancelledProjects: cancelled,
+        avgResponseTime: completed > 0 ? '< 24h' : null,
+        lastActive,
+      });
+
+      // Fetch artist details for reviews (reviews FROM artists)
+      const reviewsWithArtists: ReviewData[] = [];
+      for (const review of clientReviewsData.slice(0, 10)) {
+        const { data: artistData } = await supabase
           .from('public_profiles')
-          .select('*')
-          .eq('id', id)
+          .select('full_name, avatar_url')
+          .eq('id', review.artist_id)
           .maybeSingle();
 
-        if (error || !profileData) {
-          console.error('Profile not found:', error);
-          setProfile(null);
-          setLoading(false);
-          return;
-        }
+        const { data: projectData } = await supabase
+          .from('projects')
+          .select('title')
+          .eq('id', review.project_id)
+          .maybeSingle();
 
-        // Redirect artists to artist profile page
-        if (profileData.role === 'artist') {
-          navigate(`/artist/${id}`, { replace: true });
-          return;
-        }
-
-        // Get country name from country_currencies table if we have a country code
-        let countryName: string | null = profileData.location;
-
-        setProfile({
-          id: profileData.id || '',
-          full_name: profileData.full_name,
-          avatar_url: profileData.avatar_url,
-          cover_url: profileData.cover_url,
-          bio: profileData.bio,
-          location: profileData.location,
-          is_verified: profileData.is_verified,
-          created_at: profileData.created_at,
-          website: profileData.website,
-          country_name: countryName,
-          city: null,
+        reviewsWithArtists.push({
+          id: review.id,
+          rating: review.rating,
+          review_text: review.review_text,
+          created_at: review.created_at,
+          artist_name: artistData?.full_name || null,
+          artist_avatar: artistData?.avatar_url || null,
+          project_title: projectData?.title || null,
         });
-
-        // Fetch all client statistics in parallel
-        const [
-          projectsResult,
-          reviewsResult,
-          conversationsResult,
-        ] = await Promise.all([
-          // Projects data
-          supabase
-            .from('projects')
-            .select('id, status, budget, created_at, updated_at, artist_id')
-            .eq('client_id', id),
-          // Reviews received (from artists about this client)
-          // Note: project_reviews is for clients reviewing artists, so we need to check if there's a reverse
-          // For now, we'll show reviews this client has given to artists
-          supabase
-            .from('project_reviews')
-            .select(`
-              id,
-              rating,
-              review_text,
-              created_at,
-              project_id,
-              artist_id
-            `)
-            .eq('client_id', id),
-          // Get last activity from conversations
-          supabase
-            .from('conversations')
-            .select('updated_at')
-            .or(`client_id.eq.${id},artist_id.eq.${id}`)
-            .order('updated_at', { ascending: false })
-            .limit(1),
-        ]);
-
-        const projects = projectsResult.data || [];
-        const reviewsData = reviewsResult.data || [];
-        const lastConversation = conversationsResult.data?.[0];
-
-        // Calculate work history stats
-        const completed = projects.filter(p => p.status === 'completed').length;
-        const inProgress = projects.filter(p => p.status === 'accepted').length;
-        const cancelled = projects.filter(p => p.status === 'cancelled').length;
-        const lastActive = lastConversation?.updated_at || profileData.created_at;
-
-        setWorkHistory({
-          totalProjects: projects.length,
-          completedProjects: completed,
-          inProgressProjects: inProgress,
-          cancelledProjects: cancelled,
-          avgResponseTime: completed > 0 ? '< 24h' : null,
-          lastActive,
-        });
-
-        // Fetch artist details for reviews
-        const reviewsWithArtists: ReviewData[] = [];
-        for (const review of reviewsData.slice(0, 10)) {
-          const { data: artistData } = await supabase
-            .from('public_profiles')
-            .select('full_name, avatar_url')
-            .eq('id', review.artist_id)
-            .maybeSingle();
-
-          const { data: projectData } = await supabase
-            .from('projects')
-            .select('title')
-            .eq('id', review.project_id)
-            .maybeSingle();
-
-          reviewsWithArtists.push({
-            id: review.id,
-            rating: review.rating,
-            review_text: review.review_text,
-            created_at: review.created_at,
-            artist_name: artistData?.full_name || null,
-            artist_avatar: artistData?.avatar_url || null,
-            project_title: projectData?.title || null,
-          });
-        }
-        setReviews(reviewsWithArtists);
-        
-        // Calculate average rating (ratings this client has given)
-        const avgRating = reviewsData.length > 0
-          ? reviewsData.reduce((sum, r) => sum + r.rating, 0) / reviewsData.length
-          : 0;
-        setAverageRating(avgRating);
-
-        // Trust signals (simulated based on available data)
-        const completionRate = projects.length > 0 ? (completed / projects.length) * 100 : 0;
-        setTrustSignals({
-          paymentVerified: completed > 0, // Assume verified if they've completed projects
-          onTimePaymentRate: completed > 0 ? Math.min(100, completionRate + 20) : 0,
-          disputeCount: 0, // No dispute tracking in current schema
-          escrowUsed: false, // No escrow tracking in current schema
-          totalPayments: completed,
-        });
-
-        // Behavior metrics
-        const budgets = projects.filter(p => p.budget).map(p => p.budget as number);
-        const avgBudget = budgets.length > 0 
-          ? budgets.reduce((a, b) => a + b, 0) / budgets.length 
-          : null;
-        const minBudget = budgets.length > 0 ? Math.min(...budgets) : null;
-        const maxBudget = budgets.length > 0 ? Math.max(...budgets) : null;
-
-        // Calculate rehire rate (same artist hired multiple times)
-        const artistIds = projects.map(p => p.artist_id).filter(Boolean);
-        const uniqueArtists = new Set(artistIds);
-        const repeatHires = artistIds.length - uniqueArtists.size;
-        const rehireRate = uniqueArtists.size > 0 && artistIds.length > 1
-          ? Math.round((repeatHires / (artistIds.length - 1)) * 100)
-          : 0;
-
-        setBehaviorMetrics({
-          rehireRate,
-          avgBudget,
-          minBudget,
-          maxBudget,
-          avgProjectDuration: completed > 0 ? '1-2 weeks' : null,
-          totalHires: artistIds.length,
-          repeatHires,
-        });
-
-      } catch (err) {
-        console.error('Error fetching client profile:', err);
-        setProfile(null);
-      } finally {
-        setLoading(false);
       }
-    }
+      setReviews(reviewsWithArtists);
+      
+      // Calculate average rating (ratings this client has RECEIVED from artists)
+      const avgRating = clientReviewsData.length > 0
+        ? clientReviewsData.reduce((sum, r) => sum + r.rating, 0) / clientReviewsData.length
+        : 0;
+      setAverageRating(avgRating);
 
-    fetchClientProfile();
+      // Trust signals (simulated based on available data)
+      const completionRate = projects.length > 0 ? (completed / projects.length) * 100 : 0;
+      setTrustSignals({
+        paymentVerified: completed > 0, // Assume verified if they've completed projects
+        onTimePaymentRate: completed > 0 ? Math.min(100, completionRate + 20) : 0,
+        disputeCount: 0, // No dispute tracking in current schema
+        escrowUsed: false, // No escrow tracking in current schema
+        totalPayments: completed,
+      });
+
+      // Behavior metrics
+      const budgets = projects.filter(p => p.budget).map(p => p.budget as number);
+      const avgBudget = budgets.length > 0 
+        ? budgets.reduce((a, b) => a + b, 0) / budgets.length 
+        : null;
+      const minBudget = budgets.length > 0 ? Math.min(...budgets) : null;
+      const maxBudget = budgets.length > 0 ? Math.max(...budgets) : null;
+
+      // Calculate rehire rate (same artist hired multiple times)
+      const artistIds = projects.map(p => p.artist_id).filter(Boolean);
+      const uniqueArtists = new Set(artistIds);
+      const repeatHires = artistIds.length - uniqueArtists.size;
+      const rehireRate = uniqueArtists.size > 0 && artistIds.length > 1
+        ? Math.round((repeatHires / (artistIds.length - 1)) * 100)
+        : 0;
+
+      setBehaviorMetrics({
+        rehireRate,
+        avgBudget,
+        minBudget,
+        maxBudget,
+        avgProjectDuration: completed > 0 ? '1-2 weeks' : null,
+        totalHires: artistIds.length,
+        repeatHires,
+      });
+
+    } catch (err) {
+      console.error('Error fetching client profile:', err);
+      setProfile(null);
+    } finally {
+      setLoading(false);
+    }
   }, [id, navigate]);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
+
+  // Real-time subscriptions for live updates
+  useEffect(() => {
+    if (!id) return;
+
+    // Subscribe to profile changes
+    const profileChannel = supabase
+      .channel(`client-profile-realtime:${id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'profiles', filter: `id=eq.${id}` },
+        () => fetchAllData()
+      )
+      .subscribe();
+
+    // Subscribe to client reviews changes (reviews FROM artists TO this client)
+    const reviewsChannel = supabase
+      .channel(`client-reviews-profile:${id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'client_reviews', filter: `client_id=eq.${id}` },
+        () => fetchAllData()
+      )
+      .subscribe();
+
+    // Subscribe to projects changes
+    const projectsChannel = supabase
+      .channel(`client-projects-realtime:${id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'projects', filter: `client_id=eq.${id}` },
+        () => fetchAllData()
+      )
+      .subscribe();
+
+    // Subscribe to conversations for activity status
+    const conversationsChannel = supabase
+      .channel(`client-conversations-realtime:${id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'conversations' },
+        (payload: any) => {
+          if (payload.new?.client_id === id || payload.new?.artist_id === id) {
+            fetchAllData();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(profileChannel);
+      supabase.removeChannel(reviewsChannel);
+      supabase.removeChannel(projectsChannel);
+      supabase.removeChannel(conversationsChannel);
+    };
+  }, [id, fetchAllData]);
 
   if (loading) {
     return (
