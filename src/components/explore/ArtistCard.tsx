@@ -9,7 +9,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
-
 interface Artist {
   id: string;
   name: string;
@@ -30,62 +29,59 @@ interface Artist {
   joinedDate: string;
   tags: string[];
 }
-
 interface ArtistCardProps {
   artist: Artist;
   viewMode: 'grid' | 'list';
   onFollow?: (artistId: string) => void;
 }
-
-const ArtistCard = ({ artist, viewMode, onFollow }: ArtistCardProps) => {
-  const { user } = useAuth();
-  const { formatRange } = useCurrencyFormat();
+const ArtistCard = ({
+  artist,
+  viewMode,
+  onFollow
+}: ArtistCardProps) => {
+  const {
+    user
+  } = useAuth();
+  const {
+    formatRange
+  } = useCurrencyFormat();
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // Check initial follow state
   useEffect(() => {
     if (!user?.id) return;
-    
     const checkFollowStatus = async () => {
-      const { data } = await supabase
-        .from('follows')
-        .select('id')
-        .eq('follower_id', user.id)
-        .eq('following_id', artist.id)
-        .maybeSingle();
-      
+      const {
+        data
+      } = await supabase.from('follows').select('id').eq('follower_id', user.id).eq('following_id', artist.id).maybeSingle();
       setIsFollowing(!!data);
     };
     checkFollowStatus();
   }, [user?.id, artist.id]);
-
   const handleFollow = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
     if (!user?.id) {
       toast.error('Please sign in to follow artists');
       return;
     }
-    
     setLoading(true);
     try {
       if (isFollowing) {
-        const { error } = await supabase
-          .from('follows')
-          .delete()
-          .eq('follower_id', user.id)
-          .eq('following_id', artist.id);
-        
+        const {
+          error
+        } = await supabase.from('follows').delete().eq('follower_id', user.id).eq('following_id', artist.id);
         if (error) throw error;
         setIsFollowing(false);
         toast.success('Unfollowed artist');
       } else {
-        const { error } = await supabase
-          .from('follows')
-          .insert({ follower_id: user.id, following_id: artist.id });
-        
+        const {
+          error
+        } = await supabase.from('follows').insert({
+          follower_id: user.id,
+          following_id: artist.id
+        });
         if (error) throw error;
         setIsFollowing(true);
         toast.success('Following artist!');
@@ -97,7 +93,6 @@ const ArtistCard = ({ artist, viewMode, onFollow }: ArtistCardProps) => {
       setLoading(false);
     }
   };
-
   const formatNumber = (num: number) => {
     if (num >= 1000000) {
       return (num / 1000000).toFixed(1) + 'M';
@@ -107,10 +102,8 @@ const ArtistCard = ({ artist, viewMode, onFollow }: ArtistCardProps) => {
     }
     return num.toString();
   };
-
   if (viewMode === 'list') {
-    return (
-      <Link to={`/artist/${artist.id}`}>
+    return <Link to={`/artist/${artist.id}`}>
         <Card className="hover:shadow-lg transition-shadow duration-200">
           <CardContent className="p-4">
             <div className="flex items-center space-x-4">
@@ -119,11 +112,9 @@ const ArtistCard = ({ artist, viewMode, onFollow }: ArtistCardProps) => {
                   <AvatarImage src={artist.imageUrl} alt={artist.name} />
                   <AvatarFallback>{artist.name.charAt(0)}</AvatarFallback>
                 </Avatar>
-                {artist.verified && (
-                  <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full p-1">
+                {artist.verified && <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full p-1">
                     <CheckCircle className="w-3 h-3" />
-                  </div>
-                )}
+                  </div>}
               </div>
 
               <div className="flex-1 min-w-0">
@@ -132,18 +123,14 @@ const ArtistCard = ({ artist, viewMode, onFollow }: ArtistCardProps) => {
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-lg truncate">{artist.name}</h3>
                       <div className="flex gap-1">
-                        {artist.featured && (
-                          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                        {artist.featured && <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
                             <Crown className="w-3 h-3 mr-1" />
                             Featured
-                          </Badge>
-                        )}
-                        {artist.premium && (
-                          <Badge className="bg-gradient-to-r from-purple-500 to-pink-500">
+                          </Badge>}
+                        {artist.premium && <Badge className="bg-gradient-to-r from-purple-500 to-pink-500">
                             <Award className="w-3 h-3 mr-1" />
                             Premium
-                          </Badge>
-                        )}
+                          </Badge>}
                       </div>
                     </div>
                     <p className="text-sm text-gray-600 mb-1">{artist.category}</p>
@@ -171,23 +158,14 @@ const ArtistCard = ({ artist, viewMode, onFollow }: ArtistCardProps) => {
 
                   <div className="flex flex-col items-end gap-2 ml-4">
                     <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        artist.available 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
+                      <span className={`px-2 py-1 rounded-full text-xs ${artist.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                         {artist.available ? 'Available' : 'Busy'}
                       </span>
                       <span className="text-sm font-medium text-gray-600">
                         {artist.priceRange}
                       </span>
                     </div>
-                    <Button
-                      onClick={handleFollow}
-                      size="sm"
-                      variant={isFollowing ? 'secondary' : 'default'}
-                      disabled={loading}
-                    >
+                    <Button onClick={handleFollow} size="sm" variant={isFollowing ? 'secondary' : 'default'} disabled={loading}>
                       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : isFollowing ? 'Following' : 'Follow'}
                     </Button>
                   </div>
@@ -196,45 +174,28 @@ const ArtistCard = ({ artist, viewMode, onFollow }: ArtistCardProps) => {
             </div>
           </CardContent>
         </Card>
-      </Link>
-    );
+      </Link>;
   }
-
-  return (
-    <Link to={`/artist/${artist.id}`}>
+  return <Link to={`/artist/${artist.id}`}>
       <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 h-full">
         <div className="relative aspect-square">
-          <img
-            src={artist.imageUrl}
-            alt={artist.name}
-            className="w-full h-full object-cover"
-          />
+          <img src={artist.imageUrl} alt={artist.name} className="w-full h-full object-cover" />
           <div className="absolute top-2 right-2 flex flex-col gap-1">
-            {artist.featured && (
-              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs">
+            {artist.featured && <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs">
                 <Crown className="w-2 h-2 mr-1" />
                 Featured
-              </Badge>
-            )}
-            {artist.premium && (
-              <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-xs">
+              </Badge>}
+            {artist.premium && <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-xs">
                 <Award className="w-2 h-2 mr-1" />
                 Premium
-              </Badge>
-            )}
+              </Badge>}
           </div>
           
-          {artist.verified && (
-            <div className="absolute bottom-2 left-2 bg-blue-500 text-white rounded-full p-1">
+          {artist.verified && <div className="absolute bottom-2 left-2 bg-blue-500 text-white rounded-full p-1">
               <CheckCircle className="w-3 h-3" />
-            </div>
-          )}
+            </div>}
 
-          <div className={`absolute bottom-2 right-2 px-2 py-1 rounded-full text-xs ${
-            artist.available 
-              ? 'bg-green-500 text-white' 
-              : 'bg-red-500 text-white'
-          }`}>
+          <div className={`absolute bottom-2 right-2 px-2 py-1 rounded-full text-xs ${artist.available ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
             {artist.available ? 'Available' : 'Busy'}
           </div>
         </div>
@@ -245,9 +206,7 @@ const ArtistCard = ({ artist, viewMode, onFollow }: ArtistCardProps) => {
               <h3 className="font-semibold text-lg truncate">{artist.name}</h3>
               <p className="text-sm text-gray-600">{artist.category}</p>
             </div>
-            <span className="text-sm font-medium text-gray-600 ml-2">
-              {artist.priceRange}
-            </span>
+            
           </div>
 
           <p className="text-sm text-gray-500 line-clamp-2 mb-3">{artist.tagline}</p>
@@ -272,20 +231,12 @@ const ArtistCard = ({ artist, viewMode, onFollow }: ArtistCardProps) => {
               <MapPin className="w-3 h-3" />
               <span className="truncate">{artist.location}</span>
             </div>
-            <Button
-              onClick={handleFollow}
-              size="sm"
-              variant={isFollowing ? 'secondary' : 'default'}
-              className="ml-2"
-              disabled={loading}
-            >
+            <Button onClick={handleFollow} size="sm" variant={isFollowing ? 'secondary' : 'default'} className="ml-2" disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : isFollowing ? 'Following' : 'Follow'}
             </Button>
           </div>
         </CardContent>
       </Card>
-    </Link>
-  );
+    </Link>;
 };
-
 export default ArtistCard;
