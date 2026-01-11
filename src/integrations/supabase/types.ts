@@ -625,6 +625,48 @@ export type Database = {
           },
         ]
       }
+      login_sessions: {
+        Row: {
+          browser: string | null
+          created_at: string
+          device_info: string | null
+          expires_at: string | null
+          id: string
+          ip_address: string | null
+          is_current: boolean | null
+          last_active_at: string | null
+          location: string | null
+          os: string | null
+          user_id: string
+        }
+        Insert: {
+          browser?: string | null
+          created_at?: string
+          device_info?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: string | null
+          is_current?: boolean | null
+          last_active_at?: string | null
+          location?: string | null
+          os?: string | null
+          user_id: string
+        }
+        Update: {
+          browser?: string | null
+          created_at?: string
+          device_info?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: string | null
+          is_current?: boolean | null
+          last_active_at?: string | null
+          location?: string | null
+          os?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           attachments: Json | null
@@ -736,16 +778,26 @@ export type Database = {
           created_at: string
           currency: string | null
           email: string
+          email_notifications: boolean | null
           experience_years: number | null
           full_name: string | null
           hourly_rate: number | null
           id: string
+          in_app_notifications: boolean | null
           is_verified: boolean | null
+          language: string | null
+          last_active_at: string | null
           location: string | null
+          message_notifications: boolean | null
           portfolio_url: string | null
+          profile_visibility: boolean | null
+          project_update_notifications: boolean | null
           role: string
+          show_activity_stats: boolean | null
+          show_last_active: boolean | null
           social_links: Json | null
           tags: string[] | null
+          timezone: string | null
           updated_at: string
           website: string | null
         }
@@ -759,16 +811,26 @@ export type Database = {
           created_at?: string
           currency?: string | null
           email: string
+          email_notifications?: boolean | null
           experience_years?: number | null
           full_name?: string | null
           hourly_rate?: number | null
           id: string
+          in_app_notifications?: boolean | null
           is_verified?: boolean | null
+          language?: string | null
+          last_active_at?: string | null
           location?: string | null
+          message_notifications?: boolean | null
           portfolio_url?: string | null
+          profile_visibility?: boolean | null
+          project_update_notifications?: boolean | null
           role?: string
+          show_activity_stats?: boolean | null
+          show_last_active?: boolean | null
           social_links?: Json | null
           tags?: string[] | null
+          timezone?: string | null
           updated_at?: string
           website?: string | null
         }
@@ -782,16 +844,26 @@ export type Database = {
           created_at?: string
           currency?: string | null
           email?: string
+          email_notifications?: boolean | null
           experience_years?: number | null
           full_name?: string | null
           hourly_rate?: number | null
           id?: string
+          in_app_notifications?: boolean | null
           is_verified?: boolean | null
+          language?: string | null
+          last_active_at?: string | null
           location?: string | null
+          message_notifications?: boolean | null
           portfolio_url?: string | null
+          profile_visibility?: boolean | null
+          project_update_notifications?: boolean | null
           role?: string
+          show_activity_stats?: boolean | null
+          show_last_active?: boolean | null
           social_links?: Json | null
           tags?: string[] | null
+          timezone?: string | null
           updated_at?: string
           website?: string | null
         }
@@ -1533,9 +1605,13 @@ export type Database = {
           hourly_rate: number | null
           id: string | null
           is_verified: boolean | null
+          last_active_at: string | null
           location: string | null
           portfolio_url: string | null
+          profile_visibility: boolean | null
           role: string | null
+          show_activity_stats: boolean | null
+          show_last_active: boolean | null
           social_links: Json | null
           tags: string[] | null
           website: string | null
@@ -1551,9 +1627,13 @@ export type Database = {
           hourly_rate?: number | null
           id?: string | null
           is_verified?: boolean | null
+          last_active_at?: string | null
           location?: string | null
           portfolio_url?: string | null
+          profile_visibility?: boolean | null
           role?: string | null
+          show_activity_stats?: boolean | null
+          show_last_active?: boolean | null
           social_links?: Json | null
           tags?: string[] | null
           website?: string | null
@@ -1569,9 +1649,13 @@ export type Database = {
           hourly_rate?: number | null
           id?: string | null
           is_verified?: boolean | null
+          last_active_at?: string | null
           location?: string | null
           portfolio_url?: string | null
+          profile_visibility?: boolean | null
           role?: string | null
+          show_activity_stats?: boolean | null
+          show_last_active?: boolean | null
           social_links?: Json | null
           tags?: string[] | null
           website?: string | null
