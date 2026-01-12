@@ -207,14 +207,51 @@ export default function ArtworkDetails() {
             </div>
 
             
-            {(artwork.type === "audio" || artwork.type === "music") && artwork.audioUrl && <audio controls className="mb-4 w-full">
-                <source src={artwork.audioUrl} type="audio/mpeg" />
-                Your browser does not support the audio tag.
-              </audio>}
-            {artwork.type === "video" && artwork.videoUrl && <video controls className="mb-4 w-full rounded-lg px-[50px] py-0 my-0 mx-0 border-0 border-solid">
-                <source src={artwork.videoUrl} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>}
+            {/* Display Image */}
+            {artwork.type === "image" && artwork.imageUrl && (
+              <div className="mb-6 rounded-xl overflow-hidden">
+                <img 
+                  src={artwork.imageUrl} 
+                  alt={artwork.title} 
+                  className="w-full h-auto object-contain max-h-[500px]"
+                />
+              </div>
+            )}
+            
+            {/* Display Video */}
+            {artwork.type === "video" && artwork.imageUrl && (
+              <div className="mb-6 rounded-xl overflow-hidden">
+                <video 
+                  controls 
+                  autoPlay 
+                  muted 
+                  loop
+                  className="w-full h-auto max-h-[500px]"
+                >
+                  <source src={artwork.imageUrl} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+            )}
+            
+            {/* Display Audio */}
+            {(artwork.type === "audio" || artwork.type === "music") && (
+              <div className="mb-6">
+                {artwork.imageUrl && (
+                  <img 
+                    src={artwork.imageUrl} 
+                    alt={artwork.title} 
+                    className="w-full h-auto object-contain max-h-[300px] rounded-xl mb-4"
+                  />
+                )}
+                {artwork.audioUrl && (
+                  <audio controls className="w-full">
+                    <source src={artwork.audioUrl} type="audio/mpeg" />
+                    Your browser does not support the audio tag.
+                  </audio>
+                )}
+              </div>
+            )}
             <div className="mb-6">
               <span className="text-muted-foreground text-sm">by </span>
               <Link to={`/artist/${artwork.artistId}`} className="text-blue-700 hover:underline font-medium">
