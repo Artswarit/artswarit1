@@ -434,6 +434,104 @@ export type Database = {
         }
         Relationships: []
       }
+      dispute_evidence: {
+        Row: {
+          created_at: string
+          description: string | null
+          dispute_id: string
+          file_name: string | null
+          file_url: string | null
+          id: string
+          submitted_by: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          dispute_id: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          submitted_by: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          dispute_id?: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          submitted_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispute_evidence_dispute_id_fkey"
+            columns: ["dispute_id"]
+            isOneToOne: false
+            referencedRelation: "disputes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      disputes: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          milestone_id: string | null
+          project_id: string
+          raised_by: string
+          reason: string
+          resolution: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          milestone_id?: string | null
+          project_id: string
+          raised_by: string
+          reason: string
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          milestone_id?: string | null
+          project_id?: string
+          raised_by?: string
+          reason?: string
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disputes_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "project_milestones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disputes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       follows: {
         Row: {
           created_at: string
@@ -719,6 +817,73 @@ export type Database = {
           },
         ]
       }
+      milestone_revisions: {
+        Row: {
+          created_at: string
+          id: string
+          milestone_id: string
+          reason: string
+          requested_by: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          milestone_id: string
+          reason: string
+          requested_by: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          milestone_id?: string
+          reason?: string
+          requested_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milestone_revisions_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "project_milestones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      milestone_submissions: {
+        Row: {
+          created_at: string
+          id: string
+          is_final: boolean | null
+          milestone_id: string
+          notes: string | null
+          submitted_by: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_final?: boolean | null
+          milestone_id: string
+          notes?: string | null
+          submitted_by: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_final?: boolean | null
+          milestone_id?: string
+          notes?: string | null
+          submitted_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milestone_submissions_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "project_milestones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -869,6 +1034,51 @@ export type Database = {
         }
         Relationships: []
       }
+      project_activity_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          milestone_id: string | null
+          project_id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          milestone_id?: string | null
+          project_id: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          milestone_id?: string | null
+          project_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_activity_logs_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "project_milestones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_activity_logs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_files: {
         Row: {
           created_at: string
@@ -915,38 +1125,68 @@ export type Database = {
       }
       project_milestones: {
         Row: {
+          amount: number
+          approved_at: string | null
+          auto_approve_at: string | null
           created_at: string
           created_by: string
+          deliverables: string | null
           description: string | null
           due_date: string | null
           id: string
+          max_revisions: number | null
+          paid_at: string | null
+          payment_id: string | null
+          payment_link: string | null
           project_id: string
+          revision_count: number | null
           sort_order: number
           status: string
+          submitted_at: string | null
           title: string
           updated_at: string
         }
         Insert: {
+          amount?: number
+          approved_at?: string | null
+          auto_approve_at?: string | null
           created_at?: string
           created_by: string
+          deliverables?: string | null
           description?: string | null
           due_date?: string | null
           id?: string
+          max_revisions?: number | null
+          paid_at?: string | null
+          payment_id?: string | null
+          payment_link?: string | null
           project_id: string
+          revision_count?: number | null
           sort_order?: number
           status?: string
+          submitted_at?: string | null
           title: string
           updated_at?: string
         }
         Update: {
+          amount?: number
+          approved_at?: string | null
+          auto_approve_at?: string | null
           created_at?: string
           created_by?: string
+          deliverables?: string | null
           description?: string | null
           due_date?: string | null
           id?: string
+          max_revisions?: number | null
+          paid_at?: string | null
+          payment_id?: string | null
+          payment_link?: string | null
           project_id?: string
+          revision_count?: number | null
           sort_order?: number
           status?: string
+          submitted_at?: string | null
           title?: string
           updated_at?: string
         }
@@ -1038,40 +1278,55 @@ export type Database = {
       projects: {
         Row: {
           artist_id: string | null
+          auto_approve_days: number | null
           budget: number | null
           client_id: string | null
           created_at: string
           deadline: string | null
           description: string | null
           id: string
+          is_locked: boolean | null
           progress: number | null
+          reference_files: Json | null
           status: string | null
+          terms_accepted_at: string | null
+          terms_accepted_by: string | null
           title: string
           updated_at: string
         }
         Insert: {
           artist_id?: string | null
+          auto_approve_days?: number | null
           budget?: number | null
           client_id?: string | null
           created_at?: string
           deadline?: string | null
           description?: string | null
           id?: string
+          is_locked?: boolean | null
           progress?: number | null
+          reference_files?: Json | null
           status?: string | null
+          terms_accepted_at?: string | null
+          terms_accepted_by?: string | null
           title: string
           updated_at?: string
         }
         Update: {
           artist_id?: string | null
+          auto_approve_days?: number | null
           budget?: number | null
           client_id?: string | null
           created_at?: string
           deadline?: string | null
           description?: string | null
           id?: string
+          is_locked?: boolean | null
           progress?: number | null
+          reference_files?: Json | null
           status?: string | null
+          terms_accepted_at?: string | null
+          terms_accepted_by?: string | null
           title?: string
           updated_at?: string
         }
@@ -1257,6 +1512,47 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      submission_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          is_preview: boolean | null
+          submission_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          is_preview?: boolean | null
+          submission_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          is_preview?: boolean | null
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submission_files_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "milestone_submissions"
             referencedColumns: ["id"]
           },
         ]
@@ -1519,6 +1815,39 @@ export type Database = {
           },
         ]
       }
+      user_warnings: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          issued_by: string | null
+          reason: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          issued_by?: string | null
+          reason: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          issued_by?: string | null
+          reason?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           bio: string | null
@@ -1738,7 +2067,21 @@ export type Database = {
       app_role: "admin" | "moderator" | "artist" | "client"
       approval_status: "pending" | "approved" | "rejected"
       artwork_status: "public" | "private" | "archived"
+      dispute_status:
+        | "open"
+        | "under_review"
+        | "resolved_approved"
+        | "resolved_revision"
+        | "resolved_cancelled"
       media_type_enum: "image" | "video" | "audio" | "3d_model"
+      milestone_status:
+        | "pending"
+        | "in_progress"
+        | "submitted"
+        | "revision_requested"
+        | "approved"
+        | "paid"
+        | "disputed"
       notification_type: "success" | "error" | "info" | "warning"
       project_status: "pending" | "accepted" | "completed" | "cancelled"
       subscription_tier: "monthly" | "yearly" | "lifetime"
@@ -1875,7 +2218,23 @@ export const Constants = {
       app_role: ["admin", "moderator", "artist", "client"],
       approval_status: ["pending", "approved", "rejected"],
       artwork_status: ["public", "private", "archived"],
+      dispute_status: [
+        "open",
+        "under_review",
+        "resolved_approved",
+        "resolved_revision",
+        "resolved_cancelled",
+      ],
       media_type_enum: ["image", "video", "audio", "3d_model"],
+      milestone_status: [
+        "pending",
+        "in_progress",
+        "submitted",
+        "revision_requested",
+        "approved",
+        "paid",
+        "disputed",
+      ],
       notification_type: ["success", "error", "info", "warning"],
       project_status: ["pending", "accepted", "completed", "cancelled"],
       subscription_tier: ["monthly", "yearly", "lifetime"],
