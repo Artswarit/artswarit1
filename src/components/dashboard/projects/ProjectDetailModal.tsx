@@ -540,8 +540,8 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
             <MilestoneWorkflow projectId={projectId!} />
           </TabsContent>
 
-          <TabsContent value="milestones" className="flex-1 overflow-hidden flex flex-col mt-4">
-            <ScrollArea className="flex-1">
+          <TabsContent value="milestones" className="flex-1 min-h-0 flex flex-col mt-4">
+            <ScrollArea className="flex-1 h-[300px]">
               <div className="space-y-3 pr-4">
                 {milestones.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">No milestones yet</p>
@@ -622,8 +622,8 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
             </div>
           </TabsContent>
 
-          <TabsContent value="files" className="flex-1 overflow-hidden flex flex-col mt-4">
-            <ScrollArea className="flex-1">
+          <TabsContent value="files" className="flex-1 min-h-0 flex flex-col mt-4">
+            <ScrollArea className="flex-1 h-[300px]">
               <div className="space-y-2 pr-4">
                 {files.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">No files yet</p>
@@ -679,8 +679,8 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
             </div>
           </TabsContent>
 
-          <TabsContent value="messages" className="flex-1 overflow-hidden flex flex-col mt-4">
-            <ScrollArea className="flex-1">
+          <TabsContent value="messages" className="flex-1 min-h-0 flex flex-col mt-4">
+            <ScrollArea className="flex-1 h-[300px]">
               <div className="space-y-3 pr-4">
                 {messages.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">No messages yet. Start the conversation!</p>
