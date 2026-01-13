@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -88,6 +88,10 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
   const [newMilestone, setNewMilestone] = useState({ title: "", description: "", due_date: "" });
   const [addingMilestone, setAddingMilestone] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+
+  const [activeTab, setActiveTab] = useState<"workflow" | "milestones" | "files" | "messages">("workflow");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const milestonesEndRef = useRef<HTMLDivElement>(null);
 
   const fetchProjectData = useCallback(async () => {
     if (!projectId) return;
@@ -205,6 +209,25 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
       fetchProjectData();
     }
   }, [open, projectId, fetchProjectData]);
+
+  // Auto-scroll in tab content
+  useEffect(() => {
+    if (!open) return;
+
+    if (activeTab === "messages") {
+      const t = setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+      }, 50);
+      return () => clearTimeout(t);
+    }
+
+    if (activeTab === "milestones") {
+      const t = setTimeout(() => {
+        milestonesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+      }, 50);
+      return () => clearTimeout(t);
+    }
+  }, [open, activeTab, messages.length, milestones.length]);
 
   // Real-time subscriptions
   useEffect(() => {
@@ -516,7 +539,11 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
 
         <Progress value={progress} className="h-2" />
 
-        <Tabs defaultValue="workflow" className="flex-1 overflow-hidden flex flex-col">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as typeof activeTab)}
+          className="flex-1 min-h-0 overflow-hidden flex flex-col"
+        >
           <TabsList className="grid grid-cols-4 w-full">
             <TabsTrigger value="workflow" className="flex items-center gap-1.5 text-xs sm:text-sm">
               <GitBranch className="h-4 w-4" />
@@ -536,19 +563,19 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="workflow" className="flex-1 overflow-auto mt-4">
+          <TabsContent value="workflow" className="flex-1 min-h-0 overflow-auto mt-4">
             <MilestoneWorkflow projectId={projectId!} />
           </TabsContent>
 
-          <TabsContent value="milestones" className="flex-1 min-h-0 flex flex-col mt-4">
-            <ScrollArea className="flex-1 h-[300px]">
+          <TabsContent value="milestones" className="flex-1 min-h-0 overflow-hidden flex flex-col mt-4">
+            <ScrollArea className="flex-1 min-h-0">
               <div className="space-y-3 pr-4">
                 {milestones.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">No milestones yet</p>
                 ) : (
                   milestones.map((milestone) => (
-                    <div 
-                      key={milestone.id} 
+                    <div
+                      key={milestone.id}
                       className={`p-3 border rounded-lg flex items-start gap-3 transition-colors ${
                         milestone.status === 'completed' ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800' : ''
                       }`}
@@ -556,8 +583,8 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
                       <button
                         onClick={() => handleToggleMilestoneStatus(milestone)}
                         className={`mt-0.5 flex-shrink-0 h-5 w-5 rounded-full border-2 flex items-center justify-center ${
-                          milestone.status === 'completed' 
-                            ? 'bg-green-500 border-green-500 text-white' 
+                          milestone.status === 'completed'
+                            ? 'bg-green-500 border-green-500 text-white'
                             : 'border-muted-foreground hover:border-primary'
                         }`}
                       >
@@ -587,6 +614,7 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
                     </div>
                   ))
                 )}
+                <div ref={milestonesEndRef} />
               </div>
             </ScrollArea>
 
@@ -597,13 +625,13 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
                 <Input
                   placeholder="Milestone title..."
                   value={newMilestone.title}
-                  onChange={(e) => setNewMilestone(prev => ({ ...prev, title: e.target.value }))}
+                  onChange={(e) => setNewMilestone((prev) => ({ ...prev, title: e.target.value }))}
                   className="flex-1"
                 />
                 <Input
                   type="date"
                   value={newMilestone.due_date}
-                  onChange={(e) => setNewMilestone(prev => ({ ...prev, due_date: e.target.value }))}
+                  onChange={(e) => setNewMilestone((prev) => ({ ...prev, due_date: e.target.value }))}
                   className="w-36"
                 />
               </div>
@@ -611,7 +639,7 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
                 <Input
                   placeholder="Description (optional)"
                   value={newMilestone.description}
-                  onChange={(e) => setNewMilestone(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) => setNewMilestone((prev) => ({ ...prev, description: e.target.value }))}
                   className="flex-1"
                 />
                 <Button onClick={handleAddMilestone} disabled={addingMilestone || !newMilestone.title.trim()}>
@@ -622,8 +650,8 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
             </div>
           </TabsContent>
 
-          <TabsContent value="files" className="flex-1 min-h-0 flex flex-col mt-4">
-            <ScrollArea className="flex-1 h-[300px]">
+          <TabsContent value="files" className="flex-1 min-h-0 overflow-hidden flex flex-col mt-4">
+            <ScrollArea className="flex-1 min-h-0">
               <div className="space-y-2 pr-4">
                 {files.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">No files yet</p>
@@ -644,9 +672,9 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
                           <Download className="h-4 w-4" />
                         </Button>
                         {file.uploader_id === user?.id && (
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-8 w-8 text-destructive hover:text-destructive"
                             onClick={() => handleDeleteFile(file.id, file.storage_path)}
                           >
@@ -679,8 +707,8 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
             </div>
           </TabsContent>
 
-          <TabsContent value="messages" className="flex-1 min-h-0 flex flex-col mt-4">
-            <ScrollArea className="flex-1 h-[300px]">
+          <TabsContent value="messages" className="flex-1 min-h-0 overflow-hidden flex flex-col mt-4">
+            <ScrollArea className="flex-1 min-h-0">
               <div className="space-y-3 pr-4">
                 {messages.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">No messages yet. Start the conversation!</p>
@@ -703,6 +731,7 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
                     );
                   })
                 )}
+                <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
 
