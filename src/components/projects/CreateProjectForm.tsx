@@ -26,7 +26,7 @@ interface ReferenceFile {
 }
 
 interface CreateProjectFormProps {
-  artistId: string;
+  artistId?: string;
   onSuccess?: (projectId: string) => void;
   onCancel?: () => void;
 }

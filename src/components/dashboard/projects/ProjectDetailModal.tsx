@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { 
   FileText, MessageSquare, CheckCircle, Upload, Calendar, 
-  DollarSign, User, Clock, Plus, Trash2, Loader2, Download 
+  DollarSign, User, Clock, Plus, Trash2, Loader2, Download, GitBranch 
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { format as formatDate } from "date-fns";
 import { Link } from "react-router-dom";
 import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
+import { MilestoneWorkflow } from "@/components/projects";
 
 interface ProjectDetailModalProps {
   projectId: string | null;
@@ -432,7 +433,7 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">{project.title}</DialogTitle>
           <DialogDescription className="flex items-center gap-2 flex-wrap">
@@ -515,11 +516,15 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
 
         <Progress value={progress} className="h-2" />
 
-        <Tabs defaultValue="milestones" className="flex-1 overflow-hidden flex flex-col">
-          <TabsList className="grid grid-cols-3 w-full">
+        <Tabs defaultValue="workflow" className="flex-1 overflow-hidden flex flex-col">
+          <TabsList className="grid grid-cols-4 w-full">
+            <TabsTrigger value="workflow" className="flex items-center gap-1.5 text-xs sm:text-sm">
+              <GitBranch className="h-4 w-4" />
+              Workflow
+            </TabsTrigger>
             <TabsTrigger value="milestones" className="flex items-center gap-1.5 text-xs sm:text-sm">
               <CheckCircle className="h-4 w-4" />
-              Milestones ({milestones.length})
+              Quick View
             </TabsTrigger>
             <TabsTrigger value="files" className="flex items-center gap-1.5 text-xs sm:text-sm">
               <FileText className="h-4 w-4" />
@@ -527,9 +532,13 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
             </TabsTrigger>
             <TabsTrigger value="messages" className="flex items-center gap-1.5 text-xs sm:text-sm">
               <MessageSquare className="h-4 w-4" />
-              Messages ({messages.length})
+              Chat ({messages.length})
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="workflow" className="flex-1 overflow-auto mt-4">
+            <MilestoneWorkflow projectId={projectId!} />
+          </TabsContent>
 
           <TabsContent value="milestones" className="flex-1 overflow-hidden flex flex-col mt-4">
             <ScrollArea className="flex-1">
