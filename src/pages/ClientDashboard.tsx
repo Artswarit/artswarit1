@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LayoutDashboard, Users, MessageSquare, FileText, Settings, CreditCard, Heart, Bell, ChevronRight, Search, CheckCircle, Clock, Star, Lock, User } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { LayoutDashboard, Users, MessageSquare, FileText, Settings, CreditCard, Heart, Bell, ChevronRight, Search, CheckCircle, Clock, Star, Lock, User, PlusCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import SavedArtists from "@/components/dashboard/SavedArtists";
 import ClientMessages from "@/components/dashboard/ClientMessages";
@@ -12,6 +13,7 @@ import ClientSettings from "@/components/dashboard/ClientSettings";
 import ClientProfile from "@/components/dashboard/ClientProfile";
 import ProjectDetailModal from "@/components/dashboard/projects/ProjectDetailModal";
 import UniversalChatbot from '@/components/UniversalChatbot';
+import { CreateProjectForm } from "@/components/projects";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
@@ -62,6 +64,7 @@ const ClientDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [projectModalOpen, setProjectModalOpen] = useState(false);
+  const [createProjectOpen, setCreateProjectOpen] = useState(false);
 
   // Force profile tab when profile is incomplete
   useEffect(() => {
@@ -494,7 +497,10 @@ const ClientDashboard = () => {
                     <Search size={16} />
                   </div>
                 </div>
-                <Button className="w-full sm:w-auto text-sm">New Project</Button>
+                <Button className="w-full sm:w-auto text-sm" onClick={() => setCreateProjectOpen(true)}>
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  New Project
+                </Button>
               </div>
             </div>
             
@@ -623,6 +629,23 @@ const ClientDashboard = () => {
       </div>
       
       <ProjectDetailModal projectId={selectedProjectId} open={projectModalOpen} onOpenChange={setProjectModalOpen} />
+      
+      {/* Create Project Dialog */}
+      <Dialog open={createProjectOpen} onOpenChange={setCreateProjectOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Project</DialogTitle>
+          </DialogHeader>
+          <CreateProjectForm 
+            onSuccess={() => {
+              setCreateProjectOpen(false);
+              fetchProjects();
+              toast.success("Project created successfully!");
+            }}
+            onCancel={() => setCreateProjectOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>;
 };
 export default ClientDashboard;
