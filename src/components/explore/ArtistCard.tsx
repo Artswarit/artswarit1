@@ -161,9 +161,7 @@ const ArtistCard = ({
                       <span className={`px-2 py-1 rounded-full text-xs ${artist.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                         {artist.available ? 'Available' : 'Busy'}
                       </span>
-                      <span className="text-sm font-medium text-gray-600">
-                        {artist.priceRange}
-                      </span>
+                      
                     </div>
                     <Button onClick={handleFollow} size="sm" variant={isFollowing ? 'secondary' : 'default'} disabled={loading}>
                       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : isFollowing ? 'Following' : 'Follow'}
