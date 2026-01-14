@@ -456,7 +456,7 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-5xl h-[90vh] max-h-[90vh] min-h-0 overflow-hidden !flex !flex-col">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">{project.title}</DialogTitle>
           <DialogDescription className="flex items-center gap-2 flex-wrap">
@@ -568,7 +568,7 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
           </TabsContent>
 
           <TabsContent value="milestones" className="flex-1 min-h-0 overflow-hidden flex flex-col mt-4">
-            <ScrollArea className="flex-1 min-h-0">
+            <ScrollArea className="flex-1 min-h-0" type="always">
               <div className="space-y-3 pr-4">
                 {milestones.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">No milestones yet</p>
@@ -651,7 +651,7 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
           </TabsContent>
 
           <TabsContent value="files" className="flex-1 min-h-0 overflow-hidden flex flex-col mt-4">
-            <ScrollArea className="flex-1 min-h-0">
+            <ScrollArea className="flex-1 min-h-0" type="always">
               <div className="space-y-2 pr-4">
                 {files.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">No files yet</p>
@@ -708,7 +708,7 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
           </TabsContent>
 
           <TabsContent value="messages" className="flex-1 min-h-0 overflow-hidden flex flex-col mt-4">
-            <ScrollArea className="flex-1 min-h-0">
+            <ScrollArea className="flex-1 min-h-0" type="always">
               <div className="space-y-3 pr-4">
                 {messages.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">No messages yet. Start the conversation!</p>
