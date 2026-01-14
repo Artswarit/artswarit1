@@ -516,8 +516,8 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
 
         <Progress value={progress} className="h-2" />
 
-        <Tabs defaultValue="workflow" className="flex-1 min-h-0 flex flex-col">
-          <TabsList className="grid grid-cols-4 w-full flex-shrink-0">
+        <Tabs defaultValue="workflow" className="flex-1 overflow-hidden flex flex-col">
+          <TabsList className="grid grid-cols-4 w-full">
             <TabsTrigger value="workflow" className="flex items-center gap-1.5 text-xs sm:text-sm">
               <GitBranch className="h-4 w-4" />
               Workflow
@@ -536,15 +536,11 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="workflow" className="flex-1 min-h-0 mt-4 overflow-hidden">
-            <ScrollArea className="h-full">
-              <div className="pr-4">
-                <MilestoneWorkflow projectId={projectId!} />
-              </div>
-            </ScrollArea>
+          <TabsContent value="workflow" className="flex-1 overflow-auto mt-4">
+            <MilestoneWorkflow projectId={projectId!} />
           </TabsContent>
 
-          <TabsContent value="milestones" className="flex-1 min-h-0 flex flex-col mt-4 overflow-hidden">
+          <TabsContent value="milestones" className="flex-1 overflow-hidden flex flex-col mt-4">
             <ScrollArea className="flex-1">
               <div className="space-y-3 pr-4">
                 {milestones.length === 0 ? (
@@ -594,9 +590,9 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
               </div>
             </ScrollArea>
 
-            <Separator className="my-3 flex-shrink-0" />
+            <Separator className="my-3" />
 
-            <div className="space-y-2 flex-shrink-0">
+            <div className="space-y-2">
               <div className="flex gap-2">
                 <Input
                   placeholder="Milestone title..."
@@ -626,7 +622,7 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
             </div>
           </TabsContent>
 
-          <TabsContent value="files" className="flex-1 min-h-0 flex flex-col mt-4 overflow-hidden">
+          <TabsContent value="files" className="flex-1 overflow-hidden flex flex-col mt-4">
             <ScrollArea className="flex-1">
               <div className="space-y-2 pr-4">
                 {files.length === 0 ? (
@@ -664,9 +660,9 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
               </div>
             </ScrollArea>
 
-            <Separator className="my-3 flex-shrink-0" />
+            <Separator className="my-3" />
 
-            <div className="flex-shrink-0">
+            <div>
               <label className="cursor-pointer">
                 <div className="flex items-center justify-center gap-2 p-3 border-2 border-dashed rounded-lg hover:border-primary transition-colors">
                   {uploading ? (
@@ -683,7 +679,7 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
             </div>
           </TabsContent>
 
-          <TabsContent value="messages" className="flex-1 min-h-0 flex flex-col mt-4 overflow-hidden">
+          <TabsContent value="messages" className="flex-1 overflow-hidden flex flex-col mt-4">
             <ScrollArea className="flex-1">
               <div className="space-y-3 pr-4">
                 {messages.length === 0 ? (
@@ -710,9 +706,9 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
               </div>
             </ScrollArea>
 
-            <Separator className="my-3 flex-shrink-0" />
+            <Separator className="my-3" />
 
-            <div className="flex gap-2 flex-shrink-0">
+            <div className="flex gap-2">
               <Textarea
                 placeholder="Type a message..."
                 value={newMessage}
