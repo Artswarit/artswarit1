@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { Separator } from "@/components/ui/separator";
 import { 
   FileText, MessageSquare, CheckCircle, Upload, Calendar, 
@@ -568,8 +568,8 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
           </TabsContent>
 
           <TabsContent value="milestones" className="flex-1 min-h-0 overflow-hidden flex flex-col mt-4">
-            <ScrollArea className="flex-1 min-h-0" type="always">
-              <div className="space-y-3 pr-4">
+            <div className="flex-1 min-h-0 overflow-y-auto pr-4">
+              <div className="space-y-3">
                 {milestones.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">No milestones yet</p>
                 ) : (
@@ -616,7 +616,7 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
                 )}
                 <div ref={milestonesEndRef} />
               </div>
-            </ScrollArea>
+            </div>
 
             <Separator className="my-3" />
 
@@ -651,8 +651,8 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
           </TabsContent>
 
           <TabsContent value="files" className="flex-1 min-h-0 overflow-hidden flex flex-col mt-4">
-            <ScrollArea className="flex-1 min-h-0" type="always">
-              <div className="space-y-2 pr-4">
+            <div className="flex-1 min-h-0 overflow-y-auto pr-4">
+              <div className="space-y-2">
                 {files.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">No files yet</p>
                 ) : (
@@ -686,7 +686,7 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
                   ))
                 )}
               </div>
-            </ScrollArea>
+            </div>
 
             <Separator className="my-3" />
 
@@ -708,8 +708,8 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
           </TabsContent>
 
           <TabsContent value="messages" className="flex-1 min-h-0 overflow-hidden flex flex-col mt-4">
-            <ScrollArea className="flex-1 min-h-0" type="always">
-              <div className="space-y-3 pr-4">
+            <div className="flex-1 min-h-0 overflow-y-auto pr-4">
+              <div className="space-y-3">
                 {messages.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">No messages yet. Start the conversation!</p>
                 ) : (
@@ -733,7 +733,7 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
                 )}
                 <div ref={messagesEndRef} />
               </div>
-            </ScrollArea>
+            </div>
 
             <Separator className="my-3" />
 
