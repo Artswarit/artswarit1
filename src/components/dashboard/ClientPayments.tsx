@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,7 @@ interface Payment {
 const ClientPayments = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { format } = useCurrencyFormat();
   
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,7 +95,7 @@ const ClientPayments = () => {
           artistName: artistInfo.full_name || 'Unknown Artist',
           artistAvatar: artistInfo.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50',
           amount: tx.amount,
-          currency: '₹',
+          currency: '',
           status: tx.status as "pending" | "completed" | "failed",
           created_at: tx.created_at,
           updated_at: tx.updated_at,
@@ -123,7 +125,7 @@ const ClientPayments = () => {
           artistName: artistInfo.full_name || 'Unknown Artist',
           artistAvatar: artistInfo.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50',
           amount: sale.amount,
-          currency: sale.currency || '₹',
+          currency: '',
           status: sale.status as "pending" | "completed" | "failed",
           created_at: sale.created_at,
           updated_at: sale.updated_at,
@@ -260,7 +262,7 @@ const ClientPayments = () => {
             </div>
           </CardHeader>
           <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
-            <div className="text-lg sm:text-2xl font-bold text-orange-600">₹{totalPending.toLocaleString()}</div>
+            <div className="text-lg sm:text-2xl font-bold text-orange-600">{format(totalPending)}</div>
             <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">{pendingPayments.length} pending</p>
           </CardContent>
         </Card>
@@ -273,7 +275,7 @@ const ClientPayments = () => {
             </div>
           </CardHeader>
           <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
-            <div className="text-lg sm:text-2xl font-bold text-green-600">₹{totalPaid.toLocaleString()}</div>
+            <div className="text-lg sm:text-2xl font-bold text-green-600">{format(totalPaid)}</div>
             <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">This month</p>
           </CardContent>
         </Card>
@@ -323,7 +325,7 @@ const ClientPayments = () => {
                     
                     <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm">{payment.currency}{payment.amount.toLocaleString()}</span>
+                        <span className="font-semibold text-sm">{format(payment.amount)}</span>
                         <Badge className={cn("text-[10px] sm:text-xs", getStatusColor(payment.status))}>
                           {getStatusIcon(payment.status)}
                           <span className="ml-1 capitalize">{payment.status}</span>

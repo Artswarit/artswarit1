@@ -1,11 +1,13 @@
-
 import { ResponsiveContainer, PieChart, Pie, Tooltip } from "recharts";
+import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 
 interface LazyPieChartProps {
   data: any[];
 }
 
 const LazyPieChart = ({ data }: LazyPieChartProps) => {
+  const { format } = useCurrencyFormat();
+  
   return (
     <ResponsiveContainer width="100%" height="100%">
       <PieChart>
@@ -19,7 +21,7 @@ const LazyPieChart = ({ data }: LazyPieChartProps) => {
           fill="#8b5cf6"
           label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
         />
-        <Tooltip formatter={(value) => `₹${value}`} />
+        <Tooltip formatter={(value) => format(Number(value))} />
       </PieChart>
     </ResponsiveContainer>
   );

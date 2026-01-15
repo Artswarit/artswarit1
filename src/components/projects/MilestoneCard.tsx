@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, DollarSign, Play, Upload, Eye, AlertTriangle, FileText, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
+import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 
 interface Milestone {
   id: string;
@@ -48,6 +49,7 @@ export function MilestoneCard({
   onDispute,
   getStatusBadge
 }: MilestoneCardProps) {
+  const { format: formatCurrency } = useCurrencyFormat();
   const isPaid = milestone.status === 'paid';
   const isSubmitted = milestone.status === 'submitted';
   const isInProgress = milestone.status === 'in_progress';
@@ -69,7 +71,7 @@ export function MilestoneCard({
             {getStatusBadge(milestone.status)}
             <Badge variant="outline" className="gap-1">
               <DollarSign className="h-3 w-3" />
-              ${milestone.amount.toLocaleString()}
+              {formatCurrency(milestone.amount)}
             </Badge>
           </div>
         </div>
@@ -145,7 +147,7 @@ export function MilestoneCard({
               {isApproved && (
                 <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
                   <DollarSign className="h-4 w-4 mr-1" />
-                  Pay ${milestone.amount.toLocaleString()}
+                  Pay {formatCurrency(milestone.amount)}
                 </Button>
               )}
               {isPaid && (
