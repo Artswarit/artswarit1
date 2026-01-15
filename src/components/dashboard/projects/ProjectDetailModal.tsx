@@ -9,10 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { 
-  FileText, MessageSquare, CheckCircle, Upload, Calendar, 
-  DollarSign, User, Clock, Plus, Trash2, Loader2, Download, GitBranch 
-} from "lucide-react";
+import { FileText, MessageSquare, CheckCircle, Upload, Calendar, User, Clock, Plus, Trash2, Loader2, Download, GitBranch } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -20,13 +17,11 @@ import { format as formatDate } from "date-fns";
 import { Link } from "react-router-dom";
 import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 import { MilestoneWorkflow } from "@/components/projects";
-
 interface ProjectDetailModalProps {
   projectId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
 interface Milestone {
   id: string;
   title: string;
@@ -35,7 +30,6 @@ interface Milestone {
   status: string;
   sort_order: number;
 }
-
 interface ProjectFile {
   id: string;
   original_name: string;
@@ -46,7 +40,6 @@ interface ProjectFile {
   created_at: string;
   uploader_id: string;
 }
-
 interface Message {
   id: string;
   content: string;
@@ -55,7 +48,6 @@ interface Message {
   sender_name?: string;
   sender_avatar?: string;
 }
-
 interface ProjectData {
   id: string;
   title: string;
@@ -73,10 +65,17 @@ interface ProjectData {
   client_name?: string;
   client_avatar?: string;
 }
-
-const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModalProps) => {
-  const { user } = useAuth();
-  const { format: formatCurrency } = useCurrencyFormat();
+const ProjectDetailModal = ({
+  projectId,
+  open,
+  onOpenChange
+}: ProjectDetailModalProps) => {
+  const {
+    user
+  } = useAuth();
+  const {
+    format: formatCurrency
+  } = useCurrencyFormat();
   const [project, setProject] = useState<ProjectData | null>(null);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [files, setFiles] = useState<ProjectFile[]>([]);
@@ -85,22 +84,22 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
   const [uploading, setUploading] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
-  const [newMilestone, setNewMilestone] = useState({ title: "", description: "", due_date: "" });
+  const [newMilestone, setNewMilestone] = useState({
+    title: "",
+    description: "",
+    due_date: ""
+  });
   const [addingMilestone, setAddingMilestone] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
-
   const fetchProjectData = useCallback(async () => {
     if (!projectId) return;
     setLoading(true);
-
     try {
       // Fetch project
-      const { data: projectData, error: projectError } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', projectId)
-        .maybeSingle();
-
+      const {
+        data: projectData,
+        error: projectError
+      } = await supabase.from('projects').select('*').eq('id', projectId).maybeSingle();
       if (projectError) throw projectError;
       if (!projectData) {
         toast.error("Project not found");
@@ -110,85 +109,82 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
 
       // Fetch artist and client profiles
       const profileIds = [projectData.artist_id, projectData.client_id].filter(Boolean) as string[];
-      let profiles: Record<string, { full_name: string | null; avatar_url: string | null }> = {};
-      
+      let profiles: Record<string, {
+        full_name: string | null;
+        avatar_url: string | null;
+      }> = {};
       if (profileIds.length > 0) {
-        const { data: profilesData } = await supabase
-          .from('public_profiles')
-          .select('id, full_name, avatar_url')
-          .in('id', profileIds);
-        
+        const {
+          data: profilesData
+        } = await supabase.from('public_profiles').select('id, full_name, avatar_url').in('id', profileIds);
         (profilesData || []).forEach(p => {
-          if (p.id) profiles[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url };
+          if (p.id) profiles[p.id] = {
+            full_name: p.full_name,
+            avatar_url: p.avatar_url
+          };
         });
       }
-
       setProject({
         ...projectData,
         artist_name: profiles[projectData.artist_id!]?.full_name || 'Unassigned',
         artist_avatar: profiles[projectData.artist_id!]?.avatar_url || undefined,
         client_name: profiles[projectData.client_id!]?.full_name || 'Unknown',
-        client_avatar: profiles[projectData.client_id!]?.avatar_url || undefined,
+        client_avatar: profiles[projectData.client_id!]?.avatar_url || undefined
       });
 
       // Fetch milestones
-      const { data: milestonesData } = await supabase
-        .from('project_milestones')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('sort_order', { ascending: true });
-
+      const {
+        data: milestonesData
+      } = await supabase.from('project_milestones').select('*').eq('project_id', projectId).order('sort_order', {
+        ascending: true
+      });
       setMilestones(milestonesData || []);
 
       // Fetch files
-      const { data: filesData } = await supabase
-        .from('project_files')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
-
+      const {
+        data: filesData
+      } = await supabase.from('project_files').select('*').eq('project_id', projectId).order('created_at', {
+        ascending: false
+      });
       setFiles(filesData || []);
 
       // Fetch or create conversation for messages
       if (projectData.artist_id && projectData.client_id) {
-        const { data: existingConv } = await supabase
-          .from('conversations')
-          .select('id')
-          .eq('artist_id', projectData.artist_id)
-          .eq('client_id', projectData.client_id)
-          .maybeSingle();
-
+        const {
+          data: existingConv
+        } = await supabase.from('conversations').select('id').eq('artist_id', projectData.artist_id).eq('client_id', projectData.client_id).maybeSingle();
         if (existingConv) {
           setConversationId(existingConv.id);
-          
-          // Fetch messages
-          const { data: messagesData } = await supabase
-            .from('messages')
-            .select('*')
-            .eq('conversation_id', existingConv.id)
-            .order('created_at', { ascending: true });
 
+          // Fetch messages
+          const {
+            data: messagesData
+          } = await supabase.from('messages').select('*').eq('conversation_id', existingConv.id).order('created_at', {
+            ascending: true
+          });
           const senderIds = [...new Set((messagesData || []).map(m => m.sender_id).filter(Boolean))];
-          let senderProfiles: Record<string, { full_name: string | null; avatar_url: string | null }> = {};
-          
+          let senderProfiles: Record<string, {
+            full_name: string | null;
+            avatar_url: string | null;
+          }> = {};
           if (senderIds.length > 0) {
-            const { data: senderProfilesData } = await supabase
-              .from('public_profiles')
-              .select('id, full_name, avatar_url')
-              .in('id', senderIds as string[]);
-            
+            const {
+              data: senderProfilesData
+            } = await supabase.from('public_profiles').select('id, full_name, avatar_url').in('id', senderIds as string[]);
             (senderProfilesData || []).forEach(p => {
-              if (p.id) senderProfiles[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url };
+              if (p.id) senderProfiles[p.id] = {
+                full_name: p.full_name,
+                avatar_url: p.avatar_url
+              };
             });
           }
-
           setMessages((messagesData || []).map(m => ({
             id: m.id,
             content: m.content,
             sender_id: m.sender_id || '',
             created_at: m.created_at,
             sender_name: m.sender_id ? senderProfiles[m.sender_id]?.full_name || 'Unknown' : 'Unknown',
-            sender_avatar: m.sender_id ? senderProfiles[m.sender_id]?.avatar_url || undefined : undefined,
+            sender_avatar: m.sender_id ? senderProfiles[m.sender_id]?.avatar_url || undefined : undefined
           })));
         }
       }
@@ -199,7 +195,6 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
       setLoading(false);
     }
   }, [projectId, onOpenChange]);
-
   useEffect(() => {
     if (open && projectId) {
       fetchProjectData();
@@ -209,55 +204,59 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
   // Real-time subscriptions
   useEffect(() => {
     if (!open || !projectId) return;
-
-    const milestonesChannel = supabase
-      .channel(`project-milestones-${projectId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'project_milestones', filter: `project_id=eq.${projectId}` }, () => {
-        fetchProjectData();
-      })
-      .subscribe();
-
-    const filesChannel = supabase
-      .channel(`project-files-${projectId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'project_files', filter: `project_id=eq.${projectId}` }, () => {
-        fetchProjectData();
-      })
-      .subscribe();
+    const milestonesChannel = supabase.channel(`project-milestones-${projectId}`).on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'project_milestones',
+      filter: `project_id=eq.${projectId}`
+    }, () => {
+      fetchProjectData();
+    }).subscribe();
+    const filesChannel = supabase.channel(`project-files-${projectId}`).on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'project_files',
+      filter: `project_id=eq.${projectId}`
+    }, () => {
+      fetchProjectData();
+    }).subscribe();
 
     // Subscribe to project updates (for progress changes)
-    const projectChannel = supabase
-      .channel(`project-detail-${projectId}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'projects', filter: `id=eq.${projectId}` }, () => {
-        fetchProjectData();
-      })
-      .subscribe();
-
+    const projectChannel = supabase.channel(`project-detail-${projectId}`).on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'projects',
+      filter: `id=eq.${projectId}`
+    }, () => {
+      fetchProjectData();
+    }).subscribe();
     return () => {
       supabase.removeChannel(milestonesChannel);
       supabase.removeChannel(filesChannel);
       supabase.removeChannel(projectChannel);
     };
   }, [open, projectId, fetchProjectData]);
-
   const handleAddMilestone = async () => {
     if (!projectId || !user?.id || !newMilestone.title.trim()) return;
     setAddingMilestone(true);
-
     try {
-      const { error } = await supabase
-        .from('project_milestones')
-        .insert({
-          project_id: projectId,
-          title: newMilestone.title,
-          description: newMilestone.description || null,
-          due_date: newMilestone.due_date || null,
-          created_by: user.id,
-          sort_order: milestones.length,
-        });
-
+      const {
+        error
+      } = await supabase.from('project_milestones').insert({
+        project_id: projectId,
+        title: newMilestone.title,
+        description: newMilestone.description || null,
+        due_date: newMilestone.due_date || null,
+        created_by: user.id,
+        sort_order: milestones.length
+      });
       if (error) throw error;
       toast.success("Milestone added!");
-      setNewMilestone({ title: "", description: "", due_date: "" });
+      setNewMilestone({
+        title: "",
+        description: "",
+        due_date: ""
+      });
       fetchProjectData();
     } catch (err: any) {
       toast.error(err.message || "Failed to add milestone");
@@ -265,30 +264,25 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
       setAddingMilestone(false);
     }
   };
-
   const handleToggleMilestoneStatus = async (milestone: Milestone) => {
     const newStatus = milestone.status === 'completed' ? 'pending' : 'completed';
-    
     try {
-      const { error } = await supabase
-        .from('project_milestones')
-        .update({ status: newStatus })
-        .eq('id', milestone.id);
-
+      const {
+        error
+      } = await supabase.from('project_milestones').update({
+        status: newStatus
+      }).eq('id', milestone.id);
       if (error) throw error;
       fetchProjectData();
     } catch (err: any) {
       toast.error("Failed to update milestone");
     }
   };
-
   const handleDeleteMilestone = async (milestoneId: string) => {
     try {
-      const { error } = await supabase
-        .from('project_milestones')
-        .delete()
-        .eq('id', milestoneId);
-
+      const {
+        error
+      } = await supabase.from('project_milestones').delete().eq('id', milestoneId);
       if (error) throw error;
       toast.success("Milestone deleted");
       fetchProjectData();
@@ -296,32 +290,26 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
       toast.error("Failed to delete milestone");
     }
   };
-
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !projectId || !user?.id) return;
-
     setUploading(true);
     try {
       const fileName = `${user.id}/${projectId}/${Date.now()}-${file.name}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('project-files')
-        .upload(fileName, file);
-
+      const {
+        error: uploadError
+      } = await supabase.storage.from('project-files').upload(fileName, file);
       if (uploadError) throw uploadError;
-
-      const { error: insertError } = await supabase
-        .from('project_files')
-        .insert({
-          project_id: projectId,
-          uploader_id: user.id,
-          storage_path: fileName,
-          original_name: file.name,
-          mime_type: file.type,
-          size_bytes: file.size,
-        });
-
+      const {
+        error: insertError
+      } = await supabase.from('project_files').insert({
+        project_id: projectId,
+        uploader_id: user.id,
+        storage_path: fileName,
+        original_name: file.name,
+        mime_type: file.type,
+        size_bytes: file.size
+      });
       if (insertError) throw insertError;
       toast.success("File uploaded!");
       fetchProjectData();
@@ -331,15 +319,13 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
       setUploading(false);
     }
   };
-
   const handleDownloadFile = async (file: ProjectFile) => {
     try {
-      const { data, error } = await supabase.storage
-        .from(file.storage_bucket)
-        .download(file.storage_path);
-
+      const {
+        data,
+        error
+      } = await supabase.storage.from(file.storage_bucket).download(file.storage_path);
       if (error) throw error;
-
       const url = URL.createObjectURL(data);
       const a = document.createElement('a');
       a.href = url;
@@ -350,16 +336,12 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
       toast.error("Download failed");
     }
   };
-
   const handleDeleteFile = async (fileId: string, storagePath: string) => {
     try {
       await supabase.storage.from('project-files').remove([storagePath]);
-      
-      const { error } = await supabase
-        .from('project_files')
-        .delete()
-        .eq('id', fileId);
-
+      const {
+        error
+      } = await supabase.from('project_files').delete().eq('id', fileId);
       if (error) throw error;
       toast.success("File deleted");
       fetchProjectData();
@@ -367,41 +349,34 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
       toast.error("Failed to delete file");
     }
   };
-
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !user?.id || !project) return;
     setSendingMessage(true);
-
     try {
       let convId = conversationId;
 
       // Create conversation if it doesn't exist
       if (!convId && project.artist_id && project.client_id) {
-        const { data: newConv, error: convError } = await supabase
-          .from('conversations')
-          .insert({
-            artist_id: project.artist_id,
-            client_id: project.client_id,
-            project_title: project.title,
-          })
-          .select('id')
-          .single();
-
+        const {
+          data: newConv,
+          error: convError
+        } = await supabase.from('conversations').insert({
+          artist_id: project.artist_id,
+          client_id: project.client_id,
+          project_title: project.title
+        }).select('id').single();
         if (convError) throw convError;
         convId = newConv.id;
         setConversationId(convId);
       }
-
       if (!convId) throw new Error("Could not create conversation");
-
-      const { error } = await supabase
-        .from('messages')
-        .insert({
-          conversation_id: convId,
-          sender_id: user.id,
-          content: newMessage.trim(),
-        });
-
+      const {
+        error
+      } = await supabase.from('messages').insert({
+        conversation_id: convId,
+        sender_id: user.id,
+        content: newMessage.trim()
+      });
       if (error) throw error;
       setNewMessage("");
       fetchProjectData();
@@ -414,56 +389,40 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
 
   // Use real progress from database, fallback to milestone-based calculation
   const completedMilestones = milestones.filter(m => m.status === 'completed').length;
-  const milestoneProgress = milestones.length > 0 ? Math.round((completedMilestones / milestones.length) * 100) : 0;
+  const milestoneProgress = milestones.length > 0 ? Math.round(completedMilestones / milestones.length * 100) : 0;
   const progress = project?.progress ?? milestoneProgress;
-
   if (loading) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
+    return <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-4xl max-h-[90vh]">
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         </DialogContent>
-      </Dialog>
-    );
+      </Dialog>;
   }
-
   if (!project) return null;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+  return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">{project.title}</DialogTitle>
           <DialogDescription className="flex items-center gap-2 flex-wrap">
             <span>Client:</span>
-            {project.client_id ? (
-              <Link 
-                to={`/profile/${project.client_id}`} 
-                className="text-primary hover:underline font-medium inline-flex items-center gap-1.5"
-              >
+            {project.client_id ? <Link to={`/profile/${project.client_id}`} className="text-primary hover:underline font-medium inline-flex items-center gap-1.5">
                 <Avatar className="h-5 w-5">
                   <AvatarImage src={project.client_avatar} />
                   <AvatarFallback className="text-[10px]">{project.client_name?.charAt(0) || 'C'}</AvatarFallback>
                 </Avatar>
                 {project.client_name}
-              </Link>
-            ) : 'Unknown client'}
+              </Link> : 'Unknown client'}
             <span className="text-muted-foreground">•</span>
             <span>Artist:</span>
-            {project.artist_id ? (
-              <Link 
-                to={`/artist/${project.artist_id}`} 
-                className="text-primary hover:underline font-medium inline-flex items-center gap-1.5"
-              >
+            {project.artist_id ? <Link to={`/artist/${project.artist_id}`} className="text-primary hover:underline font-medium inline-flex items-center gap-1.5">
                 <Avatar className="h-5 w-5">
                   <AvatarImage src={project.artist_avatar} />
                   <AvatarFallback className="text-[10px]">{project.artist_name?.charAt(0) || 'A'}</AvatarFallback>
                 </Avatar>
                 {project.artist_name}
-              </Link>
-            ) : 'Unassigned'}
+              </Link> : 'Unassigned'}
           </DialogDescription>
         </DialogHeader>
 
@@ -481,7 +440,7 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
         {/* Project Overview */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-3 border-y">
           <div className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            
             <div>
               <p className="text-xs text-muted-foreground">Budget</p>
               <p className="font-medium text-sm">{formatCurrency(project.budget)}</p>
@@ -543,50 +502,23 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
           <TabsContent value="milestones" className="flex-1 overflow-hidden flex flex-col mt-4">
             <ScrollArea className="flex-1">
               <div className="space-y-3 pr-4">
-                {milestones.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No milestones yet</p>
-                ) : (
-                  milestones.map((milestone) => (
-                    <div 
-                      key={milestone.id} 
-                      className={`p-3 border rounded-lg flex items-start gap-3 transition-colors ${
-                        milestone.status === 'completed' ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800' : ''
-                      }`}
-                    >
-                      <button
-                        onClick={() => handleToggleMilestoneStatus(milestone)}
-                        className={`mt-0.5 flex-shrink-0 h-5 w-5 rounded-full border-2 flex items-center justify-center ${
-                          milestone.status === 'completed' 
-                            ? 'bg-green-500 border-green-500 text-white' 
-                            : 'border-muted-foreground hover:border-primary'
-                        }`}
-                      >
+                {milestones.length === 0 ? <p className="text-center text-muted-foreground py-8">No milestones yet</p> : milestones.map(milestone => <div key={milestone.id} className={`p-3 border rounded-lg flex items-start gap-3 transition-colors ${milestone.status === 'completed' ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800' : ''}`}>
+                      <button onClick={() => handleToggleMilestoneStatus(milestone)} className={`mt-0.5 flex-shrink-0 h-5 w-5 rounded-full border-2 flex items-center justify-center ${milestone.status === 'completed' ? 'bg-green-500 border-green-500 text-white' : 'border-muted-foreground hover:border-primary'}`}>
                         {milestone.status === 'completed' && <CheckCircle className="h-3 w-3" />}
                       </button>
                       <div className="flex-1 min-w-0">
                         <p className={`font-medium text-sm ${milestone.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>
                           {milestone.title}
                         </p>
-                        {milestone.description && (
-                          <p className="text-xs text-muted-foreground mt-1">{milestone.description}</p>
-                        )}
-                        {milestone.due_date && (
-                          <p className="text-xs text-muted-foreground mt-1">
+                        {milestone.description && <p className="text-xs text-muted-foreground mt-1">{milestone.description}</p>}
+                        {milestone.due_date && <p className="text-xs text-muted-foreground mt-1">
                             Due: {formatDate(new Date(milestone.due_date), 'MMM d, yyyy')}
-                          </p>
-                        )}
+                          </p>}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => handleDeleteMilestone(milestone.id)}
-                      >
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDeleteMilestone(milestone.id)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
-                    </div>
-                  ))
-                )}
+                    </div>)}
               </div>
             </ScrollArea>
 
@@ -594,26 +526,20 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
 
             <div className="space-y-2">
               <div className="flex gap-2">
-                <Input
-                  placeholder="Milestone title..."
-                  value={newMilestone.title}
-                  onChange={(e) => setNewMilestone(prev => ({ ...prev, title: e.target.value }))}
-                  className="flex-1"
-                />
-                <Input
-                  type="date"
-                  value={newMilestone.due_date}
-                  onChange={(e) => setNewMilestone(prev => ({ ...prev, due_date: e.target.value }))}
-                  className="w-36"
-                />
+                <Input placeholder="Milestone title..." value={newMilestone.title} onChange={e => setNewMilestone(prev => ({
+                ...prev,
+                title: e.target.value
+              }))} className="flex-1" />
+                <Input type="date" value={newMilestone.due_date} onChange={e => setNewMilestone(prev => ({
+                ...prev,
+                due_date: e.target.value
+              }))} className="w-36" />
               </div>
               <div className="flex gap-2">
-                <Input
-                  placeholder="Description (optional)"
-                  value={newMilestone.description}
-                  onChange={(e) => setNewMilestone(prev => ({ ...prev, description: e.target.value }))}
-                  className="flex-1"
-                />
+                <Input placeholder="Description (optional)" value={newMilestone.description} onChange={e => setNewMilestone(prev => ({
+                ...prev,
+                description: e.target.value
+              }))} className="flex-1" />
                 <Button onClick={handleAddMilestone} disabled={addingMilestone || !newMilestone.title.trim()}>
                   {addingMilestone ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                   Add
@@ -625,11 +551,7 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
           <TabsContent value="files" className="flex-1 overflow-hidden flex flex-col mt-4">
             <ScrollArea className="flex-1">
               <div className="space-y-2 pr-4">
-                {files.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No files yet</p>
-                ) : (
-                  files.map((file) => (
-                    <div key={file.id} className="p-3 border rounded-lg flex items-center justify-between">
+                {files.length === 0 ? <p className="text-center text-muted-foreground py-8">No files yet</p> : files.map(file => <div key={file.id} className="p-3 border rounded-lg flex items-center justify-between">
                       <div className="flex items-center gap-3 min-w-0">
                         <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                         <div className="min-w-0">
@@ -643,20 +565,11 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDownloadFile(file)}>
                           <Download className="h-4 w-4" />
                         </Button>
-                        {file.uploader_id === user?.id && (
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => handleDeleteFile(file.id, file.storage_path)}
-                          >
+                        {file.uploader_id === user?.id && <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDeleteFile(file.id, file.storage_path)}>
                             <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
+                          </Button>}
                       </div>
-                    </div>
-                  ))
-                )}
+                    </div>)}
               </div>
             </ScrollArea>
 
@@ -665,14 +578,10 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
             <div>
               <label className="cursor-pointer">
                 <div className="flex items-center justify-center gap-2 p-3 border-2 border-dashed rounded-lg hover:border-primary transition-colors">
-                  {uploading ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <>
+                  {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>
                       <Upload className="h-5 w-5" />
                       <span className="text-sm">Upload a file</span>
-                    </>
-                  )}
+                    </>}
                 </div>
                 <input type="file" className="hidden" onChange={handleFileUpload} disabled={uploading} />
               </label>
@@ -682,13 +591,9 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
           <TabsContent value="messages" className="flex-1 overflow-hidden flex flex-col mt-4">
             <ScrollArea className="flex-1">
               <div className="space-y-3 pr-4">
-                {messages.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No messages yet. Start the conversation!</p>
-                ) : (
-                  messages.map((msg) => {
-                    const isMe = msg.sender_id === user?.id;
-                    return (
-                      <div key={msg.id} className={`flex gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
+                {messages.length === 0 ? <p className="text-center text-muted-foreground py-8">No messages yet. Start the conversation!</p> : messages.map(msg => {
+                const isMe = msg.sender_id === user?.id;
+                return <div key={msg.id} className={`flex gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
                         <Avatar className="h-8 w-8 flex-shrink-0">
                           <AvatarImage src={msg.sender_avatar || ''} />
                           <AvatarFallback>{msg.sender_name?.charAt(0) || 'U'}</AvatarFallback>
@@ -699,28 +604,20 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
                             {formatDate(new Date(msg.created_at), 'MMM d, h:mm a')}
                           </p>
                         </div>
-                      </div>
-                    );
-                  })
-                )}
+                      </div>;
+              })}
               </div>
             </ScrollArea>
 
             <Separator className="my-3" />
 
             <div className="flex gap-2">
-              <Textarea
-                placeholder="Type a message..."
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                className="flex-1 min-h-[60px] resize-none"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-              />
+              <Textarea placeholder="Type a message..." value={newMessage} onChange={e => setNewMessage(e.target.value)} className="flex-1 min-h-[60px] resize-none" onKeyDown={e => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+              }
+            }} />
               <Button onClick={handleSendMessage} disabled={sendingMessage || !newMessage.trim()}>
                 {sendingMessage ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send'}
               </Button>
@@ -728,8 +625,6 @@ const ProjectDetailModal = ({ projectId, open, onOpenChange }: ProjectDetailModa
           </TabsContent>
         </Tabs>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
-
 export default ProjectDetailModal;
