@@ -500,7 +500,7 @@ const ProjectDetailModal = ({
           </TabsContent>
 
           <TabsContent value="milestones" className="flex-1 overflow-hidden flex flex-col mt-4">
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 max-h-[300px]">
               <div className="space-y-3 pr-4">
                 {milestones.length === 0 ? <p className="text-center text-muted-foreground py-8">No milestones yet</p> : milestones.map(milestone => <div key={milestone.id} className={`p-3 border rounded-lg flex items-start gap-3 transition-colors ${milestone.status === 'completed' ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800' : ''}`}>
                       <button onClick={() => handleToggleMilestoneStatus(milestone)} className={`mt-0.5 flex-shrink-0 h-5 w-5 rounded-full border-2 flex items-center justify-center ${milestone.status === 'completed' ? 'bg-green-500 border-green-500 text-white' : 'border-muted-foreground hover:border-primary'}`}>
@@ -549,7 +549,7 @@ const ProjectDetailModal = ({
           </TabsContent>
 
           <TabsContent value="files" className="flex-1 overflow-hidden flex flex-col mt-4">
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 max-h-[300px]">
               <div className="space-y-2 pr-4">
                 {files.length === 0 ? <p className="text-center text-muted-foreground py-8">No files yet</p> : files.map(file => <div key={file.id} className="p-3 border rounded-lg flex items-center justify-between">
                       <div className="flex items-center gap-3 min-w-0">
@@ -589,7 +589,7 @@ const ProjectDetailModal = ({
           </TabsContent>
 
           <TabsContent value="messages" className="flex-1 overflow-hidden flex flex-col mt-4">
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 max-h-[300px]">
               <div className="space-y-3 pr-4">
                 {messages.length === 0 ? <p className="text-center text-muted-foreground py-8">No messages yet. Start the conversation!</p> : messages.map(msg => {
                 const isMe = msg.sender_id === user?.id;
