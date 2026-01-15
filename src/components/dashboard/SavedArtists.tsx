@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +32,7 @@ interface SavedArtist {
 const SavedArtists = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { format } = useCurrencyFormat();
   const queryClient = useQueryClient();
 
   const [selectedArtist, setSelectedArtist] = useState<SavedArtist | null>(null);
@@ -111,7 +113,7 @@ const SavedArtists = () => {
         imageUrl: profile.avatar_url,
         avgRating: stats?.avgRating || 0,
         completedProjects: stats?.reviewCount || 0,
-        hourlyRate: profile.hourly_rate ? `₹${Number(profile.hourly_rate).toLocaleString()}/hour` : "Not set",
+        hourlyRate: profile.hourly_rate ? `${format(Number(profile.hourly_rate))}/hour` : "Not set",
         specialties: [
           ...(tags?.slice(0, 2) || []),
           ...(profile.is_verified ? ['Verified'] : [])
@@ -318,13 +320,13 @@ const SavedArtists = () => {
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <Label htmlFor="budget" className="text-sm">Budget (₹)</Label>
+                            <Label htmlFor="budget" className="text-sm">Budget (USD)</Label>
                             <Input 
                               id="budget" 
                               type="number" 
                               value={projectRequest.budget} 
                               onChange={(e) => setProjectRequest({...projectRequest, budget: e.target.value})} 
-                              placeholder="15000"
+                              placeholder="Enter in USD"
                               className="mt-1 text-sm"
                             />
                           </div>

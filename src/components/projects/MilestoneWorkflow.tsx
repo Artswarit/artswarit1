@@ -13,6 +13,7 @@ import { MilestoneSubmissionDialog } from './MilestoneSubmissionDialog';
 import { MilestoneReviewDialog } from './MilestoneReviewDialog';
 import { DisputeDialog } from './DisputeDialog';
 import { ProjectActivityLog } from './ProjectActivityLog';
+import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 
 interface Milestone {
   id: string;
@@ -50,6 +51,7 @@ interface MilestoneWorkflowProps {
 
 export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
   const { user } = useAuth();
+  const { format: formatCurrency } = useCurrencyFormat();
   const [project, setProject] = useState<Project | null>(null);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [loading, setLoading] = useState(true);
@@ -217,7 +219,7 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
               <CardDescription>{project.description}</CardDescription>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold">${project.budget?.toLocaleString()}</p>
+              <p className="text-2xl font-bold">{formatCurrency(project.budget)}</p>
               <p className="text-sm text-muted-foreground">Total Budget</p>
             </div>
           </div>
@@ -229,7 +231,7 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
               <div className="flex items-center gap-2 p-3 bg-destructive/10 rounded-lg border border-destructive/20">
                 <AlertTriangle className="h-5 w-5 text-destructive" />
                 <p className="text-sm text-destructive">
-                  Milestone total (${getTotalBudget().toLocaleString()}) doesn't match project budget (${project.budget?.toLocaleString()}). 
+                  Milestone total ({formatCurrency(getTotalBudget())}) doesn't match project budget ({formatCurrency(project.budget)}). 
                   Please adjust milestones before proceeding.
                 </p>
               </div>
@@ -243,8 +245,8 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
               </div>
               <Progress value={calculateProgress()} className="h-2" />
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>${getPaidAmount().toLocaleString()} paid</span>
-                <span>${(getTotalBudget() - getPaidAmount()).toLocaleString()} remaining</span>
+                <span>{formatCurrency(getPaidAmount())} paid</span>
+                <span>{formatCurrency(getTotalBudget() - getPaidAmount())} remaining</span>
               </div>
             </div>
           </div>

@@ -205,16 +205,17 @@ const ArtworkEditModal = ({ artwork, isOpen, onClose, onSave }: ArtworkEditModal
 
             {formData.is_for_sale && (
               <div className="space-y-2">
-                <Label htmlFor="price">Price (₹)</Label>
+                <Label htmlFor="price">Price (USD)</Label>
                 <Input
                   id="price"
                   type="number"
                   value={formData.price}
                   onChange={(e) => handleInputChange('price', e.target.value)}
-                  placeholder="Enter price"
+                  placeholder="Enter price in USD"
                   min="0"
                   step="0.01"
                 />
+                <p className="text-xs text-muted-foreground">Enter price in USD. It will be displayed in user's preferred currency.</p>
               </div>
             )}
 

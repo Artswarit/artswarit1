@@ -1,11 +1,13 @@
-
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 
 interface LazyAreaChartProps {
   data: any[];
 }
 
 const LazyAreaChart = ({ data }: LazyAreaChartProps) => {
+  const { format } = useCurrencyFormat();
+  
   return (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart
@@ -29,7 +31,7 @@ const LazyAreaChart = ({ data }: LazyAreaChartProps) => {
         />
         <XAxis dataKey="name" />
         <YAxis />
-        <Tooltip formatter={(value) => `₹${value}`} />
+        <Tooltip formatter={(value) => format(Number(value))} />
         <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
       </AreaChart>
     </ResponsiveContainer>

@@ -349,16 +349,17 @@ const ArtworkUploadForm = ({ onCancel, onSuccess }: ArtworkUploadFormProps) => {
 
             {(visibilityType === "premium" || visibilityType === "exclusive") && (
               <div className="space-y-2">
-                <Label htmlFor="price">Price (₹)*</Label>
+                <Label htmlFor="price">Price (USD)*</Label>
                 <Input 
                   id="price" 
                   value={price} 
                   onChange={(e) => setPrice(e.target.value)} 
-                  placeholder="Enter price"
+                  placeholder="Enter price in USD"
                   type="number"
                   min="0"
                   step="0.01"
                 />
+                <p className="text-xs text-muted-foreground">Enter price in USD. It will be displayed in user's preferred currency.</p>
               </div>
             )}
 

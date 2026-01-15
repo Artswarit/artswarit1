@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, Calendar, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 
 interface DashboardHeaderProps {
   user?: any;
@@ -20,6 +21,7 @@ type ArtistStats = {
 
 const DashboardHeader = ({ user, profile, title, subtitle }: DashboardHeaderProps) => {
   const navigate = useNavigate();
+  const { format } = useCurrencyFormat();
   const [artistStats, setArtistStats] = useState<ArtistStats>({
     totalViews: 0,
     monthlyEarnings: 0,
@@ -160,7 +162,7 @@ const DashboardHeader = ({ user, profile, title, subtitle }: DashboardHeaderProp
             </div>
             <div>
               <p className="text-xs sm:text-sm font-medium text-muted-foreground">Monthly Earnings</p>
-              <p className="text-xl sm:text-2xl font-bold">₹{artistStats.monthlyEarnings.toLocaleString()}</p>
+              <p className="text-xl sm:text-2xl font-bold">{format(artistStats.monthlyEarnings)}</p>
             </div>
           </CardContent>
         </Card>
