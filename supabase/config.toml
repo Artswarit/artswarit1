@@ -1,1 +1,13 @@
 project_id = "sqdzemlcqesgjsybbhte"
+
+[functions.create-milestone-order]
+verify_jwt = false
+
+[functions.verify-razorpay-payment]
+verify_jwt = false
+
+[functions.razorpay-webhook]
+verify_jwt = false
+
+[functions.create-artist-razorpay-account]
+verify_jwt = false
