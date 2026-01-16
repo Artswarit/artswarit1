@@ -932,6 +932,84 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          amount: number
+          artist_id: string
+          artist_payout: number
+          client_id: string
+          created_at: string
+          currency: string
+          error_message: string | null
+          id: string
+          milestone_id: string
+          paid_at: string | null
+          payment_method: string | null
+          platform_fee: number
+          project_id: string
+          razorpay_order_id: string | null
+          razorpay_payment_id: string | null
+          razorpay_signature: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          artist_id: string
+          artist_payout?: number
+          client_id: string
+          created_at?: string
+          currency?: string
+          error_message?: string | null
+          id?: string
+          milestone_id: string
+          paid_at?: string | null
+          payment_method?: string | null
+          platform_fee?: number
+          project_id: string
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          artist_id?: string
+          artist_payout?: number
+          client_id?: string
+          created_at?: string
+          currency?: string
+          error_message?: string | null
+          id?: string
+          milestone_id?: string
+          paid_at?: string | null
+          payment_method?: string | null
+          platform_fee?: number
+          project_id?: string
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "project_milestones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           account_status: string | null
@@ -1360,6 +1438,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      razorpay_accounts: {
+        Row: {
+          account_status: string
+          bank_account_name: string | null
+          bank_account_number: string | null
+          bank_iban: string | null
+          bank_ifsc_code: string | null
+          bank_swift_code: string | null
+          country: string | null
+          created_at: string
+          id: string
+          kyc_status: string
+          payouts_enabled: boolean
+          phone: string | null
+          razorpay_account_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_status?: string
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_iban?: string | null
+          bank_ifsc_code?: string | null
+          bank_swift_code?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          kyc_status?: string
+          payouts_enabled?: boolean
+          phone?: string | null
+          razorpay_account_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_status?: string
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_iban?: string | null
+          bank_ifsc_code?: string | null
+          bank_swift_code?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          kyc_status?: string
+          payouts_enabled?: boolean
+          phone?: string | null
+          razorpay_account_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       reports: {
         Row: {
@@ -1884,6 +2016,39 @@ export type Database = {
           role?: Database["public"]["Enums"]["user_role"]
           social_links?: Json | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      webhook_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event_id: string
+          event_type: string
+          id: string
+          payload: Json
+          processed: boolean
+          processed_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event_id: string
+          event_type: string
+          id?: string
+          payload: Json
+          processed?: boolean
+          processed_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event_id?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed?: boolean
+          processed_at?: string | null
         }
         Relationships: []
       }

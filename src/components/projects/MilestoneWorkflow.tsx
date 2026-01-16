@@ -7,13 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertTriangle, CheckCircle, Clock, DollarSign, FileText, Lock, Upload, AlertCircle, MessageSquare } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, DollarSign, FileText, Lock, Upload, AlertCircle, CreditCard } from 'lucide-react';
 import { MilestoneCard } from './MilestoneCard';
 import { MilestoneSubmissionDialog } from './MilestoneSubmissionDialog';
 import { MilestoneReviewDialog } from './MilestoneReviewDialog';
 import { DisputeDialog } from './DisputeDialog';
 import { ProjectActivityLog } from './ProjectActivityLog';
 import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
+import { EnablePaymentsDialog } from '@/components/payments/EnablePaymentsDialog';
+import { useArtistPaymentAccount } from '@/hooks/useArtistPaymentAccount';
 
 interface Milestone {
   id: string;
@@ -59,25 +61,89 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
   const [submissionDialogOpen, setSubmissionDialogOpen] = useState(false);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [disputeDialogOpen, setDisputeDialogOpen] = useState(false);
+  const [enablePaymentsOpen, setEnablePaymentsOpen] = useState(false);
+  const [artistKycEnabled, setArtistKycEnabled] = useState(false);
+
+  const { account: myPaymentAccount, isPayoutsEnabled } = useArtistPaymentAccount();
 
   const isClient = user?.id === project?.client_id;
   const isArtist = user?.id === project?.artist_id;
 
+  // Fetch artist KYC status for client view
+  useEffect(() => {
+    const fetchArtistKyc = async () => {
+      if (!project?.artist_id || isArtist) return;
+      
+      const { data } = await supabase
+        .from('razorpay_accounts')
+        .select('payouts_enabled')
+        .eq('user_id', project.artist_id)
+        .single();
+
+      setArtistKycEnabled(data?.payouts_enabled ?? false);
+    };
+
+    fetchArtistKyc();
+
+    // Subscribe to artist KYC updates
+    if (project?.artist_id) {
+      const channel = supabase
+        .channel(`artist-kyc-${project.artist_id}`)
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'razorpay_accounts',
+          filter: `user_id=eq.${project.artist_id}`,
+        }, (payload) => {
+          if (payload.new) {
+            setArtistKycEnabled((payload.new as any).payouts_enabled ?? false);
+          }
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [project?.artist_id, isArtist]);
+
   useEffect(() => {
     fetchProjectData();
     
-    const channel = supabase
-      .channel(`project-${projectId}`)
+    // Subscribe to milestone updates
+    const milestoneChannel = supabase
+      .channel(`project-milestones-${projectId}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'project_milestones',
         filter: `project_id=eq.${projectId}`
-      }, () => fetchMilestones())
+      }, (payload) => {
+        console.log('Milestone update:', payload);
+        fetchMilestones();
+      })
+      .subscribe();
+
+    // Subscribe to payment updates
+    const paymentChannel = supabase
+      .channel(`project-payments-${projectId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'payments',
+        filter: `project_id=eq.${projectId}`
+      }, (payload) => {
+        console.log('Payment update:', payload);
+        if ((payload.new as any)?.status === 'success') {
+          toast.success('Payment confirmed!');
+          fetchMilestones();
+        }
+      })
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(milestoneChannel);
+      supabase.removeChannel(paymentChannel);
     };
   }, [projectId]);
 
@@ -204,9 +270,32 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
   }
 
   const budgetMatch = getTotalBudget() === (project.budget || 0);
+  const hasApprovedMilestones = milestones.some(m => m.status === 'approved');
 
   return (
     <div className="space-y-6">
+      {/* Artist Payment Setup Banner */}
+      {isArtist && !isPayoutsEnabled && (
+        <Card className="border-yellow-500/50 bg-yellow-500/5">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <CreditCard className="h-5 w-5 text-yellow-600" />
+                <div>
+                  <p className="font-medium text-yellow-600">Enable Payments to Receive Payouts</p>
+                  <p className="text-sm text-muted-foreground">
+                    Complete your payment setup to receive payouts when milestones are paid.
+                  </p>
+                </div>
+              </div>
+              <Button onClick={() => setEnablePaymentsOpen(true)}>
+                Enable Payments
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Project Overview */}
       <Card>
         <CardHeader>
@@ -278,6 +367,7 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
                 isArtist={isArtist}
                 isLocked={project.is_locked}
                 canStart={canStartMilestone(milestone, index)}
+                artistKycEnabled={isArtist ? isPayoutsEnabled : artistKycEnabled}
                 onStart={() => handleStartMilestone(milestone.id)}
                 onSubmit={() => {
                   setSelectedMilestone(milestone);
@@ -290,6 +380,10 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
                 onDispute={() => {
                   setSelectedMilestone(milestone);
                   setDisputeDialogOpen(true);
+                }}
+                onPaymentSuccess={() => {
+                  fetchMilestones();
+                  logActivity(milestone.id, 'payment_initiated', { milestoneId: milestone.id });
                 }}
                 getStatusBadge={getStatusBadge}
               />
@@ -339,6 +433,11 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
           />
         </>
       )}
+
+      <EnablePaymentsDialog
+        open={enablePaymentsOpen}
+        onOpenChange={setEnablePaymentsOpen}
+      />
     </div>
   );
 }
