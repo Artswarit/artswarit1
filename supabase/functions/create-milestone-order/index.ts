@@ -12,7 +12,9 @@ const RAZORPAY_KEY_SECRET = Deno.env.get('RAZORPAY_KEY_SECRET')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 
-const PLATFORM_COMMISSION = 0.12; // 12%
+// Plan-based commission rates
+const STARTER_COMMISSION = 0.15; // 15% for Starter artists
+const PRO_COMMISSION = 0; // 0% for Pro artists
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -116,9 +118,24 @@ serve(async (req) => {
       });
     }
 
-    // Calculate amounts
+    // Check if artist is a Pro subscriber (0% fee) or Starter (15% fee)
+    const { data: subscription } = await supabase
+      .from('subscribers')
+      .select('*')
+      .eq('user_id', milestone.project.artist_id)
+      .eq('is_active', true)
+      .order('started_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const isProArtist = !!subscription;
+    const commissionRate = isProArtist ? PRO_COMMISSION : STARTER_COMMISSION;
+    
+    console.log(`Artist ${milestone.project.artist_id} is ${isProArtist ? 'Pro' : 'Starter'} - Commission: ${commissionRate * 100}%`);
+
+    // Calculate amounts based on artist plan
     const amount = Number(milestone.amount);
-    const platformFee = Math.round(amount * PLATFORM_COMMISSION * 100) / 100;
+    const platformFee = Math.round(amount * commissionRate * 100) / 100;
     const artistPayout = Math.round((amount - platformFee) * 100) / 100;
     const amountInPaise = Math.round(amount * 100); // Razorpay uses smallest currency unit
 
@@ -142,6 +159,8 @@ serve(async (req) => {
           artist_id: milestone.project.artist_id,
           platform_fee: platformFee,
           artist_payout: artistPayout,
+          is_pro_artist: isProArtist,
+          commission_rate: commissionRate,
         },
       }),
     });
@@ -186,6 +205,9 @@ serve(async (req) => {
       keyId: RAZORPAY_KEY_ID,
       milestoneId,
       projectId: milestone.project_id,
+      isProArtist,
+      platformFee,
+      artistPayout,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
