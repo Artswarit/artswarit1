@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Heart, Eye } from "lucide-react";
 import MessageArtistDialog from "@/components/artist-profile/MessageArtistDialog";
 import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
+import { CreateProjectForm } from "@/components/projects/CreateProjectForm";
 
 // --- Demo Data for fallback ---
 const ARTIST_UUID_1 = "11111111-1111-1111-1111-111111111111";
@@ -910,71 +911,23 @@ export default function ArtistProfile() {
         )}
       </main>
 
-      {/* Project Request Modal - mobile responsive */}
+      {/* Project Request Modal - Full form with milestones */}
       <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
-        <DialogContent className="max-w-sm sm:max-w-md mx-3 sm:mx-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-base sm:text-lg lg:text-xl">Send Project Request</DialogTitle>
-            <DialogDescription className="text-sm sm:text-base">
-              Send a project request to {profileState?.name}
+            <DialogTitle>Create Project Request</DialogTitle>
+            <DialogDescription>
+              Send a detailed project request to {profileState?.name}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
-            <div>
-              <Label htmlFor="req-title" className="text-sm sm:text-base">Project Title</Label>
-              <Input 
-                id="req-title" 
-                value={projectRequest.title} 
-                onChange={(e) => setProjectRequest({...projectRequest, title: e.target.value})} 
-                placeholder="e.g., Album Cover Design"
-                className="text-sm sm:text-base min-h-[44px]"
-              />
-            </div>
-            <div>
-              <Label htmlFor="req-budget" className="text-sm sm:text-base">Budget ({userCurrencySymbol})</Label>
-              <Input 
-                id="req-budget" 
-                type="number" 
-                value={projectRequest.budget} 
-                onChange={(e) => setProjectRequest({...projectRequest, budget: e.target.value})} 
-                placeholder="e.g., 500"
-                className="text-sm sm:text-base min-h-[44px]"
-              />
-            </div>
-            <div>
-              <Label htmlFor="req-deadline" className="text-sm sm:text-base">Deadline</Label>
-              <Input 
-                id="req-deadline" 
-                type="date" 
-                value={projectRequest.deadline} 
-                onChange={(e) => setProjectRequest({...projectRequest, deadline: e.target.value})}
-                className="text-sm sm:text-base min-h-[44px]"
-              />
-            </div>
-            <div>
-              <Label htmlFor="req-description" className="text-sm sm:text-base">Project Description</Label>
-              <Textarea 
-                id="req-description" 
-                value={projectRequest.description} 
-                onChange={(e) => setProjectRequest({...projectRequest, description: e.target.value})} 
-                placeholder="Describe your project requirements..." 
-                rows={3}
-                className="text-sm sm:text-base min-h-[100px]"
-              />
-            </div>
-          </div>
-          <DialogFooter className="flex-col gap-2 sm:flex-row">
-            <Button variant="outline" onClick={() => setIsRequestDialogOpen(false)} className="w-full sm:w-auto min-h-[44px]">
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleSendProjectRequest} 
-              disabled={sendProjectRequestMutation.isPending || !user}
-              className="w-full sm:w-auto min-h-[44px]"
-            >
-              {sendProjectRequestMutation.isPending ? 'Sending...' : 'Send Request'}
-            </Button>
-          </DialogFooter>
+          <CreateProjectForm 
+            artistId={id}
+            onSuccess={() => {
+              setIsRequestDialogOpen(false);
+              toast({ title: "Project request sent successfully!" });
+            }}
+            onCancel={() => setIsRequestDialogOpen(false)}
+          />
         </DialogContent>
       </Dialog>
 
