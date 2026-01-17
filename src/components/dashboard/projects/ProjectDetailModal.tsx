@@ -87,7 +87,8 @@ const ProjectDetailModal = ({
   const [newMilestone, setNewMilestone] = useState({
     title: "",
     description: "",
-    due_date: ""
+    due_date: "",
+    amount: ""
   });
   const [addingMilestone, setAddingMilestone] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -247,6 +248,7 @@ const ProjectDetailModal = ({
         title: newMilestone.title,
         description: newMilestone.description || null,
         due_date: newMilestone.due_date || null,
+        amount: newMilestone.amount ? parseFloat(newMilestone.amount) : 0,
         created_by: user.id,
         sort_order: milestones.length
       });
@@ -255,7 +257,8 @@ const ProjectDetailModal = ({
       setNewMilestone({
         title: "",
         description: "",
-        due_date: ""
+        due_date: "",
+        amount: ""
       });
       fetchProjectData();
     } catch (err: any) {
@@ -530,6 +533,17 @@ const ProjectDetailModal = ({
                 ...prev,
                 title: e.target.value
               }))} className="flex-1" />
+                <Input 
+                  type="number" 
+                  placeholder="Amount" 
+                  value={newMilestone.amount} 
+                  onChange={e => setNewMilestone(prev => ({
+                    ...prev,
+                    amount: e.target.value
+                  }))} 
+                  className="w-28" 
+                  min="0"
+                />
                 <Input type="date" value={newMilestone.due_date} onChange={e => setNewMilestone(prev => ({
                 ...prev,
                 due_date: e.target.value
