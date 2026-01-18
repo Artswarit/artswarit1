@@ -1,10 +1,12 @@
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { Palette, Users, Sparkles, Crown } from "lucide-react";
 
 export interface SignupFormData {
   name: string;
@@ -33,6 +35,15 @@ const SignupForm = ({
   loading = false
 }: SignupFormProps) => {
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+
+  // Pre-select role from URL parameter
+  useEffect(() => {
+    const role = searchParams.get('role');
+    if (role && (role === 'artist' || role === 'client') && !formData.role) {
+      handleRoleChange(role);
+    }
+  }, [searchParams, formData.role, handleRoleChange]);
 
   const validateAndSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -137,19 +148,71 @@ const SignupForm = ({
           />
         </div>
         <div>
-          <div className="mb-2">
+          <div className="mb-3">
             <Label className="text-sm sm:text-base">I want to join as <span className="text-destructive">*</span></Label>
           </div>
-          <RadioGroup value={formData.role} onValueChange={handleRoleChange} className="flex gap-4 sm:gap-6" disabled={loading}>
-            <div className="flex items-center space-x-2 min-h-[44px]">
-              <RadioGroupItem value="artist" id="artist" disabled={loading} className="w-5 h-5" />
-              <Label htmlFor="artist" className="text-sm sm:text-base cursor-pointer">Artist</Label>
+          <div className="grid grid-cols-2 gap-3">
+            <div 
+              onClick={() => !loading && handleRoleChange('artist')}
+              className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                formData.role === 'artist' 
+                  ? 'border-primary bg-primary/5 shadow-md' 
+                  : 'border-muted hover:border-primary/50 hover:bg-muted/50'
+              } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <div className="flex flex-col items-center text-center gap-2">
+                <div className={`p-2 rounded-full ${formData.role === 'artist' ? 'bg-primary/20' : 'bg-muted'}`}>
+                  <Palette className={`h-5 w-5 ${formData.role === 'artist' ? 'text-primary' : 'text-muted-foreground'}`} />
+                </div>
+                <span className="font-semibold">Artist</span>
+                <span className="text-xs text-muted-foreground">
+                  Showcase & earn from your creativity
+                </span>
+                {formData.role === 'artist' && (
+                  <div className="absolute top-2 right-2">
+                    <Sparkles className="h-4 w-4 text-yellow-500" />
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="flex items-center space-x-2 min-h-[44px]">
-              <RadioGroupItem value="client" id="client" disabled={loading} className="w-5 h-5" />
-              <Label htmlFor="client" className="text-sm sm:text-base cursor-pointer">Client</Label>
+            
+            <div 
+              onClick={() => !loading && handleRoleChange('client')}
+              className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                formData.role === 'client' 
+                  ? 'border-primary bg-primary/5 shadow-md' 
+                  : 'border-muted hover:border-primary/50 hover:bg-muted/50'
+              } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <div className="flex flex-col items-center text-center gap-2">
+                <div className={`p-2 rounded-full ${formData.role === 'client' ? 'bg-primary/20' : 'bg-muted'}`}>
+                  <Users className={`h-5 w-5 ${formData.role === 'client' ? 'text-primary' : 'text-muted-foreground'}`} />
+                </div>
+                <span className="font-semibold">Client</span>
+                <span className="text-xs text-muted-foreground">
+                  Find & hire talented artists
+                </span>
+                {formData.role === 'client' && (
+                  <div className="absolute top-2 right-2">
+                    <Sparkles className="h-4 w-4 text-yellow-500" />
+                  </div>
+                )}
+              </div>
             </div>
-          </RadioGroup>
+          </div>
+          
+          {/* Artist info hint */}
+          {formData.role === 'artist' && (
+            <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-start gap-2">
+                <Crown className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                <div className="text-xs text-yellow-700">
+                  <span className="font-medium">Start free!</span> Upload up to 10 portfolio items and 2 services. 
+                  Upgrade to Pro anytime for unlimited features and 0% platform fees.
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         <div className="flex items-start space-x-2 py-2">
           <Checkbox 
