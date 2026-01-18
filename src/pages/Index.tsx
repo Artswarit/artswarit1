@@ -380,7 +380,7 @@ const Index = () => {
               </Button>
 
               <Button asChild className="group relative overflow-hidden bg-white text-artswarit-purple hover:bg-gray-50 font-medium px-6 py-3 text-sm transition-all duration-300 hover:scale-105 hover:shadow-lg">
-                <Link to="/signup?role=client" className="flex items-center justify-center gap-2 relative z-10">
+                <Link to="/client-dashboard" className="flex items-center justify-center gap-2 relative z-10">
                   <Briefcase className="w-4 h-4 transition-transform group-hover:scale-110" />
                   <span>Join as Client</span>
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
