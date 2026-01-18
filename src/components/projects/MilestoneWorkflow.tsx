@@ -368,6 +368,7 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
                 isLocked={project.is_locked}
                 canStart={canStartMilestone(milestone, index)}
                 artistKycEnabled={isArtist ? isPayoutsEnabled : artistKycEnabled}
+                artistId={project.artist_id || undefined}
                 onStart={() => handleStartMilestone(milestone.id)}
                 onSubmit={() => {
                   setSelectedMilestone(milestone);
