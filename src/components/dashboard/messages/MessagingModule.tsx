@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { SearchIcon, Send, Loader2 } from "lucide-react";
+import { SearchIcon, Send, Smile, Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
@@ -249,7 +249,9 @@ const MessagingModule = () => {
                   </Button>
                 </div>
                 <div className="flex items-center gap-2 mt-2">
-                  
+                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                    <Smile size={16} />
+                  </Button>
                   <div className="flex-1"></div>
                   <p className="text-xs text-muted-foreground">Press Enter to send</p>
                 </div>
