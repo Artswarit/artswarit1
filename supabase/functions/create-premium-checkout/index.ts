@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.8";
@@ -40,53 +41,57 @@ serve(async (req) => {
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId = customers.data.length > 0 ? customers.data[0].id : undefined;
 
-    // NEW PLAN CONFIG: Pro Artist only at ₹499/month (49900 paise)
-    // Keeping monthly as the only option since the new model is simpler
-    const planConfigs: Record<string, { price: number; name: string; interval?: "month" | "year"; id: string }> = {
-      pro: {
-        price: 49900, // ₹499 in paise
-        name: "Pro Artist",
-        interval: "month",
-        id: "artswarit-pro-artist"
-      },
-      // Keep old plans for backward compatibility
+    // Plan configs: monthly ₹49 (INR), yearly ₹499, lifetime ₹1499
+    const planConfigs = {
       monthly: {
-        price: 49900,
-        name: "Pro Artist Monthly",
-        interval: "month",
-        id: "artswarit-pro-monthly"
+        price: 4900, name: "Premium Monthly", interval: "month", id: "artswarit-premium-monthly"
       },
       yearly: {
-        price: 499900, // ₹4999 (save ~17%)
-        name: "Pro Artist Yearly",
-        interval: "year",
-        id: "artswarit-pro-yearly"
+        price: 49900, name: "Premium Yearly", interval: "year", id: "artswarit-premium-yearly"
+      },
+      lifetime: {
+        price: 149900, name: "Premium Lifetime", interval: undefined, id: "artswarit-premium-lifetime"
       }
     };
-
     const config = planConfigs[plan];
-    if (!config) throw new Error("Invalid plan. Valid options: pro, monthly, yearly");
 
-    const lineItem = {
-      price_data: {
-        currency: "inr",
-        product_data: {
-          name: config.name,
-          description: "0% platform fees • Unlimited portfolio • Verified badge • Priority ranking"
+    if (!config) throw new Error("Invalid plan");
+
+    let lineItem;
+    if (plan === "lifetime") {
+      lineItem = {
+        price_data: {
+          currency: "inr",
+          product_data: {
+            name: config.name,
+            description: "Artswarit Premium Lifetime Access"
+          },
+          unit_amount: config.price
         },
-        unit_amount: config.price,
-        recurring: config.interval ? { interval: config.interval } : undefined
-      },
-      quantity: 1
-    };
+        quantity: 1
+      };
+    } else {
+      lineItem = {
+        price_data: {
+          currency: "inr",
+          product_data: {
+            name: config.name,
+            description: "Artswarit Premium Subscription"
+          },
+          unit_amount: config.price,
+          recurring: { interval: config.interval }
+        },
+        quantity: 1
+      };
+    }
 
     // Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: !customerId ? user.email : undefined,
       line_items: [lineItem],
-      mode: "subscription",
-      success_url: `${req.headers.get("origin")}/artist-dashboard?premium=success&plan=${plan}`,
+      mode: plan === "lifetime" ? "payment" : "subscription",
+      success_url: `${req.headers.get("origin")}/artist-dashboard?premium=success`,
       cancel_url: `${req.headers.get("origin")}/artist-dashboard?premium=cancel`,
       metadata: {
         user_id: user.id,

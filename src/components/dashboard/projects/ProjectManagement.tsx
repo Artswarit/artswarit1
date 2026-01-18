@@ -13,6 +13,7 @@ import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 import { toast } from "sonner";
 import ProjectDetailModal from "./ProjectDetailModal";
 import ReviewClientDialog from "./ReviewClientDialog";
+
 interface Project {
   id: string;
   title: string;
@@ -28,20 +29,19 @@ interface Project {
   clientAvatar?: string;
   payment?: string;
 }
+
 interface ClientReview {
   id: string;
   project_id: string;
   rating: number;
   review_text: string | null;
 }
+
 const PROGRESS_OPTIONS = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+
 const ProjectManagement = () => {
-  const {
-    user
-  } = useAuth();
-  const {
-    format
-  } = useCurrencyFormat();
+  const { user } = useAuth();
+  const { format } = useCurrencyFormat();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -50,41 +50,42 @@ const ProjectManagement = () => {
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [selectedProjectForReview, setSelectedProjectForReview] = useState<Project | null>(null);
   const [clientReviews, setClientReviews] = useState<Record<string, ClientReview>>({});
+
   const fetchProjects = useCallback(async () => {
     if (!user?.id) return;
+
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('projects').select('*').eq('artist_id', user.id).order('created_at', {
-        ascending: false
-      });
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('artist_id', user.id)
+        .order('created_at', { ascending: false });
+
       if (error) throw error;
 
       // Fetch client profiles separately using public_profiles view
       const clientIds = [...new Set((data || []).map(p => p.client_id).filter(Boolean))] as string[];
-      let clientProfiles: Record<string, {
-        full_name: string | null;
-        avatar_url: string | null;
-      }> = {};
+      let clientProfiles: Record<string, { full_name: string | null; avatar_url: string | null }> = {};
+      
       if (clientIds.length > 0) {
-        const {
-          data: profiles
-        } = await supabase.from('public_profiles').select('id, full_name, avatar_url').in('id', clientIds);
+        const { data: profiles } = await supabase
+          .from('public_profiles')
+          .select('id, full_name, avatar_url')
+          .in('id', clientIds);
+        
         (profiles || []).forEach(p => {
-          if (p.id) clientProfiles[p.id] = {
-            full_name: p.full_name,
-            avatar_url: p.avatar_url
-          };
+          if (p.id) clientProfiles[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url };
         });
       }
+
       const transformedProjects = (data || []).map((project: any) => ({
         ...project,
-        client: project.client_id ? clientProfiles[project.client_id]?.full_name || 'Unknown Client' : 'Unknown Client',
-        clientAvatar: project.client_id ? clientProfiles[project.client_id]?.avatar_url || undefined : undefined,
+        client: project.client_id ? (clientProfiles[project.client_id]?.full_name || 'Unknown Client') : 'Unknown Client',
+        clientAvatar: project.client_id ? (clientProfiles[project.client_id]?.avatar_url || undefined) : undefined,
         progress: project.progress ?? (project.status === 'completed' ? 100 : project.status === 'accepted' ? 10 : 0),
-        payment: project.budget ? format(project.budget) : 'Not set'
+        payment: project.budget ? format(project.budget) : 'Not set',
       }));
+
       setProjects(transformedProjects);
     } catch (err) {
       console.error('Error fetching projects:', err);
@@ -92,12 +93,15 @@ const ProjectManagement = () => {
       setLoading(false);
     }
   }, [user?.id, format]);
+
   const fetchClientReviews = useCallback(async () => {
     if (!user?.id) return;
-    const {
-      data,
-      error
-    } = await supabase.from('client_reviews').select('id, project_id, rating, review_text').eq('artist_id', user.id);
+
+    const { data, error } = await supabase
+      .from('client_reviews')
+      .select('id, project_id, rating, review_text')
+      .eq('artist_id', user.id);
+
     if (!error && data) {
       const reviewMap: Record<string, ClientReview> = {};
       data.forEach(review => {
@@ -106,57 +110,62 @@ const ProjectManagement = () => {
       setClientReviews(reviewMap);
     }
   }, [user?.id]);
+
   useEffect(() => {
     fetchProjects();
     fetchClientReviews();
   }, [fetchProjects, fetchClientReviews]);
+
   useEffect(() => {
     if (!user?.id) return;
-    const projectsChannel = supabase.channel(`projects-realtime:${user.id}`).on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'projects',
-      filter: `artist_id=eq.${user.id}`
-    }, () => fetchProjects()).subscribe();
-    const reviewsChannel = supabase.channel(`client-reviews-realtime:${user.id}`).on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'client_reviews',
-      filter: `artist_id=eq.${user.id}`
-    }, () => fetchClientReviews()).subscribe();
-    return () => {
+
+    const projectsChannel = supabase
+      .channel(`projects-realtime:${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'projects', filter: `artist_id=eq.${user.id}` }, () => fetchProjects())
+      .subscribe();
+
+    const reviewsChannel = supabase
+      .channel(`client-reviews-realtime:${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'client_reviews', filter: `artist_id=eq.${user.id}` }, () => fetchClientReviews())
+      .subscribe();
+
+    return () => { 
       supabase.removeChannel(projectsChannel);
       supabase.removeChannel(reviewsChannel);
     };
   }, [user?.id, fetchProjects, fetchClientReviews]);
+
   const handleAcceptProject = async (project: Project) => {
     if (!project.client_id) return;
+    
     setActionLoading(project.id);
     try {
-      const {
-        error: updateError
-      } = await supabase.from('projects').update({
-        status: 'accepted',
-        progress: 10
-      }).eq('id', project.id);
+      const { error: updateError } = await supabase
+        .from('projects')
+        .update({ status: 'accepted', progress: 10 })
+        .eq('id', project.id);
+
       if (updateError) throw updateError;
-      const {
-        data: artistProfile
-      } = await supabase.from('profiles').select('full_name').eq('id', user?.id).maybeSingle();
+
+      const { data: artistProfile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user?.id)
+        .maybeSingle();
 
       // Only send notification if client is different from the artist (don't notify yourself)
       if (project.client_id !== user?.id) {
-        await supabase.from('notifications').insert({
-          user_id: project.client_id,
-          type: 'project_accepted',
-          title: 'Project Accepted!',
-          message: `${artistProfile?.full_name || 'The artist'} has accepted your project "${project.title}"`,
-          metadata: {
-            project_id: project.id,
-            artist_id: user?.id
-          }
-        });
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: project.client_id,
+            type: 'project_accepted',
+            title: 'Project Accepted!',
+            message: `${artistProfile?.full_name || 'The artist'} has accepted your project "${project.title}"`,
+            metadata: { project_id: project.id, artist_id: user?.id }
+          });
       }
+
       toast.success('Project accepted successfully!');
       fetchProjects();
     } catch (err) {
@@ -166,34 +175,38 @@ const ProjectManagement = () => {
       setActionLoading(null);
     }
   };
+
   const handleRejectProject = async (project: Project) => {
     if (!project.client_id) return;
+    
     setActionLoading(project.id);
     try {
-      const {
-        error: updateError
-      } = await supabase.from('projects').update({
-        status: 'cancelled',
-        progress: 0
-      }).eq('id', project.id);
+      const { error: updateError } = await supabase
+        .from('projects')
+        .update({ status: 'cancelled', progress: 0 })
+        .eq('id', project.id);
+
       if (updateError) throw updateError;
-      const {
-        data: artistProfile
-      } = await supabase.from('profiles').select('full_name').eq('id', user?.id).maybeSingle();
+
+      const { data: artistProfile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user?.id)
+        .maybeSingle();
 
       // Only send notification if client is different from the artist
       if (project.client_id !== user?.id) {
-        await supabase.from('notifications').insert({
-          user_id: project.client_id,
-          type: 'project_rejected',
-          title: 'Project Declined',
-          message: `${artistProfile?.full_name || 'The artist'} has declined your project "${project.title}"`,
-          metadata: {
-            project_id: project.id,
-            artist_id: user?.id
-          }
-        });
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: project.client_id,
+            type: 'project_rejected',
+            title: 'Project Declined',
+            message: `${artistProfile?.full_name || 'The artist'} has declined your project "${project.title}"`,
+            metadata: { project_id: project.id, artist_id: user?.id }
+          });
       }
+
       toast.success('Project rejected');
       fetchProjects();
     } catch (err) {
@@ -203,34 +216,38 @@ const ProjectManagement = () => {
       setActionLoading(null);
     }
   };
+
   const handleUpdateProgress = async (project: Project, newProgress: number) => {
     if (!project.client_id) return;
+    
     setActionLoading(project.id);
     try {
-      const {
-        error: updateError
-      } = await supabase.from('projects').update({
-        progress: newProgress
-      }).eq('id', project.id);
+      const { error: updateError } = await supabase
+        .from('projects')
+        .update({ progress: newProgress })
+        .eq('id', project.id);
+
       if (updateError) throw updateError;
-      const {
-        data: artistProfile
-      } = await supabase.from('profiles').select('full_name').eq('id', user?.id).maybeSingle();
+
+      const { data: artistProfile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user?.id)
+        .maybeSingle();
 
       // Only send notification if client is different from the artist
       if (project.client_id !== user?.id) {
-        await supabase.from('notifications').insert({
-          user_id: project.client_id,
-          type: 'project_progress',
-          title: 'Project Progress Updated',
-          message: `${artistProfile?.full_name || 'The artist'} updated "${project.title}" to ${newProgress}% complete`,
-          metadata: {
-            project_id: project.id,
-            artist_id: user?.id,
-            progress: newProgress
-          }
-        });
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: project.client_id,
+            type: 'project_progress',
+            title: 'Project Progress Updated',
+            message: `${artistProfile?.full_name || 'The artist'} updated "${project.title}" to ${newProgress}% complete`,
+            metadata: { project_id: project.id, artist_id: user?.id, progress: newProgress }
+          });
       }
+
       toast.success(`Progress updated to ${newProgress}%`);
       fetchProjects();
     } catch (err) {
@@ -240,34 +257,38 @@ const ProjectManagement = () => {
       setActionLoading(null);
     }
   };
+
   const handleCompleteProject = async (project: Project) => {
     if (!project.client_id) return;
+    
     setActionLoading(project.id);
     try {
-      const {
-        error: updateError
-      } = await supabase.from('projects').update({
-        status: 'completed',
-        progress: 100
-      }).eq('id', project.id);
+      const { error: updateError } = await supabase
+        .from('projects')
+        .update({ status: 'completed', progress: 100 })
+        .eq('id', project.id);
+
       if (updateError) throw updateError;
-      const {
-        data: artistProfile
-      } = await supabase.from('profiles').select('full_name').eq('id', user?.id).maybeSingle();
+
+      const { data: artistProfile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user?.id)
+        .maybeSingle();
 
       // Only send notification if client is different from the artist
       if (project.client_id !== user?.id) {
-        await supabase.from('notifications').insert({
-          user_id: project.client_id,
-          type: 'project_completed',
-          title: 'Project Completed! 🎉',
-          message: `${artistProfile?.full_name || 'The artist'} has completed your project "${project.title}"`,
-          metadata: {
-            project_id: project.id,
-            artist_id: user?.id
-          }
-        });
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: project.client_id,
+            type: 'project_completed',
+            title: 'Project Completed! 🎉',
+            message: `${artistProfile?.full_name || 'The artist'} has completed your project "${project.title}"`,
+            metadata: { project_id: project.id, artist_id: user?.id }
+          });
       }
+
       toast.success('Project marked as completed!');
       fetchProjects();
     } catch (err) {
@@ -277,30 +298,39 @@ const ProjectManagement = () => {
       setActionLoading(null);
     }
   };
+
   const handleViewDetails = (projectId: string) => {
     setSelectedProjectId(projectId);
     setDetailModalOpen(true);
   };
+
   const handleOpenReviewDialog = (project: Project) => {
     setSelectedProjectForReview(project);
     setReviewDialogOpen(true);
   };
+
   const getProjectReview = (projectId: string) => clientReviews[projectId] || null;
+
   const activeProjects = projects.filter(p => p.status === "accepted");
   const pendingProjects = projects.filter(p => p.status === "pending");
   const completedProjects = projects.filter(p => p.status === "completed");
+
   if (loading) {
-    return <div className="flex items-center justify-center py-20">
+    return (
+      <div className="flex items-center justify-center py-20">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>;
+      </div>
+    );
   }
-  return <div className="space-y-6">
+
+  return (
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-semibold tracking-tight">Project Management</h2>
           <p className="text-muted-foreground">Manage client projects and track their progress</p>
         </div>
-        
+        <Button><PlusCircle className="mr-2 h-4 w-4" />New Project</Button>
       </div>
 
       <Tabs defaultValue="active" className="w-full">
@@ -311,18 +341,22 @@ const ProjectManagement = () => {
         </TabsList>
 
         <TabsContent value="active">
-          {activeProjects.length > 0 ? <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {activeProjects.map(project => <Card key={project.id}>
+          {activeProjects.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {activeProjects.map(project => (
+                <Card key={project.id}>
                   <CardHeader>
                     <div className="flex justify-between">
                       <CardTitle>{project.title}</CardTitle>
                       <Badge className="bg-blue-100 text-blue-700">Active</Badge>
                     </div>
                     <CardDescription>
-                      {project.client_id ? <Link to={`/profile/${project.client_id}`} className="text-primary hover:underline inline-flex items-center gap-1">
+                      {project.client_id ? (
+                        <Link to={`/profile/${project.client_id}`} className="text-primary hover:underline inline-flex items-center gap-1">
                           <User size={14} />
                           {project.client}
-                        </Link> : project.client}
+                        </Link>
+                      ) : project.client}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -339,42 +373,70 @@ const ProjectManagement = () => {
                     </div>
                   </CardContent>
                   <CardFooter className="flex flex-wrap gap-2">
-                    <Button size="sm" variant="outline" onClick={() => handleViewDetails(project.id)}>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleViewDetails(project.id)}
+                    >
                       <Eye className="h-4 w-4 mr-1" />
                       View Details
                     </Button>
-                    <Select value={project.progress.toString()} onValueChange={value => handleUpdateProgress(project, parseInt(value))} disabled={actionLoading === project.id}>
+                    <Select
+                      value={project.progress.toString()}
+                      onValueChange={(value) => handleUpdateProgress(project, parseInt(value))}
+                      disabled={actionLoading === project.id}
+                    >
                       <SelectTrigger className="w-[130px] h-9">
                         <SelectValue placeholder="Update %" />
                       </SelectTrigger>
                       <SelectContent>
-                        {PROGRESS_OPTIONS.map(opt => <SelectItem key={opt} value={opt.toString()}>{opt}% Complete</SelectItem>)}
+                        {PROGRESS_OPTIONS.map(opt => (
+                          <SelectItem key={opt} value={opt.toString()}>{opt}% Complete</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
-                    <Button size="sm" variant="default" className="bg-green-600 hover:bg-green-700" onClick={() => handleCompleteProject(project)} disabled={actionLoading === project.id}>
-                      {actionLoading === project.id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Trophy className="h-4 w-4 mr-1" />}
+                    <Button 
+                      size="sm"
+                      variant="default"
+                      className="bg-green-600 hover:bg-green-700"
+                      onClick={() => handleCompleteProject(project)}
+                      disabled={actionLoading === project.id}
+                    >
+                      {actionLoading === project.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      ) : (
+                        <Trophy className="h-4 w-4 mr-1" />
+                      )}
                       Mark Complete
                     </Button>
                   </CardFooter>
-                </Card>)}
-            </div> : <div className="text-center py-16 bg-muted/50 rounded-lg border border-dashed">
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16 bg-muted/50 rounded-lg border border-dashed">
               <p className="text-muted-foreground">No active projects</p>
-            </div>}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="pending">
-          {pendingProjects.length > 0 ? <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {pendingProjects.map(project => <Card key={project.id}>
+          {pendingProjects.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {pendingProjects.map(project => (
+                <Card key={project.id}>
                   <CardHeader>
                     <div className="flex justify-between">
                       <CardTitle>{project.title}</CardTitle>
                       <Badge className="bg-amber-100 text-amber-700">Pending</Badge>
                     </div>
                     <CardDescription>
-                      {project.client_id ? <Link to={`/profile/${project.client_id}`} className="text-primary hover:underline inline-flex items-center gap-1">
+                      {project.client_id ? (
+                        <Link to={`/profile/${project.client_id}`} className="text-primary hover:underline inline-flex items-center gap-1">
                           <User size={14} />
                           {project.client}
-                        </Link> : project.client}
+                        </Link>
+                      ) : project.client}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -385,40 +447,70 @@ const ProjectManagement = () => {
                     </div>
                   </CardContent>
                   <CardFooter className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => handleViewDetails(project.id)}>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleViewDetails(project.id)}
+                    >
                       <Eye className="h-4 w-4 mr-1" />
                       View Details
                     </Button>
-                    <Button size="sm" onClick={() => handleAcceptProject(project)} disabled={actionLoading === project.id}>
-                      {actionLoading === project.id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <CheckCircle className="h-4 w-4 mr-1" />}
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleAcceptProject(project)}
+                      disabled={actionLoading === project.id}
+                    >
+                      {actionLoading === project.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      ) : (
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                      )}
                       Accept
                     </Button>
-                    <Button size="sm" variant="outline" className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={() => handleRejectProject(project)} disabled={actionLoading === project.id}>
-                      {actionLoading === project.id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <X className="h-4 w-4 mr-1" />}
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      onClick={() => handleRejectProject(project)}
+                      disabled={actionLoading === project.id}
+                    >
+                      {actionLoading === project.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      ) : (
+                        <X className="h-4 w-4 mr-1" />
+                      )}
                       Reject
                     </Button>
                   </CardFooter>
-                </Card>)}
-            </div> : <div className="text-center py-16 bg-muted/50 rounded-lg border border-dashed">
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16 bg-muted/50 rounded-lg border border-dashed">
               <p className="text-muted-foreground">No pending projects</p>
-            </div>}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="completed">
-          {completedProjects.length > 0 ? <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {completedProjects.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {completedProjects.map(project => {
-            const review = getProjectReview(project.id);
-            return <Card key={project.id}>
+                const review = getProjectReview(project.id);
+                return (
+                  <Card key={project.id}>
                     <CardHeader>
                       <div className="flex justify-between">
                         <CardTitle>{project.title}</CardTitle>
                         <Badge className="bg-green-100 text-green-700">Completed</Badge>
                       </div>
                       <CardDescription>
-                        {project.client_id ? <Link to={`/profile/${project.client_id}`} className="text-primary hover:underline inline-flex items-center gap-1">
+                        {project.client_id ? (
+                          <Link to={`/profile/${project.client_id}`} className="text-primary hover:underline inline-flex items-center gap-1">
                             <User size={14} />
                             {project.client}
-                          </Link> : project.client}
+                          </Link>
+                        ) : project.client}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -431,42 +523,85 @@ const ProjectManagement = () => {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-green-600 font-medium text-sm">{project.payment}</span>
-                        {review && <div className="flex items-center gap-1 text-sm">
+                        {review && (
+                          <div className="flex items-center gap-1 text-sm">
                             <span className="text-muted-foreground">Your rating:</span>
                             <div className="flex items-center gap-0.5">
-                              {[1, 2, 3, 4, 5].map(star => <Star key={star} className={`w-4 h-4 ${star <= review.rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`} />)}
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`w-4 h-4 ${
+                                    star <= review.rating
+                                      ? "fill-yellow-400 text-yellow-400"
+                                      : "text-muted-foreground"
+                                  }`}
+                                />
+                              ))}
                             </div>
-                          </div>}
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                     <CardFooter className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => handleViewDetails(project.id)}>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleViewDetails(project.id)}
+                      >
                         <Eye className="h-4 w-4 mr-1" />
                         View Details
                       </Button>
-                      <Button size="sm" variant={review ? "outline" : "default"} onClick={() => handleOpenReviewDialog(project)} className={review ? "" : "bg-amber-500 hover:bg-amber-600"}>
-                        {review ? <>
+                      <Button
+                        size="sm"
+                        variant={review ? "outline" : "default"}
+                        onClick={() => handleOpenReviewDialog(project)}
+                        className={review ? "" : "bg-amber-500 hover:bg-amber-600"}
+                      >
+                        {review ? (
+                          <>
                             <Edit className="h-4 w-4 mr-1" />
                             Edit Review
-                          </> : <>
+                          </>
+                        ) : (
+                          <>
                             <Star className="h-4 w-4 mr-1" />
                             Rate Client
-                          </>}
+                          </>
+                        )}
                       </Button>
                     </CardFooter>
-                  </Card>;
-          })}
-            </div> : <div className="text-center py-16 bg-muted/50 rounded-lg border border-dashed">
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-16 bg-muted/50 rounded-lg border border-dashed">
               <p className="text-muted-foreground">No completed projects</p>
-            </div>}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
       {/* Project Detail Modal */}
-      <ProjectDetailModal projectId={selectedProjectId} open={detailModalOpen} onOpenChange={setDetailModalOpen} />
+      <ProjectDetailModal
+        projectId={selectedProjectId}
+        open={detailModalOpen}
+        onOpenChange={setDetailModalOpen}
+      />
 
       {/* Review Client Dialog */}
-      {selectedProjectForReview && user && <ReviewClientDialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen} project={selectedProjectForReview} artistId={user.id} existingReview={getProjectReview(selectedProjectForReview.id)} onReviewSubmitted={fetchClientReviews} />}
-    </div>;
+      {selectedProjectForReview && user && (
+        <ReviewClientDialog
+          open={reviewDialogOpen}
+          onOpenChange={setReviewDialogOpen}
+          project={selectedProjectForReview}
+          artistId={user.id}
+          existingReview={getProjectReview(selectedProjectForReview.id)}
+          onReviewSubmitted={fetchClientReviews}
+        />
+      )}
+    </div>
+  );
 };
+
 export default ProjectManagement;

@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
-import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,8 +16,7 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, Loader2, Crown, Lock } from "lucide-react";
-import { FeatureLimitBanner } from "@/components/premium/FeatureLimitBanner";
+import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 
 interface Service {
   id: string;
@@ -30,7 +28,6 @@ interface Service {
 
 const ServicesManagement: React.FC = () => {
   const { user } = useAuth();
-  const { canAddService, serviceCount, serviceLimit, isProArtist, loading: gatingLoading } = useFeatureGating(user?.id);
   const { toast } = useToast();
   const { formatPlus, userCurrencySymbol } = useCurrencyFormat();
 
@@ -166,56 +163,16 @@ const ServicesManagement: React.FC = () => {
     }
   };
 
-  const handleUpgrade = () => {
-    // Navigate to premium page
-    window.location.href = '/artist-dashboard?tab=premium';
-  };
-
-  const handleAddClick = () => {
-    if (!canAddService) {
-      toast({
-        title: "Service limit reached",
-        description: `You've reached your limit of ${serviceLimit} services. Upgrade to Pro for unlimited services!`,
-        variant: "destructive"
-      });
-      return;
-    }
-    openCreateDialog();
-  };
-
   return (
     <Card className="shadow-lg">
-      <CardHeader className="flex flex-col gap-4">
-        <div className="flex flex-row items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CardTitle className="text-xl">Your Services</CardTitle>
-            {!isProArtist && (
-              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                {serviceCount}/{serviceLimit}
-              </span>
-            )}
-          </div>
-          <Button 
-            onClick={handleAddClick} 
-            size="sm" 
-            className="gap-1"
-            disabled={!canAddService}
-          >
-            {canAddService ? (
-              <>
-                <Plus className="h-4 w-4" /> Add Service
-              </>
-            ) : (
-              <>
-                <Lock className="h-4 w-4" /> Limit Reached
-              </>
-            )}
-          </Button>
-        </div>
-        <FeatureLimitBanner type="service" onUpgrade={handleUpgrade} />
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-xl">Your Services</CardTitle>
+        <Button onClick={openCreateDialog} size="sm" className="gap-1">
+          <Plus className="h-4 w-4" /> Add Service
+        </Button>
       </CardHeader>
       <CardContent>
-        {loading || gatingLoading ? (
+        {loading ? (
           <div className="flex justify-center py-10">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>

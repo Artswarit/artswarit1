@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useArtworks } from "@/hooks/useArtworks";
-import { useAuth } from "@/contexts/AuthContext";
-import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,11 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, ImageIcon, MusicIcon, VideoIcon, FileTextIcon, AlertTriangle, Crown, Lock } from "lucide-react";
+import { Calendar as CalendarIcon, ImageIcon, MusicIcon, VideoIcon, FileTextIcon, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import AIContentDetection from "@/components/dashboard/AIContentDetection";
-import { FeatureLimitBanner } from "@/components/premium/FeatureLimitBanner";
 
 const contentTypes = [
   { id: "image", label: "Image", icon: ImageIcon },
@@ -39,9 +36,7 @@ interface ArtworkUploadFormProps {
 const ArtworkUploadForm = ({ onCancel, onSuccess }: ArtworkUploadFormProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
   const { uploadArtwork } = useArtworks();
-  const { canUploadPortfolio, portfolioCount, portfolioLimit, isProArtist } = useFeatureGating(user?.id);
   const [selectedType, setSelectedType] = useState("image");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -54,10 +49,6 @@ const ArtworkUploadForm = ({ onCancel, onSuccess }: ArtworkUploadFormProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [detectionResults, setDetectionResults] = useState<any[]>([]);
   const [hasAiContent, setHasAiContent] = useState(false);
-
-  const handleUpgrade = () => {
-    window.location.href = '/artist-dashboard?tab=premium';
-  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -78,17 +69,6 @@ const ArtworkUploadForm = ({ onCancel, onSuccess }: ArtworkUploadFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Check portfolio limit before uploading
-    if (!canUploadPortfolio) {
-      toast({
-        title: "Portfolio limit reached",
-        description: `You've reached your limit of ${portfolioLimit} portfolio items. Upgrade to Pro for unlimited uploads!`,
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsUploading(true);
 
     // Validation
@@ -182,44 +162,9 @@ const ArtworkUploadForm = ({ onCancel, onSuccess }: ArtworkUploadFormProps) => {
   return (
     <div className="max-w-4xl mx-auto">
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Portfolio Limit Banner */}
-        <FeatureLimitBanner type="portfolio" onUpgrade={handleUpgrade} />
-
-        {/* Limit Reached Warning */}
-        {!canUploadPortfolio && (
-          <Card className="border-orange-300 bg-orange-50">
-            <CardContent className="py-4">
-              <div className="flex items-center gap-3">
-                <Lock className="h-5 w-5 text-orange-600" />
-                <div>
-                  <p className="font-medium text-orange-700">Portfolio limit reached</p>
-                  <p className="text-sm text-orange-600">
-                    You've uploaded {portfolioCount}/{portfolioLimit} items. Upgrade to Pro for unlimited portfolio space!
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  onClick={handleUpgrade}
-                  className="ml-auto bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white"
-                >
-                  <Crown className="h-4 w-4 mr-1" />
-                  Upgrade
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Content Type</span>
-              {!isProArtist && (
-                <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                  {portfolioCount}/{portfolioLimit} items
-                </span>
-              )}
-            </CardTitle>
+            <CardTitle>Content Type</CardTitle>
             <CardDescription>Select the type of content you want to upload</CardDescription>
           </CardHeader>
           <CardContent>
@@ -457,7 +402,7 @@ const ArtworkUploadForm = ({ onCancel, onSuccess }: ArtworkUploadFormProps) => {
           </Button>
           <Button 
             type="submit" 
-            disabled={isUploading || !canUploadPortfolio}
+            disabled={isUploading}
             className="bg-gradient-to-r from-artswarit-purple to-blue-500 border-none"
           >
             {isUploading ? "Uploading..." : "Upload Artwork"}

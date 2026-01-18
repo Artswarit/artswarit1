@@ -5,7 +5,6 @@ import { Calendar, Play, Upload, Eye, AlertTriangle, FileText, RotateCcw, Lock }
 import { format } from 'date-fns';
 import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 import { PayMilestoneButton } from '@/components/payments/PayMilestoneButton';
-import { ArtistEarningsBanner } from '@/components/payments/ArtistEarningsBanner';
 
 interface Milestone {
   id: string;
@@ -32,7 +31,6 @@ interface MilestoneCardProps {
   isLocked: boolean;
   canStart: boolean;
   artistKycEnabled?: boolean;
-  artistId?: string;
   onStart: () => void;
   onSubmit: () => void;
   onReview: () => void;
@@ -49,7 +47,6 @@ export function MilestoneCard({
   isLocked,
   canStart,
   artistKycEnabled = false,
-  artistId,
   onStart,
   onSubmit,
   onReview,
@@ -126,15 +123,6 @@ export function MilestoneCard({
             </div>
           )}
         </div>
-
-        {/* Artist Earnings Banner - Shows upgrade prompt for Starter artists */}
-        {isArtist && artistId && (
-          <ArtistEarningsBanner
-            milestoneAmount={milestone.amount}
-            milestoneStatus={milestone.status}
-            artistId={artistId}
-          />
-        )}
 
         {/* Payment blocked warning */}
         {paymentBlocked && (
