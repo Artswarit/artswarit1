@@ -1,12 +1,9 @@
-
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
-
 const TermsOfService = () => {
-  return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50">
+  return <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-8 pt-24">
@@ -215,7 +212,7 @@ const TermsOfService = () => {
                   <div className="mt-3 space-y-1">
                     <p><strong>Legal Team:</strong> legal@artswarit.com</p>
                     <p><strong>General Support:</strong> support@artswarit.com</p>
-                    <p><strong>Address:</strong> [Company Address]</p>
+                    <p><strong>Address:</strong>Address: New Delhi</p>
                     <p><strong>Last Updated:</strong> {new Date().toLocaleDateString()}</p>
                   </div>
                 </div>
@@ -226,8 +223,6 @@ const TermsOfService = () => {
       </main>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default TermsOfService;
