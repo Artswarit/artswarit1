@@ -74,6 +74,28 @@ export function MilestoneReviewDialog({
     }
   }, [open, milestone.id]);
 
+  // Helper to extract storage path from full URL
+  const extractStoragePath = (url: string): string | null => {
+    const match = url.match(/\/milestone-submissions\/(.+)$/);
+    return match ? match[1] : null;
+  };
+
+  // Generate a signed URL for private bucket access
+  const getSignedUrl = async (fileUrl: string): Promise<string> => {
+    const path = extractStoragePath(fileUrl);
+    if (!path) return fileUrl;
+    
+    const { data, error } = await supabase.storage
+      .from('milestone-submissions')
+      .createSignedUrl(path, 3600); // 1 hour expiry
+    
+    if (error || !data?.signedUrl) {
+      console.error('Failed to create signed URL:', error);
+      return fileUrl;
+    }
+    return data.signedUrl;
+  };
+
   const fetchSubmissions = async () => {
     setLoading(true);
     try {
@@ -85,7 +107,7 @@ export function MilestoneReviewDialog({
 
       if (submissionsError) throw submissionsError;
 
-      // Fetch files for each submission
+      // Fetch files for each submission and generate signed URLs
       const submissionsWithFiles = await Promise.all(
         (submissionsData || []).map(async (submission) => {
           const { data: files } = await supabase
@@ -93,9 +115,17 @@ export function MilestoneReviewDialog({
             .select('*')
             .eq('submission_id', submission.id);
           
+          // Generate signed URLs for each file
+          const filesWithSignedUrls = await Promise.all(
+            (files || []).map(async (file) => ({
+              ...file,
+              file_url: await getSignedUrl(file.file_url)
+            }))
+          );
+          
           return {
             ...submission,
-            files: files || []
+            files: filesWithSignedUrls
           };
         })
       );
