@@ -8,14 +8,12 @@ import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Star, Heart, Send, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { CreateProjectForm } from "@/components/projects/CreateProjectForm";
 
 interface SavedArtist {
   id: string;
@@ -36,12 +34,7 @@ const SavedArtists = () => {
   const queryClient = useQueryClient();
 
   const [selectedArtist, setSelectedArtist] = useState<SavedArtist | null>(null);
-  const [projectRequest, setProjectRequest] = useState({
-    title: "",
-    description: "",
-    budget: "",
-    deadline: "",
-  });
+  const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
 
   const fetchSavedArtists = async () => {
     if (!user) return [];
@@ -173,37 +166,18 @@ const SavedArtists = () => {
     },
   });
 
-  const sendProjectRequestMutation = useMutation({
-    mutationFn: async (newProject: { title: string; description: string; budget: string; deadline: string; artist_id: string }) => {
-      if (!user) throw new Error("User not logged in");
-      const { error } = await supabase.from('projects').insert([{
-        client_id: user.id,
-        artist_id: newProject.artist_id,
-        title: newProject.title,
-        description: newProject.description,
-        budget: newProject.budget ? parseFloat(newProject.budget) : null,
-        deadline: newProject.deadline || null,
-        status: 'pending',
-      }]);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast({ title: "Project request sent!" });
-      setProjectRequest({ title: "", description: "", budget: "", deadline: "" });
-      setSelectedArtist(null);
-    },
-    onError: (error) => {
-      toast({ variant: "destructive", title: "Error sending request", description: error.message });
-    },
-  });
-
-  const handleSendProjectRequest = () => {
-    if (!selectedArtist) return;
-    sendProjectRequestMutation.mutate({ ...projectRequest, artist_id: selectedArtist.id });
-  };
-
   const handleRemoveArtist = (artistId: string) => {
     unsaveArtistMutation.mutate(artistId);
+  };
+
+  const handleOpenRequestDialog = (artist: SavedArtist) => {
+    setSelectedArtist(artist);
+    setIsRequestDialogOpen(true);
+  };
+
+  const handleCloseRequestDialog = () => {
+    setIsRequestDialogOpen(false);
+    setSelectedArtist(null);
   };
 
   return (
@@ -279,7 +253,7 @@ const SavedArtists = () => {
                 <div className="flex items-center justify-between text-xs sm:text-sm">
                   <div className="flex items-center gap-1">
                     <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-yellow-400 text-yellow-400" />
-                    <span className="font-medium">{artist.avgRating}</span>
+                    <span className="font-medium">{artist.avgRating.toFixed(1)}</span>
                     <span className="text-muted-foreground">({artist.completedProjects})</span>
                   </div>
                   <span className="text-xs text-muted-foreground">{artist.lastActive}</span>
@@ -293,87 +267,14 @@ const SavedArtists = () => {
                 </div>
                 <div className="text-xs sm:text-sm font-medium text-green-600">{artist.hourlyRate}</div>
                 <div className="flex gap-2">
-                  <Dialog open={!!selectedArtist && selectedArtist.id === artist.id} onOpenChange={(isOpen) => !isOpen && setSelectedArtist(null)}>
-                    <DialogTrigger asChild>
-                      <Button size="sm" className="flex-1 text-xs sm:text-sm h-8 sm:h-9" onClick={() => setSelectedArtist(artist)}>
-                        <Send className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                        Request
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-sm sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle className="text-base sm:text-lg">Send Project Request</DialogTitle>
-                        <DialogDescription className="text-sm">
-                          Send a project request to {selectedArtist?.name}
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
-                        <div>
-                          <Label htmlFor="title" className="text-sm">Project Title</Label>
-                          <Input 
-                            id="title" 
-                            value={projectRequest.title} 
-                            onChange={(e) => setProjectRequest({...projectRequest, title: e.target.value})} 
-                            placeholder="e.g., Album Cover Design"
-                            className="mt-1 text-sm"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label htmlFor="budget" className="text-sm">Budget (USD)</Label>
-                            <Input 
-                              id="budget" 
-                              type="number" 
-                              value={projectRequest.budget} 
-                              onChange={(e) => setProjectRequest({...projectRequest, budget: e.target.value})} 
-                              placeholder="Enter in USD"
-                              className="mt-1 text-sm"
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="deadline" className="text-sm">Deadline</Label>
-                            <Input 
-                              id="deadline" 
-                              type="date" 
-                              value={projectRequest.deadline} 
-                              onChange={(e) => setProjectRequest({...projectRequest, deadline: e.target.value})}
-                              className="mt-1 text-sm"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <Label htmlFor="description" className="text-sm">Description</Label>
-                          <Textarea 
-                            id="description" 
-                            value={projectRequest.description} 
-                            onChange={(e) => setProjectRequest({...projectRequest, description: e.target.value})} 
-                            placeholder="Describe your project requirements..." 
-                            rows={3}
-                            className="mt-1 text-sm resize-none"
-                          />
-                        </div>
-                      </div>
-                      <DialogFooter className="gap-2">
-                        <Button variant="outline" onClick={() => setSelectedArtist(null)} className="text-sm">
-                          Cancel
-                        </Button>
-                        <Button 
-                          onClick={handleSendProjectRequest} 
-                          disabled={sendProjectRequestMutation.isPending || !projectRequest.title}
-                          className="text-sm"
-                        >
-                          {sendProjectRequestMutation.isPending ? (
-                            <>
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                              Sending...
-                            </>
-                          ) : (
-                            'Send Request'
-                          )}
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                  <Button 
+                    size="sm" 
+                    className="flex-1 text-xs sm:text-sm h-8 sm:h-9" 
+                    onClick={() => handleOpenRequestDialog(artist)}
+                  >
+                    <Send className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    Request
+                  </Button>
                   <Button variant="outline" size="sm" asChild className="text-xs sm:text-sm h-8 sm:h-9">
                     <Link to={`/artist/${artist.id}`}>View</Link>
                   </Button>
@@ -394,6 +295,28 @@ const SavedArtists = () => {
           </div>
         )
       )}
+
+      {/* Project Request Dialog - Uses same CreateProjectForm as Artist Profile */}
+      <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create Project Request</DialogTitle>
+            <DialogDescription>
+              Send a detailed project request to {selectedArtist?.name}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedArtist && (
+            <CreateProjectForm 
+              artistId={selectedArtist.id}
+              onSuccess={() => {
+                handleCloseRequestDialog();
+                toast({ title: "Project request sent successfully!" });
+              }}
+              onCancel={handleCloseRequestDialog}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
