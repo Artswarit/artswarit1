@@ -2,21 +2,15 @@ import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
-
 const AboutUs = () => {
-  return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50">
+  return <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-8 pt-24">
         <div className="max-w-4xl mx-auto">
           {/* Logo and name */}
           <div className="flex items-center justify-center gap-4 mb-8">
-            <img
-              src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png"
-              alt="Artswarit Logo"
-              className="h-14 w-14 md:h-20 md:w-20 rounded-full object-cover shadow"
-            />
+            <img src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png" alt="Artswarit Logo" className="h-14 w-14 md:h-20 md:w-20 rounded-full object-cover shadow" />
             <span className="font-bold text-2xl md:text-3xl text-purple-700 tracking-tight font-heading">Artswarit</span>
           </div>
           <div className="text-center mb-12">
@@ -27,12 +21,7 @@ const AboutUs = () => {
           <Card className="mb-12">
             <CardContent className="p-8">
               <h2 className="text-3xl font-bold text-purple-600 mb-6 text-center">Who We Are</h2>
-              <p className="text-lg text-gray-700 leading-relaxed text-center max-w-4xl mx-auto mb-8">
-                Artswarit is more than just a platform—it's a global community dedicated to celebrating creativity and 
-                empowering artists to thrive in the digital age. Founded in 2023, we recognized the need for a comprehensive 
-                space where artists could not only showcase their work but also build sustainable careers through meaningful 
-                connections with clients, collectors, and fellow creators.
-              </p>
+              <p className="text-lg text-gray-700 leading-relaxed text-center max-w-4xl mx-auto mb-8">Artswarit is more than just a platform it's a global community dedicated to celebrating creativity and empowering artists to thrive in the digital age. Founded in 2025, we recognized the need for a comprehensive space where artists could not only showcase their work but also build sustainable careers through meaningful connections with clients, collectors, and fellow creators.</p>
               <p className="text-lg text-gray-700 leading-relaxed text-center max-w-4xl mx-auto">
                 Our team consists of passionate individuals from diverse backgrounds including technology, arts, design, 
                 and business, all united by a shared vision of making art more accessible and artists more successful.
@@ -98,7 +87,7 @@ const AboutUs = () => {
 
           <Card className="mb-12">
             <CardContent className="p-6">
-              <h2 className="text-2xl font-bold text-purple-600 mb-6">Our Impact</h2>
+              <h2 className="text-2xl font-bold text-purple-600 mb-6">Our Impact (Target)</h2>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
                 <div>
                   <h3 className="text-3xl font-bold text-purple-600 mb-2">10,000+</h3>
@@ -170,8 +159,6 @@ const AboutUs = () => {
       </main>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default AboutUs;
