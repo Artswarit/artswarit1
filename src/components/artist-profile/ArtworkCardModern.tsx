@@ -1,7 +1,8 @@
 
 import React, { useState } from "react";
 import GlassCard from "@/components/ui/glass-card";
-import { Eye, Heart, Download, Lock, ExternalLink } from "lucide-react";
+import { Eye, Heart, Download, Lock, Sparkles, MessageSquare } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ArtworkCardProps {
   title: string;
@@ -16,6 +17,9 @@ interface ArtworkCardProps {
   onViewFull?: () => void;
   downloadable?: boolean;
   onDownload?: () => void;
+  isUnlocked?: boolean;
+  onUnlock?: () => void;
+  onRequestAccess?: () => void;
 }
 
 const ArtworkCardModern: React.FC<ArtworkCardProps> = ({
@@ -31,47 +35,136 @@ const ArtworkCardModern: React.FC<ArtworkCardProps> = ({
   onViewFull,
   downloadable,
   onDownload,
+  isUnlocked = false,
+  onUnlock,
+  onRequestAccess,
 }) => {
   const [hovered, setHovered] = useState(false);
-  // Make entire artwork image area clickable for full view
+  const [showUnlockAnimation, setShowUnlockAnimation] = useState(false);
+
+  // Determine if content should be blurred
+  const shouldBlur = (isPremium || isExclusive) && !isUnlocked;
+  const blurIntensity = isExclusive ? "blur-xl" : "blur-md";
+
+  const handleUnlock = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onUnlock) {
+      setShowUnlockAnimation(true);
+      onUnlock();
+      // Animation completes after unlock
+      setTimeout(() => setShowUnlockAnimation(false), 600);
+    }
+  };
+
+  const handleRequestAccess = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onRequestAccess) {
+      onRequestAccess();
+    }
+  };
+
   return (
     <GlassCard
       className="glass-effect relative p-0 overflow-hidden cursor-pointer hover:scale-[1.03] transition-transform group"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      // Do not attach onClick at GlassCard level to avoid accidental opens
     >
       <div
         className="relative aspect-[4/3] overflow-hidden w-full"
-        style={{ cursor: "pointer" }}
-        onClick={onViewFull}
+        style={{ cursor: shouldBlur ? "default" : "pointer" }}
+        onClick={!shouldBlur ? onViewFull : undefined}
         tabIndex={0}
         role="button"
         aria-label={`View details for ${title}`}
         onKeyDown={(e) => {
-          if ((e.key === 'Enter' || e.key === ' ') && onViewFull) {
+          if ((e.key === 'Enter' || e.key === ' ') && onViewFull && !shouldBlur) {
             e.preventDefault();
             onViewFull();
           }
         }}
       >
+        {/* Artwork Image with conditional blur */}
         <img
           src={img}
           alt={title}
-          className="object-cover w-full h-full transition-all duration-300 group-hover:scale-105"
+          className={`object-cover w-full h-full transition-all duration-500 group-hover:scale-105 ${
+            shouldBlur ? blurIntensity : ''
+          } ${showUnlockAnimation ? 'blur-0 scale-105' : ''}`}
         />
-        {/* Overlays */}
-        {/* Premium/Exclusive Overlay */}
+
+        {/* Lock Overlay for Premium/Exclusive */}
+        {shouldBlur && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30 backdrop-blur-[2px]">
+            <div className={`p-3 rounded-full ${
+              isExclusive 
+                ? 'bg-purple-500/90 shadow-lg shadow-purple-500/30' 
+                : 'bg-yellow-500/90 shadow-lg shadow-yellow-500/30'
+            } mb-3`}>
+              <Lock className="w-6 h-6 text-white" />
+            </div>
+            
+            {/* Premium: Show price and unlock button */}
+            {isPremium && !isExclusive && (
+              <div className="text-center px-4">
+                <p className="text-white font-semibold text-sm mb-2">
+                  ₹{price} to Unlock
+                </p>
+                <Button 
+                  onClick={handleUnlock}
+                  size="sm" 
+                  className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold shadow-lg"
+                >
+                  <Sparkles className="w-4 h-4 mr-1" />
+                  Unlock Now
+                </Button>
+              </div>
+            )}
+
+            {/* Exclusive: Request access button (no price shown) */}
+            {isExclusive && (
+              <div className="text-center px-4">
+                <p className="text-white/90 text-xs mb-2">
+                  Exclusive Content
+                </p>
+                <Button 
+                  onClick={handleRequestAccess}
+                  size="sm" 
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-semibold shadow-lg"
+                >
+                  <MessageSquare className="w-4 h-4 mr-1" />
+                  Request Access
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Unlocked Animation Overlay */}
+        {showUnlockAnimation && (
+          <div className="absolute inset-0 flex items-center justify-center bg-green-500/20 animate-pulse">
+            <div className="text-white font-bold text-lg flex items-center gap-2 bg-green-600/90 px-4 py-2 rounded-full shadow-xl">
+              <Sparkles className="w-5 h-5" />
+              Unlocked!
+            </div>
+          </div>
+        )}
+
+        {/* Premium/Exclusive Badge */}
         {(isPremium || isExclusive) && (
-          <div className="absolute top-2 right-2">
-            <span className="flex items-center gap-1 bg-yellow-200/80 text-yellow-800 font-semibold rounded-md px-2 py-0.5 text-xs shadow">
-              <Lock size={15} /> {isPremium ? "Premium" : "Exclusive"}
+          <div className="absolute top-2 right-2 z-10">
+            <span className={`flex items-center gap-1 font-semibold rounded-md px-2 py-0.5 text-xs shadow ${
+              isExclusive 
+                ? 'bg-purple-200/90 text-purple-800' 
+                : 'bg-yellow-200/90 text-yellow-800'
+            }`}>
+              <Lock size={13} /> {isExclusive ? "Exclusive" : "Premium"}
             </span>
           </div>
         )}
-        {hovered && (
+
+        {/* Hover actions - only show for free or unlocked content */}
+        {hovered && !shouldBlur && (
           <div className="absolute inset-0 flex flex-col justify-between bg-gradient-to-t from-black/70 via-transparent to-transparent transition-opacity duration-200">
-            {/* Quick actions */}
             <div className="flex justify-end p-2 gap-2">
               <button
                 onClick={(e) => { e.stopPropagation(); if (onLike) onLike(); }}
@@ -98,6 +191,7 @@ const ArtworkCardModern: React.FC<ArtworkCardProps> = ({
           </div>
         )}
       </div>
+
       {/* Content */}
       <div className="p-2 sm:p-3 md:p-4 flex flex-col gap-1.5 sm:gap-2">
         <h4 className="font-medium text-sm sm:text-base text-gray-900 truncate">{title}</h4>
@@ -108,11 +202,20 @@ const ArtworkCardModern: React.FC<ArtworkCardProps> = ({
           <span className="flex items-center gap-0.5 sm:gap-1">
             <Heart size={12} className="sm:w-[13px] sm:h-[13px]" /> <span className="text-[10px] sm:text-xs">{likes}</span>
           </span>
-          {typeof price !== "undefined" && (
-            <span className={`rounded-full px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-semibold ml-auto flex-shrink-0 ${isPremium ? "bg-yellow-300/40 text-yellow-800" : "bg-blue-100 text-blue-700"}`}>
-              {price === 0 ? "Free" : `₹${price}`}
-            </span>
-          )}
+          {/* Show price for Premium, "Request" for Exclusive, "Free" for free */}
+          <span className={`rounded-full px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-semibold ml-auto flex-shrink-0 ${
+            isExclusive 
+              ? "bg-purple-100 text-purple-700" 
+              : isPremium 
+                ? "bg-yellow-300/40 text-yellow-800" 
+                : "bg-green-100 text-green-700"
+          }`}>
+            {isExclusive 
+              ? "Request Access" 
+              : isPremium 
+                ? `₹${price}` 
+                : "Free"}
+          </span>
         </div>
       </div>
     </GlassCard>
@@ -120,4 +223,3 @@ const ArtworkCardModern: React.FC<ArtworkCardProps> = ({
 };
 
 export default ArtworkCardModern;
-

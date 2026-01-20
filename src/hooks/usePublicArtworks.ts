@@ -37,7 +37,8 @@ export const usePublicArtworks = () => {
     try {
       setLoading(true);
       
-      // Fetch all public artworks
+      // Fetch only FREE public artworks for Explore page
+      // Premium and Exclusive artworks should NOT appear on explore
       const { data: artworksData, error: artworksError } = await supabase
         .from('artworks')
         .select('*')
@@ -58,8 +59,15 @@ export const usePublicArtworks = () => {
       // Create artist map
       const artistMap = new Map((artistsData || []).map(a => [a.id, a.name]));
 
+      // Filter to show ONLY FREE artworks on Explore page
+      // Premium and Exclusive artworks must NOT appear
+      const freeArtworks = (artworksData || []).filter(artwork => {
+        const accessType = (artwork.metadata as any)?.access_type || 'free';
+        return accessType === 'free';
+      });
+
       // Transform data to match component expectations
-      const transformedArtworks: PublicArtwork[] = (artworksData || []).map(artwork => ({
+      const transformedArtworks: PublicArtwork[] = freeArtworks.map(artwork => ({
         id: artwork.id,
         title: artwork.title,
         description: artwork.description,
