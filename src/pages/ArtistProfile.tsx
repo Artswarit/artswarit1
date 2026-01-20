@@ -277,6 +277,8 @@ export default function ArtistProfile() {
             likes: likesPerArtwork[art.id] || 0,
             views: viewsPerArtwork[art.id] || 0,
             price: art.price || 0,
+            metadata: art.metadata, // Include metadata for access_type
+            access_type: (art.metadata as any)?.access_type || 'free',
           })),
         };
 
@@ -762,22 +764,31 @@ export default function ArtistProfile() {
 
   // Use real data for artworks, only add demo values for demo profiles
   const isDemoProfile = id === ARTIST_UUID_1 || id === ARTIST_UUID_2;
-  const portfolio = (profileState.artworks || []).map((a: any, ix: number) => ({
-    ...a,
-    likes: a.likes || (isDemoProfile ? 100 + ix * 11 : 0),
-    views: a.views || (isDemoProfile ? 500 + ix * 30 : 0),
-    price: a.price ?? (isDemoProfile ? (ix === 0 ? 0 : 499 + 100 * ix) : 0),
-    isPremium: a.isPremium ?? (isDemoProfile && ix === 1),
-    isExclusive: a.isExclusive ?? (isDemoProfile && ix === 2),
-    artistId: id,
-    artistName: profileState.name,
-    category: profileState.category,
-    type: a.type || 'image',
-  }));
+  const portfolio = (profileState.artworks || []).map((a: any, ix: number) => {
+    // Extract access_type from metadata for real artworks
+    const accessType = a.metadata?.access_type || a.access_type || 'free';
+    const isPremiumArt = accessType === 'premium' || (isDemoProfile && ix === 1);
+    const isExclusiveArt = accessType === 'exclusive' || (isDemoProfile && ix === 2);
+    
+    return {
+      ...a,
+      likes: a.likes || (isDemoProfile ? 100 + ix * 11 : 0),
+      views: a.views || (isDemoProfile ? 500 + ix * 30 : 0),
+      price: a.price ?? (isDemoProfile ? (ix === 0 ? 0 : 499 + 100 * ix) : 0),
+      isPremium: isPremiumArt && !isExclusiveArt, // Premium but not exclusive
+      isExclusive: isExclusiveArt,
+      artistId: id,
+      artistName: profileState.name,
+      category: profileState.category,
+      type: a.type || 'image',
+      accessType: accessType, // Keep original access type
+    };
+  });
 
   const pinnedArtworks = [portfolio[0]].filter(Boolean);
   const pinnedIds = pinnedArtworks.map((a: any) => a.id);
 
+  // Filter artworks by access type
   const premiumArt = portfolio.filter((p: any) => p.isPremium);
   const exclusiveArt = portfolio.filter((p: any) => p.isExclusive);
 

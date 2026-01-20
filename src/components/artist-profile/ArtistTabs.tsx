@@ -113,13 +113,22 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
     userCurrencySymbol
   } = useCurrencyFormat();
 
-  // Put pinned artworks at the top for "All"
-  let allWithPinnedFirst = allArt;
-  if (pinnedIds.length > 0 && allArt) {
-    const pinned = allArt.filter(a => pinnedIds.includes(a.id));
-    const unpinned = allArt.filter(a => !pinnedIds.includes(a.id));
+  // Filter artworks by type:
+  // "All Art" tab shows ONLY FREE artworks (no premium, no exclusive)
+  // "Premium" tab shows ONLY Premium artworks (blurred)
+  // "Exclusive" tab shows ONLY Exclusive artworks (heavily blurred)
+  
+  // Free artworks only for "All" tab
+  const freeArt = allArt.filter(a => !a.isPremium && !a.isExclusive);
+  
+  // Put pinned artworks at the top for "All" (only free ones)
+  let allWithPinnedFirst = freeArt;
+  if (pinnedIds.length > 0 && freeArt) {
+    const pinned = freeArt.filter(a => pinnedIds.includes(a.id));
+    const unpinned = freeArt.filter(a => !pinnedIds.includes(a.id));
     allWithPinnedFirst = [...pinned, ...unpinned];
   }
+  
   const displayed: Record<string, GalleryArtwork[]> = {
     all: allWithPinnedFirst || [],
     premium: premiumArt || [],
@@ -158,9 +167,15 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
     }}>
         <div className="w-full overflow-x-auto pb-2 mb-2 -mx-1 px-1 flex justify-center">
           <TabsList className="bg-white/40 backdrop-blur rounded-2xl glass-effect w-full sm:w-max mb-2 py-1 px-1 min-w-max">
-            <TabsTrigger value="all" className="text-xs sm:text-sm px-2 sm:px-3">All Art</TabsTrigger>
-            <TabsTrigger value="premium" className="text-xs sm:text-sm px-2 sm:px-3">Premium</TabsTrigger>
-            <TabsTrigger value="exclusive" className="text-xs sm:text-sm px-2 sm:px-3">Exclusive</TabsTrigger>
+            <TabsTrigger value="all" className="text-xs sm:text-sm px-2 sm:px-3">
+              All Art {freeArt.length > 0 && `(${freeArt.length})`}
+            </TabsTrigger>
+            <TabsTrigger value="premium" className="text-xs sm:text-sm px-2 sm:px-3">
+              Premium {premiumArt.length > 0 && `(${premiumArt.length})`}
+            </TabsTrigger>
+            <TabsTrigger value="exclusive" className="text-xs sm:text-sm px-2 sm:px-3">
+              Exclusive {exclusiveArt.length > 0 && `(${exclusiveArt.length})`}
+            </TabsTrigger>
             <TabsTrigger value="services" className="text-xs sm:text-sm px-2 sm:px-3">Services</TabsTrigger>
             <TabsTrigger value="about" className="text-xs sm:text-sm px-2 sm:px-3">About</TabsTrigger>
           </TabsList>
