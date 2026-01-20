@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bell, Check, X, Info, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
+import { Bell, Check, Info, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Notification {
@@ -16,11 +16,15 @@ interface Notification {
   created_at: string;
 }
 
+const ITEMS_PER_PAGE = 10;
+
 const NotificationCenter = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -60,7 +64,7 @@ const NotificationCenter = () => {
         .select('*')
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(200);
 
       if (error) {
         console.error('Error fetching notifications:', error);
@@ -75,6 +79,17 @@ const NotificationCenter = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const displayedNotifications = notifications.slice(0, displayCount);
+  const hasMore = notifications.length > displayCount;
+
+  const handleLoadMore = () => {
+    setLoadingMore(true);
+    setTimeout(() => {
+      setDisplayCount(prev => prev + ITEMS_PER_PAGE);
+      setLoadingMore(false);
+    }, 300);
   };
 
   const markAsRead = async (notificationId: string) => {
@@ -128,26 +143,26 @@ const NotificationCenter = () => {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'success':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+        return <CheckCircle className="h-5 w-5 text-emerald-500" />;
       case 'warning':
-        return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+        return <AlertTriangle className="h-5 w-5 text-amber-500" />;
       case 'error':
-        return <XCircle className="h-5 w-5 text-red-500" />;
+        return <XCircle className="h-5 w-5 text-destructive" />;
       default:
-        return <Info className="h-5 w-5 text-blue-500" />;
+        return <Info className="h-5 w-5 text-primary" />;
     }
   };
 
   const getNotificationBadgeColor = (type: string) => {
     switch (type) {
       case 'success':
-        return 'bg-green-100 text-green-800';
+        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400';
       case 'warning':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400';
       case 'error':
-        return 'bg-red-100 text-red-800';
+        return 'bg-destructive/10 text-destructive';
       default:
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-primary/10 text-primary';
     }
   };
 
@@ -184,19 +199,19 @@ const NotificationCenter = () => {
       {notifications.length === 0 ? (
         <Card>
           <CardContent className="text-center py-8">
-            <Bell className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">No notifications yet</p>
+            <Bell className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">No notifications yet</p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
-          {notifications.map((notification) => (
+          {displayedNotifications.map((notification) => (
             <Card
               key={notification.id}
               className={`transition-all ${
                 !notification.is_read
-                  ? 'border-l-4 border-l-blue-500 bg-blue-50/50'
-                  : 'border-l-4 border-l-gray-200'
+                  ? 'border-l-4 border-l-primary bg-primary/5'
+                  : 'border-l-4 border-l-muted'
               }`}
             >
               <CardHeader className="pb-3">
@@ -231,12 +246,24 @@ const NotificationCenter = () => {
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   {new Date(notification.created_at).toLocaleString()}
                 </p>
               </CardContent>
             </Card>
           ))}
+          
+          {hasMore && (
+            <div className="flex justify-center pt-4">
+              <Button 
+                variant="outline" 
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+              >
+                {loadingMore ? "Loading..." : "Load More"}
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>

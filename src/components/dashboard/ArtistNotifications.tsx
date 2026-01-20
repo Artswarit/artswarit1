@@ -22,11 +22,15 @@ interface ArtistNotificationsProps {
   isLoading: boolean;
 }
 
+const ITEMS_PER_PAGE = 10;
+
 const ArtistNotifications = ({ isLoading }: ArtistNotificationsProps) => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
+  const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const fetchNotifications = useCallback(async () => {
     if (!user?.id) return;
@@ -37,7 +41,7 @@ const ArtistNotifications = ({ isLoading }: ArtistNotificationsProps) => {
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(200);
 
       if (error) throw error;
       setNotifications(data || []);
@@ -81,10 +85,30 @@ const ArtistNotifications = ({ isLoading }: ArtistNotificationsProps) => {
   const unreadCount = notifications.filter(n => !n.is_read).length;
   
   const filterNotifications = () => {
-    if (activeTab === "all") return notifications;
-    if (activeTab === "unread") return notifications.filter(n => !n.is_read);
-    return notifications.filter(n => n.type === activeTab);
+    let filtered = notifications;
+    if (activeTab === "unread") {
+      filtered = notifications.filter(n => !n.is_read);
+    } else if (activeTab !== "all") {
+      filtered = notifications.filter(n => n.type === activeTab);
+    }
+    return filtered;
   };
+
+  const displayedNotifications = filterNotifications().slice(0, displayCount);
+  const hasMore = filterNotifications().length > displayCount;
+
+  const handleLoadMore = () => {
+    setLoadingMore(true);
+    setTimeout(() => {
+      setDisplayCount(prev => prev + ITEMS_PER_PAGE);
+      setLoadingMore(false);
+    }, 300);
+  };
+
+  // Reset display count when tab changes
+  useEffect(() => {
+    setDisplayCount(ITEMS_PER_PAGE);
+  }, [activeTab]);
   
   const markAsRead = async (id: string) => {
     try {
@@ -218,12 +242,12 @@ const ArtistNotifications = ({ isLoading }: ArtistNotificationsProps) => {
           </CardHeader>
           <CardContent className="px-0">
             <div className="divide-y">
-              {filterNotifications().length === 0 ? (
+              {displayedNotifications.length === 0 ? (
                 <div className="py-8 text-center">
                   <p className="text-muted-foreground">No notifications found</p>
                 </div>
               ) : (
-                filterNotifications().map((notification) => (
+                displayedNotifications.map((notification) => (
                   <div 
                     key={notification.id} 
                     className={`px-6 py-4 hover:bg-muted/50 cursor-pointer ${!notification.is_read ? "bg-muted/30" : ""}`}
@@ -253,9 +277,16 @@ const ArtistNotifications = ({ isLoading }: ArtistNotificationsProps) => {
               )}
             </div>
           </CardContent>
-          {filterNotifications().length > 0 && (
+          {hasMore && (
             <CardFooter className="border-t p-4 flex justify-center">
-              <Button variant="outline" className="w-full md:w-auto">Load More</Button>
+              <Button 
+                variant="outline" 
+                className="w-full md:w-auto"
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+              >
+                {loadingMore ? "Loading..." : "Load More"}
+              </Button>
             </CardFooter>
           )}
         </Card>
