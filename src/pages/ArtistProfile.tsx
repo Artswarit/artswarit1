@@ -767,21 +767,27 @@ export default function ArtistProfile() {
   const portfolio = (profileState.artworks || []).map((a: any, ix: number) => {
     // Extract access_type from metadata for real artworks
     const accessType = a.metadata?.access_type || a.access_type || 'free';
-    const isPremiumArt = accessType === 'premium' || (isDemoProfile && ix === 1);
+    const artworkPrice = a.price ?? (isDemoProfile ? (ix === 0 ? 0 : 499 + 100 * ix) : 0);
+    
+    // CRITICAL: If price is 0 or null/undefined, treat as FREE regardless of access_type
+    // Premium requires both access_type = 'premium' AND price > 0
+    // Exclusive requires access_type = 'exclusive' AND price > 0 (or request-based)
+    const hasPrice = artworkPrice !== null && artworkPrice !== undefined && artworkPrice > 0;
+    const isPremiumArt = (accessType === 'premium' && hasPrice) || (isDemoProfile && ix === 1 && hasPrice);
     const isExclusiveArt = accessType === 'exclusive' || (isDemoProfile && ix === 2);
     
     return {
       ...a,
       likes: a.likes || (isDemoProfile ? 100 + ix * 11 : 0),
       views: a.views || (isDemoProfile ? 500 + ix * 30 : 0),
-      price: a.price ?? (isDemoProfile ? (ix === 0 ? 0 : 499 + 100 * ix) : 0),
+      price: artworkPrice,
       isPremium: isPremiumArt && !isExclusiveArt, // Premium but not exclusive
       isExclusive: isExclusiveArt,
       artistId: id,
       artistName: profileState.name,
       category: profileState.category,
       type: a.type || 'image',
-      accessType: accessType, // Keep original access type
+      accessType: hasPrice ? accessType : 'free', // Override access type if no price
     };
   });
 
