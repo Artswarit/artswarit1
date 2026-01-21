@@ -214,9 +214,25 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
   };
 
   const canStartMilestone = (milestone: Milestone, index: number) => {
+    // Artists must have payment enabled AND project must be accepted
+    if (isArtist && (!isPayoutsEnabled || project?.status !== 'accepted')) {
+      return false;
+    }
     if (index === 0) return milestone.status === 'pending';
     const previousMilestone = milestones[index - 1];
     return previousMilestone.status === 'paid' && milestone.status === 'pending';
+  };
+
+  const getStartBlockedReason = () => {
+    if (isArtist) {
+      if (project?.status !== 'accepted') {
+        return 'project_not_accepted';
+      }
+      if (!isPayoutsEnabled) {
+        return 'payment_not_enabled';
+      }
+    }
+    return null;
   };
 
   const handleStartMilestone = async (milestoneId: string) => {
@@ -367,8 +383,10 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
                 isArtist={isArtist}
                 isLocked={project.is_locked}
                 canStart={canStartMilestone(milestone, index)}
+                startBlockedReason={getStartBlockedReason()}
                 artistKycEnabled={isArtist ? isPayoutsEnabled : artistKycEnabled}
                 artistId={project.artist_id || undefined}
+                projectStatus={project.status || 'pending'}
                 onStart={() => handleStartMilestone(milestone.id)}
                 onSubmit={() => {
                   setSelectedMilestone(milestone);
@@ -387,6 +405,7 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
                   logActivity(milestone.id, 'payment_initiated', { milestoneId: milestone.id });
                 }}
                 getStatusBadge={getStatusBadge}
+                onEnablePayments={() => setEnablePaymentsOpen(true)}
               />
             ))
           )}

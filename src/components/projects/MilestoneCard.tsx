@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Play, Upload, Eye, AlertTriangle, FileText, RotateCcw, Lock } from 'lucide-react';
+import { Calendar, Play, Upload, Eye, AlertTriangle, FileText, RotateCcw, Lock, CreditCard, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 import { PayMilestoneButton } from '@/components/payments/PayMilestoneButton';
@@ -31,14 +31,17 @@ interface MilestoneCardProps {
   isArtist: boolean;
   isLocked: boolean;
   canStart: boolean;
+  startBlockedReason?: 'project_not_accepted' | 'payment_not_enabled' | null;
   artistKycEnabled?: boolean;
   artistId?: string;
+  projectStatus?: string;
   onStart: () => void;
   onSubmit: () => void;
   onReview: () => void;
   onDispute: () => void;
   onPaymentSuccess?: () => void;
   getStatusBadge: (status: string) => React.ReactNode;
+  onEnablePayments?: () => void;
 }
 
 export function MilestoneCard({
@@ -48,14 +51,17 @@ export function MilestoneCard({
   isArtist,
   isLocked,
   canStart,
+  startBlockedReason,
   artistKycEnabled = false,
   artistId,
+  projectStatus = 'pending',
   onStart,
   onSubmit,
   onReview,
   onDispute,
   onPaymentSuccess,
-  getStatusBadge
+  getStatusBadge,
+  onEnablePayments
 }: MilestoneCardProps) {
   const { format: formatCurrency } = useCurrencyFormat();
   
@@ -143,6 +149,33 @@ export function MilestoneCard({
             <p className="text-sm text-yellow-600">
               Payment blocked: Artist has not enabled payments yet.
             </p>
+          </div>
+        )}
+
+        {/* Artist blocked from starting - Project not accepted */}
+        {isArtist && startBlockedReason === 'project_not_accepted' && isPending && (
+          <div className="flex items-center gap-2 p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
+            <CheckCircle className="h-4 w-4 text-amber-600" />
+            <p className="text-sm text-amber-600">
+              You must accept this project before starting milestones.
+            </p>
+          </div>
+        )}
+
+        {/* Artist blocked from starting - Payment not enabled */}
+        {isArtist && startBlockedReason === 'payment_not_enabled' && projectStatus === 'accepted' && isPending && (
+          <div className="flex items-center justify-between gap-2 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+            <div className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-yellow-600" />
+              <p className="text-sm text-yellow-600">
+                Enable payment details to start milestones and receive payouts.
+              </p>
+            </div>
+            {onEnablePayments && (
+              <Button size="sm" variant="outline" onClick={onEnablePayments} className="shrink-0">
+                Enable Payments
+              </Button>
+            )}
           </div>
         )}
 
