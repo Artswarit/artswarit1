@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import ArtworkCard from "@/components/artwork/ArtworkCard";
+import ArtworkCardModern from "@/components/artist-profile/ArtworkCardModern";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Star, MapPin, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -185,7 +186,49 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
         <TabsContent value={tab} forceMount>
           {isArtTab && <>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 my-4">
-                {paged.map(art => <ArtworkCard key={art.id} id={art.id} title={art.title} artist={art.artistName || "Artist"} artistId={art.artistId || ""} type={art.type || "image"} imageUrl={art.img} likes={art.likes} views={art.views} price={art.price} category={art.category} />)}
+                {paged.map(art => {
+                  // Use ArtworkCardModern for Premium/Exclusive tabs with blur/lock
+                  if (tab === "premium" || tab === "exclusive") {
+                    return (
+                      <ArtworkCardModern
+                        key={art.id}
+                        title={art.title}
+                        img={art.img}
+                        views={art.views}
+                        likes={art.likes}
+                        price={art.price}
+                        isPremium={art.isPremium}
+                        isExclusive={art.isExclusive}
+                        isUnlocked={false}
+                        onViewFull={() => onArtworkClick?.(art)}
+                        onUnlock={() => {
+                          // TODO: Handle payment flow
+                          console.log("Unlock artwork:", art.id);
+                        }}
+                        onRequestAccess={() => {
+                          // TODO: Handle request access flow
+                          console.log("Request access for:", art.id);
+                        }}
+                      />
+                    );
+                  }
+                  // Use regular ArtworkCard for "All Art" (free artworks)
+                  return (
+                    <ArtworkCard
+                      key={art.id}
+                      id={art.id}
+                      title={art.title}
+                      artist={art.artistName || "Artist"}
+                      artistId={art.artistId || ""}
+                      type={art.type || "image"}
+                      imageUrl={art.img}
+                      likes={art.likes}
+                      views={art.views}
+                      price={art.price}
+                      category={art.category}
+                    />
+                  );
+                })}
               </div>
               {hasMore && <div className="flex justify-center mt-2">
                   <button onClick={() => setPage(page + 1)} className="bg-white/60 hover:bg-white/80 text-purple-700 px-5 py-2 rounded-lg shadow font-semibold">
