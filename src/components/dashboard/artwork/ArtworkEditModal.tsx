@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Plus, Save, DollarSign, Loader2 } from "lucide-react";
+import { X, Plus, Save, Loader2, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -18,6 +18,12 @@ interface ArtworkEditModalProps {
   onSave: (updatedArtwork: any) => void;
 }
 
+const visibilityOptions = [
+  { id: "public", label: "Public - Visible to everyone" },
+  { id: "private", label: "Private - Only visible to you" },
+  { id: "followers", label: "Followers Only - Visible to your followers" },
+];
+
 const ArtworkEditModal = ({ artwork, isOpen, onClose, onSave }: ArtworkEditModalProps) => {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
@@ -26,21 +32,26 @@ const ArtworkEditModal = ({ artwork, isOpen, onClose, onSave }: ArtworkEditModal
     description: "",
     price: "",
     category: "",
-    is_for_sale: false,
+    visibility: "public",
+    accessType: "free",
     is_pinned: false,
+    scheduleRelease: false,
     tags: [] as string[]
   });
   const [newTag, setNewTag] = useState("");
 
   useEffect(() => {
     if (artwork) {
+      const metadata = artwork.metadata || {};
       setFormData({
         title: artwork.title || "",
         description: artwork.description || "",
         price: artwork.price?.toString() || "",
         category: artwork.category || "",
-        is_for_sale: artwork.is_for_sale || false,
-        is_pinned: artwork.is_pinned || false,
+        visibility: metadata.visibility || "public",
+        accessType: metadata.access_type || "free",
+        is_pinned: metadata.is_pinned || artwork.is_pinned || false,
+        scheduleRelease: metadata.schedule_release || false,
         tags: artwork.tags || []
       });
     }
@@ -75,8 +86,22 @@ const ArtworkEditModal = ({ artwork, isOpen, onClose, onSave }: ArtworkEditModal
     
     setSaving(true);
     try {
-      const priceValue = formData.price ? parseFloat(formData.price) : null;
+      // For Free access type, price should be null/0
+      let priceValue = null;
+      if (formData.accessType !== "free" && formData.price) {
+        priceValue = parseFloat(formData.price);
+      }
       
+      const updatedMetadata = {
+        ...(artwork.metadata || {}),
+        is_pinned: formData.is_pinned,
+        visibility: formData.visibility,
+        access_type: formData.accessType,
+        schedule_release: formData.scheduleRelease,
+        likes_count: (artwork.metadata as any)?.likes_count || 0,
+        views_count: (artwork.metadata as any)?.views_count || 0
+      };
+
       const { error } = await supabase
         .from('artworks')
         .update({
@@ -85,11 +110,8 @@ const ArtworkEditModal = ({ artwork, isOpen, onClose, onSave }: ArtworkEditModal
           category: formData.category,
           price: priceValue,
           tags: formData.tags,
-          metadata: {
-            ...(artwork.metadata || {}),
-            is_pinned: formData.is_pinned,
-            is_for_sale: formData.is_for_sale
-          }
+          metadata: updatedMetadata,
+          updated_at: new Date().toISOString()
         })
         .eq('id', artwork.id);
 
@@ -97,8 +119,13 @@ const ArtworkEditModal = ({ artwork, isOpen, onClose, onSave }: ArtworkEditModal
 
       const updatedArtwork = {
         ...artwork,
-        ...formData,
-        price: priceValue
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        price: priceValue,
+        tags: formData.tags,
+        metadata: updatedMetadata,
+        is_pinned: formData.is_pinned
       };
 
       onSave(updatedArtwork);
@@ -129,11 +156,11 @@ const ArtworkEditModal = ({ artwork, isOpen, onClose, onSave }: ArtworkEditModal
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
+            <Eye className="h-5 w-5" />
             Edit Artwork
           </DialogTitle>
           <DialogDescription>
-            Update your artwork details, pricing, and availability
+            Update your artwork details, visibility, and pricing
           </DialogDescription>
         </DialogHeader>
 
@@ -141,13 +168,13 @@ const ArtworkEditModal = ({ artwork, isOpen, onClose, onSave }: ArtworkEditModal
           {/* Artwork Preview */}
           <div className="flex gap-4">
             <img
-              src={artwork?.imageUrl}
+              src={artwork?.imageUrl || artwork?.media_url}
               alt={artwork?.title}
               className="w-24 h-24 object-cover rounded-lg"
             />
             <div className="flex-1">
               <h3 className="font-semibold">{artwork?.title}</h3>
-              <p className="text-sm text-muted-foreground">Current Status: {artwork?.approval_status}</p>
+              <p className="text-sm text-muted-foreground">Current Status: {artwork?.status || artwork?.approval_status}</p>
             </div>
           </div>
 
@@ -192,20 +219,68 @@ const ArtworkEditModal = ({ artwork, isOpen, onClose, onSave }: ArtworkEditModal
             />
           </div>
 
-          {/* Pricing and Sale Options */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="is_for_sale">Available for Sale</Label>
-              <Switch
-                id="is_for_sale"
-                checked={formData.is_for_sale}
-                onCheckedChange={(checked) => handleInputChange('is_for_sale', checked)}
-              />
+          {/* Visibility & Pricing Section */}
+          <div className="space-y-4 p-4 bg-muted/30 rounded-lg border">
+            <div>
+              <h3 className="font-semibold text-foreground">Visibility & Pricing</h3>
+              <p className="text-sm text-muted-foreground">Set who can see your artwork and how they can access it</p>
             </div>
 
-            {formData.is_for_sale && (
+            {/* Visibility */}
+            <div className="space-y-2">
+              <Label>Visibility</Label>
+              <Select value={formData.visibility} onValueChange={(value) => handleInputChange('visibility', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select visibility" />
+                </SelectTrigger>
+                <SelectContent>
+                  {visibilityOptions.map(option => (
+                    <SelectItem key={option.id} value={option.id}>{option.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Access Type */}
+            <div className="space-y-2">
+              <Label>Access Type</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
+                <div 
+                  className={`border rounded-lg p-3 cursor-pointer transition-all hover:border-primary hover:shadow-md ${
+                    formData.accessType === "free" ? "border-primary bg-primary/5" : "border-border"
+                  }`}
+                  onClick={() => handleInputChange('accessType', 'free')}
+                >
+                  <p className="font-medium text-sm">Free</p>
+                  <p className="text-xs text-muted-foreground mt-1">Available to everyone at no cost</p>
+                </div>
+                
+                <div 
+                  className={`border rounded-lg p-3 cursor-pointer transition-all hover:border-primary hover:shadow-md ${
+                    formData.accessType === "premium" ? "border-primary bg-primary/5" : "border-border"
+                  }`}
+                  onClick={() => handleInputChange('accessType', 'premium')}
+                >
+                  <p className="font-medium text-sm">Premium</p>
+                  <p className="text-xs text-muted-foreground mt-1">Paid access to this content only</p>
+                </div>
+                
+                <div 
+                  className={`border rounded-lg p-3 cursor-pointer transition-all hover:border-primary hover:shadow-md ${
+                    formData.accessType === "exclusive" ? "border-primary bg-primary/5" : "border-border"
+                  }`}
+                  onClick={() => handleInputChange('accessType', 'exclusive')}
+                >
+                  <p className="font-medium text-sm">Exclusive</p>
+                  <p className="text-xs text-muted-foreground mt-1">Special collectors-only content</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Price field - only show for premium/exclusive */}
+            {(formData.accessType === "premium" || formData.accessType === "exclusive") && (
               <div className="space-y-2">
-                <Label htmlFor="price">Price (USD)</Label>
+                <Label htmlFor="price">Price (USD)*</Label>
                 <Input
                   id="price"
                   type="number"
@@ -219,14 +294,28 @@ const ArtworkEditModal = ({ artwork, isOpen, onClose, onSave }: ArtworkEditModal
               </div>
             )}
 
+            {/* Schedule for future release */}
             <div className="flex items-center justify-between">
-              <Label htmlFor="is_pinned">Pin to Profile</Label>
+              <Label htmlFor="schedule">Schedule for future release</Label>
               <Switch
-                id="is_pinned"
-                checked={formData.is_pinned}
-                onCheckedChange={(checked) => handleInputChange('is_pinned', checked)}
+                id="schedule"
+                checked={formData.scheduleRelease}
+                onCheckedChange={(checked) => handleInputChange('scheduleRelease', checked)}
               />
             </div>
+          </div>
+
+          {/* Pin to Profile */}
+          <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
+            <div>
+              <Label htmlFor="is_pinned" className="font-medium">Pin to Profile</Label>
+              <p className="text-xs text-muted-foreground">Pinned artworks appear first on your profile</p>
+            </div>
+            <Switch
+              id="is_pinned"
+              checked={formData.is_pinned}
+              onCheckedChange={(checked) => handleInputChange('is_pinned', checked)}
+            />
           </div>
 
           {/* Tags */}
@@ -238,7 +327,7 @@ const ArtworkEditModal = ({ artwork, isOpen, onClose, onSave }: ArtworkEditModal
                   {tag}
                   <button
                     onClick={() => removeTag(tag)}
-                    className="hover:text-red-500"
+                    className="hover:text-destructive"
                     type="button"
                   >
                     <X className="h-3 w-3" />
