@@ -212,7 +212,7 @@ const TermsOfService = () => {
                   <div className="mt-3 space-y-1">
                     <p><strong>Legal Team:</strong>Legal Team: legal@artswarit.com</p>
                     <p><strong>General Support:</strong> support@artswarit.com</p>
-                    <p><strong>Address:</strong>Address: New Delhi Legal Name (PAN Holder): Ashwareet Basu
+                    <p><strong>Address:</strong>Address: New Delhi 
 Legal Name (PAN Holder): Ashwareet Basu
 Platform Name: Artswarit
 
