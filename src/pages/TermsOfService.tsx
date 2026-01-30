@@ -210,13 +210,10 @@ const TermsOfService = () => {
                 <div className="text-gray-700">
                   <p>For questions regarding these Terms of Service:</p>
                   <div className="mt-3 space-y-1">
-                    <p><strong>Legal Team:</strong>Legal Team: legal@artswarit.com</p>
+                    <p><strong>Legal Team:</strong>Legal Team: legal@artswarit.com</p>
                     <p><strong>General Support:</strong> support@artswarit.com</p>
-                    <p><strong>Address:</strong>Address: New Delhi 
-Legal Name (PAN Holder): Ashwareet Basu
-Platform Name: Artswarit
-
-                  </p>
+                    <p><strong>Address:</strong>Address: New Delhi
+Legal Name (PAN Holder): Ashwareet Basu</p>
                     <p><strong>Last Updated:</strong> {new Date().toLocaleDateString()}</p>
                   </div>
                 </div>
