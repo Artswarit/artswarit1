@@ -10,25 +10,40 @@ import PlanComparisonPanel from './PlanComparisonPanel';
 import SubscriptionManagement from '@/components/settings/SubscriptionManagement';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-
 const PremiumMembership = () => {
-  const { user } = useAuth();
-  const { profile } = useProfile();
-  const { isActive, subscriptionTier, loading } = usePremiumSubscription(user?.id);
-  const { isProArtist, plan, renewAt, startedAt } = useArtistPlan(user?.id);
-  const { toast } = useToast();
+  const {
+    user
+  } = useAuth();
+  const {
+    profile
+  } = useProfile();
+  const {
+    isActive,
+    subscriptionTier,
+    loading
+  } = usePremiumSubscription(user?.id);
+  const {
+    isProArtist,
+    plan,
+    renewAt,
+    startedAt
+  } = useArtistPlan(user?.id);
+  const {
+    toast
+  } = useToast();
   const [upgradeLoading, setUpgradeLoading] = useState(false);
-
   const handleUpgrade = async (planType?: string) => {
     try {
       setUpgradeLoading(true);
-      const { data, error } = await supabase.functions.invoke('create-premium-checkout', {
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('create-premium-checkout', {
         body: {
           plan: planType || 'pro',
           user_id: user?.id
         }
       });
-
       if (error) {
         toast({
           title: "Payment Error",
@@ -37,7 +52,6 @@ const PremiumMembership = () => {
         });
         return;
       }
-
       if (data?.url) {
         window.open(data.url, '_blank');
       }
@@ -52,26 +66,37 @@ const PremiumMembership = () => {
       setUpgradeLoading(false);
     }
   };
-
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
+    return <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+      </div>;
   }
-
-  const proFeatures = [
-    { icon: Infinity, label: "Unlimited Portfolio", description: "Showcase all your work" },
-    { icon: Infinity, label: "Unlimited Services", description: "Offer any number of services" },
-    { icon: Shield, label: "Verified Badge", description: "Build trust with clients" },
-    { icon: Zap, label: "0% Platform Fee", description: "Keep 100% of earnings" },
-    { icon: TrendingUp, label: "Priority Ranking", description: "Get discovered faster" },
-    { icon: Star, label: "Featured Rotation", description: "Appear in featured spots" },
-  ];
-
-  return (
-    <div className="space-y-8 max-w-7xl mx-auto">
+  const proFeatures = [{
+    icon: Infinity,
+    label: "Unlimited Portfolio",
+    description: "Showcase all your work"
+  }, {
+    icon: Infinity,
+    label: "Unlimited Services",
+    description: "Offer any number of services"
+  }, {
+    icon: Shield,
+    label: "Verified Badge",
+    description: "Build trust with clients"
+  }, {
+    icon: Zap,
+    label: "0% Platform Fee",
+    description: "Keep 100% of earnings"
+  }, {
+    icon: TrendingUp,
+    label: "Priority Ranking",
+    description: "Get discovered faster"
+  }, {
+    icon: Star,
+    label: "Featured Rotation",
+    description: "Appear in featured spots"
+  }];
+  return <div className="space-y-8 max-w-7xl mx-auto">
       {/* Header Section */}
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center gap-3">
@@ -84,24 +109,16 @@ const PremiumMembership = () => {
           </h1>
         </div>
         
-        {isProArtist && (
-          <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-4 py-2">
+        {isProArtist && <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-4 py-2">
             <CheckCircle className="h-5 w-5 text-green-600" />
             <span className="text-green-700 font-semibold">Pro Active</span>
-          </div>
-        )}
+          </div>}
 
         {/* Emotional Copy */}
-        {!isProArtist && (
-          <p className="text-muted-foreground max-w-xl mx-auto">
-            Turn your creativity into meaningful work. Start free, upgrade when you're ready.
-            No pressure, no dark patterns – just honest value. ✨
-          </p>
-        )}
+        {!isProArtist && <p className="text-muted-foreground max-w-xl mx-auto text-center">Turn your creativity into meaningful work. Start free, upgrade when ready.</p>}
       </div>
 
-      {isProArtist ? (
-        <div className="space-y-8">
+      {isProArtist ? <div className="space-y-8">
           {/* Pro Status Card */}
           <Card className="relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-yellow-50 via-orange-50 to-amber-50 opacity-60"></div>
@@ -123,16 +140,11 @@ const PremiumMembership = () => {
             
             <CardContent className="relative z-10">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {proFeatures.map((feature, index) => (
-                  <div 
-                    key={index} 
-                    className="text-center p-4 bg-white/60 backdrop-blur-sm rounded-lg border border-white/40"
-                  >
+                {proFeatures.map((feature, index) => <div key={index} className="text-center p-4 bg-white/60 backdrop-blur-sm rounded-lg border border-white/40">
                     <feature.icon className="h-6 w-6 text-yellow-500 mx-auto mb-2" />
                     <div className="text-sm font-medium text-gray-800">{feature.label}</div>
                     <div className="text-xs text-muted-foreground">{feature.description}</div>
-                  </div>
-                ))}
+                  </div>)}
               </div>
 
               {/* Savings Highlight */}
@@ -157,20 +169,15 @@ const PremiumMembership = () => {
               <SubscriptionManagement />
             </CardContent>
           </Card>
-        </div>
-      ) : (
-        <div className="space-y-6">
+        </div> : <div className="space-y-6">
           <PlanComparisonPanel onUpgrade={handleUpgrade} loading={upgradeLoading} currentPlan="starter" />
           
           {/* Trust Indicators */}
           <div className="text-center space-y-2 text-sm text-muted-foreground">
-            <p>💖 Friendly • Supportive • Celebratory • Transparent</p>
+            
             <p>No contracts. Cancel anytime. Pro artists get hired 3× faster on average.</p>
           </div>
-        </div>
-      )}
-    </div>
-  );
+        </div>}
+    </div>;
 };
-
 export default PremiumMembership;
