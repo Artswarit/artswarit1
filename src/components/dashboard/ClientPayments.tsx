@@ -11,8 +11,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { CreditCard, Download, Eye, DollarSign, Calendar, CheckCircle, Clock, AlertCircle, Loader2 } from "lucide-react";
+import { CreditCard, Download, Eye, DollarSign, Calendar, CheckCircle, Clock, AlertCircle, Loader2, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BillingAddressForm } from "@/components/billing/BillingAddressForm";
+import { InvoiceDownload } from "@/components/billing/InvoiceDownload";
 
 interface Payment {
   id: string;
@@ -505,10 +507,18 @@ const ClientPayments = () => {
                       <span>Paid: {new Date(payment.updated_at).toLocaleDateString()}</span>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="h-7 sm:h-8 text-xs">
-                        <Download className="h-3 w-3 mr-1" />
-                        <span className="hidden sm:inline">Receipt</span>
-                      </Button>
+                      <InvoiceDownload
+                        invoice={{
+                          id: payment.id,
+                          type: 'payment',
+                          amount: payment.amount,
+                          currency: payment.currency || 'USD',
+                          date: payment.updated_at,
+                          description: `Payment for ${payment.projectTitle}`,
+                          to: payment.artistName,
+                          status: payment.status,
+                        }}
+                      />
                     </div>
                   </div>
                 </CardContent>
@@ -522,6 +532,11 @@ const ClientPayments = () => {
             <p className="text-xs text-muted-foreground">Your completed payments will appear here</p>
           </div>
         )}
+      </div>
+
+      {/* Billing Address Section */}
+      <div className="animate-fade-in" style={{ animationDelay: '300ms' }}>
+        <BillingAddressForm />
       </div>
 
       {payments.length === 0 && (

@@ -77,7 +77,7 @@ export function EnablePaymentsDialog({ open, onOpenChange }: EnablePaymentsDialo
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            You will receive 88% of each milestone payment. A 12% platform fee is deducted automatically.
+            Starter artists receive 85% of each milestone payment (15% platform fee). Pro artists receive 100% with no fees.
           </AlertDescription>
         </Alert>
 
