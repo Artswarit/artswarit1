@@ -13,8 +13,9 @@ import ArtistEarnings from '@/components/dashboard/ArtistEarnings';
 import MessagingModule from '@/components/dashboard/messages/MessagingModule';
 import ArtistSettings from '@/components/dashboard/ArtistSettings';
 import PremiumMembership from '@/components/premium/PremiumMembership';
+import { ArtistBilling } from '@/components/dashboard/ArtistBilling';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Palette, User, DollarSign, MessageSquare, Settings, Crown, Bell, Briefcase, Wrench, Lock } from 'lucide-react';
+import { Palette, User, DollarSign, MessageSquare, Settings, Crown, Bell, Briefcase, Wrench, Lock, Wallet } from 'lucide-react';
 import ProjectManagement from '@/components/dashboard/projects/ProjectManagement';
 import ArtistNotifications from '@/components/dashboard/ArtistNotifications';
 import ServicesManagement from '@/components/dashboard/services/ServicesManagement';
@@ -86,6 +87,7 @@ const ArtistDashboard = () => {
     { value: 'profile', label: 'Profile', shortLabel: 'Prof', icon: User },
     { value: 'premium', label: 'Premium', shortLabel: 'Prem', icon: Crown },
     { value: 'earnings', label: 'Earnings', shortLabel: 'Earn', icon: DollarSign },
+    { value: 'billing', label: 'Billing', shortLabel: 'Bill', icon: Wallet },
     { value: 'messages', label: 'Messages', shortLabel: 'Msg', icon: MessageSquare },
     { value: 'notifications', label: 'Notifications', shortLabel: 'Notif', icon: Bell },
     { value: 'settings', label: 'Settings', shortLabel: 'Set', icon: Settings },
@@ -182,6 +184,9 @@ const ArtistDashboard = () => {
             </TabsContent>
             <TabsContent value="earnings" className="space-y-6">
               <ArtistEarnings isLoading={profileLoading} />
+            </TabsContent>
+            <TabsContent value="billing" className="space-y-6">
+              <ArtistBilling />
             </TabsContent>
             <TabsContent value="messages" className="space-y-6">
               <MessagingModule />
