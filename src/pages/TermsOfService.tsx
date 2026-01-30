@@ -2,8 +2,10 @@ import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
+
 const TermsOfService = () => {
-  return <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50">
+  return (
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-8 pt-24">
@@ -196,7 +198,7 @@ const TermsOfService = () => {
               <section>
                 <h2 className="text-2xl font-bold text-purple-600 mb-4">11. Governing Law and Dispute Resolution</h2>
                 <div className="space-y-3 text-gray-700">
-                  <p>These Terms are governed by the laws of [Jurisdiction]. Any disputes shall be resolved through:</p>
+                  <p>These Terms are governed by the laws of India. Any disputes shall be resolved through:</p>
                   <ul className="list-disc list-inside space-y-1 ml-4">
                     <li>Good faith negotiation between the parties</li>
                     <li>Binding arbitration if negotiation fails</li>
@@ -210,9 +212,11 @@ const TermsOfService = () => {
                 <div className="text-gray-700">
                   <p>For questions regarding these Terms of Service:</p>
                   <div className="mt-3 space-y-1">
+                    <p><strong>Platform Name:</strong> Artswarit</p>
+                    <p><strong>Legal Name (PAN Holder):</strong> Ashwareet Basu</p>
                     <p><strong>Legal Team:</strong> legal@artswarit.com</p>
                     <p><strong>General Support:</strong> support@artswarit.com</p>
-                    <p><strong>Address:</strong>Address: New Delhi</p>
+                    <p><strong>Address:</strong> New Delhi</p>
                     <p><strong>Last Updated:</strong> {new Date().toLocaleDateString()}</p>
                   </div>
                 </div>
@@ -223,6 +227,8 @@ const TermsOfService = () => {
       </main>
 
       <Footer />
-    </div>;
+    </div>
+  );
 };
+
 export default TermsOfService;
