@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      artist_availability: {
+        Row: {
+          artist_id: string
+          created_at: string | null
+          date: string
+          id: string
+          note: string | null
+          status: string
+        }
+        Insert: {
+          artist_id: string
+          created_at?: string | null
+          date: string
+          id?: string
+          note?: string | null
+          status?: string
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string | null
+          date?: string
+          id?: string
+          note?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artist_availability_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "artist_availability_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       artist_services: {
         Row: {
           artist_id: string
@@ -168,6 +210,7 @@ export type Database = {
           media_url: string
           metadata: Json | null
           price: number | null
+          sort_order: number | null
           status: Database["public"]["Enums"]["artwork_status"]
           tags: string[] | null
           title: string
@@ -183,6 +226,7 @@ export type Database = {
           media_url: string
           metadata?: Json | null
           price?: number | null
+          sort_order?: number | null
           status?: Database["public"]["Enums"]["artwork_status"]
           tags?: string[] | null
           title: string
@@ -198,6 +242,7 @@ export type Database = {
           media_url?: string
           metadata?: Json | null
           price?: number | null
+          sort_order?: number | null
           status?: Database["public"]["Enums"]["artwork_status"]
           tags?: string[] | null
           title?: string
@@ -1014,6 +1059,7 @@ export type Database = {
         Row: {
           account_status: string | null
           avatar_url: string | null
+          avg_response_hours: number | null
           bio: string | null
           city: string | null
           country: string | null
@@ -1027,6 +1073,7 @@ export type Database = {
           hourly_rate: number | null
           id: string
           in_app_notifications: boolean | null
+          is_on_vacation: boolean | null
           is_verified: boolean | null
           language: string | null
           last_active_at: string | null
@@ -1035,6 +1082,8 @@ export type Database = {
           portfolio_url: string | null
           profile_visibility: boolean | null
           project_update_notifications: boolean | null
+          recovery_codes_hash: string | null
+          recovery_phone: string | null
           role: string
           show_activity_stats: boolean | null
           show_last_active: boolean | null
@@ -1047,6 +1096,7 @@ export type Database = {
         Insert: {
           account_status?: string | null
           avatar_url?: string | null
+          avg_response_hours?: number | null
           bio?: string | null
           city?: string | null
           country?: string | null
@@ -1060,6 +1110,7 @@ export type Database = {
           hourly_rate?: number | null
           id: string
           in_app_notifications?: boolean | null
+          is_on_vacation?: boolean | null
           is_verified?: boolean | null
           language?: string | null
           last_active_at?: string | null
@@ -1068,6 +1119,8 @@ export type Database = {
           portfolio_url?: string | null
           profile_visibility?: boolean | null
           project_update_notifications?: boolean | null
+          recovery_codes_hash?: string | null
+          recovery_phone?: string | null
           role?: string
           show_activity_stats?: boolean | null
           show_last_active?: boolean | null
@@ -1080,6 +1133,7 @@ export type Database = {
         Update: {
           account_status?: string | null
           avatar_url?: string | null
+          avg_response_hours?: number | null
           bio?: string | null
           city?: string | null
           country?: string | null
@@ -1093,6 +1147,7 @@ export type Database = {
           hourly_rate?: number | null
           id?: string
           in_app_notifications?: boolean | null
+          is_on_vacation?: boolean | null
           is_verified?: boolean | null
           language?: string | null
           last_active_at?: string | null
@@ -1101,6 +1156,8 @@ export type Database = {
           portfolio_url?: string | null
           profile_visibility?: boolean | null
           project_update_notifications?: boolean | null
+          recovery_codes_hash?: string | null
+          recovery_phone?: string | null
           role?: string
           show_activity_stats?: boolean | null
           show_last_active?: boolean | null
@@ -1204,6 +1261,7 @@ export type Database = {
       project_milestones: {
         Row: {
           amount: number
+          amount_paid: number | null
           approved_at: string | null
           auto_approve_at: string | null
           created_at: string
@@ -1226,6 +1284,7 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          amount_paid?: number | null
           approved_at?: string | null
           auto_approve_at?: string | null
           created_at?: string
@@ -1248,6 +1307,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          amount_paid?: number | null
           approved_at?: string | null
           auto_approve_at?: string | null
           created_at?: string
@@ -1493,6 +1553,45 @@ export type Database = {
         }
         Relationships: []
       }
+      recently_viewed: {
+        Row: {
+          id: string
+          item_id: string
+          item_type: string
+          user_id: string | null
+          viewed_at: string | null
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          item_type: string
+          user_id?: string | null
+          viewed_at?: string | null
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          item_type?: string
+          user_id?: string | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recently_viewed_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recently_viewed_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reports: {
         Row: {
           artwork_id: string | null
@@ -1642,6 +1741,49 @@ export type Database = {
           {
             foreignKeyName: "saved_artists_client_id_fkey"
             columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saved_artworks: {
+        Row: {
+          artwork_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          artwork_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          artwork_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_artworks_artwork_id_fkey"
+            columns: ["artwork_id"]
+            isOneToOne: false
+            referencedRelation: "artworks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_artworks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_artworks_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
@@ -1907,6 +2049,59 @@ export type Database = {
             columns: ["seller_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string | null
+          id: string
+          reason: string | null
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string | null
+          id?: string
+          reason?: string | null
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string | null
+          id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_blocks_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_blocks_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_blocks_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_blocks_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]

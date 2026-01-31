@@ -1,18 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { usePublicArtworks } from '@/hooks/usePublicArtworks';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ArtworkCard from '@/components/artwork/ArtworkCard';
 import TopFilters from '@/components/explore/TopFilters';
+import RecentlyViewed from '@/components/explore/RecentlyViewed';
 import GlassCard from '@/components/ui/glass-card';
-import { 
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { Loader2 } from 'lucide-react';
 import ChatbotBubble from '@/components/explore/ChatbotBubble';
 
 const Explore = () => {
@@ -21,20 +15,50 @@ const Explore = () => {
   const { artworks, loading, error } = usePublicArtworks();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filteredArtworks, setFilteredArtworks] = useState(artworks || []);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [displayedArtworks, setDisplayedArtworks] = useState<typeof artworks>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const loaderRef = useRef<HTMLDivElement>(null);
   const itemsPerPage = 12;
 
   const trendingArtworks = [...(artworks || [])]
     .sort((a, b) => ((b.views || 0) + (b.likes || 0) * 5) - ((a.views || 0) + (a.likes || 0) * 5))
     .slice(0, 4);
 
-  console.log('Explore state:', { artworks: artworks?.length, loading, error, filteredArtworks: filteredArtworks?.length });
+  // Infinite scroll - load more items
+  const loadMore = useCallback(() => {
+    if (loadingMore || !hasMore) return;
+    
+    setLoadingMore(true);
+    const currentLength = displayedArtworks.length;
+    const nextItems = filteredArtworks.slice(currentLength, currentLength + itemsPerPage);
+    
+    if (nextItems.length === 0) {
+      setHasMore(false);
+    } else {
+      setDisplayedArtworks(prev => [...prev, ...nextItems]);
+      setHasMore(currentLength + nextItems.length < filteredArtworks.length);
+    }
+    setLoadingMore(false);
+  }, [displayedArtworks.length, filteredArtworks, loadingMore, hasMore]);
 
-  // Pagination logic
-  const totalPages = Math.ceil((filteredArtworks?.length || 0) / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentArtworks = (filteredArtworks || []).slice(startIndex, endIndex);
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [loadMore, hasMore, loadingMore]);
 
   const handleFiltersChange = (filters: {
     search: string;
@@ -178,13 +202,17 @@ const Explore = () => {
 
     console.log('Filtered artworks:', filtered.length);
     setFilteredArtworks(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
+    // Reset displayed artworks when filters change
+    setDisplayedArtworks(filtered.slice(0, itemsPerPage));
+    setHasMore(filtered.length > itemsPerPage);
   };
 
   useEffect(() => {
     console.log('Artworks data updated:', artworks?.length);
     if (artworks) {
       setFilteredArtworks(artworks);
+      setDisplayedArtworks(artworks.slice(0, itemsPerPage));
+      setHasMore(artworks.length > itemsPerPage);
     }
   }, [artworks]);
 
@@ -207,7 +235,7 @@ const Explore = () => {
     console.error('Explore error:', error);
   }
 
-  console.log('Explore rendering main content with:', currentArtworks?.length, 'artworks');
+  console.log('Explore rendering main content with:', displayedArtworks?.length, 'artworks');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
@@ -225,16 +253,16 @@ const Explore = () => {
         </div>
       </div>
 
+      {/* Recently Viewed */}
+      <RecentlyViewed />
+
       {/* Trending Section */}
       {trendingArtworks.length > 0 && !loading && (
         <div className="container mx-auto px-4 pt-6 sm:pt-8">
           <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-gray-800">Trending Now</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {trendingArtworks.map((artwork) => (
-              <div 
-                key={`trending-${artwork.id}`}
-                className="group"
-              >
+              <div key={`trending-${artwork.id}`} className="group">
                 <ArtworkCard
                   id={artwork.id}
                   title={artwork.title}
@@ -264,9 +292,9 @@ const Explore = () => {
         resultsCount={filteredArtworks?.length || 0}
       />
 
-      {/* Main Content */}
+      {/* Main Content with Infinite Scroll */}
       <main className="container mx-auto px-4 py-6 sm:py-8">
-        {currentArtworks && currentArtworks.length > 0 ? (
+        {displayedArtworks && displayedArtworks.length > 0 ? (
           <div>
             {/* Artworks Grid */}
             <div className={`mb-6 sm:mb-8 ${
@@ -274,11 +302,8 @@ const Explore = () => {
                 ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6'
                 : 'space-y-4'
             }`}>
-              {currentArtworks.map((artwork) => (
-                <div 
-                  key={artwork.id}
-                  className="group"
-                >
+              {displayedArtworks.map((artwork) => (
+                <div key={artwork.id} className="group">
                   <ArtworkCard
                     id={artwork.id}
                     title={artwork.title}
@@ -297,45 +322,18 @@ const Explore = () => {
               ))}
             </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center">
-                <GlassCard className="p-4">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious 
-                          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                          className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:bg-white/20'}
-                        />
-                      </PaginationItem>
-                      
-                      {[...Array(Math.min(5, totalPages))].map((_, i) => {
-                        const pageNum = i + 1;
-                        return (
-                          <PaginationItem key={pageNum}>
-                            <PaginationLink
-                              onClick={() => setCurrentPage(pageNum)}
-                              isActive={currentPage === pageNum}
-                              className="cursor-pointer hover:bg-white/20"
-                            >
-                              {pageNum}
-                            </PaginationLink>
-                          </PaginationItem>
-                        );
-                      })}
-                      
-                      <PaginationItem>
-                        <PaginationNext 
-                          onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                          className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:bg-white/20'}
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                </GlassCard>
-              </div>
-            )}
+            {/* Infinite Scroll Loader */}
+            <div ref={loaderRef} className="flex justify-center py-8">
+              {loadingMore && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>Loading more...</span>
+                </div>
+              )}
+              {!hasMore && displayedArtworks.length > 0 && (
+                <p className="text-muted-foreground text-sm">You've seen all artworks</p>
+              )}
+            </div>
           </div>
         ) : (
           <div className="text-center py-16">
