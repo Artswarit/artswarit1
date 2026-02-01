@@ -18,6 +18,9 @@ import {
   Mail, MessageSquare, FolderOpen, Lock
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
+import ChangeEmailForm from "@/components/settings/ChangeEmailForm";
+import RecoveryOptions from "@/components/settings/RecoveryOptions";
+import TwoFactorSetup from "@/components/settings/TwoFactorSetup";
 
 interface LoginSession {
   id: string;
@@ -566,12 +569,21 @@ const ClientSettings = () => {
           </CardContent>
         </Card>
 
-        {/* Security */}
+        {/* Email Change */}
+        <ChangeEmailForm />
+
+        {/* Two-Factor Authentication */}
+        <TwoFactorSetup />
+
+        {/* Recovery Options */}
+        <RecoveryOptions />
+
+        {/* Security - Password */}
         <Card className="transition-all duration-300 hover:shadow-md">
           <CardHeader className="pb-3 sm:pb-4">
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Shield className="h-4 w-4 sm:h-5 sm:w-5" />
-              Security
+              Change Password
             </CardTitle>
             <CardDescription className="text-xs sm:text-sm">Update your password</CardDescription>
           </CardHeader>

@@ -17,10 +17,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Heart, Eye } from "lucide-react";
+import { Heart, Eye, Flag, Ban } from "lucide-react";
 import MessageArtistDialog from "@/components/artist-profile/MessageArtistDialog";
 import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 import { CreateProjectForm } from "@/components/projects/CreateProjectForm";
+import ReportDialog from "@/components/reports/ReportDialog";
+import BlockUserButton from "@/components/blocks/BlockUserButton";
 
 // --- Demo Data for fallback ---
 const ARTIST_UUID_1 = "11111111-1111-1111-1111-111111111111";
@@ -125,17 +127,9 @@ export default function ArtistProfile() {
 
   // State for message dialog
   const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
-
-  // Add a flag to show diagnostic banner for NOT logged in state
-  const [showDiagnosticBanner, setShowDiagnosticBanner] = useState(false);
-  useEffect(() => {
-    // Show this banner if NOT logged in, only for preview/new tab
-    if (!user) {
-      setShowDiagnosticBanner(true);
-    } else {
-      setShowDiagnosticBanner(false);
-    }
-  }, [user]);
+  
+  // State for report dialog
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
 
   // Fetch real artist profile from database
   useEffect(() => {
@@ -802,16 +796,6 @@ export default function ArtistProfile() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-gray-100 flex flex-col">
       <Navbar />
       
-      {/* Diagnostic login banner - mobile responsive */}
-      {showDiagnosticBanner && (
-        <div className="w-full bg-orange-200 py-2 px-3 sm:px-4 text-center text-orange-900 font-medium text-xs sm:text-sm">
-          <span className="block sm:inline">
-            Not logged in! Some actions are disabled.
-            <span className="block sm:inline sm:ml-2">[Preview mode 💡]</span>
-          </span>
-        </div>
-      )}
-      
       {/* Artist Header - responsive spacing */}
       <div className="pt-16 w-full">
         <ArtistHeader
@@ -959,6 +943,14 @@ export default function ArtistProfile() {
           currentUserId={user.id}
         />
       )}
+
+      {/* Report Dialog */}
+      <ReportDialog
+        isOpen={isReportDialogOpen}
+        onClose={() => setIsReportDialogOpen(false)}
+        contentType="user"
+        contentId={id || ''}
+      />
       
       <Footer />
     </div>
