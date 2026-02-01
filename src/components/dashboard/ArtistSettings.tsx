@@ -19,11 +19,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Shield, Bell, Eye, Globe, Loader2, Download, UserX, Trash2 } from "lucide-react";
+import { Shield, Bell, Eye, Globe, Loader2, Download, UserX, Trash2, Mail, Key, Smartphone } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import ChangeEmailForm from "@/components/settings/ChangeEmailForm";
+import RecoveryOptions from "@/components/settings/RecoveryOptions";
+import TwoFactorSetup from "@/components/settings/TwoFactorSetup";
+import AvailabilityCalendar from "@/components/dashboard/AvailabilityCalendar";
 
 interface ArtistSettingsProps {
   isLoading: boolean;
@@ -472,28 +476,17 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
         </div>
 
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Security
-              </CardTitle>
-              <CardDescription>Manage your account security settings</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="two-factor">Two-Factor Authentication</Label>
-                  <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
-                </div>
-                <Switch
-                  id="two-factor"
-                  checked={settings.twoFactorAuth}
-                  onCheckedChange={(checked) => handleSettingChange('twoFactorAuth', checked)}
-                />
-              </div>
-            </CardContent>
-          </Card>
+          {/* Email Change */}
+          <ChangeEmailForm />
+
+          {/* Two-Factor Authentication */}
+          <TwoFactorSetup />
+
+          {/* Recovery Options */}
+          <RecoveryOptions />
+
+          {/* Availability Calendar */}
+          <AvailabilityCalendar />
 
           <Card>
             <CardHeader>

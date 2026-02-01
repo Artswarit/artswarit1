@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Heart, Eye, Play, ExternalLink } from 'lucide-react';
+import { Heart, Eye, Play, ExternalLink, Bookmark, Flag, MoreVertical } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import GlassCard from '@/components/ui/glass-card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import LikeParticles from '@/components/ui/LikeParticles';
 import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
+import { useSavedArtworks } from '@/hooks/useSavedArtworks';
+import ReportDialog from '@/components/reports/ReportDialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface ArtworkCardProps {
   id: string;
@@ -40,6 +48,9 @@ const ArtworkCard = ({
   const { user } = useAuth();
   const { toast } = useToast();
   const { format } = useCurrencyFormat();
+  const { savedArtworkIds, toggleSaveArtwork, loading: isSaveLoading } = useSavedArtworks();
+  const isSaved = savedArtworkIds.has(id);
+  const [isReportOpen, setIsReportOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [currentLikes, setCurrentLikes] = useState(likes);
   const [currentViews, setCurrentViews] = useState(views);
@@ -200,30 +211,50 @@ const ArtworkCard = ({
     }
   };
 
+  const handleSave = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user?.id) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to save artworks.",
+      });
+      return;
+    }
+    toggleSaveArtwork(id);
+  };
+
+  const handleReportClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsReportOpen(true);
+  };
+
   return (
-    <Link to={`/artwork/${id}`}>
-      <GlassCard 
-        className="group overflow-hidden hover:scale-[1.02] transition-all duration-300 cursor-pointer"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        {/* Image/Video Container */}
-        <div className="relative aspect-square overflow-hidden">
-          {type === 'video' ? (
-            <video
-              src={imageUrl}
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-          ) : (
-            <img
-              src={imageUrl}
-              alt={title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
+    <>
+      <Link to={`/artwork/${id}`}>
+        <GlassCard 
+          className="group overflow-hidden hover:scale-[1.02] transition-all duration-300 cursor-pointer"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          {/* Image/Video Container */}
+          <div className="relative aspect-square overflow-hidden">
+            {type === 'video' ? (
+              <video
+                src={imageUrl}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+            ) : (
+              <img
+                src={imageUrl}
+                alt={title}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
           )}
           
           {/* Subtle gradient on hover only */}
@@ -268,17 +299,45 @@ const ArtworkCard = ({
               </span>
             </div>
             
-            <Link
-              to={`/artwork/${id}`}
-              className="text-primary hover:text-primary/80 text-sm font-medium transition-colors duration-300"
-              onClick={e => e.stopPropagation()}
-            >
-              View Details
-            </Link>
+            <div className="flex items-center gap-2">
+              {/* Save/Bookmark Button */}
+              <button
+                onClick={handleSave}
+                disabled={isSaveLoading}
+                className={`p-1 rounded transition-colors ${isSaved ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
+                title={isSaved ? 'Remove from saved' : 'Save artwork'}
+              >
+                <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
+              </button>
+              
+              {/* More Options Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
+                  <button className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors">
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenuItem onClick={handleReportClick} className="text-destructive">
+                    <Flag className="w-4 h-4 mr-2" />
+                    Report
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
       </GlassCard>
     </Link>
+
+    {/* Report Dialog */}
+    <ReportDialog
+      isOpen={isReportOpen}
+      onClose={() => setIsReportOpen(false)}
+      contentType="artwork"
+      contentId={id}
+    />
+  </>
   );
 };
 
