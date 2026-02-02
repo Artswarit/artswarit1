@@ -15,28 +15,34 @@ export function ArtistBilling() {
   const { isActive: isProSubscriber, renewAt, loading: subLoading } = usePremiumSubscription(user?.id);
   const [loadingPortal, setLoadingPortal] = useState(false);
 
-  const openStripePortal = async () => {
+  const handleSubscribe = async () => {
     if (!user?.id) return;
     
     setLoadingPortal(true);
     try {
-      const { data, error } = await supabase.functions.invoke('customer-portal', {
-        body: {},
+      const { data, error } = await supabase.functions.invoke('create-razorpay-subscription', {
+        body: { plan: 'pro' },
       });
 
       if (error) throw error;
       
-      if (data?.url) {
-        window.open(data.url, '_blank');
+      const checkoutUrl = data?.url || data?.short_url;
+      if (checkoutUrl) {
+        window.open(checkoutUrl, '_blank');
       } else {
-        toast.error('Could not open billing portal');
+        toast.error('Could not open subscription page');
       }
     } catch (error: any) {
-      console.error('Error opening portal:', error);
-      toast.error('Failed to open billing portal');
+      console.error('Error opening subscription:', error);
+      toast.error('Failed to open subscription page');
     } finally {
       setLoadingPortal(false);
     }
+  };
+
+  const handleManageSubscription = () => {
+    // Razorpay doesn't have a self-service portal like Stripe
+    toast.info('To manage your subscription, please contact support@artswarit.com');
   };
 
   return (
@@ -98,7 +104,7 @@ export function ArtistBilling() {
                 <Button 
                   variant="outline" 
                   className="w-full" 
-                  onClick={openStripePortal}
+                  onClick={handleManageSubscription}
                   disabled={loadingPortal}
                 >
                   {loadingPortal ? (
@@ -120,8 +126,16 @@ export function ArtistBilling() {
                     <li>• Advanced analytics dashboard</li>
                   </ul>
                 </div>
-                <Button className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600">
-                  <Crown className="h-4 w-4 mr-2" />
+                <Button 
+                  className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600"
+                  onClick={handleSubscribe}
+                  disabled={loadingPortal}
+                >
+                  {loadingPortal ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Crown className="h-4 w-4 mr-2" />
+                  )}
                   Upgrade to Pro - ₹499/month
                 </Button>
               </div>

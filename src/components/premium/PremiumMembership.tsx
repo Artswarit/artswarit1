@@ -38,10 +38,9 @@ const PremiumMembership = () => {
       const {
         data,
         error
-      } = await supabase.functions.invoke('create-premium-checkout', {
+      } = await supabase.functions.invoke('create-razorpay-subscription', {
         body: {
-          plan: planType || 'pro',
-          user_id: user?.id
+          plan: planType || 'pro'
         }
       });
       if (error) {
@@ -52,14 +51,22 @@ const PremiumMembership = () => {
         });
         return;
       }
-      if (data?.url) {
-        window.open(data.url, '_blank');
+      // Handle both link and API response
+      const checkoutUrl = data?.url || data?.short_url;
+      if (checkoutUrl) {
+        window.open(checkoutUrl, '_blank');
+      } else if (data?.error) {
+        toast({
+          title: "Subscription Error",
+          description: data.error,
+          variant: "destructive"
+        });
       }
     } catch (error) {
-      console.error('Error creating checkout:', error);
+      console.error('Error creating subscription:', error);
       toast({
         title: "Error",
-        description: "Failed to initiate payment. Please try again.",
+        description: "Failed to initiate subscription. Please try again.",
         variant: "destructive"
       });
     } finally {

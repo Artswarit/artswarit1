@@ -6,29 +6,19 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 export default function SubscriptionManagement() {
-  const { user, session } = useAuth(); // Add session here
+  const { user } = useAuth();
   const { isActive, subscriptionTier, renewAt, loading } = usePremiumSubscription(user?.id);
   const { toast } = useToast();
 
   const handleManage = async () => {
-    try {
-      // Get Stripe customer portal URL
-      const resp = await fetch("/functions/v1/customer-portal", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${session?.access_token}`, // Use session.access_token
-          "Content-Type": "application/json"
-        }
-      });
-      const data = await resp.json();
-      if (data?.url) {
-        window.open(data.url, "_blank");
-      } else {
-        toast({ title: "Error", description: "Unable to open subscription management." });
-      }
-    } catch (e) {
-      toast({ title: "Error", description: "Failed to open Stripe portal." });
-    }
+    // For Razorpay subscriptions, direct to Razorpay dashboard or contact support
+    // Razorpay doesn't have a customer self-service portal like Stripe
+    toast({ 
+      title: "Manage Subscription", 
+      description: "To manage or cancel your subscription, please contact support@artswarit.com or visit your Razorpay payment history." 
+    });
+    // Open Razorpay support or dashboard (you can customize this URL)
+    window.open("https://dashboard.razorpay.com", "_blank");
   };
 
   if (loading) return (
