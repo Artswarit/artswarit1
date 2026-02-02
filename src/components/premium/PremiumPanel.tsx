@@ -150,7 +150,7 @@ const PremiumPanel = ({ onUpgrade }: Props) => {
           </div>
           <div className="flex items-center gap-1">
             <CheckCircle className="h-4 w-4 text-green-600" />
-            <span>Secure payments via Stripe</span>
+            <span>Secure payments via Razorpay</span>
           </div>
           <div className="flex items-center gap-1">
             <CheckCircle className="h-4 w-4 text-green-600" />
