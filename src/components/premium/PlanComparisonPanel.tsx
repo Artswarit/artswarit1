@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Crown, CheckCircle, Sparkles, Users, Star, Zap, MessageSquare, TrendingUp, Image, Wrench } from "lucide-react";
 import { PLANS } from "@/hooks/useArtistPlan";
 interface PlanComparisonPanelProps {
-  onUpgrade: (plan: string) => void;
+  onUpgrade: () => void;
   loading?: boolean;
   currentPlan?: "starter" | "pro";
 }
@@ -141,7 +141,7 @@ export function PlanComparisonPanel({
             {currentPlan === "pro" ? <Button variant="outline" className="w-full border-yellow-400 text-yellow-700" disabled>
                 <Crown className="h-4 w-4 mr-2" />
                 Pro Member
-              </Button> : <Button onClick={() => onUpgrade('pro')} disabled={loading} className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-bold shadow-lg hover:shadow-xl transition-all">
+              </Button> : <Button onClick={onUpgrade} disabled={loading} className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-bold shadow-lg hover:shadow-xl transition-all">
                 <Crown className="h-4 w-4 mr-2" />
                 Upgrade to Pro
               </Button>}
