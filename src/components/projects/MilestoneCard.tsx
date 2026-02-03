@@ -74,8 +74,10 @@ export function MilestoneCard({
   const isPending = milestone.status === 'pending';
   const isPartiallyPaid = milestone.status === 'partially_paid';
 
-  const canPay = isClient && isApproved && !isDisputed && artistKycEnabled;
-  const paymentBlocked = isClient && isApproved && !artistKycEnabled;
+  // Clients can pay directly via Razorpay - no artist KYC required
+  // Payments go to platform first, then distributed to artists
+  const canPay = isClient && isApproved && !isDisputed;
+  // Payment is never blocked for clients - Razorpay handles everything
 
   return (
     <Card className={`transition-all ${isPaid ? 'border-emerald-500/50 bg-emerald-500/5' : ''} ${isDisputed ? 'border-red-500/50 bg-red-500/5' : ''}`}>
@@ -143,12 +145,12 @@ export function MilestoneCard({
           />
         )}
 
-        {/* Payment blocked warning */}
-        {paymentBlocked && (
-          <div className="flex items-center gap-2 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
-            <Lock className="h-4 w-4 text-yellow-600" />
-            <p className="text-sm text-yellow-600">
-              Payment blocked: Artist has not enabled payments yet.
+        {/* Client info when milestone is approved */}
+        {isClient && isApproved && (
+          <div className="flex items-center gap-2 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <p className="text-sm text-green-600">
+              ✓ Work approved! Ready for payment.
             </p>
           </div>
         )}
