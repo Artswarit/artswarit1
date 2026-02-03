@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Play, Upload, Eye, AlertTriangle, FileText, RotateCcw, Lock, CreditCard, CheckCircle } from 'lucide-react';
+import { Calendar, Play, Upload, Eye, AlertTriangle, FileText, RotateCcw, Lock, CreditCard, CheckCircle, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 import { PayMilestoneButton } from '@/components/payments/PayMilestoneButton';
@@ -72,6 +72,7 @@ export function MilestoneCard({
   const isDisputed = milestone.status === 'disputed';
   const isApproved = milestone.status === 'approved';
   const isPending = milestone.status === 'pending';
+  const isPartiallyPaid = milestone.status === 'partially_paid';
 
   const canPay = isClient && isApproved && !isDisputed && artistKycEnabled;
   const paymentBlocked = isClient && isApproved && !artistKycEnabled;
@@ -179,24 +180,52 @@ export function MilestoneCard({
           </div>
         )}
 
+        {/* Workflow Status Message */}
+        {isArtist && isApproved && (
+          <div className="flex items-center gap-2 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+            <Clock className="h-4 w-4 text-green-600" />
+            <p className="text-sm text-green-600">
+              ✓ Work approved! Waiting for client to make payment.
+            </p>
+          </div>
+        )}
+
+        {isClient && isInProgress && (
+          <div className="flex items-center gap-2 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+            <Play className="h-4 w-4 text-blue-600" />
+            <p className="text-sm text-blue-600">
+              Artist is working on this milestone.
+            </p>
+          </div>
+        )}
+
+        {isClient && isPending && index === 0 && (
+          <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              Waiting for artist to start work on this milestone.
+            </p>
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-2 pt-2 border-t">
           {/* Artist Actions */}
           {isArtist && (
             <>
-              {canStart && (
-                <Button size="sm" onClick={onStart}>
+              {canStart && !startBlockedReason && (
+                <Button size="sm" onClick={onStart} className="bg-primary hover:bg-primary/90">
                   <Play className="h-4 w-4 mr-1" />
                   Start Milestone
                 </Button>
               )}
               {(isInProgress || isRevisionRequested) && (
-                <Button size="sm" onClick={onSubmit}>
+                <Button size="sm" onClick={onSubmit} className="bg-primary hover:bg-primary/90">
                   <Upload className="h-4 w-4 mr-1" />
                   Submit for Review
                 </Button>
               )}
-              {isPaid && (
+              {(isPaid || isPartiallyPaid) && (
                 <Button size="sm" variant="outline" onClick={onSubmit}>
                   <Upload className="h-4 w-4 mr-1" />
                   Upload Final Files
@@ -209,7 +238,7 @@ export function MilestoneCard({
           {isClient && (
             <>
               {isSubmitted && (
-                <Button size="sm" onClick={onReview}>
+                <Button size="sm" onClick={onReview} className="bg-primary hover:bg-primary/90">
                   <Eye className="h-4 w-4 mr-1" />
                   Review Submission
                 </Button>
@@ -222,7 +251,7 @@ export function MilestoneCard({
                   onSuccess={onPaymentSuccess}
                 />
               )}
-              {isPaid && (
+              {(isPaid || isPartiallyPaid) && (
                 <Button size="sm" variant="outline">
                   <FileText className="h-4 w-4 mr-1" />
                   Download Files
