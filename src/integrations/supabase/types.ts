@@ -1553,6 +1553,77 @@ export type Database = {
         }
         Relationships: []
       }
+      razorpay_orders: {
+        Row: {
+          amount: number
+          currency: string
+          id: string
+          inserted_at: string | null
+          product_id: string | null
+          raw_payload: Json | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          currency: string
+          id: string
+          inserted_at?: string | null
+          product_id?: string | null
+          raw_payload?: Json | null
+          status: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          currency?: string
+          id?: string
+          inserted_at?: string | null
+          product_id?: string | null
+          raw_payload?: Json | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      razorpay_payments: {
+        Row: {
+          amount: number
+          currency: string
+          id: string
+          inserted_at: string | null
+          order_id: string | null
+          raw_payload: Json | null
+          status: string
+        }
+        Insert: {
+          amount: number
+          currency: string
+          id: string
+          inserted_at?: string | null
+          order_id?: string | null
+          raw_payload?: Json | null
+          status: string
+        }
+        Update: {
+          amount?: number
+          currency?: string
+          id?: string
+          inserted_at?: string | null
+          order_id?: string | null
+          raw_payload?: Json | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "razorpay_payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "razorpay_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recently_viewed: {
         Row: {
           id: string
