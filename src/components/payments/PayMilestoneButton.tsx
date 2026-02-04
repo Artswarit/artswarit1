@@ -4,6 +4,8 @@ import { DollarSign, Loader2, AlertCircle } from 'lucide-react';
 import { useRazorpay } from '@/hooks/useRazorpay';
 import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 import { useArtistPlan, calculateEarnings } from '@/hooks/useArtistPlan';
+import { usePaymentGateway } from '@/hooks/usePaymentGateway';
+import { PaymentMethodBadge } from '@/components/payments/PaymentMethodBadge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Dialog,
@@ -36,6 +38,7 @@ export function PayMilestoneButton({
   const { initiatePayment, loading } = useRazorpay();
   const { format: formatCurrency } = useCurrencyFormat();
   const { isProArtist } = useArtistPlan(artistId);
+  const { displayMethods, legalCopy } = usePaymentGateway();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   // Calculate earnings based on artist plan
@@ -59,7 +62,7 @@ export function PayMilestoneButton({
     <>
       <Button
         size="sm"
-        className={`bg-emerald-600 hover:bg-emerald-700 ${className}`}
+        className={`bg-primary hover:bg-primary/90 ${className}`}
         onClick={() => setConfirmOpen(true)}
         disabled={disabled || loading}
       >
@@ -81,6 +84,11 @@ export function PayMilestoneButton({
           </DialogHeader>
 
 <div className="space-y-4 py-4">
+            {/* Payment method info */}
+            <div className="bg-muted/50 rounded-lg p-3">
+              <PaymentMethodBadge showLegalCopy />
+            </div>
+
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Milestone Amount</span>
               <span className="font-semibold">{formatCurrency(amount)}</span>
@@ -90,7 +98,7 @@ export function PayMilestoneButton({
               <span className="text-muted-foreground">
                 Artist Payout ({isProArtist ? '100%' : '85%'})
               </span>
-              <span className={isProArtist ? 'text-green-600 font-semibold' : ''}>
+              <span className={isProArtist ? 'text-primary font-semibold' : ''}>
                 {formatCurrency(earnings.artistPayout)}
               </span>
             </div>
@@ -103,8 +111,8 @@ export function PayMilestoneButton({
             </div>
             
             {isProArtist && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-2 text-center">
-                <span className="text-green-700 text-sm font-medium">
+              <div className="bg-primary/10 border border-primary/20 rounded-lg p-2 text-center">
+                <span className="text-primary text-sm font-medium">
                   ✨ Pro Artist - 0% platform fee applied!
                 </span>
               </div>
@@ -123,7 +131,7 @@ export function PayMilestoneButton({
               Cancel
             </Button>
             <Button 
-              className="bg-emerald-600 hover:bg-emerald-700"
+              className="bg-primary hover:bg-primary/90"
               onClick={handlePayment}
               disabled={loading}
             >
