@@ -101,22 +101,9 @@ serve(async (req) => {
       });
     }
 
-    // Check artist KYC status
-    const { data: artistAccount } = await supabase
-      .from('razorpay_accounts')
-      .select('*')
-      .eq('user_id', milestone.project.artist_id)
-      .single();
-
-    if (!artistAccount || !artistAccount.payouts_enabled) {
-      console.error('Artist KYC not complete:', milestone.project.artist_id);
-      return new Response(JSON.stringify({ 
-        error: 'Artist has not completed payment setup. Please ask them to enable payments in their dashboard.' 
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    // Note: Artist bank details are optional - platform collects payment
+    // and handles artist payouts separately through admin dashboard
+    console.log(`Processing payment for artist: ${milestone.project.artist_id}`);
 
     // Check if artist is a Pro subscriber (0% fee) or Starter (15% fee)
     const { data: subscription } = await supabase
