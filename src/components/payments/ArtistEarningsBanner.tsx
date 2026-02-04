@@ -40,19 +40,22 @@ export function ArtistEarningsBanner({ milestoneAmount, milestoneStatus, artistI
   const handleUpgrade = async () => {
     try {
       setUpgradeLoading(true);
-      const { data, error } = await supabase.functions.invoke('create-premium-checkout', {
+      const { data, error } = await supabase.functions.invoke('create-razorpay-subscription', {
         body: { plan: 'pro' }
       });
 
       if (error) throw error;
 
-      if (data?.url) {
-        // Open in new tab
-        window.open(data.url, '_blank');
+      // Handle subscription link
+      const checkoutUrl = data?.url || data?.short_url;
+      if (checkoutUrl) {
+        window.open(checkoutUrl, '_blank');
+      } else if (data?.error) {
+        toast.error(data.error);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating checkout:', error);
-      toast.error('Failed to start upgrade process');
+      toast.error(error.message || 'Failed to start upgrade process');
     } finally {
       setUpgradeLoading(false);
       setUpgradePromptOpen(false);

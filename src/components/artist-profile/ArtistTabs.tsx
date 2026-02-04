@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import ArtworkCard from "@/components/artwork/ArtworkCard";
 import ArtworkCardModern from "@/components/artist-profile/ArtworkCardModern";
@@ -11,6 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import ReviewCard from "@/components/reviews/ReviewCard";
 import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
+import { useArtworkPayment } from "@/hooks/useArtworkPayment";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+
 interface GalleryArtwork {
   id: string;
   title: string;
@@ -81,6 +85,58 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
   const [tab, setTab] = useState("all");
   const [page, setPage] = useState(1);
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
+  const { initiatePayment, loading: paymentLoading } = useArtworkPayment();
+  
+  // Track unlocked artworks
+  const [unlockedArtworkIds, setUnlockedArtworkIds] = useState<Set<string>>(new Set());
+
+  // Fetch user's unlocked artworks on mount
+  useEffect(() => {
+    async function fetchUnlockedArtworks() {
+      if (!user?.id) return;
+      
+      const { data } = await supabase
+        .from('artwork_unlocks')
+        .select('artwork_id')
+        .eq('user_id', user.id);
+      
+      if (data) {
+        setUnlockedArtworkIds(new Set(data.map(u => u.artwork_id)));
+      }
+    }
+    
+    fetchUnlockedArtworks();
+  }, [user?.id]);
+
+  // Handle artwork unlock payment
+  const handleUnlockArtwork = useCallback((artworkId: string) => {
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to unlock premium artworks.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    initiatePayment({
+      artworkId,
+      onSuccess: () => {
+        // Add to unlocked set
+        setUnlockedArtworkIds(prev => new Set([...prev, artworkId]));
+      }
+    });
+  }, [user, initiatePayment]);
+
+  // Handle exclusive access request
+  const handleRequestAccess = useCallback((artworkId: string, artistName?: string) => {
+    toast({
+      title: "Access Requested",
+      description: `Your request has been sent to ${artistName || 'the artist'}. They will contact you if approved.`
+    });
+    // TODO: Implement actual request system (could be via messaging)
+  }, []);
 
   // Open the right tab when arriving from a notification link
   useEffect(() => {
@@ -187,6 +243,9 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
           {isArtTab && <>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 my-4">
                 {paged.map(art => {
+                  // Check if this artwork is unlocked by the user
+                  const isUnlocked = unlockedArtworkIds.has(art.id) || isArtistOwner;
+                  
                   // Use ArtworkCardModern for Premium/Exclusive tabs with blur/lock
                   if (tab === "premium" || tab === "exclusive") {
                     return (
@@ -199,16 +258,10 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
                         price={art.price}
                         isPremium={art.isPremium}
                         isExclusive={art.isExclusive}
-                        isUnlocked={false}
+                        isUnlocked={isUnlocked}
                         onViewFull={() => onArtworkClick?.(art)}
-                        onUnlock={() => {
-                          // TODO: Handle payment flow
-                          console.log("Unlock artwork:", art.id);
-                        }}
-                        onRequestAccess={() => {
-                          // TODO: Handle request access flow
-                          console.log("Request access for:", art.id);
-                        }}
+                        onUnlock={() => handleUnlockArtwork(art.id)}
+                        onRequestAccess={() => handleRequestAccess(art.id, art.artistName)}
                       />
                     );
                   }
