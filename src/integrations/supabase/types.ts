@@ -178,6 +178,44 @@ export type Database = {
           },
         ]
       }
+      artwork_unlocks: {
+        Row: {
+          amount: number
+          artwork_id: string
+          created_at: string
+          id: string
+          order_id: string | null
+          payment_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          artwork_id: string
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          payment_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          artwork_id?: string
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          payment_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artwork_unlocks_artwork_id_fkey"
+            columns: ["artwork_id"]
+            isOneToOne: false
+            referencedRelation: "artworks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       artwork_views: {
         Row: {
           artwork_id: string | null
