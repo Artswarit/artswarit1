@@ -121,10 +121,15 @@ serve(async (req) => {
     console.log(`Artist ${milestone.project.artist_id} is ${isProArtist ? 'Pro' : 'Starter'} - Commission: ${commissionRate * 100}%`);
 
     // Calculate amounts based on artist plan
-    const amount = Number(milestone.amount);
-    const platformFee = Math.round(amount * commissionRate * 100) / 100;
-    const artistPayout = Math.round((amount - platformFee) * 100) / 100;
-    const amountInPaise = Math.round(amount * 100); // Razorpay uses smallest currency unit
+    // IMPORTANT: milestone.amount is stored in USD, but Razorpay MUST receive INR
+    // Convert USD to INR for Razorpay (approximate rate, backend should use live rate)
+    const amountUSD = Number(milestone.amount);
+    const USD_TO_INR_RATE = 83.5; // Fallback rate - should ideally be fetched from API
+    const amountINR = Math.round(amountUSD * USD_TO_INR_RATE * 100) / 100;
+    
+    const platformFee = Math.round(amountUSD * commissionRate * 100) / 100;
+    const artistPayout = Math.round((amountUSD - platformFee) * 100) / 100;
+    const amountInPaise = Math.round(amountINR * 100); // Razorpay uses smallest currency unit (paise)
 
     // Create Razorpay order
     const razorpayAuth = btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`);
@@ -137,17 +142,20 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         amount: amountInPaise,
-        currency: 'USD',
+        currency: 'INR', // Razorpay MUST receive INR for Indian payments
         receipt: `ms_${milestoneId.slice(0, 8)}`,
         notes: {
           milestone_id: milestoneId,
           project_id: milestone.project_id,
           client_id: userId,
           artist_id: milestone.project.artist_id,
-          platform_fee: platformFee,
-          artist_payout: artistPayout,
+          amount_usd: amountUSD, // Store original USD amount
+          amount_inr: amountINR, // Store converted INR amount
+          platform_fee_usd: platformFee,
+          artist_payout_usd: artistPayout,
           is_pro_artist: isProArtist,
           commission_rate: commissionRate,
+          usd_to_inr_rate: USD_TO_INR_RATE,
         },
       }),
     });
@@ -164,7 +172,7 @@ serve(async (req) => {
     const order = await orderResponse.json();
     console.log('Razorpay order created:', order.id);
 
-    // Create payment record
+    // Create payment record - store amounts in USD (base currency)
     const { error: paymentError } = await supabase
       .from('payments')
       .insert({
@@ -172,10 +180,10 @@ serve(async (req) => {
         project_id: milestone.project_id,
         client_id: userId,
         artist_id: milestone.project.artist_id,
-        amount: amount,
+        amount: amountUSD, // Store in USD (base currency)
         platform_fee: platformFee,
         artist_payout: artistPayout,
-        currency: 'USD',
+        currency: 'USD', // Base currency for storage
         razorpay_order_id: order.id,
         status: 'pending',
       });
@@ -187,14 +195,18 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       orderId: order.id,
-      amount: amountInPaise,
-      currency: 'USD',
+      amount: amountInPaise, // Amount in paise for Razorpay
+      amountINR: amountINR, // Display amount in INR
+      amountUSD: amountUSD, // Original USD amount
+      currency: 'INR', // Gateway currency
+      baseCurrency: 'USD', // Base storage currency
       keyId: RAZORPAY_KEY_ID,
       milestoneId,
       projectId: milestone.project_id,
       isProArtist,
       platformFee,
       artistPayout,
+      exchangeRate: USD_TO_INR_RATE,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

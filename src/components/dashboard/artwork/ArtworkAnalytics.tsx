@@ -1,7 +1,7 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Eye, Heart, DollarSign, Users } from 'lucide-react';
+import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 
 interface AnalyticsData {
   totalViews: number;
@@ -19,6 +19,8 @@ interface ArtworkAnalyticsProps {
 }
 
 const ArtworkAnalytics = ({ data }: ArtworkAnalyticsProps) => {
+  const { format: formatCurrency } = useCurrencyFormat();
+  
   const formatNumber = (num: number) => {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
     if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
@@ -55,7 +57,7 @@ const ArtworkAnalytics = ({ data }: ArtworkAnalyticsProps) => {
     },
     {
       title: 'Total Revenue',
-      value: `$${formatNumber(data.totalRevenue)}`,
+      value: formatCurrency(data.totalRevenue),
       growth: data.revenueGrowth,
       icon: DollarSign,
       color: 'text-green-600'

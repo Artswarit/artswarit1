@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import GlassCard from "@/components/ui/glass-card";
 import { Eye, Heart, Download, Lock, Sparkles, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 
 interface ArtworkCardProps {
   title: string;
@@ -41,6 +42,7 @@ const ArtworkCardModern: React.FC<ArtworkCardProps> = ({
 }) => {
   const [hovered, setHovered] = useState(false);
   const [showUnlockAnimation, setShowUnlockAnimation] = useState(false);
+  const { format: formatCurrency } = useCurrencyFormat();
 
   // Determine if content should be blurred
   const shouldBlur = (isPremium || isExclusive) && !isUnlocked;
@@ -107,7 +109,7 @@ const ArtworkCardModern: React.FC<ArtworkCardProps> = ({
             {isPremium && !isExclusive && (
               <div className="text-center px-4">
                 <p className="text-white font-semibold text-sm mb-2">
-                  ₹{price} to Unlock
+                  {formatCurrency(price)} to Unlock
                 </p>
                 <Button 
                   onClick={handleUnlock}
@@ -213,7 +215,7 @@ const ArtworkCardModern: React.FC<ArtworkCardProps> = ({
             {isExclusive 
               ? "Request Access" 
               : isPremium 
-                ? `₹${price}` 
+                ? formatCurrency(price)
                 : "Free"}
           </span>
         </div>

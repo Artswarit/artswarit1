@@ -3,9 +3,10 @@ import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { LayoutDashboard, Users, MessageSquare, FileText, Settings, CreditCard, Heart, Bell, ChevronRight, Search, CheckCircle, Clock, Star, Lock, User, PlusCircle } from "lucide-react";
+import { LayoutDashboard, Users, MessageSquare, FileText, Settings, CreditCard, Heart, Bell, ChevronRight, Search, CheckCircle, Clock, Star, Lock, User, PlusCircle, Bookmark } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import SavedArtists from "@/components/dashboard/SavedArtists";
+import SavedArtworks from "@/components/dashboard/SavedArtworks";
 import ClientMessages from "@/components/dashboard/ClientMessages";
 import ProjectRating from "@/components/dashboard/ProjectRating";
 import ClientPayments from "@/components/dashboard/ClientPayments";
@@ -350,9 +351,13 @@ const ClientDashboard = () => {
                 <MessageSquare className="h-4 w-4" />
                 <span>Messages</span>
               </TabsTrigger>
+              <TabsTrigger value="saved" disabled={profileIncomplete} className={cn("flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200", "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground", "hover:bg-muted/50", profileIncomplete && "opacity-50 cursor-not-allowed")}>
+                <Bookmark className="h-4 w-4" />
+                <span>Saved</span>
+              </TabsTrigger>
               <TabsTrigger value="artists" disabled={profileIncomplete} className={cn("flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200", "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground", "hover:bg-muted/50", profileIncomplete && "opacity-50 cursor-not-allowed")}>
                 <Heart className="h-4 w-4" />
-                <span>Artists</span>
+                <span>Following</span>
               </TabsTrigger>
               <TabsTrigger value="ratings" disabled={profileIncomplete} className={cn("flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-md transition-all duration-200", "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground", "hover:bg-muted/50", profileIncomplete && "opacity-50 cursor-not-allowed")}>
                 <Star className="h-4 w-4" />
@@ -610,6 +615,10 @@ const ClientDashboard = () => {
             <ClientMessages />
           </TabsContent>
           
+          <TabsContent value="saved" className="animate-fade-in">
+            <SavedArtworks />
+          </TabsContent>
+
           <TabsContent value="artists" className="animate-fade-in">
             <SavedArtists />
           </TabsContent>

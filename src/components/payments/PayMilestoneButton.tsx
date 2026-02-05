@@ -18,7 +18,7 @@ import {
 
 interface PayMilestoneButtonProps {
   milestoneId: string;
-  amount: number;
+  amount: number; // Amount in USD (base currency)
   milestoneTitle: string;
   artistId?: string;
   onSuccess?: () => void;
@@ -38,11 +38,14 @@ export function PayMilestoneButton({
   const { initiatePayment, loading } = useRazorpay();
   const { format: formatCurrency } = useCurrencyFormat();
   const { isProArtist } = useArtistPlan(artistId);
-  const { displayMethods, legalCopy } = usePaymentGateway();
+  const { formatGatewayAmount, gatewayCurrency, isIndian } = usePaymentGateway();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  // Calculate earnings based on artist plan
+  // Calculate earnings based on artist plan (in USD)
   const earnings = calculateEarnings(amount, isProArtist);
+
+  // Gateway display amount (INR for Razorpay, converted from USD)
+  const gatewayDisplayAmount = formatGatewayAmount(amount);
 
   const handlePayment = () => {
     setConfirmOpen(false);
@@ -71,7 +74,7 @@ export function PayMilestoneButton({
         ) : (
           <DollarSign className="h-4 w-4 mr-1" />
         )}
-        Pay {formatCurrency(amount)}
+        Pay {gatewayDisplayAmount}
       </Button>
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
@@ -83,15 +86,22 @@ export function PayMilestoneButton({
             </DialogDescription>
           </DialogHeader>
 
-<div className="space-y-4 py-4">
+          <div className="space-y-4 py-4">
             {/* Payment method info */}
             <div className="bg-muted/50 rounded-lg p-3">
               <PaymentMethodBadge showLegalCopy />
             </div>
 
+            {/* Base amount in USD */}
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">Milestone Amount (USD)</span>
+              <span className="font-medium">${amount.toFixed(2)}</span>
+            </div>
+
+            {/* Actual payment amount in gateway currency */}
             <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Milestone Amount</span>
-              <span className="font-semibold">{formatCurrency(amount)}</span>
+              <span className="text-muted-foreground font-medium">You Pay ({gatewayCurrency})</span>
+              <span className="font-bold text-lg text-primary">{gatewayDisplayAmount}</span>
             </div>
             
             <div className="flex justify-between items-center text-sm">
@@ -99,7 +109,7 @@ export function PayMilestoneButton({
                 Artist Payout ({isProArtist ? '100%' : '85%'})
               </span>
               <span className={isProArtist ? 'text-primary font-semibold' : ''}>
-                {formatCurrency(earnings.artistPayout)}
+                ${earnings.artistPayout.toFixed(2)}
               </span>
             </div>
             
@@ -107,7 +117,7 @@ export function PayMilestoneButton({
               <span className="text-muted-foreground">
                 Platform Fee ({earnings.feePercentage}%)
               </span>
-              <span>{formatCurrency(earnings.platformFee)}</span>
+              <span>${earnings.platformFee.toFixed(2)}</span>
             </div>
             
             {isProArtist && (
@@ -136,7 +146,7 @@ export function PayMilestoneButton({
               disabled={loading}
             >
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Pay Now
+              Pay {gatewayDisplayAmount}
             </Button>
           </DialogFooter>
         </DialogContent>
