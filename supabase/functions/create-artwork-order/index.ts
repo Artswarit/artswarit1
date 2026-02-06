@@ -73,8 +73,14 @@ serve(async (req) => {
       );
     }
 
+    // CRITICAL: artwork.price is stored in USD, Razorpay ALWAYS needs INR
+    const USD_TO_INR_RATE = 83.5;
+    const priceUSD = Number(artwork.price);
+    const priceINR = priceUSD * USD_TO_INR_RATE;
     // Convert to paise (Razorpay uses smallest currency unit)
-    const amountInPaise = Math.round(artwork.price * 100);
+    const amountInPaise = Math.round(priceINR * 100);
+    
+    console.log(`Artwork order: $${priceUSD} USD = ₹${priceINR} INR = ${amountInPaise} paise`);
 
     // Create Razorpay order
     const auth = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
@@ -93,6 +99,8 @@ serve(async (req) => {
           artwork_id: artworkId,
           user_id: user.id,
           artist_id: artwork.artist_id,
+          amount_usd: priceUSD,
+          usd_to_inr_rate: USD_TO_INR_RATE,
         },
       }),
     });
