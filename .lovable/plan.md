@@ -1,486 +1,252 @@
 
+# Implementation Plan: Remaining Fixes for Artswarit Platform
 
-# Comprehensive Platform Enhancement Implementation Plan
-
-This plan addresses 20 identified issues across the platform, organized into logical implementation phases.
-
----
-
-## Phase 1: Authentication & Security Enhancements
-
-### 1.1 Email Change Feature (Issue 6.2)
-**Location**: `src/components/dashboard/ArtistSettings.tsx` and `src/components/dashboard/ClientSettings.tsx`
-
-**Implementation**:
-- Add new "Change Email" card in both settings pages
-- Use Supabase's `supabase.auth.updateUser({ email: newEmail })` API
-- Include verification step that sends confirmation to new email
-- Show current email with edit button
-- Add loading state and success/error handling
-
-### 1.2 Account Recovery Options (Issue 6.3)
-**Location**: Settings pages and new `src/components/settings/RecoveryOptions.tsx`
-
-**Implementation**:
-- Add recovery phone number field to settings
-- Generate and display backup recovery codes (store hash in DB)
-- Allow users to regenerate codes (invalidates old ones)
-- Store phone number in profiles table
-
-**Database Migration Required**:
-```sql
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS recovery_phone text;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS recovery_codes_hash text;
-```
-
-### 1.3 Two-Factor Authentication (Issue 9.4)
-**Location**: Settings pages and new TOTP components
-
-**Implementation**:
-- Create `src/components/settings/TwoFactorSetup.tsx` component
-- Use Supabase's MFA enrollment APIs
-- QR code generation for authenticator apps
-- Backup codes generation and secure storage
-- Replace placeholder toggle with actual 2FA setup flow
+## Overview
+This plan addresses multiple interconnected issues across currency handling, project workflows, analytics, recommendations, and UI/UX improvements. The work is organized into logical phases to ensure stability.
 
 ---
 
-## Phase 2: Explore Page Improvements
+## Phase 1: Currency Consistency (Critical)
 
-### 2.1 Infinite Scroll (Issue 5.1)
-**Location**: `src/pages/Explore.tsx`
+### Problem Analysis
+- Currency display mismatch: Some areas show USD symbol ($) with INR amounts
+- Razorpay receiving USD instead of INR (gateway incompatibility)
+- Artwork pricing shows incorrect conversion (e.g., $1 showing as ₹1 instead of ₹83.5)
+- Milestone payment button and gateway amount mismatch
 
-**Implementation**:
-- Replace pagination with IntersectionObserver-based infinite scroll
-- Load 12 items initially, then 12 more on scroll
-- Add loading spinner at bottom during fetch
-- Preserve scroll position on filter changes
+### Technical Changes
 
-**Key Changes**:
-- Remove `Pagination` component import
-- Add `useRef` for observer target element
-- Implement `useIntersectionObserver` hook or inline logic
-- Update `currentArtworks` to accumulate data
+**1.1 Update Payment Gateway Hook**
+- File: `src/hooks/usePaymentGateway.ts`
+- Add centralized USD-to-INR conversion constant (83.5 rate)
+- Add `convertToGatewayCurrency()` function for consistent Razorpay amount calculation
+- Ensure `gatewayAmount` always returns INR for Razorpay
 
-### 2.2 Location-Based Search (Issue 5.2)
-**Location**: `src/components/explore/TopFilters.tsx` and `src/components/explore/ArtistFilters.tsx`
+**1.2 Fix Milestone Payment Display**
+- File: `src/components/payments/PayMilestoneButton.tsx`
+- Use gateway-converted amount in "Pay" button text
+- Ensure button shows exact INR amount that Razorpay will charge
 
-**Implementation**:
-- Add "Near Me" button that requests geolocation
-- Store user's coordinates in state
-- Filter artists by proximity using location field
-- Add distance indicator on artist cards
-- Fallback for denied geolocation permissions
+**1.3 Fix Artwork Card Pricing**
+- File: `src/components/artist-profile/ArtworkCardModern.tsx`
+- Replace direct price display with `useCurrencyFormat` hook
+- Ensure Premium unlock price shows correct INR conversion
 
-### 2.3 Recently Viewed Section (Issue 5.3)
-**Location**: `src/pages/Explore.tsx` and new hook `src/hooks/useRecentlyViewed.ts`
+**1.4 Fix Project Dashboard Budget Display**
+- File: `src/pages/ClientDashboard.tsx`
+- Replace hardcoded `$` symbol with `format()` from `useCurrencyFormat`
+- Update completed projects budget display (line ~591)
 
-**Implementation**:
-- Create hook to track recently viewed artworks/artists in localStorage
-- Maximum 10 items, newest first, no duplicates
-- Add "Recently Viewed" section above main content
-- Horizontal scrollable carousel display
-- Clear all button
-
-**Database Migration Required**:
-```sql
-CREATE TABLE IF NOT EXISTS recently_viewed (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES profiles(id) ON DELETE CASCADE,
-  item_type text NOT NULL, -- 'artwork' or 'artist'
-  item_id uuid NOT NULL,
-  viewed_at timestamp with time zone DEFAULT now(),
-  UNIQUE(user_id, item_type, item_id)
-);
-```
+**1.5 Update Edge Functions for Currency**
+- Files: `supabase/functions/create-artwork-order/index.ts`, `supabase/functions/create-milestone-order/index.ts`
+- Ensure all Razorpay orders are created with INR currency
+- Add logging for currency conversion debugging
 
 ---
 
-## Phase 3: Artist Profile Enhancements
+## Phase 2: Internal Scroll Fixes (UI Bug)
 
-### 3.1 Completed Projects Count (Issue 4.5)
-**Location**: `src/pages/ArtistProfile.tsx` and `src/components/artist-profile/ArtistHeader.tsx`
+### Problem Analysis
+Fixed heights on ScrollArea components create scroll traps and cut off content in:
+- Project Quick View tab
+- Files tab
+- Chat tab
+- Workflow tab
 
-**Implementation**:
-- Already fetching `completedProjectsCount` - ensure it's passed to header
-- Add prominently in stats section alongside followers/likes
-- Icon: `Briefcase` or `CheckCircle`
+### Technical Changes
 
-### 3.2 Response Time Indicator (Issue 4.2)
-**Location**: `src/pages/ArtistProfile.tsx` and `src/components/artist-profile/ArtistHeader.tsx`
+**2.1 Update ProjectDetailModal Scroll Areas**
+- File: `src/components/dashboard/projects/ProjectDetailModal.tsx`
+- Change `h-[350px]` and `h-[300px]` to use flexible height with `flex-1 min-h-0`
+- Ensure parent containers use flexbox layout
+- Update all four tab content areas:
+  - Workflow tab (line 502): `h-[400px]` -> `flex-1 min-h-0 max-h-[60vh]`
+  - Quick View tab (line 509): Similar update
+  - Files tab (line 569): Similar update
+  - Messages tab (line 609): Similar update
 
-**Implementation**:
-- Query `messages` table for artist's response times
-- Calculate average time between received and sent messages
-- Display "Usually responds within X hours/days"
-- Edge function to calculate and cache response time
-
-**Database Migration Required**:
-```sql
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS avg_response_hours integer;
-```
-
-### 3.3 Portfolio Category Filters (Issue 4.3)
-**Location**: `src/components/artist-profile/ArtistTabs.tsx`
-
-**Implementation**:
-- Add category filter chips above artwork grid
-- Extract unique categories from artist's artworks
-- Filter displayed artworks by selected category
-- "All" option to reset filter
-- Persist filter selection in URL params
-
-### 3.4 Service Packages Display (Issue 4.1)
-**Location**: `src/components/artist-profile/ArtistTabs.tsx` (Services tab)
-
-**Implementation**:
-- Redesign services display with tiered cards (Basic/Standard/Premium)
-- Add visual hierarchy with different styling per tier
-- Include features list per package
-- Prominent pricing display
-- "Request This Package" CTA buttons
+**2.2 Dashboard Scroll Improvements**
+- Ensure main container in both Artist and Client dashboards allows natural scrolling
+- Remove any conflicting `overflow-hidden` on parent containers
 
 ---
 
-## Phase 4: Client Dashboard Enhancements
+## Phase 3: Project Reference Files Visibility
 
-### 4.1 Payment Receipt History (Issue 3.4)
-**Location**: `src/components/dashboard/ClientPayments.tsx`
+### Problem Analysis
+Reference files uploaded during project creation are stored in `projects.reference_files` (JSONB array of URLs), but the Files tab only queries the `project_files` table.
 
-**Implementation**:
-- Already has InvoiceDownload component - verify it works
-- Fetch complete transaction history from `payments` table
-- Add date range filter
-- Export all receipts as ZIP option
+### Technical Changes
 
-### 4.2 Bookmark/Favorite Artworks (Issue 3.3)
-**Location**: New `src/hooks/useSavedArtworks.ts` and artwork cards
+**3.1 Update CreateProjectForm to Insert File Records**
+- File: `src/components/projects/CreateProjectForm.tsx`
+- After uploading files to storage, also insert records into `project_files` table
+- This ensures both storage and database tracking
 
-**Implementation**:
-- Add bookmark icon to artwork cards
-- Create saved_artworks table
-- Add "Saved Artworks" section in Client Dashboard
-- Toggle save/unsave functionality
+```text
+Current flow:
+  Upload -> storage -> reference_files JSONB
 
-**Database Migration Required**:
-```sql
-CREATE TABLE IF NOT EXISTS saved_artworks (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  artwork_id uuid NOT NULL REFERENCES artworks(id) ON DELETE CASCADE,
-  created_at timestamp with time zone DEFAULT now(),
-  UNIQUE(user_id, artwork_id)
-);
+New flow:
+  Upload -> storage -> reference_files JSONB
+                    -> project_files table (for Files tab visibility)
 ```
 
-### 4.3 Project Search/Filter (Issue 3.1)
-**Location**: `src/pages/ClientDashboard.tsx` (Projects tab)
-
-**Implementation**:
-- Make the existing search input functional (currently just UI)
-- Add filter dropdowns: Status, Artist, Date Range, Budget Range
-- Debounced search on title and description
-- Sort options: Newest, Oldest, Budget High/Low
+**3.2 Update ProjectDetailModal to Show Reference Files**
+- File: `src/components/dashboard/projects/ProjectDetailModal.tsx`
+- Merge files from `project_files` table with `reference_files` from project record
+- Handle backward compatibility for projects created before the fix
 
 ---
 
-## Phase 5: Artist Dashboard Enhancements
+## Phase 4: Following System and Recommendations
 
-### 5.1 Payout Schedule Display (Issue 2.6)
-**Location**: `src/components/dashboard/ArtistBilling.tsx`
+### Problem Analysis
+- Recommendations use mock data instead of real user preferences
+- Followed artists' work doesn't appear higher in Explore feed
+- No personalization based on actual follows
 
-**Implementation**:
-- Add "Payout Schedule" card
-- Display: "Payouts are processed every Friday"
-- Show pending payout amount
-- Estimated next payout date
-- Minimum payout threshold info
+### Technical Changes
 
-### 5.2 Portfolio Reordering (Issue 2.4)
-**Location**: `src/components/dashboard/ArtworkManagement.tsx`
+**4.1 Update PersonalizedRecommendations Component**
+- File: `src/components/recommendations/PersonalizedRecommendations.tsx`
+- Fetch actual followed artists from `follows` table
+- Query artworks from followed artists
+- Score recommendations based on:
+  - Follow status (highest priority)
+  - User's liked categories
+  - Engagement metrics (views, likes)
 
-**Implementation**:
-- Add drag-and-drop capability using existing `@hello-pangea/dnd`
-- Save sort order to `artworks.sort_order` column
-- Toggle between reorder mode and normal view
-- Visual indicators during drag
+**4.2 Update Explore Page Sorting**
+- File: `src/pages/Explore.tsx`
+- Add optional "For You" sorting option
+- When user is logged in, boost artworks from followed artists
 
-**Database Migration Required**:
-```sql
-ALTER TABLE artworks ADD COLUMN IF NOT EXISTS sort_order integer DEFAULT 0;
-```
-
-### 5.3 Availability Calendar (Issue 2.3)
-**Location**: New `src/components/dashboard/AvailabilityCalendar.tsx`
-
-**Implementation**:
-- Add to Artist Profile or Settings tab
-- Calendar component showing available/busy dates
-- Toggle vacation mode
-- Block specific date ranges
-- Show availability status on public profile
-
-**Database Migration Required**:
-```sql
-CREATE TABLE IF NOT EXISTS artist_availability (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  artist_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  date date NOT NULL,
-  status text NOT NULL DEFAULT 'available', -- 'available', 'busy', 'vacation'
-  note text,
-  created_at timestamp with time zone DEFAULT now(),
-  UNIQUE(artist_id, date)
-);
-
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_on_vacation boolean DEFAULT false;
+**4.3 Database Query Pattern**
+```text
+1. Fetch followed artist IDs from `follows` table
+2. Fetch artworks, marking those from followed artists
+3. Sort: followed artists first, then by engagement score
 ```
 
 ---
 
-## Phase 6: Payments & Transactions
+## Phase 5: Artist Analytics Access Control
 
-### 6.1 Partial Payment Option (Issue 8.2)
-**Location**: `src/components/projects/MilestoneCard.tsx` and payment edge functions
+### Problem Analysis
+- Analytics are accessible to all artists (should be premium-only for advanced)
+- Analytics use hardcoded mock data
+- No real-time updates after events
 
-**Implementation**:
-- Allow clients to pay a percentage of milestone
-- Track paid vs remaining amounts
-- Update milestone status to "partially_paid"
-- Show payment progress bar on milestones
-- Modify `create-milestone-order` edge function
+### Technical Changes
 
-**Database Changes**:
-```sql
-ALTER TABLE project_milestones ADD COLUMN IF NOT EXISTS amount_paid numeric DEFAULT 0;
-```
+**5.1 Create Advanced Analytics Component**
+- File: `src/components/dashboard/AdvancedAnalytics.tsx` (new)
+- Premium-only detailed analytics with:
+  - Revenue trends (line chart)
+  - Engagement breakdown (pie chart)
+  - Top performing artworks
+  - Follower growth over time
 
----
+**5.2 Update ArtworkManagement Analytics Button**
+- File: `src/components/dashboard/ArtworkManagement.tsx`
+- Add `isProArtist` check from `useArtistPlan` hook
+- Show lock icon for non-premium artists
+- Show upgrade prompt when clicked by non-premium
 
-## Phase 7: Reporting & Blocking Features
+**5.3 Implement Real Analytics Data**
+- File: `src/components/dashboard/ArtworkManagement.tsx`
+- Replace mock `analyticsData` (lines 38-47) with real queries:
+  - `totalViews`: Sum views from `artwork_views` table
+  - `totalLikes`: Sum likes from `artwork_likes` table
+  - `totalRevenue`: Sum from `transactions` or `payments` table
+  - `totalFollowers`: Count from `follows` table
 
-### 7.1 Report Content UI (Issue 9.1)
-**Location**: New `src/components/reports/ReportDialog.tsx`
+**5.4 Add Real-Time Subscription**
+- Subscribe to `artwork_views`, `artwork_likes`, `follows` tables
+- Refresh analytics data on changes
 
-**Implementation**:
-- Create report dialog component
-- Add "Report" option to artwork cards and profiles
-- Reason selection: Spam, Inappropriate, Copyright, Other
-- Optional description field
-- Call existing `report-content` edge function
-- Success confirmation
-
-**Integration Points**:
-- `src/components/artwork/ArtworkCard.tsx` - dropdown menu
-- `src/pages/ArtistProfile.tsx` - profile actions
-- `src/pages/ArtworkDetails.tsx` - artwork page
-
-### 7.2 Block User Feature (Issue 9.2)
-**Location**: New `src/components/blocks/BlockUserButton.tsx` and hook
-
-**Implementation**:
-- Add block button on user profiles and in messaging
-- Create user_blocks table
-- Filter blocked users from messaging and discovery
-- Show blocked users list in settings
-- Unblock functionality
-
-**Database Migration Required**:
-```sql
-CREATE TABLE IF NOT EXISTS user_blocks (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  blocker_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  blocked_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  created_at timestamp with time zone DEFAULT now(),
-  reason text,
-  UNIQUE(blocker_id, blocked_id)
-);
-```
+**5.5 Integrate EarningsAnalysis for Pro Artists**
+- File: `src/components/dashboard/ArtistEarnings.tsx`
+- Import and conditionally render `EarningsAnalysis` component for Pro artists
+- Keep basic earnings view for free tier
 
 ---
 
-## Phase 8: Role Checking Consolidation (Issue 10.1)
+## Phase 6: Additional Fixes
 
-### 8.1 Centralize Role Logic
-**Location**: New `src/hooks/useUserRole.ts`
+### 6.1 Saved Artworks Already Implemented
+The SavedArtworks component exists and is integrated into ClientDashboard's "saved" tab.
+- Verify real-time subscription works
+- Test save/unsave from artist profile and explore page
 
-**Implementation**:
-- Create centralized hook for role checking
-- Export role constants and type guards
-- Replace scattered role checks across components
-- Include utility functions: `isArtist()`, `isClient()`, `isPro()`, `isAdmin()`
-
-```typescript
-// src/hooks/useUserRole.ts
-export const USER_ROLES = {
-  ARTIST: 'artist',
-  PREMIUM: 'premium', 
-  CLIENT: 'client',
-  ADMIN: 'admin'
-} as const;
-
-export function useUserRole() {
-  const { profile } = useProfile();
-  
-  return {
-    role: profile?.role,
-    isArtist: profile?.role === 'artist' || profile?.role === 'premium',
-    isClient: profile?.role === 'client',
-    isPro: profile?.role === 'premium',
-    isAdmin: profile?.is_admin === true
-  };
-}
-```
+### 6.2 Billing Address Form Context
+- File: `src/components/billing/BillingAddressForm.tsx`
+- This is for invoice generation, not payment processing
+- Razorpay handles payment details; this is for tax invoices
+- Add clarifying text: "Used for invoices and receipts only. Not required for payments."
 
 ---
 
-## Database Migrations Summary
+## Implementation Order
 
-All required schema changes in one migration:
+1. **Currency Fixes (Critical)** - Phase 1
+   - Prevents payment failures and user confusion
+   - Estimated: 2-3 files, straightforward changes
 
-```sql
--- Recovery options
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS recovery_phone text;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS recovery_codes_hash text;
+2. **Scroll Fixes** - Phase 2
+   - Quick UX improvement
+   - Estimated: 1 file, CSS/layout changes
 
--- Response time tracking
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS avg_response_hours integer;
+3. **Reference Files** - Phase 3
+   - Important for artist-client workflow
+   - Estimated: 2 files, database insert logic
 
--- Vacation mode
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_on_vacation boolean DEFAULT false;
+4. **Analytics Gating** - Phase 5
+   - Premium feature enforcement
+   - Estimated: 3-4 files, conditional rendering + data fetching
 
--- Artwork ordering
-ALTER TABLE artworks ADD COLUMN IF NOT EXISTS sort_order integer DEFAULT 0;
-
--- Partial payments
-ALTER TABLE project_milestones ADD COLUMN IF NOT EXISTS amount_paid numeric DEFAULT 0;
-
--- Recently viewed
-CREATE TABLE IF NOT EXISTS recently_viewed (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES profiles(id) ON DELETE CASCADE,
-  item_type text NOT NULL,
-  item_id uuid NOT NULL,
-  viewed_at timestamp with time zone DEFAULT now(),
-  UNIQUE(user_id, item_type, item_id)
-);
-
--- Saved artworks
-CREATE TABLE IF NOT EXISTS saved_artworks (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  artwork_id uuid NOT NULL REFERENCES artworks(id) ON DELETE CASCADE,
-  created_at timestamp with time zone DEFAULT now(),
-  UNIQUE(user_id, artwork_id)
-);
-
--- Artist availability
-CREATE TABLE IF NOT EXISTS artist_availability (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  artist_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  date date NOT NULL,
-  status text NOT NULL DEFAULT 'available',
-  note text,
-  created_at timestamp with time zone DEFAULT now(),
-  UNIQUE(artist_id, date)
-);
-
--- User blocks
-CREATE TABLE IF NOT EXISTS user_blocks (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  blocker_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  blocked_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  created_at timestamp with time zone DEFAULT now(),
-  reason text,
-  UNIQUE(blocker_id, blocked_id)
-);
-
--- Enable RLS on new tables
-ALTER TABLE recently_viewed ENABLE ROW LEVEL SECURITY;
-ALTER TABLE saved_artworks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE artist_availability ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_blocks ENABLE ROW LEVEL SECURITY;
-
--- RLS Policies
-CREATE POLICY "Users can manage their own recently viewed" ON recently_viewed
-  FOR ALL USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can manage their own saved artworks" ON saved_artworks
-  FOR ALL USING (auth.uid() = user_id);
-
-CREATE POLICY "Artists can manage their availability" ON artist_availability
-  FOR ALL USING (auth.uid() = artist_id);
-
-CREATE POLICY "Public can view artist availability" ON artist_availability
-  FOR SELECT USING (true);
-
-CREATE POLICY "Users can manage their blocks" ON user_blocks
-  FOR ALL USING (auth.uid() = blocker_id);
-```
-
----
-
-## New Files to Create
-
-| File Path | Purpose |
-|-----------|---------|
-| `src/hooks/useUserRole.ts` | Centralized role checking |
-| `src/hooks/useRecentlyViewed.ts` | Recently viewed tracking |
-| `src/hooks/useSavedArtworks.ts` | Artwork bookmarking |
-| `src/hooks/useBlockedUsers.ts` | User blocking functionality |
-| `src/hooks/useArtistAvailability.ts` | Availability calendar data |
-| `src/components/reports/ReportDialog.tsx` | Content reporting UI |
-| `src/components/blocks/BlockUserButton.tsx` | Block user action |
-| `src/components/settings/TwoFactorSetup.tsx` | 2FA enrollment |
-| `src/components/settings/RecoveryOptions.tsx` | Recovery codes/phone |
-| `src/components/settings/ChangeEmailForm.tsx` | Email change form |
-| `src/components/dashboard/AvailabilityCalendar.tsx` | Availability management |
-| `src/components/explore/RecentlyViewed.tsx` | Recently viewed section |
+5. **Recommendations** - Phase 4
+   - Improves personalization
+   - Estimated: 2 files, database queries
 
 ---
 
 ## Files to Modify
 
-| File Path | Changes |
-|-----------|---------|
-| `src/pages/Explore.tsx` | Infinite scroll, recently viewed |
-| `src/pages/ExploreArtists.tsx` | Location-based filtering |
-| `src/pages/ArtistProfile.tsx` | Response time, completed projects |
-| `src/pages/ClientDashboard.tsx` | Project search/filter |
-| `src/components/dashboard/ArtistSettings.tsx` | Email change, 2FA, recovery |
-| `src/components/dashboard/ClientSettings.tsx` | Email change, recovery |
-| `src/components/dashboard/ArtworkManagement.tsx` | Drag-and-drop reordering |
-| `src/components/dashboard/ArtistBilling.tsx` | Payout schedule |
-| `src/components/artist-profile/ArtistTabs.tsx` | Category filters, service packages |
-| `src/components/artist-profile/ArtistHeader.tsx` | Response time, vacation badge |
-| `src/components/artwork/ArtworkCard.tsx` | Bookmark, report buttons |
-| `src/components/explore/TopFilters.tsx` | Near me button |
+| File | Changes |
+|------|---------|
+| `src/hooks/usePaymentGateway.ts` | Add conversion function |
+| `src/components/payments/PayMilestoneButton.tsx` | Fix amount display |
+| `src/components/artist-profile/ArtworkCardModern.tsx` | Fix price formatting |
+| `src/pages/ClientDashboard.tsx` | Fix budget symbol |
+| `src/components/dashboard/projects/ProjectDetailModal.tsx` | Fix scrolling, add reference files |
+| `src/components/projects/CreateProjectForm.tsx` | Insert file records |
+| `src/components/dashboard/ArtworkManagement.tsx` | Real analytics + gating |
+| `src/components/dashboard/ArtistEarnings.tsx` | Add advanced analytics for Pro |
+| `src/components/recommendations/PersonalizedRecommendations.tsx` | Real follow data |
+| `src/pages/Explore.tsx` | Add "For You" boost |
+| `src/components/billing/BillingAddressForm.tsx` | Add clarifying text |
+| `supabase/functions/create-artwork-order/index.ts` | Ensure INR |
 
 ---
 
-## Implementation Priority
+## Testing Checklist
 
-1. **Critical** (Do First):
-   - 9.1 Report Content UI - Safety feature
-   - 9.2 Block User - Safety feature
-   - 10.1 Role Consolidation - Code quality
+- [ ] Indian user sees INR prices everywhere
+- [ ] Razorpay checkout shows matching INR amount
+- [ ] All project tabs scroll to bottom
+- [ ] Reference files appear in Files tab
+- [ ] Saved artworks appear instantly in client dashboard
+- [ ] Non-premium artists see locked analytics
+- [ ] Pro artists see advanced analytics with real data
+- [ ] Followed artists appear higher in Explore
 
-2. **High Priority**:
-   - 5.1 Infinite Scroll - UX improvement
-   - 3.1 Project Search - Usability
-   - 4.5 Completed Projects - Already have data
+---
 
-3. **Medium Priority**:
-   - 6.2 Email Change
-   - 3.3 Bookmark Artworks
-   - 4.2 Response Time
-   - 4.3 Portfolio Filters
-   - 2.4 Portfolio Reordering
+## Notes
 
-4. **Lower Priority**:
-   - 5.2 Location Search - Requires geolocation
-   - 5.3 Recently Viewed
-   - 2.3 Availability Calendar
-   - 9.4 Two-Factor Auth - Complex
-   - 6.3 Recovery Options
-   - 8.2 Partial Payments
-
+- All currency conversions use single source: `useCurrencyFormat` hook
+- Rate: $1 = ₹83.5 (configurable in CurrencyContext)
+- Database stores USD, display converts based on user location
+- Razorpay always receives INR (converted from USD base)
