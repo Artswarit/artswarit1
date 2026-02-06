@@ -4,7 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useArtworks } from '@/hooks/useArtworks';
-import { Grid3X3, List, Plus, BarChart3, ImagePlus, FolderOpen, Pin } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useArtistPlan } from '@/hooks/useArtistPlan';
+import { useRealAnalytics } from '@/hooks/useRealAnalytics';
+import { Grid3X3, List, Plus, BarChart3, ImagePlus, FolderOpen, Pin, Lock, Crown } from 'lucide-react';
 import ArtworkUploadForm from './artwork/ArtworkUploadForm';
 import ArtworkEditModal from './artwork/ArtworkEditModal';
 import ArtworkSearchFilters from './artwork/ArtworkSearchFilters';
@@ -16,16 +19,23 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
+import { Link } from 'react-router-dom';
 
 const ArtworkManagement = () => {
+  const { user } = useAuth();
   const { artworks, loading, fetchArtworks } = useArtworks();
   const { toast } = useToast();
+  const { isProArtist, loading: planLoading } = useArtistPlan(user?.id);
+  const { analytics, loading: analyticsLoading } = useRealAnalytics();
+  
   const [selectedArtworks, setSelectedArtworks] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [editingArtwork, setEditingArtwork] = useState<any>(null);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [filters, setFilters] = useState({
     search: '',
     category: 'all',
@@ -35,15 +45,13 @@ const ArtworkManagement = () => {
     sortBy: 'newest',
   });
 
-  const analyticsData = {
-    totalViews: 45670,
-    totalLikes: 8900,
-    totalRevenue: 12450,
-    totalFollowers: 1234,
-    viewsGrowth: 12.5,
-    likesGrowth: 8.3,
-    revenueGrowth: 15.7,
-    followersGrowth: -2.1,
+  // Handle analytics button click with premium gating
+  const handleAnalyticsClick = () => {
+    if (!isProArtist) {
+      setShowUpgradePrompt(true);
+    } else {
+      setShowAnalytics(!showAnalytics);
+    }
   };
 
   const filteredArtworks = useMemo(() => {
@@ -278,11 +286,16 @@ const ArtworkManagement = () => {
           <Button
             variant={showAnalytics ? 'secondary' : 'outline'}
             size="sm"
-            onClick={() => setShowAnalytics(!showAnalytics)}
+            onClick={handleAnalyticsClick}
             className="gap-2"
           >
-            <BarChart3 className="h-4 w-4" />
+            {isProArtist ? (
+              <BarChart3 className="h-4 w-4" />
+            ) : (
+              <Lock className="h-4 w-4" />
+            )}
             <span className="hidden sm:inline">Analytics</span>
+            {!isProArtist && <Crown className="h-3 w-3 text-yellow-500" />}
           </Button>
           <Button onClick={() => setShowUploadForm(true)} size="sm" className="gap-2">
             <Plus className="h-4 w-4" />
@@ -291,8 +304,10 @@ const ArtworkManagement = () => {
         </div>
       </div>
 
-      {/* Analytics */}
-      {showAnalytics && <ArtworkAnalytics data={analyticsData} />}
+      {/* Analytics - Only for Pro Artists */}
+      {showAnalytics && isProArtist && !analyticsLoading && (
+        <ArtworkAnalytics data={analytics} />
+      )}
 
       {/* Search and Filters */}
       <ArtworkSearchFilters onFiltersChange={setFilters} />
@@ -415,6 +430,42 @@ const ArtworkManagement = () => {
           }}
         />
       )}
+
+      {/* Upgrade Prompt for Non-Pro Artists */}
+      <Dialog open={showUpgradePrompt} onOpenChange={setShowUpgradePrompt}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Crown className="h-5 w-5 text-yellow-500" />
+              Unlock Advanced Analytics
+            </DialogTitle>
+            <DialogDescription>
+              Advanced analytics are available exclusively for Pro Artists. Upgrade to see detailed performance metrics, revenue trends, and engagement insights.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+              <h4 className="font-semibold mb-2">Pro Artist Benefits:</h4>
+              <ul className="text-sm space-y-1 text-muted-foreground">
+                <li>• Real-time views, likes, and revenue tracking</li>
+                <li>• 30-day growth metrics</li>
+                <li>• Follower analytics</li>
+                <li>• 0% platform fee on all earnings</li>
+              </ul>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowUpgradePrompt(false)} className="flex-1">
+                Maybe Later
+              </Button>
+              <Button asChild className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600">
+                <Link to="/artist-dashboard?tab=subscription">
+                  Upgrade to Pro
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

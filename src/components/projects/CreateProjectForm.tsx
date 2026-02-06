@@ -161,6 +161,26 @@ export function CreateProjectForm({ artistId, onSuccess, onCancel }: CreateProje
 
       if (projectError) throw projectError;
 
+      // Also insert reference files into project_files table for visibility in Files tab
+      if (referenceFiles.length > 0 && user?.id) {
+        const fileRecords = referenceFiles.map(({ file }, index) => {
+          const filePath = `${user.id}/${Date.now()}-${file.name}`;
+          return {
+            project_id: project.id,
+            uploader_id: user.id,
+            storage_path: filePath,
+            storage_bucket: 'project-files',
+            original_name: file.name,
+            mime_type: file.type || 'application/octet-stream',
+            size_bytes: file.size,
+            file_type: 'reference'
+          };
+        });
+
+        // Insert file records (the actual files are already uploaded above)
+        await supabase.from('project_files').insert(fileRecords);
+      }
+
       // Create milestones
       const milestonesData = milestones.map((m, index) => ({
         project_id: project.id,
