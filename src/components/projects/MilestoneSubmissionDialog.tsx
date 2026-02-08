@@ -79,7 +79,13 @@ export function MilestoneSubmissionDialog({
     return <FileText className="h-4 w-4" />;
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e?: React.MouseEvent) => {
+    // Prevent default to fix mobile refresh issue
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     if (!isFinalUpload && !agreed) {
       toast.error('Please acknowledge the file protection warning');
       return;

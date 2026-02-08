@@ -17,7 +17,9 @@ const ChangeEmailForm = () => {
   const [emailSent, setEmailSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
+    // Prevent default form submission - fixes mobile refresh issue
     e.preventDefault();
+    e.stopPropagation();
 
     if (!newEmail || !confirmEmail) {
       toast({
