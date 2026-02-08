@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useProfile } from '@/hooks/useProfile';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, MapPin, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -41,9 +42,10 @@ const INDIAN_STATES = [
 ];
 
 export function BillingAddressForm() {
-  const { profile, updateProfile } = useProfile();
+  const { user } = useAuth();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
   const [formData, setFormData] = useState<BillingAddress>({
     name: '',
     addressLine1: '',
@@ -55,35 +57,104 @@ export function BillingAddressForm() {
     gstNumber: '',
   });
 
-  // Load existing billing address from profile
-  useEffect(() => {
-    if (profile?.social_links) {
-      const socialLinks = profile.social_links as any;
-      if (socialLinks.billing_address) {
+  // Fetch profile
+  const fetchProfile = useCallback(async () => {
+    if (!user?.id) return;
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('Error fetching profile:', error);
+      return;
+    }
+    
+    if (data) {
+      setProfile(data);
+      const socialLinks = data.social_links as any;
+      if (socialLinks?.billing_address) {
         setFormData(prev => ({
           ...prev,
           ...socialLinks.billing_address,
         }));
       }
+      if (data.full_name && !formData.name) {
+        setFormData(prev => ({ ...prev, name: data.full_name || '' }));
+      }
     }
-    if (profile?.full_name && !formData.name) {
-      setFormData(prev => ({ ...prev, name: profile.full_name || '' }));
-    }
-  }, [profile]);
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  // Real-time subscription
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`billing-address-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user.id}`
+        },
+        () => {
+          fetchProfile();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, fetchProfile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
+    // Prevent default form submission - this fixes mobile refresh issue
     e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user?.id) return;
+    
     setSaving(true);
 
     try {
-      // Store billing address in city field as JSON string (workaround for type constraints)
-      // The billing_address is stored as a serialized string
-      const billingData = JSON.stringify(formData);
+      const currentSocialLinks = (profile?.social_links as Record<string, unknown>) || {};
       
-      await updateProfile({ 
+      // Convert formData to Json-compatible object
+      const billingAddressData: Record<string, string> = {
+        name: formData.name,
+        addressLine1: formData.addressLine1,
+        addressLine2: formData.addressLine2,
         city: formData.city,
+        state: formData.state,
+        postalCode: formData.postalCode,
         country: formData.country,
-      });
+        gstNumber: formData.gstNumber,
+      };
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          city: formData.city,
+          country: formData.country,
+          social_links: {
+            ...currentSocialLinks,
+            billing_address: billingAddressData
+          },
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      
       setSaved(true);
       toast.success('Billing address saved successfully!');
       setTimeout(() => setSaved(false), 3000);
@@ -105,7 +176,7 @@ export function BillingAddressForm() {
           <CardTitle>Billing Address</CardTitle>
         </div>
         <CardDescription>
-          Your billing address for invoices and receipts
+          Your billing address for invoices and receipts. Not required for payments.
         </CardDescription>
       </CardHeader>
       <CardContent>

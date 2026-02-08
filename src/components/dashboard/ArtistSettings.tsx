@@ -115,11 +115,19 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
     };
   }, [user?.id, fetchProfile]);
 
-  const handleSettingChange = async (key: string, value: boolean) => {
+  const handleSettingChange = async (key: string, value: boolean, e?: React.MouseEvent | React.ChangeEvent) => {
+    // Prevent default to fix mobile refresh issue
+    if (e && 'preventDefault' in e) {
+      e.preventDefault();
+      e.stopPropagation?.();
+    }
+    
     const newSettings = {
       ...settings,
       [key]: value
     };
+    
+    // Optimistic update
     setSettings(newSettings);
 
     // Auto-save to database
@@ -163,7 +171,12 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
     }));
   };
 
-  const saveSettings = async () => {
+  const saveSettings = async (e?: React.MouseEvent) => {
+    // Prevent default to fix mobile refresh issue
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (!user?.id) return;
 
     setSaving(true);
@@ -199,7 +212,13 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
     }
   };
 
-  const changePassword = async () => {
+  const changePassword = async (e?: React.MouseEvent) => {
+    // Prevent default to fix mobile refresh issue
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast({
         variant: "destructive",
@@ -246,8 +265,12 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
     }
   };
 
-  // Download user data
-  const downloadUserData = async () => {
+  const downloadUserData = async (e?: React.MouseEvent) => {
+    // Prevent default to fix mobile refresh issue
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (!user?.id) return;
     
     setDownloadingData(true);
@@ -295,8 +318,12 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
     }
   };
 
-  // Deactivate account
-  const deactivateAccount = async () => {
+  const deactivateAccount = async (e?: React.MouseEvent) => {
+    // Prevent default to fix mobile refresh issue
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (!user?.id) return;
     
     setDeactivating(true);
@@ -332,8 +359,12 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
     }
   };
 
-  // Delete account
-  const deleteAccount = async () => {
+  const deleteAccount = async (e?: React.MouseEvent) => {
+    // Prevent default to fix mobile refresh issue
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (!user?.id) return;
     
     setDeleting(true);

@@ -52,7 +52,12 @@ const RecoveryOptions = () => {
     fetchRecoveryOptions();
   }, [user?.id]);
 
-  const savePhone = async () => {
+  const savePhone = async (e?: React.MouseEvent) => {
+    // Prevent default to fix mobile refresh issue
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (!user?.id) return;
 
     setSavingPhone(true);
@@ -85,7 +90,12 @@ const RecoveryOptions = () => {
     }
   };
 
-  const generateNewCodes = async () => {
+  const generateNewCodes = async (e?: React.MouseEvent) => {
+    // Prevent default to fix mobile refresh issue
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (!user?.id) return;
 
     setLoading(true);

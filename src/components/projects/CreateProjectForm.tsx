@@ -98,7 +98,13 @@ export function CreateProjectForm({ artistId, onSuccess, onCancel }: CreateProje
     });
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
+    // Prevent default to fix mobile refresh issue
+    if (e) {
+      e.preventDefault();
+      'stopPropagation' in e && e.stopPropagation();
+    }
+    
     // Validation
     if (!title.trim()) {
       toast.error('Please enter a project title');
