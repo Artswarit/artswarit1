@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_logs: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          reason: string
+          target_id: string
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          reason: string
+          target_id: string
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          reason?: string
+          target_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_audit_logs_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_audit_logs_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       artist_availability: {
         Row: {
           artist_id: string
@@ -434,7 +479,9 @@ export type Database = {
       conversations: {
         Row: {
           artist_id: string | null
+          artist_last_cleared_at: string | null
           client_id: string | null
+          client_last_cleared_at: string | null
           created_at: string
           id: string
           project_title: string | null
@@ -443,7 +490,9 @@ export type Database = {
         }
         Insert: {
           artist_id?: string | null
+          artist_last_cleared_at?: string | null
           client_id?: string | null
+          client_last_cleared_at?: string | null
           created_at?: string
           id?: string
           project_title?: string | null
@@ -452,7 +501,9 @@ export type Database = {
         }
         Update: {
           artist_id?: string | null
+          artist_last_cleared_at?: string | null
           client_id?: string | null
+          client_last_cleared_at?: string | null
           created_at?: string
           id?: string
           project_title?: string | null
@@ -611,6 +662,68 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exclusive_memberships: {
+        Row: {
+          approved_at: string | null
+          artist_id: string
+          client_id: string
+          created_at: string
+          id: string
+          rejected_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          artist_id: string
+          client_id: string
+          created_at?: string
+          id?: string
+          rejected_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          artist_id?: string
+          client_id?: string
+          created_at?: string
+          id?: string
+          rejected_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exclusive_memberships_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exclusive_memberships_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exclusive_memberships_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exclusive_memberships_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
