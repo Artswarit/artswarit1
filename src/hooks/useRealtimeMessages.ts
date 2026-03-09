@@ -275,8 +275,7 @@ export const useRealtimeMessages = () => {
           attachments: attachments && attachments.length > 0 ? JSON.parse(JSON.stringify(attachments)) : []
         })
         .select()
-        .single()
-        .abortSignal(signal);
+        .single();
 
       if (error) {
         if (error.name === 'AbortError' || (error as any).code === 'ABORT' || error.message?.includes('signal is aborted')) return null;
