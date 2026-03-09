@@ -33,7 +33,7 @@ export function useRazorpay() {
         resolve(true);
       };
       script.onerror = () => {
-        console.error('Failed to load Razorpay script');
+        toast.error('Failed to load payment gateway');
         resolve(false);
       };
       document.body.appendChild(script);
@@ -47,7 +47,7 @@ export function useRazorpay() {
       // Load Razorpay script
       const loaded = await loadRazorpayScript();
       if (!loaded) {
-        throw new Error('Failed to load payment gateway');
+        throw new Error('Failed to load payment gateway. Please check your internet connection or disable ad-blockers.');
       }
 
       // Get current session
@@ -57,19 +57,24 @@ export function useRazorpay() {
       }
 
       // Create order via edge function
-      const { data, error } = await supabase.functions.invoke('create-milestone-order', {
-        body: { milestoneId },
+      const orderResp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-milestone-order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ milestoneId }),
       });
 
-      if (error) {
-        throw new Error(error.message || 'Failed to create payment order');
+      const orderData = await orderResp.json().catch(() => ({}));
+      
+      if (!orderResp.ok || orderData?.success === false) {
+        console.error('Order creation failed:', { status: orderResp.status, data: orderData });
+        throw new Error(orderData?.error || `Failed to create payment order (HTTP ${orderResp.status})`);
       }
 
-      if (!data?.orderId) {
-        throw new Error(data?.error || 'Failed to create payment order');
-      }
-
-      console.log('Order created:', data);
+      const data = orderData;
 
       // Configure Razorpay options
       const options = {
@@ -84,16 +89,25 @@ export function useRazorpay() {
           
           try {
             // Verify payment
-            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-razorpay-payment', {
-              body: {
+            const verifyResp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-razorpay-payment`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`,
+                'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+              },
+              body: JSON.stringify({
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
                 milestoneId,
-              },
+              }),
             });
 
-            if (verifyError || !verifyData?.success) {
+            const verifyData = await verifyResp.json().catch(() => ({}));
+
+            if (!verifyResp.ok || verifyData?.success === false) {
+              console.error('Verification failed:', { status: verifyResp.status, data: verifyData });
               throw new Error(verifyData?.error || 'Payment verification failed');
             }
 
@@ -130,7 +144,6 @@ export function useRazorpay() {
       
       razorpay.open();
     } catch (error: any) {
-      console.error('Payment error:', error);
       toast.error(error.message || 'Payment failed');
       onFailure?.(error.message);
     } finally {

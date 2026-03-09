@@ -139,7 +139,14 @@ const SignupForm = ({
           {formData.role === 'artist'}
         </div>
         <div className="flex items-start space-x-2 py-2">
-          <Checkbox id="terms" checked={formData.acceptTerms} onCheckedChange={handleTermsChange} required disabled={loading} className="mt-0.5 w-5 h-5 flex-shrink-0" />
+          <Checkbox 
+            id="terms" 
+            checked={formData.acceptTerms} 
+            onCheckedChange={handleTermsChange} 
+            required 
+            disabled={loading} 
+            className="mt-1" 
+          />
           <Label htmlFor="terms" className="text-xs sm:text-sm leading-tight cursor-pointer">
             I accept the{" "}
             <Link to="/terms-of-service" target="_blank" className="text-artswarit-purple hover:text-artswarit-purple-dark underline" onClick={e => e.stopPropagation()}>

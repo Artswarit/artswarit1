@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Music, Image, Video, Trash2, Edit2, Play } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 
 interface CollectionItem {
   id: string;
@@ -268,6 +268,7 @@ const ContentCollections = () => {
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>{selectedCollection.name}</DialogTitle>
+              <DialogDescription>View the items in this collection.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <p className="text-muted-foreground">{selectedCollection.description}</p>

@@ -38,7 +38,7 @@ const NotificationBell = () => {
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(50);
 
       if (!error && data) {
         setNotifications(data as Notification[]);
@@ -61,7 +61,7 @@ const NotificationBell = () => {
         },
         (payload) => {
           const newNotification = payload.new as Notification;
-          setNotifications(prev => [newNotification, ...prev.slice(0, 9)]);
+          setNotifications(prev => [newNotification, ...prev.slice(0, 49)]);
           setUnreadCount(prev => prev + 1);
         }
       )
@@ -188,47 +188,52 @@ const NotificationBell = () => {
             No notifications yet
           </div>
         ) : (
-          notifications.map((notification) => (
-            <DropdownMenuItem
-              key={notification.id}
-              asChild
-              className={`px-4 py-3 cursor-pointer focus:bg-gray-50 ${
-                !notification.is_read ? 'bg-primary/5' : ''
-              }`}
-            >
-              <Link
-                to={getNotificationLink(notification)}
-                onClick={() => {
-                  if (!notification.is_read) {
-                    markAsRead(notification.id);
-                  }
-                  setIsOpen(false);
-                }}
-                className="block"
+          notifications.map((notification) => {
+            const isAlert = notification.type === 'error' || notification.type === 'warning' || notification.type === 'ADMIN_DISPUTE_MESSAGE_SENT';
+            const isSuccess = notification.type === 'success';
+            
+            return (
+              <DropdownMenuItem
+                key={notification.id}
+                asChild
+                className={`px-4 py-3 cursor-pointer focus:bg-gray-50 border-l-4 ${
+                  !notification.is_read ? (isAlert ? 'bg-red-500/10 border-red-500' : 'bg-primary/5 border-primary') : (isAlert ? 'border-red-200 bg-red-50' : 'border-transparent')
+                }`}
               >
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${
-                      !notification.is_read ? 'bg-primary' : 'bg-transparent'
-                    }`}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm text-foreground truncate">
-                      {notification.title}
-                    </p>
-                    <p className="text-xs text-muted-foreground line-clamp-2">
-                      {notification.message}
-                    </p>
-                    <p className="text-xs text-muted-foreground/70 mt-1">
-                      {formatDistanceToNow(new Date(notification.created_at), {
-                        addSuffix: true,
-                      })}
-                    </p>
+                <Link
+                  to={getNotificationLink(notification)}
+                  onClick={() => {
+                    if (!notification.is_read) {
+                      markAsRead(notification.id);
+                    }
+                    setIsOpen(false);
+                  }}
+                  className="block"
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${
+                        !notification.is_read ? (isAlert ? 'bg-red-500 animate-pulse' : 'bg-primary') : 'bg-transparent'
+                      }`}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className={`font-bold text-sm truncate ${isAlert ? 'text-red-700' : 'text-foreground'}`}>
+                        {notification.title}
+                      </p>
+                      <p className={`text-xs mt-0.5 line-clamp-3 leading-relaxed ${isAlert ? 'text-red-600/90 font-medium' : 'text-muted-foreground'}`}>
+                        {notification.message}
+                      </p>
+                      <p className={`text-[10px] mt-1.5 ${isAlert ? 'text-red-500/70 font-bold' : 'text-muted-foreground/70'}`}>
+                        {formatDistanceToNow(new Date(notification.created_at), {
+                          addSuffix: true,
+                        })}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            </DropdownMenuItem>
-          ))
+                </Link>
+              </DropdownMenuItem>
+            );
+          })
         )}
       </DropdownMenuContent>
     </DropdownMenu>

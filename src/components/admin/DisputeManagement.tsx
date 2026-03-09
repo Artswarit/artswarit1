@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { Database } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -133,10 +134,10 @@ export function DisputeManagement() {
 
       // Update milestone status based on resolution
       if (selectedDispute.milestone_id) {
-        let newStatus = 'pending';
-        if (resolutionType === 'approved') newStatus = 'approved';
-        if (resolutionType === 'revision') newStatus = 'revision_requested';
-        if (resolutionType === 'cancelled') newStatus = 'pending';
+        let newStatus: Database['public']['Enums']['milestone_status'] = 'WAITING_FUNDS';
+        if (resolutionType === 'approved') newStatus = 'COMPLETED';
+        if (resolutionType === 'revision') newStatus = 'REVISION_REQUESTED';
+        if (resolutionType === 'cancelled') newStatus = 'WAITING_FUNDS';
 
         await supabase
           .from('project_milestones')
@@ -203,14 +204,16 @@ export function DisputeManagement() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="open">
-            <TabsList>
-              <TabsTrigger value="open">
-                Open ({openDisputes.length})
-              </TabsTrigger>
-              <TabsTrigger value="resolved">
-                Resolved ({resolvedDisputes.length})
-              </TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 pb-4">
+              <TabsList className="w-full h-auto min-h-[52px] sm:min-h-0 p-1 bg-muted/50 rounded-lg flex items-stretch gap-1">
+                <TabsTrigger value="open" className="flex-1 min-w-[100px] py-2 sm:py-2.5 px-3 rounded-md transition-all">
+                  Open ({openDisputes.length})
+                </TabsTrigger>
+                <TabsTrigger value="resolved" className="flex-1 min-w-[100px] py-2 sm:py-2.5 px-3 rounded-md transition-all">
+                  Resolved ({resolvedDisputes.length})
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="open" className="mt-4">
               {openDisputes.length === 0 ? (

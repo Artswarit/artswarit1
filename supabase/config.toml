@@ -17,3 +17,27 @@ verify_jwt = false
 
 [functions.razorpay-subscription-webhook]
 verify_jwt = false
+
+[functions.artist-gpt-chat]
+verify_jwt = false
+
+[functions.stripe-webhook-handler]
+verify_jwt = false
+
+[functions.create-premium-checkout]
+verify_jwt = false
+
+[functions.customer-portal]
+verify_jwt = false
+
+[functions.get-artist-dashboard-stats]
+verify_jwt = false
+
+[functions.release-milestone-payout]
+verify_jwt = false
+
+[functions.universal-chatgpt-assistant]
+verify_jwt = false
+
+[functions.update-user-profile]
+verify_jwt = false

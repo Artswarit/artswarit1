@@ -1,212 +1,356 @@
-
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
+import { ShieldCheck, Eye, Database, Lock, Globe, UserCheck, Trash2, Bell, Scale, FileText, Server } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const PrivacyPolicy = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-purple-50 dark:from-background dark:via-background dark:to-background">
       <Navbar />
-      
-      <main className="flex-1 container mx-auto px-4 py-8 pt-24">
-        <div className="max-w-4xl mx-auto">
-          {/* Logo and name */}
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <img
-              src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png"
-              alt="Artswarit Logo"
-              className="h-14 w-14 md:h-20 md:w-20 rounded-full object-cover shadow"
-            />
-            <span className="font-bold text-2xl md:text-3xl text-purple-700 tracking-tight font-heading">Artswarit</span>
+
+      <main className="flex-1 pt-20 sm:pt-24 pb-16">
+        <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
+
+          {/* Hero */}
+          <div className="text-center mb-12 sm:mb-16 space-y-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest mb-2">
+              <ShieldCheck className="h-4 w-4" />
+              DPDP Act 2023 Compliant
+            </div>
+            <h1 className="text-3xl sm:text-5xl font-black tracking-tight bg-gradient-to-r from-primary via-purple-600 to-indigo-600 bg-clip-text text-transparent leading-tight">
+              Privacy Policy
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              <strong>Effective Date:</strong> 1st March, 2026 · <strong>Last Updated:</strong> 27th February, 2026
+            </p>
+            <p className="text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              Artswarit (Sole Proprietorship of Ashwareet Basu) is committed to protecting your personal data. This Privacy Policy explains how we collect, use, store, and protect your information in compliance with the Digital Personal Data Protection Act, 2023, the IT Act 2000, and the RBI guidelines for payment aggregators.
+            </p>
           </div>
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Privacy Policy</h1>
-            <p className="text-gray-600">Last updated: {new Date().toLocaleDateString()}</p>
-          </div>
 
-          <Card className="mb-8">
-            <CardContent className="p-6 space-y-6">
-              <section>
-                <h2 className="text-2xl font-bold text-purple-600 mb-4">1. Information We Collect</h2>
-                <div className="space-y-4 text-gray-700">
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Personal Information:</h3>
-                    <p>When you create an account, we collect your name, email address, profile information, location (if provided), social media links, and professional details such as artistic specializations and experience level.</p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Artwork and Content Data:</h3>
-                    <p>Images, videos, audio files, descriptions, titles, tags, categories, pricing information, and any metadata associated with your uploaded content. We may also process this content for AI-powered features like content detection and recommendations.</p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Usage and Analytics Information:</h3>
-                    <p>How you interact with our platform including page views, clicks, time spent on pages, search queries, device information, IP addresses, browser type, and referral sources.</p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Communication Data:</h3>
-                    <p>Messages and interactions between users, feedback and ratings, support tickets, and any correspondence with our team.</p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Financial Information:</h3>
-                    <p>Payment details for transactions, subscription information, and earnings data (processed securely through third-party payment processors).</p>
-                  </div>
-                </div>
-              </section>
-
-              <section>
-                <h2 className="text-2xl font-bold text-purple-600 mb-4">2. How We Use Your Information</h2>
-                <div className="space-y-3 text-gray-700">
-                  <p><strong>Service Provision:</strong></p>
-                  <ul className="list-disc list-inside space-y-1 ml-4">
-                    <li>Create and maintain your account and profile</li>
-                    <li>Enable artwork uploads, showcasing, and discovery</li>
-                    <li>Facilitate connections between artists and clients</li>
-                    <li>Process transactions, payments, and subscription management</li>
-                    <li>Provide customer support and respond to inquiries</li>
-                  </ul>
-                  
-                  <p><strong>Platform Improvement:</strong></p>
-                  <ul className="list-disc list-inside space-y-1 ml-4">
-                    <li>Analyze usage patterns to enhance user experience</li>
-                    <li>Develop new features and improve existing functionality</li>
-                    <li>Conduct research and analytics for platform optimization</li>
-                    <li>Train AI models for content recommendations and detection</li>
-                  </ul>
-                  
-                  <p><strong>Communication and Marketing:</strong></p>
-                  <ul className="list-disc list-inside space-y-1 ml-4">
-                    <li>Send important updates, notifications, and platform announcements</li>
-                    <li>Provide marketing communications (with your consent)</li>
-                    <li>Send personalized recommendations and featured content</li>
-                  </ul>
-                  
-                  <p><strong>Security and Legal Compliance:</strong></p>
-                  <ul className="list-disc list-inside space-y-1 ml-4">
-                    <li>Prevent fraud, abuse, and unauthorized access</li>
-                    <li>Ensure platform security and user safety</li>
-                    <li>Comply with legal obligations and regulatory requirements</li>
-                    <li>Enforce our Terms of Service and community guidelines</li>
-                  </ul>
-                </div>
-              </section>
-
-              <section>
-                <h2 className="text-2xl font-bold text-purple-600 mb-4">3. Information Sharing and Disclosure</h2>
-                <div className="space-y-4 text-gray-700">
-                  <p className="font-semibold">We do not sell your personal information to third parties. We may share information in the following circumstances:</p>
-                  
-                  <div>
-                    <h3 className="font-semibold text-gray-900">With Your Consent:</h3>
-                    <p>When you explicitly agree to share information with specific third parties or for particular purposes.</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Service Providers:</h3>
-                    <p>With trusted third-party service providers who help us operate our platform, including payment processors, cloud storage providers, analytics services, and customer support tools. These providers are bound by confidentiality agreements.</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Legal Requirements:</h3>
-                    <p>When required by law, court order, or government request, or when necessary to protect our rights, property, or safety, or that of our users.</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Business Transfers:</h3>
-                    <p>In connection with a merger, acquisition, or sale of assets, your information may be transferred to the new entity, subject to the same privacy protections.</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Public Information:</h3>
-                    <p>Information you choose to make public on your profile, such as your portfolio, bio, and contact information, will be visible to other users and may be indexed by search engines.</p>
-                  </div>
-                </div>
-              </section>
-
-              <section>
-                <h2 className="text-2xl font-bold text-purple-600 mb-4">4. Data Security and Protection</h2>
-                <div className="space-y-3 text-gray-700">
-                  <p>We implement industry-standard security measures to protect your personal information, including:</p>
-                  <ul className="list-disc list-inside space-y-1 ml-4">
-                    <li>SSL encryption for data transmission</li>
-                    <li>Secure cloud storage with access controls</li>
-                    <li>Regular security audits and vulnerability assessments</li>
-                    <li>Employee training on data protection practices</li>
-                    <li>Multi-factor authentication for sensitive operations</li>
-                  </ul>
-                  <p className="text-sm italic">However, no internet transmission or storage system is 100% secure. While we strive to protect your information, we cannot guarantee absolute security.</p>
-                </div>
-              </section>
-
-              <section>
-                <h2 className="text-2xl font-bold text-purple-600 mb-4">5. Data Retention</h2>
-                <div className="space-y-3 text-gray-700">
-                  <p>We retain your information for as long as necessary to provide our services and comply with legal obligations:</p>
-                  <ul className="list-disc list-inside space-y-1 ml-4">
-                    <li>Account information: Until you delete your account or request deletion</li>
-                    <li>Artwork and content: Until removed by you or in accordance with our policies</li>
-                    <li>Transaction records: As required by law (typically 7 years)</li>
-                    <li>Analytics data: Aggregated and anonymized after 2 years</li>
-                  </ul>
-                </div>
-              </section>
-
-              <section>
-                <h2 className="text-2xl font-bold text-purple-600 mb-4">6. Your Rights and Choices</h2>
-                <div className="space-y-3 text-gray-700">
-                  <p>You have the following rights regarding your personal information:</p>
-                  <ul className="list-disc list-inside space-y-1 ml-4">
-                    <li><strong>Access:</strong> Request a copy of your personal data</li>
-                    <li><strong>Correction:</strong> Update or correct inaccurate information</li>
-                    <li><strong>Deletion:</strong> Request deletion of your account and data</li>
-                    <li><strong>Portability:</strong> Export your data in a machine-readable format</li>
-                    <li><strong>Objection:</strong> Opt out of certain data processing activities</li>
-                    <li><strong>Privacy Controls:</strong> Manage your profile visibility and privacy settings</li>
-                    <li><strong>Communication Preferences:</strong> Control marketing and notification settings</li>
-                  </ul>
-                  <p>To exercise these rights, contact us at privacy@artswarit.com or use the settings in your account dashboard.</p>
-                </div>
-              </section>
-
-              <section>
-                <h2 className="text-2xl font-bold text-purple-600 mb-4">7. International Data Transfers</h2>
-                <p className="text-gray-700">
-                  Artswarit operates globally, and your information may be transferred to and processed in countries other than your own. 
-                  We ensure appropriate safeguards are in place to protect your information during international transfers, in compliance 
-                  with applicable data protection laws including GDPR and other regional regulations.
+          {/* Section 1: Data Controller */}
+          <Card className="mb-6 border-primary/10 shadow-md">
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex items-start gap-3 mb-4">
+                <UserCheck className="h-5 w-5 text-primary mt-1 shrink-0" />
+                <h2 className="text-lg sm:text-xl font-black tracking-tight">1. Data Fiduciary (Controller)</h2>
+              </div>
+              <div className="space-y-3 text-sm text-muted-foreground leading-relaxed pl-8">
+                <p>
+                  The <strong>Data Fiduciary</strong> (as defined under the DPDP Act, 2023) for all personal data processed through artswarit.com is:
                 </p>
-              </section>
-
-              <section>
-                <h2 className="text-2xl font-bold text-purple-600 mb-4">8. Children's Privacy</h2>
-                <p className="text-gray-700">
-                  Our platform is not intended for children under 13 years of age. We do not knowingly collect personal information 
-                  from children under 13. If you believe we have collected information from a child under 13, please contact us immediately, 
-                  and we will take steps to remove the information.
-                </p>
-              </section>
-
-              <section>
-                <h2 className="text-2xl font-bold text-purple-600 mb-4">9. Changes to This Policy</h2>
-                <p className="text-gray-700">
-                  We may update this Privacy Policy from time to time to reflect changes in our practices or applicable laws. 
-                  We will notify you of significant changes through email or platform notifications. Your continued use of our 
-                  services after changes take effect constitutes acceptance of the updated policy.
-                </p>
-              </section>
-
-              <section>
-                <h2 className="text-2xl font-bold text-purple-600 mb-4">10. Contact Us</h2>
-                <div className="text-gray-700">
-                  <p>If you have questions about this Privacy Policy or wish to exercise your rights, please contact us:</p>
-                  <div className="mt-3 space-y-1">
-                    <p><strong>Email:</strong> privacy@artswarit.com</p>
-                    <p><strong>Data Protection Officer:</strong> dpo@artswarit.com</p>
-                    <p><strong>Response Time:</strong> We will respond to your inquiry within 30 days</p>
-                  </div>
+                <div className="p-4 rounded-xl bg-muted/40 border border-border/50 space-y-1">
+                  <p className="font-bold text-foreground">Ashwareet Basu</p>
+                  <p>Proprietor, Artswarit</p>
+                  <p>Registered Office: Bairiya Bazar, Turkaulia, Purbi Champaran, Bihar — 845437, India</p>
+                  <p>Operations Hub: Kalkaji, New Delhi — 110019, India</p>
+                  <p>Email: <a href="mailto:privacy@artswarit.com" className="text-primary font-semibold">privacy@artswarit.com</a></p>
                 </div>
-              </section>
+              </div>
             </CardContent>
           </Card>
+
+          {/* Section 2: Data We Collect */}
+          <Card className="mb-6 border-primary/10 shadow-md">
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex items-start gap-3 mb-4">
+                <Database className="h-5 w-5 text-primary mt-1 shrink-0" />
+                <h2 className="text-lg sm:text-xl font-black tracking-tight">2. Personal Data We Collect</h2>
+              </div>
+              <div className="space-y-4 text-sm text-muted-foreground leading-relaxed pl-8">
+                <div>
+                  <h3 className="font-bold text-foreground mb-2">a. Data You Provide Directly</h3>
+                  <ul className="list-disc pl-5 space-y-1.5">
+                    <li><strong>Account Registration:</strong> Full name, email address, password (hashed), role (Artist/Client), country, city</li>
+                    <li><strong>Profile Information:</strong> Bio, avatar image, portfolio links, social media links, skills, categories</li>
+                    <li><strong>KYC/Verification:</strong> Phone number, tax identification (PAN/GST), bank account details for artist payouts</li>
+                    <li><strong>Communications:</strong> Messages sent via the platform's chat system, project descriptions, milestone specifications</li>
+                    <li><strong>Payment Data:</strong> Billing address, transaction records. Note: We do NOT store credit/debit card numbers — this is handled by our PCI-DSS Level 1 compliant partner (Razorpay).</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground mb-2">b. Data Collected Automatically</h3>
+                  <ul className="list-disc pl-5 space-y-1.5">
+                    <li><strong>Device Information:</strong> Browser type, operating system, screen resolution, device identifiers</li>
+                    <li><strong>Usage Data:</strong> Pages visited, click patterns, session duration, search queries, artwork views/likes</li>
+                    <li><strong>Network Data:</strong> IP address, approximate location (city-level), referral URLs</li>
+                    <li><strong>Cookies & Tracking:</strong> Session cookies (essential), analytics cookies (with consent). See Section 8 below.</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 3: Purpose */}
+          <Card className="mb-6 border-primary/10 shadow-md">
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex items-start gap-3 mb-4">
+                <Eye className="h-5 w-5 text-primary mt-1 shrink-0" />
+                <h2 className="text-lg sm:text-xl font-black tracking-tight">3. Purpose & Legal Basis for Processing</h2>
+              </div>
+              <div className="space-y-3 text-sm text-muted-foreground leading-relaxed pl-8">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/30">
+                        <th className="py-3 px-4 text-left font-bold text-foreground">Purpose</th>
+                        <th className="py-3 px-4 text-left font-bold text-foreground">Legal Basis (DPDP Act)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b border-border/50">
+                        <td className="py-3 px-4">Account creation & authentication</td>
+                        <td className="py-3 px-4">Consent (Section 6)</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-3 px-4">Facilitating artist-client transactions</td>
+                        <td className="py-3 px-4">Performance of contract</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-3 px-4">Payment processing & escrow management</td>
+                        <td className="py-3 px-4">Legal obligation (RBI PA/PG Guidelines)</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-3 px-4">KYC/Identity verification for payouts</td>
+                        <td className="py-3 px-4">Legal obligation (RBI KYC norms)</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-3 px-4">Content moderation & compliance</td>
+                        <td className="py-3 px-4">Legal obligation (IT Rules 2021)</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-3 px-4">Platform analytics & improvement</td>
+                        <td className="py-3 px-4">Legitimate use (with consent)</td>
+                      </tr>
+                      <tr>
+                        <td className="py-3 px-4">Marketing communications</td>
+                        <td className="py-3 px-4">Consent (opt-in, withdrawable)</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 4: Data Sharing */}
+          <Card className="mb-6 border-primary/10 shadow-md">
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex items-start gap-3 mb-4">
+                <Globe className="h-5 w-5 text-primary mt-1 shrink-0" />
+                <h2 className="text-lg sm:text-xl font-black tracking-tight">4. Data Sharing & Third Parties</h2>
+              </div>
+              <div className="space-y-3 text-sm text-muted-foreground leading-relaxed pl-8">
+                <p><strong>We do not sell your personal data. Ever.</strong></p>
+                <p>We share personal data only with the following categories of recipients, and only to the extent necessary:</p>
+                <ul className="list-disc pl-5 space-y-2">
+                  <li><strong>Payment Processor (Razorpay):</strong> To process payments, manage escrow, and comply with RBI mandates. Razorpay is PCI-DSS Level 1 certified.</li>
+                  <li><strong>Cloud Hosting (Supabase / AWS):</strong> For data storage and infrastructure. All data is encrypted at rest and in transit.</li>
+                  <li><strong>Authentication (Supabase Auth):</strong> For secure user authentication including email verification and password management.</li>
+                  <li><strong>Analytics (aggregate, anonymised):</strong> We may use anonymised, aggregated data for platform performance analysis. This data cannot identify individual users.</li>
+                  <li><strong>Law Enforcement:</strong> We will disclose personal data if required by a court order, government directive, or law enforcement request under applicable Indian law.</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 5: Data Storage & Security */}
+          <Card className="mb-6 border-primary/10 shadow-md">
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex items-start gap-3 mb-4">
+                <Lock className="h-5 w-5 text-primary mt-1 shrink-0" />
+                <h2 className="text-lg sm:text-xl font-black tracking-tight">5. Data Storage & Security</h2>
+              </div>
+              <div className="space-y-3 text-sm text-muted-foreground leading-relaxed pl-8">
+                <ul className="list-disc pl-5 space-y-2">
+                  <li><strong>Encryption:</strong> All data is encrypted at rest (AES-256) and in transit (TLS 1.2+).</li>
+                  <li><strong>Password Storage:</strong> Passwords are hashed using industry-standard bcrypt algorithms and are never stored in plain text.</li>
+                  <li><strong>Access Control:</strong> Access to personal data is restricted to authorised personnel on a need-to-know basis with audit logging.</li>
+                  <li><strong>Infrastructure:</strong> Our platform is hosted on Supabase (backed by AWS infrastructure) with data centres that comply with SOC 2 Type II and ISO 27001 standards.</li>
+                  <li><strong>Payment Security:</strong> Card and bank account data is handled exclusively by Razorpay (PCI-DSS Level 1). Artswarit does not have access to raw card numbers.</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 6: Data Retention */}
+          <Card className="mb-6 border-primary/10 shadow-md">
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex items-start gap-3 mb-4">
+                <Server className="h-5 w-5 text-primary mt-1 shrink-0" />
+                <h2 className="text-lg sm:text-xl font-black tracking-tight">6. Data Retention</h2>
+              </div>
+              <div className="space-y-3 text-sm text-muted-foreground leading-relaxed pl-8">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/30">
+                        <th className="py-3 px-4 text-left font-bold text-foreground">Data Category</th>
+                        <th className="py-3 px-4 text-left font-bold text-foreground">Retention Period</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b border-border/50">
+                        <td className="py-3 px-4">Account data (name, email, profile)</td>
+                        <td className="py-3 px-4">Until account deletion + 30 days</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-3 px-4">Transaction records</td>
+                        <td className="py-3 px-4">7 years (Income Tax Act, 1961)</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-3 px-4">KYC documents</td>
+                        <td className="py-3 px-4">5 years post relationship end (RBI KYC norms)</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-3 px-4">Chat/message logs</td>
+                        <td className="py-3 px-4">Until account deletion</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-3 px-4">Server logs (IP, access)</td>
+                        <td className="py-3 px-4">90 days (rolling)</td>
+                      </tr>
+                      <tr>
+                        <td className="py-3 px-4">Analytics data</td>
+                        <td className="py-3 px-4">Anonymised; retained indefinitely</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 7: Your Rights */}
+          <Card className="mb-6 border-emerald-200 dark:border-emerald-900/40 shadow-md">
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex items-start gap-3 mb-4">
+                <UserCheck className="h-5 w-5 text-emerald-600 mt-1 shrink-0" />
+                <div>
+                  <h2 className="text-lg sm:text-xl font-black tracking-tight">7. Your Rights as a Data Principal</h2>
+                  <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mt-1">DPDP Act, 2023 — Chapter III</p>
+                </div>
+              </div>
+              <div className="space-y-3 text-sm text-muted-foreground leading-relaxed pl-8">
+                <p>Under the Digital Personal Data Protection Act, 2023, you (the "Data Principal") have the following rights:</p>
+                <ul className="list-disc pl-5 space-y-2">
+                  <li><strong>Right to Access:</strong> You may request a summary of the personal data processed about you and the processing activities.</li>
+                  <li><strong>Right to Correction:</strong> You may request correction of inaccurate or incomplete personal data.</li>
+                  <li><strong>Right to Erasure:</strong> You may request deletion of your personal data (subject to legal retention obligations).</li>
+                  <li><strong>Right to Withdraw Consent:</strong> You may withdraw consent for data processing at any time. Withdrawal does not affect the lawfulness of processing done prior to withdrawal.</li>
+                  <li><strong>Right to Grievance Redressal:</strong> You may file a complaint with our Grievance Officer or the Data Protection Board of India.</li>
+                  <li><strong>Right to Nominate:</strong> You may nominate another individual to exercise your rights in the event of your death or incapacity.</li>
+                </ul>
+                <p>
+                  To exercise any of these rights, contact <a href="mailto:privacy@artswarit.com" className="text-primary font-semibold underline underline-offset-2">privacy@artswarit.com</a> or our Grievance Officer via the <Link to="/contact-us" className="text-primary font-semibold underline underline-offset-2">Contact & Grievance Redressal</Link> page.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 8: Cookies */}
+          <Card className="mb-6 border-primary/10 shadow-md">
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex items-start gap-3 mb-4">
+                <FileText className="h-5 w-5 text-primary mt-1 shrink-0" />
+                <h2 className="text-lg sm:text-xl font-black tracking-tight">8. Cookies & Tracking Technologies</h2>
+              </div>
+              <div className="space-y-3 text-sm text-muted-foreground leading-relaxed pl-8">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/30">
+                        <th className="py-3 px-4 text-left font-bold text-foreground">Cookie Type</th>
+                        <th className="py-3 px-4 text-left font-bold text-foreground">Purpose</th>
+                        <th className="py-3 px-4 text-left font-bold text-foreground">Consent</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b border-border/50">
+                        <td className="py-3 px-4 font-medium">Essential</td>
+                        <td className="py-3 px-4">Authentication, session management, security</td>
+                        <td className="py-3 px-4">Not required (strictly necessary)</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-3 px-4 font-medium">Functional</td>
+                        <td className="py-3 px-4">Remembering preferences, theme, language</td>
+                        <td className="py-3 px-4">Optional (consent-based)</td>
+                      </tr>
+                      <tr>
+                        <td className="py-3 px-4 font-medium">Analytics</td>
+                        <td className="py-3 px-4">Understanding usage patterns, improving UX</td>
+                        <td className="py-3 px-4">Optional (consent-based)</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p>
+                  We do <strong>not</strong> use third-party advertising trackers or sell data to advertisers. You may manage cookie preferences in your browser settings at any time.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 9: Children */}
+          <Card className="mb-6 border-primary/10 shadow-md">
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex items-start gap-3 mb-4">
+                <Trash2 className="h-5 w-5 text-primary mt-1 shrink-0" />
+                <h2 className="text-lg sm:text-xl font-black tracking-tight">9. Children's Data</h2>
+              </div>
+              <div className="space-y-3 text-sm text-muted-foreground leading-relaxed pl-8">
+                <p>
+                  Artswarit is not intended for use by individuals under the age of <strong>18 years</strong>. We do not knowingly collect personal data from minors. In compliance with Section 9 of the DPDP Act, 2023, processing of a child's personal data requires verifiable parental consent.
+                </p>
+                <p>
+                  If we become aware that we have collected data from a child without appropriate consent, we will take immediate steps to delete such data.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 10: Updates */}
+          <Card className="mb-6 border-primary/10 shadow-md">
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex items-start gap-3 mb-4">
+                <Bell className="h-5 w-5 text-primary mt-1 shrink-0" />
+                <h2 className="text-lg sm:text-xl font-black tracking-tight">10. Changes to This Policy</h2>
+              </div>
+              <div className="space-y-3 text-sm text-muted-foreground leading-relaxed pl-8">
+                <p>
+                  We may update this Privacy Policy from time to time to reflect changes in our practices, technology, or legal requirements. Material changes will be notified via email and/or a prominent notice on the Platform at least <strong>30 days before</strong> the changes take effect.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 11: Contact */}
+          <Card className="mb-6 border-primary/10 shadow-md">
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex items-start gap-3 mb-4">
+                <Scale className="h-5 w-5 text-primary mt-1 shrink-0" />
+                <h2 className="text-lg sm:text-xl font-black tracking-tight">11. Contact for Privacy Concerns</h2>
+              </div>
+              <div className="space-y-3 text-sm text-muted-foreground leading-relaxed pl-8">
+                <p>For any privacy-related questions, data access requests, or complaints:</p>
+                <div className="p-4 rounded-xl bg-muted/40 border border-border/50 space-y-1">
+                  <p><strong>Privacy Email:</strong> <a href="mailto:privacy@artswarit.com" className="text-primary font-semibold">privacy@artswarit.com</a></p>
+                  <p><strong>Grievance Officer:</strong> Ashwareet Basu — <a href="mailto:grievance@artswarit.com" className="text-primary font-semibold">grievance@artswarit.com</a></p>
+                  <p><strong>Regulatory Authority:</strong> Data Protection Board of India (once constituted under DPDP Act, 2023)</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Footer */}
+          <div className="text-center space-y-3 pt-4">
+            <p className="text-xs text-muted-foreground/60">
+              © 2026 Artswarit · Sole Proprietorship of Ashwareet Basu · All rights reserved.
+            </p>
+          </div>
+
         </div>
       </main>
 
@@ -216,4 +360,3 @@ const PrivacyPolicy = () => {
 };
 
 export default PrivacyPolicy;
-

@@ -96,15 +96,15 @@ const PinnedArtworks = () => {
   const unpinnedArtworks = artworks.filter(art => !art.isPinned);
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Pinned Artworks</CardTitle>
-          <CardDescription>
-            Drag and drop to reorder your pinned artworks. You can pin up to 3 artworks.
+    <div className="space-y-8">
+      <Card className="rounded-[2.5rem] shadow-xl shadow-primary/5 border-primary/10 overflow-hidden backdrop-blur-md bg-background/50">
+        <CardHeader className="space-y-2 pb-6 border-b border-primary/5">
+          <CardTitle className="text-2xl font-black uppercase tracking-tight text-primary">Pinned Artworks</CardTitle>
+          <CardDescription className="text-sm font-medium text-muted-foreground">
+            Drag and drop to reorder your pinned artworks. You can pin up to <span className="text-primary font-black">3</span> artworks.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           {pinnedArtworks.length > 0 ? (
             <DragDropContext onDragEnd={onDragEnd}>
               <Droppable droppableId="pinnedArtworks">
@@ -121,19 +121,19 @@ const PinnedArtworks = () => {
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
-                            className="flex items-center bg-gray-50/80 backdrop-blur-sm rounded-lg border p-3 shadow-sm"
+                            className="flex items-center bg-background/60 backdrop-blur-xl rounded-3xl border border-primary/10 p-4 shadow-lg hover:shadow-primary/5 hover:border-primary/20 transition-all group"
                           >
-                            <div className="h-16 w-16 rounded-md overflow-hidden mr-4">
+                            <div className="h-20 w-20 rounded-2xl overflow-hidden mr-5 shadow-inner border border-white/10 shrink-0">
                               <img 
                                 src={artwork.imageUrl} 
                                 alt={artwork.title} 
-                                className="h-full w-full object-cover"
+                                className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"
                               />
                             </div>
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-2">
-                                <h4 className="font-medium">{artwork.title}</h4>
-                                <Badge variant="secondary" className="bg-primary/20 hover:bg-primary/30">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                <h4 className="font-black text-lg tracking-tight truncate">{artwork.title}</h4>
+                                <Badge variant="secondary" className="w-fit bg-primary/10 text-primary hover:bg-primary/20 border-none px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
                                   Pinned
                                 </Badge>
                               </div>
@@ -141,6 +141,7 @@ const PinnedArtworks = () => {
                             <Button 
                               variant="ghost" 
                               size="sm" 
+                              className="h-12 px-5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-destructive/10 hover:text-destructive transition-all active:scale-95 ml-4 shrink-0"
                               onClick={() => handleTogglePin(artwork.id)}
                             >
                               Unpin
@@ -155,42 +156,43 @@ const PinnedArtworks = () => {
               </Droppable>
             </DragDropContext>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              No pinned artworks. Pin your best artworks to showcase them prominently on your profile.
+            <div className="text-center py-16 px-4 bg-muted/20 rounded-3xl border border-dashed border-primary/20">
+              <p className="text-muted-foreground font-medium text-lg">No pinned artworks yet.</p>
+              <p className="text-sm text-muted-foreground/60 mt-1">Pin your best work to showcase it on your profile.</p>
             </div>
           )}
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Other Artworks</CardTitle>
-          <CardDescription>
+      <Card className="rounded-[2.5rem] shadow-xl shadow-primary/5 border-primary/10 overflow-hidden backdrop-blur-md bg-background/50">
+        <CardHeader className="space-y-2 pb-6 border-b border-primary/5">
+          <CardTitle className="text-2xl font-black uppercase tracking-tight text-primary">Other Artworks</CardTitle>
+          <CardDescription className="text-sm font-medium text-muted-foreground">
             Pin more artworks to your profile (maximum 3 pins).
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           {unpinnedArtworks.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {unpinnedArtworks.map(artwork => (
                 <div 
                   key={artwork.id}
-                  className="flex items-center bg-white rounded-lg border p-3"
+                  className="flex items-center bg-background/40 backdrop-blur-sm rounded-3xl border border-primary/5 p-4 hover:border-primary/20 transition-all group"
                 >
-                  <div className="h-16 w-16 rounded-md overflow-hidden mr-4">
+                  <div className="h-20 w-20 rounded-2xl overflow-hidden mr-5 shadow-inner border border-white/10 shrink-0">
                     <img 
                       src={artwork.imageUrl} 
                       alt={artwork.title} 
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                   </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium">{artwork.title}</h4>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-black text-lg tracking-tight truncate">{artwork.title}</h4>
                   </div>
                   <Button 
                     variant="outline" 
                     size="sm"
-                    className="border-primary text-primary hover:bg-primary/10"
+                    className="h-12 px-6 rounded-xl border-primary/20 text-primary font-black text-[10px] uppercase tracking-[0.2em] hover:bg-primary hover:text-primary-foreground hover:border-primary shadow-lg transition-all active:scale-95 ml-4 shrink-0"
                     onClick={() => handleTogglePin(artwork.id)}
                   >
                     Pin
@@ -199,8 +201,9 @@ const PinnedArtworks = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              All your artworks are pinned. Upload more artworks to add to your collection.
+            <div className="text-center py-16 px-4 bg-muted/20 rounded-3xl border border-dashed border-primary/20">
+              <p className="text-muted-foreground font-medium text-lg">All your artworks are pinned.</p>
+              <p className="text-sm text-muted-foreground/60 mt-1">Upload more work to continue building your collection.</p>
             </div>
           )}
         </CardContent>

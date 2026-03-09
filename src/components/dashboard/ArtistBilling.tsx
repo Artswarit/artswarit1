@@ -21,20 +21,26 @@ export function ArtistBilling() {
     setLoadingPortal(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-razorpay-subscription', {
-        body: { plan: 'pro' },
+        body: { plan: 'pro', use_link: true },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Subscription function error:', error);
+        throw error;
+      }
       
       const checkoutUrl = data?.url || data?.short_url;
       if (checkoutUrl) {
         window.open(checkoutUrl, '_blank');
       } else {
-        toast.error('Could not open subscription page');
+        // Fallback: open the hardcoded subscription link directly
+        window.open('https://rzp.io/rzp/JgMbYCOw', '_blank');
       }
     } catch (error: any) {
-      console.error('Error opening subscription:', error);
-      toast.error('Failed to open subscription page');
+      console.error('Subscription error details:', error);
+      // Fallback: open the direct Razorpay subscription link
+      window.open('https://rzp.io/rzp/JgMbYCOw', '_blank');
+      toast.info('Opening subscription page directly...');
     } finally {
       setLoadingPortal(false);
     }
@@ -62,7 +68,7 @@ export function ArtistBilling() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Crown className="h-5 w-5" />
-                <CardTitle className="text-lg">Pro Subscription</CardTitle>
+                <CardTitle className="text-lg">Premium Subscription</CardTitle>
               </div>
               {isProSubscriber && (
                 <span className="px-2 py-1 text-xs font-medium bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-600 rounded-full">
@@ -72,8 +78,8 @@ export function ArtistBilling() {
             </div>
             <CardDescription>
               {isProSubscriber
-                ? 'You have full access to Pro features including 0% platform fees.'
-                : 'Upgrade to Pro to unlock premium features and remove platform fees.'}
+                ? 'You have full access to Premium features including 0% platform fees.'
+                : 'Upgrade to Premium to unlock premium features and remove platform fees.'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -85,7 +91,7 @@ export function ArtistBilling() {
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Plan</span>
-                  <span className="font-medium">Pro Artist</span>
+                  <span className="font-medium">Premium Artist</span>
                 </div>
                 {renewAt && (
                   <div className="flex justify-between text-sm">
@@ -103,7 +109,7 @@ export function ArtistBilling() {
                 <Separator className="my-3" />
                 <Button 
                   variant="outline" 
-                  className="w-full" 
+                  className="w-full h-12 sm:h-10 min-h-[48px] sm:min-h-[40px]" 
                   onClick={handleManageSubscription}
                   disabled={loadingPortal}
                 >
@@ -127,7 +133,7 @@ export function ArtistBilling() {
                   </ul>
                 </div>
                 <Button 
-                  className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600"
+                  className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 h-12 sm:h-11 min-h-[48px] sm:min-h-[44px]"
                   onClick={handleSubscribe}
                   disabled={loadingPortal}
                 >

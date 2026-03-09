@@ -69,7 +69,7 @@ serve(async (req) => {
     }
 
     const event = JSON.parse(body);
-    console.log("Razorpay webhook event:", event.event);
+    // console.log("Razorpay webhook event:", event.event);
 
     const payload = event.payload;
 
@@ -84,7 +84,7 @@ serve(async (req) => {
           break;
         }
 
-        console.log("Processing subscription:", subscription.id);
+        // console.log("Processing subscription:", subscription.id);
         
         // Extract user info from notes or payment email
         const userId = subscription.notes?.user_id;
@@ -166,7 +166,7 @@ serve(async (req) => {
           metadata: { subscription_id: subscription.id }
         });
 
-        console.log("Subscription activated for user:", finalUserId);
+        // console.log("Subscription activated for user:", finalUserId);
         break;
       }
 
@@ -209,20 +209,20 @@ serve(async (req) => {
             metadata: { subscription_id: subscription.id }
           });
 
-          console.log("Subscription deactivated for user:", finalUserId);
+          // console.log("Subscription deactivated for user:", finalUserId);
         }
         break;
       }
 
       case "subscription.pending": {
-        console.log("Subscription pending - awaiting payment");
+        // console.log("Subscription pending - awaiting payment");
         break;
       }
 
       case "payment.authorized":
       case "payment.captured": {
-        const payment = payload.payment?.entity;
-        console.log("Payment processed:", payment?.id);
+        // const payment = payload.payment?.entity;
+        // console.log("Payment processed:", payment?.id);
         break;
       }
 
@@ -251,7 +251,7 @@ serve(async (req) => {
       }
 
       default:
-        console.log("Unhandled event type:", event.event);
+        // console.log("Unhandled event type:", event.event);
     }
 
     return new Response(

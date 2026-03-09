@@ -30,6 +30,8 @@ export default function SavedArtworks() {
   const { savedArtworks, loading, toggleSaveArtwork, refresh } = useSavedArtworks();
   const [artworkDetails, setArtworkDetails] = useState<SavedArtworkItem[]>([]);
   const [loadingDetails, setLoadingDetails] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(8);
+  const ITEMS_PER_PAGE = 8;
 
   // Fetch detailed artwork information
   const fetchArtworkDetails = useCallback(async () => {
@@ -189,8 +191,9 @@ export default function SavedArtworks() {
             </Button>
           </div>
         ) : (
+          <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {artworkDetails.map((artwork) => (
+            {artworkDetails.slice(0, visibleCount).map((artwork) => (
               <div
                 key={artwork.id}
                 className="group relative bg-card border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300"
@@ -264,6 +267,20 @@ export default function SavedArtworks() {
               </div>
             ))}
           </div>
+
+          {/* Load More */}
+          {visibleCount < artworkDetails.length && (
+            <div className="flex justify-center pt-4">
+              <Button
+                variant="outline"
+                className="h-11 px-10 rounded-2xl font-black text-xs uppercase tracking-widest border-primary/20 hover:bg-primary/5 hover:border-primary/40 transition-all"
+                onClick={() => setVisibleCount(c => c + ITEMS_PER_PAGE)}
+              >
+                Load More · {Math.min(ITEMS_PER_PAGE, artworkDetails.length - visibleCount)} of {artworkDetails.length - visibleCount} remaining
+              </Button>
+            </div>
+          )}
+          </>
         )}
       </CardContent>
     </Card>

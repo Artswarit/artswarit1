@@ -201,7 +201,7 @@ export function PayoutHistory() {
               <CardDescription>Your completed and pending payouts from milestones</CardDescription>
             </div>
             <Select value={filter} onValueChange={(v) => setFilter(v as any)}>
-              <SelectTrigger className="w-[130px]">
+              <SelectTrigger className="w-[130px] h-12 sm:h-10 min-h-[48px] sm:min-h-[40px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

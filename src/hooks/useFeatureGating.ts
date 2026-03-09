@@ -18,46 +18,61 @@ export interface FeatureLimits {
 }
 
 export const useFeatureGating = (userId: string | undefined | null) => {
-  const { plan, isProArtist, portfolioLimit, serviceLimit, loading: planLoading } = useArtistPlan(userId);
+  const { plan, isProArtist, portfolioLimit, serviceLimit, loading: planLoading, refetch: refetchPlan } = useArtistPlan(userId);
   const [portfolioCount, setPortfolioCount] = useState(0);
   const [serviceCount, setServiceCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchCounts = async () => {
-      if (!userId) {
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-
-      // Fetch portfolio (artworks) count
-      const { count: artworkCount } = await supabase
-        .from("artworks")
-        .select("*", { count: "exact", head: true })
-        .eq("artist_id", userId);
-
-      // Fetch services count
-      const { count: servicesCount } = await supabase
-        .from("artist_services")
-        .select("*", { count: "exact", head: true })
-        .eq("artist_id", userId);
-
-      setPortfolioCount(artworkCount || 0);
-      setServiceCount(servicesCount || 0);
+  const fetchCounts = async () => {
+    if (!userId) {
       setLoading(false);
-    };
+      return;
+    }
 
+    console.log(`[useFeatureGating] Fetching counts for ${userId}...`);
+    
+    // Fetch portfolio (artworks) count
+    const { count: artworkCount, error: artError } = await supabase
+      .from("artworks")
+      .select("*", { count: "exact", head: true })
+      .eq("artist_id", userId);
+
+    // Fetch services count
+    const { count: servicesCount, error: svcError } = await supabase
+      .from("artist_services")
+      .select("*", { count: "exact", head: true })
+      .eq("artist_id", userId);
+
+    if (artError) console.error("[useFeatureGating] Artworks count error:", artError);
+    if (svcError) console.error("[useFeatureGating] Services count error:", svcError);
+
+    console.log(`[useFeatureGating] Counts fetched: artworks=${artworkCount}, services=${servicesCount}`);
+
+    setPortfolioCount(artworkCount || 0);
+    setServiceCount(servicesCount || 0);
+    setLoading(false);
+  };
+
+  const refresh = async () => {
+    await Promise.all([
+      fetchCounts(),
+      refetchPlan()
+    ]);
+  };
+
+  useEffect(() => {
+    setLoading(true);
     fetchCounts();
   }, [userId]);
 
-  // Real-time subscription to artwork and service changes
   useEffect(() => {
     if (!userId) return;
 
-    const artworkChannel = supabase
-      .channel(`portfolio-count-${userId}`)
+    console.log(`[useFeatureGating] Setting up real-time for ${userId}`);
+
+    // Listen to both tables in a single channel
+    const channel = supabase
+      .channel(`gating-updates-${userId}`)
       .on(
         'postgres_changes',
         {
@@ -66,18 +81,12 @@ export const useFeatureGating = (userId: string | undefined | null) => {
           table: 'artworks',
           filter: `artist_id=eq.${userId}`
         },
-        async () => {
-          const { count } = await supabase
-            .from("artworks")
-            .select("*", { count: "exact", head: true })
-            .eq("artist_id", userId);
-          setPortfolioCount(count || 0);
+        (payload) => {
+          console.log('[useFeatureGating] Real-time artwork change:', payload.eventType);
+          // Small delay to ensure DB consistency before re-fetching counts
+          setTimeout(fetchCounts, 150);
         }
       )
-      .subscribe();
-
-    const serviceChannel = supabase
-      .channel(`service-count-${userId}`)
       .on(
         'postgres_changes',
         {
@@ -86,19 +95,19 @@ export const useFeatureGating = (userId: string | undefined | null) => {
           table: 'artist_services',
           filter: `artist_id=eq.${userId}`
         },
-        async () => {
-          const { count } = await supabase
-            .from("artist_services")
-            .select("*", { count: "exact", head: true })
-            .eq("artist_id", userId);
-          setServiceCount(count || 0);
+        (payload) => {
+          console.log('[useFeatureGating] Real-time service change:', payload.eventType);
+          // Small delay to ensure DB consistency before re-fetching counts
+          setTimeout(fetchCounts, 150);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`[useFeatureGating] Subscription status for ${userId}:`, status);
+      });
 
     return () => {
-      supabase.removeChannel(artworkChannel);
-      supabase.removeChannel(serviceChannel);
+      console.log(`[useFeatureGating] Cleaning up real-time for ${userId}`);
+      supabase.removeChannel(channel);
     };
   }, [userId]);
 
@@ -124,6 +133,7 @@ export const useFeatureGating = (userId: string | undefined | null) => {
   return {
     ...limits,
     loading: loading || planLoading,
-    plan
+    plan,
+    refresh
   };
 };

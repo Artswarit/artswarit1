@@ -46,7 +46,7 @@ serve(async (req) => {
     // Get artwork details
     const { data: artwork, error: artworkError } = await supabaseClient
       .from("artworks")
-      .select("id, title, price, artist_id")
+      .select("id, title, price, artist_id, metadata")
       .eq("id", artworkId)
       .single();
 
@@ -73,14 +73,25 @@ serve(async (req) => {
       );
     }
 
-    // CRITICAL: artwork.price is stored in USD, Razorpay ALWAYS needs INR
+    // Handle currency logic: if stored as INR, use directly. If USD, convert to INR.
+    const metadata = artwork.metadata as { currency?: string } | null;
+    const storedCurrency = metadata?.currency ?? 'USD';
     const USD_TO_INR_RATE = 83.5;
-    const priceUSD = Number(artwork.price);
-    const priceINR = priceUSD * USD_TO_INR_RATE;
+    let priceINR: number;
+    let priceUSD: number;
+
+    if (storedCurrency === 'INR') {
+      priceINR = Number(artwork.price);
+      priceUSD = priceINR / USD_TO_INR_RATE;
+    } else {
+      priceUSD = Number(artwork.price);
+      priceINR = priceUSD * USD_TO_INR_RATE;
+    }
+
     // Convert to paise (Razorpay uses smallest currency unit)
     const amountInPaise = Math.round(priceINR * 100);
     
-    console.log(`Artwork order: $${priceUSD} USD = ₹${priceINR} INR = ${amountInPaise} paise`);
+    // console.log(`Artwork order (${storedCurrency}): $${priceUSD.toFixed(2)} USD = ₹${priceINR.toFixed(2)} INR = ${amountInPaise} paise`);
 
     // Create Razorpay order
     const auth = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
@@ -100,6 +111,8 @@ serve(async (req) => {
           user_id: user.id,
           artist_id: artwork.artist_id,
           amount_usd: priceUSD,
+          amount_inr: priceINR,
+          stored_currency: storedCurrency,
           usd_to_inr_rate: USD_TO_INR_RATE,
         },
       }),
@@ -112,7 +125,6 @@ serve(async (req) => {
     }
 
     const order = await orderResponse.json();
-    console.log("Created Razorpay order for artwork:", order.id);
 
     return new Response(
       JSON.stringify({

@@ -13,6 +13,7 @@ interface ArtworkCardProps {
   price?: number | null;
   isPremium?: boolean;
   isExclusive?: boolean;
+  currency?: string;
   onLike?: () => void;
   isLiked?: boolean;
   onViewFull?: () => void;
@@ -31,6 +32,7 @@ const ArtworkCardModern: React.FC<ArtworkCardProps> = ({
   price,
   isPremium,
   isExclusive,
+  currency,
   isLiked,
   onLike,
   onViewFull,
@@ -109,7 +111,7 @@ const ArtworkCardModern: React.FC<ArtworkCardProps> = ({
             {isPremium && !isExclusive && (
               <div className="text-center px-4">
                 <p className="text-white font-semibold text-sm mb-2">
-                  {formatCurrency(price)} to Unlock
+                  {formatCurrency(price, currency)} to Unlock
                 </p>
                 <Button 
                   onClick={handleUnlock}
@@ -151,15 +153,25 @@ const ArtworkCardModern: React.FC<ArtworkCardProps> = ({
           </div>
         )}
 
-        {/* Premium/Exclusive Badge */}
         {(isPremium || isExclusive) && (
           <div className="absolute top-2 right-2 z-10">
-            <span className={`flex items-center gap-1 font-semibold rounded-md px-2 py-0.5 text-xs shadow ${
-              isExclusive 
-                ? 'bg-purple-200/90 text-purple-800' 
-                : 'bg-yellow-200/90 text-yellow-800'
-            }`}>
-              <Lock size={13} /> {isExclusive ? "Exclusive" : "Premium"}
+            <span
+              className={`flex items-center gap-1 font-semibold rounded-md px-2 py-0.5 text-xs shadow ${
+                isExclusive
+                  ? "bg-purple-200/90 text-purple-800"
+                  : "bg-yellow-200/90 text-yellow-800"
+              }`}
+            >
+              {shouldBlur ? (
+                <>
+                  <Lock size={13} /> {isExclusive ? "Exclusive" : "Premium"}
+                </>
+              ) : (
+                <>
+                  <Sparkles size={13} />{" "}
+                  {isExclusive ? "Exclusive Access" : "Unlocked"}
+                </>
+              )}
             </span>
           </div>
         )}
@@ -204,18 +216,21 @@ const ArtworkCardModern: React.FC<ArtworkCardProps> = ({
           <span className="flex items-center gap-0.5 sm:gap-1">
             <Heart size={12} className="sm:w-[13px] sm:h-[13px]" /> <span className="text-[10px] sm:text-xs">{likes}</span>
           </span>
-          {/* Show price for Premium, "Request" for Exclusive, "Free" for free */}
-          <span className={`rounded-full px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-semibold ml-auto flex-shrink-0 ${
-            isExclusive 
-              ? "bg-purple-100 text-purple-700" 
-              : isPremium 
-                ? "bg-yellow-300/40 text-yellow-800" 
-                : "bg-green-100 text-green-700"
-          }`}>
-            {isExclusive 
-              ? "Request Access" 
-              : isPremium 
-                ? formatCurrency(price)
+          <span
+            className={`rounded-full px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-semibold ml-auto flex-shrink-0 ${
+              isExclusive
+                ? "bg-purple-100 text-purple-700"
+                : isPremium
+                  ? "bg-yellow-300/40 text-yellow-800"
+                  : "bg-green-100 text-green-700"
+            }`}
+          >
+            {isExclusive
+              ? isUnlocked
+                ? "Exclusive"
+                : "Request Access"
+              : isPremium
+                ? formatCurrency(price, currency)
                 : "Free"}
           </span>
         </div>

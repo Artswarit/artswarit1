@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { cn } from '@/lib/utils';
 import { usePublicArtworks } from '@/hooks/usePublicArtworks';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -7,58 +8,82 @@ import TopFilters from '@/components/explore/TopFilters';
 import RecentlyViewed from '@/components/explore/RecentlyViewed';
 import GlassCard from '@/components/ui/glass-card';
 import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import ChatbotBubble from '@/components/explore/ChatbotBubble';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const Explore = () => {
-  console.log('Explore page rendering');
-  
-  const { artworks, loading, error } = usePublicArtworks();
+  const { artworks, loading, error, hasMore, loadMore, loadingMore } = usePublicArtworks();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filteredArtworks, setFilteredArtworks] = useState(artworks || []);
-  const [displayedArtworks, setDisplayedArtworks] = useState<typeof artworks>([]);
-  const [hasMore, setHasMore] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const loaderRef = useRef<HTMLDivElement>(null);
-  const itemsPerPage = 12;
+  const [currentCategory, setCurrentCategory] = useState<string>('all');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const SCROLL_KEY = 'explore_scroll_y';
 
-  const trendingArtworks = [...(artworks || [])]
-    .sort((a, b) => ((b.views || 0) + (b.likes || 0) * 5) - ((a.views || 0) + (a.likes || 0) * 5))
-    .slice(0, 4);
-
-  // Infinite scroll - load more items
-  const loadMore = useCallback(() => {
-    if (loadingMore || !hasMore) return;
-    
-    setLoadingMore(true);
-    const currentLength = displayedArtworks.length;
-    const nextItems = filteredArtworks.slice(currentLength, currentLength + itemsPerPage);
-    
-    if (nextItems.length === 0) {
-      setHasMore(false);
-    } else {
-      setDisplayedArtworks(prev => [...prev, ...nextItems]);
-      setHasMore(currentLength + nextItems.length < filteredArtworks.length);
-    }
-    setLoadingMore(false);
-  }, [displayedArtworks.length, filteredArtworks, loadingMore, hasMore]);
-
-  // Intersection Observer for infinite scroll
+  // Restore scroll position when returning via back button
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loadingMore) {
-          loadMore();
-        }
-      },
-      { threshold: 0.1 }
+    const saved = sessionStorage.getItem(SCROLL_KEY);
+    if (saved) {
+      const y = parseInt(saved, 10);
+      // Defer to let content paint first
+      const t = setTimeout(() => window.scrollTo({ top: y }), 80);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
+  // Save scroll position on scroll
+  const handleScroll = useCallback(() => {
+    sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
+
+  const categoryMap: Record<string, string> = {
+    musicians: 'Musicians',
+    writers: 'Writers',
+    rappers: 'Rappers',
+    editors: 'Editors',
+    scriptwriters: 'Scriptwriters',
+    photographers: 'Photographers',
+    illustrators: 'Illustrators',
+    'voice-artists': 'Voice Artists',
+    animators: 'Animators',
+    designers: 'UI/UX Designers',
+    singers: 'Singers',
+    dancers: 'Dancers'
+  };
+
+  const initialCategory = (() => {
+    const params = new URLSearchParams(location.search);
+    const slug = params.get('category') || '';
+    return categoryMap[slug] || 'all';
+  })();
+
+  const initialSearch = (() => {
+    const params = new URLSearchParams(location.search);
+    const slug = params.get('category') || '';
+    return categoryMap[slug] || decodeURIComponent(slug || '');
+  })();
+
+  const toSlug = (name: string) =>
+    encodeURIComponent(
+      (name || '')
+        .toLowerCase()
+        .trim()
+        .replace(/[\s_]+/g, '-')
+        .replace(/[^a-z0-9\-]/g, '')
     );
 
-    if (loaderRef.current) {
-      observer.observe(loaderRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [loadMore, hasMore, loadingMore]);
+  const trendingArtworks = useMemo(() => {
+    return [...(artworks || [])]
+      .sort((a, b) => ((b.views || 0) + (b.likes || 0) * 5) - ((a.views || 0) + (a.likes || 0) * 5))
+      .slice(0, 4);
+  }, [artworks]);
 
   const handleFiltersChange = (filters: {
     search: string;
@@ -75,8 +100,19 @@ const Explore = () => {
     hasVideo?: boolean;
     forSaleOnly?: boolean;
   }) => {
-    console.log('Filters changed:', filters);
     let filtered = [...(artworks || [])];
+    if (filters.category && filters.category !== 'all') {
+      const slug = toSlug(filters.category);
+      const params = new URLSearchParams(location.search);
+      params.set('category', slug);
+      navigate(`/explore?${params.toString()}`, { replace: false });
+    } else {
+      const params = new URLSearchParams(location.search);
+      params.delete('category');
+      const query = params.toString();
+      navigate(query ? `/explore?${query}` : '/explore', { replace: false });
+    }
+
 
     // Search filter - prioritize artist name matches
     if (filters.search) {
@@ -95,7 +131,7 @@ const Explore = () => {
 
     // Category filter (artist category)
     if (filters.category && filters.category !== 'all') {
-      filtered = filtered.filter(artwork => artwork.category === filters.category);
+      filtered = filtered.filter(artwork => (artwork.category || '').toLowerCase() === (filters.category || '').toLowerCase());
     }
 
     // Artwork type filter
@@ -134,6 +170,14 @@ const Explore = () => {
             artworkTag.toLowerCase().includes(tag.toLowerCase())
           )
         )
+      );
+    }
+
+    // Location filter
+    if (filters.location) {
+      const searchLoc = filters.location.toLowerCase();
+      filtered = filtered.filter(artwork => 
+        artwork.artistLocation?.toLowerCase().includes(searchLoc)
       );
     }
 
@@ -200,32 +244,38 @@ const Explore = () => {
         break;
     }
 
-    console.log('Filtered artworks:', filtered.length);
     setFilteredArtworks(filtered);
-    // Reset displayed artworks when filters change
-    setDisplayedArtworks(filtered.slice(0, itemsPerPage));
-    setHasMore(filtered.length > itemsPerPage);
   };
 
   useEffect(() => {
-    console.log('Artworks data updated:', artworks?.length);
     if (artworks) {
       setFilteredArtworks(artworks);
-      setDisplayedArtworks(artworks.slice(0, itemsPerPage));
-      setHasMore(artworks.length > itemsPerPage);
     }
   }, [artworks]);
 
   if (loading) {
-    console.log('Explore showing loading state');
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+      <div className="min-h-screen flex flex-col bg-background">
         <Navbar />
-        <div className="flex-1 flex items-center justify-center">
-          <GlassCard className="p-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-            <p className="mt-4 text-muted-foreground text-center">Loading artworks...</p>
-          </GlassCard>
+        <div className="flex-1 pt-20 sm:pt-24">
+          {/* Filter bar skeleton */}
+          <div className="sticky top-16 z-30 bg-background/90 backdrop-blur-md border-b border-border px-4 py-3">
+            <div className="h-10 bg-muted animate-pulse rounded-xl max-w-3xl mx-auto" />
+          </div>
+          {/* Grid skeleton — matches real layout exactly */}
+          <div className="container mx-auto px-4 py-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {Array.from({ length: 15 }).map((_, i) => (
+                <div key={i} className="animate-pulse rounded-2xl overflow-hidden bg-card border border-border" style={{ animationDelay: `${i * 40}ms` }}>
+                  <div className="aspect-[3/4] bg-muted" />
+                  <div className="p-3 space-y-2">
+                    <div className="h-3 bg-muted rounded-full w-3/4" />
+                    <div className="h-3 bg-muted rounded-full w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -233,122 +283,176 @@ const Explore = () => {
 
   if (error) {
     console.error('Explore error:', error);
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center p-4">
+          <GlassCard className="p-8 max-w-md w-full text-center space-y-6">
+            <div className="text-4xl">⚠️</div>
+            <h3 className="text-xl font-black uppercase tracking-tight">Connection Lost</h3>
+            <p className="text-muted-foreground font-medium">
+              We're having trouble reaching the gallery. Please check your connection and try again.
+            </p>
+            <Button 
+              onClick={() => window.location.reload()}
+              className="w-full rounded-2xl h-12 font-black uppercase tracking-widest"
+            >
+              Retry Connection
+            </Button>
+          </GlassCard>
+        </div>
+      </div>
+    );
   }
 
-  console.log('Explore rendering main content with:', displayedArtworks?.length, 'artworks');
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-background selection:bg-primary/20" ref={scrollRef}>
       <Navbar />
       
       {/* Hero Section */}
-      <div className="pt-16 sm:pt-20 pb-6 sm:pb-8 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-600/10">
-        <div className="container mx-auto px-4 py-8 sm:py-12 text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Explore Artworks
+      <section className="relative pt-24 sm:pt-32 pb-12 sm:pb-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_50%_-20%,rgba(120,119,198,0.1),transparent)] pointer-events-none" />
+        
+        <div className="container relative mx-auto px-4 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] sm:text-xs font-black uppercase tracking-widest mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+            </span>
+            Discover the Future of Art
+          </div>
+          
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-6 tracking-tighter leading-[0.9] animate-in fade-in slide-in-from-bottom-6 duration-1000">
+            EXPLORE THE <br className="hidden sm:block" />
+            <span className="bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">COLLECTION</span>
           </h1>
-          <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto px-4">
-            Discover amazing artworks from talented artists around the world
+          
+          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto px-4 font-medium leading-relaxed opacity-80 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+            Curated masterpieces from visionaries worldwide. 
+            Filter by medium, style, or artist to find your next obsession.
           </p>
         </div>
-      </div>
+      </section>
 
       {/* Recently Viewed */}
-      <RecentlyViewed />
+      <div className="relative z-10 -mt-8 mb-12 animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-300">
+        <RecentlyViewed />
+      </div>
 
       {/* Trending Section */}
       {trendingArtworks.length > 0 && !loading && (
-        <div className="container mx-auto px-4 pt-6 sm:pt-8">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-gray-800">Trending Now</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {trendingArtworks.map((artwork) => (
-              <div key={`trending-${artwork.id}`} className="group">
+        <section className="container mx-auto px-4 py-12 animate-in fade-in duration-1000 delay-500">
+          <div className="flex items-center justify-between mb-8 sm:mb-12">
+            <div>
+              <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-foreground">TRENDING NOW</h2>
+              <div className="h-1.5 w-12 bg-primary rounded-full mt-2" />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+            {trendingArtworks.map((artwork, idx) => (
+              <div 
+                key={`trending-${artwork.id}`} 
+                className="animate-in fade-in slide-in-from-bottom-4 duration-700"
+                style={{ animationDelay: `${idx * 100}ms` }}
+              >
                 <ArtworkCard
-                  id={artwork.id}
-                  title={artwork.title}
-                  artist={artwork.artist}
-                  artistId={artwork.artistId}
-                  type={artwork.type}
-                  imageUrl={artwork.imageUrl}
-                  likes={artwork.likes}
-                  views={artwork.views}
-                  price={artwork.price}
-                  category={artwork.category}
-                  audioUrl={artwork.audioUrl}
-                  videoUrl={artwork.videoUrl}
+                  {...artwork}
                 />
               </div>
             ))}
           </div>
-          <hr className="my-8 sm:my-12 border-gray-200" />
-        </div>
+          <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent my-16 sm:my-24" />
+        </section>
       )}
 
-      {/* Filters */}
-      <TopFilters
-        onFiltersChange={handleFiltersChange}
-        onViewModeChange={setViewMode}
-        viewMode={viewMode}
-        resultsCount={filteredArtworks?.length || 0}
-      />
+      {/* Filters & Content */}
+      <div className="relative pb-24">
+        <div className="sticky top-16 sm:top-20 z-30 bg-background/80 backdrop-blur-xl border-y border-border/40 mb-8 transition-all duration-300">
+          <TopFilters
+            onFiltersChange={handleFiltersChange}
+            onViewModeChange={setViewMode}
+            viewMode={viewMode}
+            resultsCount={filteredArtworks?.length || 0}
+            initialCategory={initialCategory}
+            initialSearch={initialSearch}
+          />
+        </div>
 
-      {/* Main Content with Infinite Scroll */}
-      <main className="container mx-auto px-4 py-6 sm:py-8">
-        {displayedArtworks && displayedArtworks.length > 0 ? (
-          <div>
-            {/* Artworks Grid */}
-            <div className={`mb-6 sm:mb-8 ${
-              viewMode === 'grid'
-                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6'
-                : 'space-y-4'
-            }`}>
-              {displayedArtworks.map((artwork) => (
-                <div key={artwork.id} className="group">
-                  <ArtworkCard
-                    id={artwork.id}
-                    title={artwork.title}
-                    artist={artwork.artist}
-                    artistId={artwork.artistId}
-                    type={artwork.type}
-                    imageUrl={artwork.imageUrl}
-                    likes={artwork.likes}
-                    views={artwork.views}
-                    price={artwork.price}
-                    category={artwork.category}
-                    audioUrl={artwork.audioUrl}
-                    videoUrl={artwork.videoUrl}
-                  />
-                </div>
-              ))}
-            </div>
+        <main className="container mx-auto px-4">
+          {filteredArtworks && filteredArtworks.length > 0 ? (
+            <div className="space-y-12">
+              <div className={cn(
+                "transition-all duration-500",
+                viewMode === 'grid'
+                  ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8'
+                  : 'flex flex-col gap-4 sm:gap-6 max-w-4xl mx-auto'
+              )}>
+                {filteredArtworks.map((artwork, idx) => (
+                  <div 
+                    key={artwork.id}
+                    className="animate-in fade-in zoom-in-95 duration-500"
+                    style={{ animationDelay: `${(idx % 12) * 50}ms` }}
+                  >
+                    <ArtworkCard
+                      {...artwork}
+                    />
+                  </div>
+                ))}
+              </div>
 
-            {/* Infinite Scroll Loader */}
-            <div ref={loaderRef} className="flex justify-center py-8">
-              {loadingMore && (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  <span>Loading more...</span>
+              {hasMore && (
+                <div className="flex flex-col items-center justify-center py-12 border-t border-border/10">
+                  <Button
+                    onClick={loadMore}
+                    disabled={loadingMore}
+                    className="rounded-2xl px-10 h-12 font-black uppercase tracking-[0.2em] bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
+                  >
+                    {loadingMore ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Loading More
+                      </>
+                    ) : (
+                      'Load More'
+                    )}
+                  </Button>
                 </div>
               )}
-              {!hasMore && displayedArtworks.length > 0 && (
-                <p className="text-muted-foreground text-sm">You've seen all artworks</p>
-              )}
             </div>
-          </div>
-        ) : (
-          <div className="text-center py-16">
-            <GlassCard className="p-12 max-w-md mx-auto">
-              <div className="text-6xl mb-4">🎨</div>
-              <h3 className="text-xl font-semibold mb-2">No artworks found</h3>
-              <p className="text-gray-500">Try adjusting your filters or search terms to discover amazing artworks.</p>
-            </GlassCard>
-          </div>
-        )}
-      </main>
+          ) : (
+            <div className="text-center py-24 sm:py-32">
+              <div className="max-w-md mx-auto space-y-8">
+                <div className="relative inline-block">
+                  <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
+                  <div className="relative text-7xl sm:text-8xl animate-bounce">🎨</div>
+                </div>
+                <div className="space-y-4">
+                  <h3 className="text-2xl sm:text-3xl font-black tracking-tight">SILENCE IN THE GALLERY</h3>
+                  <p className="text-muted-foreground font-medium leading-relaxed">
+                    {currentCategory !== 'all' 
+                      ? 'Currently not found — coming soon' 
+                      : "We couldn't find any artworks matching your current filters. Try broadening your search or exploring new categories."}
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleFiltersChange({
+                      search: '', category: 'all', artworkType: 'all', priceRange: 'all', 
+                      tags: [], sortBy: 'most_recent', location: ''
+                    })}
+                    className="rounded-2xl px-8 h-12 font-black uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-all"
+                  >
+                    Reset All Filters
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
 
       <Footer />
-
-      {/* Floating ChatbotBubble for artist discovery */}
       <ChatbotBubble />
     </div>
   );

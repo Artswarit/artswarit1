@@ -111,7 +111,7 @@ serve(async (req) => {
     }
 
     const subscription = await subscriptionResponse.json();
-    console.log("Created Razorpay subscription:", subscription.id);
+    // console.log("Created Razorpay subscription:", subscription.id);
 
     // Return short URL or checkout link
     return new Response(

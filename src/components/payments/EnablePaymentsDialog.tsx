@@ -89,6 +89,7 @@ export function EnablePaymentsDialog({ open, onOpenChange }: EnablePaymentsDialo
               placeholder="As it appears on your bank account"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="min-h-[48px]"
               required
             />
           </div>
@@ -101,6 +102,7 @@ export function EnablePaymentsDialog({ open, onOpenChange }: EnablePaymentsDialo
               placeholder="+91 9876543210"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              className="min-h-[48px]"
               required
             />
           </div>
@@ -111,7 +113,7 @@ export function EnablePaymentsDialog({ open, onOpenChange }: EnablePaymentsDialo
               value={formData.country}
               onValueChange={(value) => setFormData({ ...formData, country: value })}
             >
-              <SelectTrigger>
+              <SelectTrigger className="min-h-[48px]">
                 <SelectValue placeholder="Select your country" />
               </SelectTrigger>
               <SelectContent>
@@ -135,6 +137,7 @@ export function EnablePaymentsDialog({ open, onOpenChange }: EnablePaymentsDialo
                   placeholder="Name on the bank account"
                   value={formData.bank_account_name}
                   onChange={(e) => setFormData({ ...formData, bank_account_name: e.target.value })}
+                  className="min-h-[48px]"
                   required
                 />
               </div>
@@ -146,6 +149,7 @@ export function EnablePaymentsDialog({ open, onOpenChange }: EnablePaymentsDialo
                   placeholder="Your bank account number"
                   value={formData.bank_account_number}
                   onChange={(e) => setFormData({ ...formData, bank_account_number: e.target.value })}
+                  className="min-h-[48px]"
                   required
                 />
               </div>
@@ -158,6 +162,7 @@ export function EnablePaymentsDialog({ open, onOpenChange }: EnablePaymentsDialo
                     placeholder="e.g., SBIN0001234"
                     value={formData.bank_ifsc_code}
                     onChange={(e) => setFormData({ ...formData, bank_ifsc_code: e.target.value.toUpperCase() })}
+                    className="min-h-[48px]"
                     required
                   />
                 </div>
@@ -170,6 +175,7 @@ export function EnablePaymentsDialog({ open, onOpenChange }: EnablePaymentsDialo
                       placeholder="e.g., AAAA-BB-CC-123"
                       value={formData.bank_swift_code}
                       onChange={(e) => setFormData({ ...formData, bank_swift_code: e.target.value.toUpperCase() })}
+                      className="min-h-[48px]"
                     />
                   </div>
 
@@ -180,6 +186,7 @@ export function EnablePaymentsDialog({ open, onOpenChange }: EnablePaymentsDialo
                       placeholder="International Bank Account Number"
                       value={formData.bank_iban}
                       onChange={(e) => setFormData({ ...formData, bank_iban: e.target.value.toUpperCase() })}
+                      className="min-h-[48px]"
                     />
                   </div>
                 </>
@@ -187,11 +194,20 @@ export function EnablePaymentsDialog({ open, onOpenChange }: EnablePaymentsDialo
             </div>
           </div>
 
-          <DialogFooter className="pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <DialogFooter className="pt-4 flex-col sm:flex-row gap-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              className="w-full sm:w-auto min-h-[48px]"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={!isValid || creating}>
+            <Button 
+              type="submit" 
+              disabled={!isValid || creating}
+              className="w-full sm:w-auto min-h-[48px]"
+            >
               {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Enable Payments
             </Button>

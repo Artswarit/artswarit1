@@ -22,6 +22,7 @@ interface GalleryArtwork {
   views: number;
   likes: number;
   price?: number;
+  currency?: string;
   isPremium?: boolean;
   isExclusive?: boolean;
   type?: string;
@@ -87,9 +88,22 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { initiatePayment, loading: paymentLoading } = useArtworkPayment();
+  const { toast } = useToast();
+  const { formatPlus, userCurrencySymbol } = useCurrencyFormat();
   
   // Track unlocked artworks
   const [unlockedArtworkIds, setUnlockedArtworkIds] = useState<Set<string>>(new Set());
+  const [exclusiveStatus, setExclusiveStatus] = useState<"none" | "pending" | "approved" | "rejected">("none");
+  const [exclusiveLoading, setExclusiveLoading] = useState(false);
+
+  const normalizeExclusiveStatus = (status: any): "none" | "pending" | "approved" | "rejected" => {
+    if (!status) return "none";
+    const s = String(status).toLowerCase().trim();
+    if (s === "approved") return "approved";
+    if (s === "pending") return "pending";
+    if (s === "rejected") return "rejected";
+    return "none";
+  };
 
   // Fetch user's unlocked artworks on mount
   useEffect(() => {
@@ -108,6 +122,58 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
     
     fetchUnlockedArtworks();
   }, [user?.id]);
+
+  // Fetch exclusive membership status for this artist
+  useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    async function fetchExclusiveStatus() {
+      if (!user?.id || !artistId) return;
+      setExclusiveLoading(true);
+      const { data, error } = await supabase
+        .from("exclusive_memberships")
+        .select("status")
+        .eq("artist_id", artistId)
+        .eq("client_id", user.id)
+        .maybeSingle();
+
+      if (!error && data) {
+        setExclusiveStatus(normalizeExclusiveStatus((data as any).status));
+      } else if (!error && !data) {
+        setExclusiveStatus("none");
+      }
+      setExclusiveLoading(false);
+    }
+
+    fetchExclusiveStatus();
+
+    if (user?.id && artistId) {
+      channel = supabase
+        .channel(`exclusive-membership-${artistId}-${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'exclusive_memberships',
+            filter: `client_id=eq.${user.id}`,
+          },
+          (payload) => {
+            const row = (payload.new || payload.old) as any;
+            if (row && row.artist_id === artistId && row.client_id === user.id && row.status) {
+              setExclusiveStatus(normalizeExclusiveStatus(row.status));
+            }
+          }
+        )
+        .subscribe();
+    }
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [user?.id, artistId]);
 
   // Handle artwork unlock payment
   const handleUnlockArtwork = useCallback((artworkId: string) => {
@@ -130,13 +196,123 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
   }, [user, initiatePayment]);
 
   // Handle exclusive access request
-  const handleRequestAccess = useCallback((artworkId: string, artistName?: string) => {
-    toast({
-      title: "Access Requested",
-      description: `Your request has been sent to ${artistName || 'the artist'}. They will contact you if approved.`
-    });
-    // TODO: Implement actual request system (could be via messaging)
-  }, []);
+  const handleRequestAccess = useCallback(async (artworkId: string, artistName?: string) => {
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to request access to exclusive content.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (exclusiveStatus === "approved") {
+      toast({
+        title: "Already Approved",
+        description: "You already have access to this artist's exclusive content."
+      });
+      return;
+    }
+
+    if (exclusiveStatus === "pending") {
+      toast({
+        title: "Request Pending",
+        description: "Your request is already pending approval from the artist."
+      });
+      return;
+    }
+
+    setExclusiveLoading(true);
+
+    // Ensure client has a profile row to satisfy foreign key
+    try {
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (!existingProfile) {
+        await supabase.from("profiles").insert({
+          id: user.id,
+          email: user.email || "",
+          full_name:
+            (user as any).user_metadata?.full_name ||
+            (user as any).user_metadata?.name ||
+            user.email?.split("@")[0] ||
+            "User",
+          role: "client",
+        });
+      }
+    } catch (e) {
+      console.error("Failed to ensure client profile before exclusive request", e);
+    }
+
+    try {
+      const { error } = await supabase
+        .from("exclusive_memberships")
+        .upsert(
+          {
+            artist_id: artistId,
+            client_id: user.id,
+            status: "pending"
+          },
+          { onConflict: "artist_id,client_id" }
+        );
+
+      if (error) {
+        console.error("Exclusive access request failed", error);
+        const description =
+          (error as any)?.message ||
+          (typeof error === "string" ? error : null) ||
+          "Could not send your exclusive access request. Please try again.";
+        toast({
+          title: "Request Failed",
+          description,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const clientName =
+        (user as any)?.user_metadata?.full_name ||
+        (user as any)?.user_metadata?.name ||
+        user.email?.split("@")[0] ||
+        "A client";
+
+      if (artistId && artistId !== user.id) {
+        try {
+          await supabase.from("notifications").insert({
+            user_id: artistId,
+            title: "New Exclusive Access Request",
+            message: `${clientName} requested exclusive access to your exclusive content.`,
+            type: "info",
+            metadata: {
+              artist_id: artistId,
+              client_id: user.id
+            }
+          });
+        } catch (notifyError) {
+          console.error("Failed to send exclusive request notification", notifyError);
+        }
+      }
+
+      setExclusiveStatus("pending");
+      toast({
+        title: "Access Requested",
+        description: `Your request has been sent to ${artistName || "the artist"}. You will see exclusive content once approved.`
+      });
+    } catch (err: any) {
+      console.error("Exclusive access request failed (exception)", err);
+      toast({
+        title: "Request Failed",
+        description: err?.message || "Could not send your exclusive access request. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setExclusiveLoading(false);
+    }
+  }, [user, artistId, exclusiveStatus, toast]);
 
   // Open the right tab when arriving from a notification link
   useEffect(() => {
@@ -162,13 +338,6 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
       });
     }
   }, [tab, reviews, searchParams]);
-  const {
-    toast
-  } = useToast();
-  const {
-    formatPlus,
-    userCurrencySymbol
-  } = useCurrencyFormat();
 
   // Filter artworks by type:
   // "All Art" tab shows ONLY FREE artworks (no premium, no exclusive)
@@ -222,19 +391,19 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
       setTab(v);
       setPage(1);
     }}>
-        <div className="w-full overflow-x-auto pb-2 mb-2 -mx-1 px-1 flex justify-center">
-          <TabsList className="bg-white/40 backdrop-blur rounded-2xl glass-effect w-full sm:w-max mb-2 py-1 px-1 min-w-max">
-            <TabsTrigger value="all" className="text-xs sm:text-sm px-2 sm:px-3">
+        <div className="w-full overflow-x-auto pb-4 mb-2 -mx-1 px-1 flex justify-center no-scrollbar">
+          <TabsList className="bg-white/40 backdrop-blur rounded-2xl glass-effect w-full sm:w-max mb-2 py-1.5 sm:py-1 px-1.5 sm:px-1 min-w-max flex items-center min-h-[44px] sm:min-h-0">
+            <TabsTrigger value="all" className="text-[11px] sm:text-sm px-2.5 sm:px-4 whitespace-nowrap min-h-[36px] sm:min-h-[40px] transition-all">
               All Art {freeArt.length > 0 && `(${freeArt.length})`}
             </TabsTrigger>
-            <TabsTrigger value="premium" className="text-xs sm:text-sm px-2 sm:px-3">
+            <TabsTrigger value="premium" className="text-[11px] sm:text-sm px-2.5 sm:px-4 whitespace-nowrap min-h-[36px] sm:min-h-[40px] transition-all">
               Premium {premiumArt.length > 0 && `(${premiumArt.length})`}
             </TabsTrigger>
-            <TabsTrigger value="exclusive" className="text-xs sm:text-sm px-2 sm:px-3">
+            <TabsTrigger value="exclusive" className="text-[11px] sm:text-sm px-2.5 sm:px-4 whitespace-nowrap min-h-[36px] sm:min-h-[40px] transition-all">
               Exclusive {exclusiveArt.length > 0 && `(${exclusiveArt.length})`}
             </TabsTrigger>
-            <TabsTrigger value="services" className="text-xs sm:text-sm px-2 sm:px-3">Services</TabsTrigger>
-            <TabsTrigger value="about" className="text-xs sm:text-sm px-2 sm:px-3">About</TabsTrigger>
+            <TabsTrigger value="services" className="text-[11px] sm:text-sm px-2.5 sm:px-4 whitespace-nowrap min-h-[36px] sm:min-h-[40px] transition-all">Services</TabsTrigger>
+            <TabsTrigger value="about" className="text-[11px] sm:text-sm px-2.5 sm:px-4 whitespace-nowrap min-h-[36px] sm:min-h-[40px] transition-all">About</TabsTrigger>
           </TabsList>
         </div>
 
@@ -243,8 +412,8 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
           {isArtTab && <>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 my-4">
                 {paged.map(art => {
-                  // Check if this artwork is unlocked by the user
-                  const isUnlocked = unlockedArtworkIds.has(art.id) || isArtistOwner;
+                  const hasExclusiveAccess = art.isExclusive && exclusiveStatus === "approved";
+                  const isUnlocked = unlockedArtworkIds.has(art.id) || isArtistOwner || hasExclusiveAccess;
                   
                   // Use ArtworkCardModern for Premium/Exclusive tabs with blur/lock
                   if (tab === "premium" || tab === "exclusive") {
@@ -256,10 +425,11 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
                         views={art.views}
                         likes={art.likes}
                         price={art.price}
+                        currency={art.currency}
                         isPremium={art.isPremium}
                         isExclusive={art.isExclusive}
                         isUnlocked={isUnlocked}
-                        onViewFull={() => onArtworkClick?.(art)}
+                        onViewFull={() => onArtworkClick?.({ ...art, isUnlocked })}
                         onUnlock={() => handleUnlockArtwork(art.id)}
                         onRequestAccess={() => handleRequestAccess(art.id, art.artistName)}
                       />
@@ -278,6 +448,7 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
                       likes={art.likes}
                       views={art.views}
                       price={art.price}
+                      currency={art.currency}
                       category={art.category}
                     />
                   );

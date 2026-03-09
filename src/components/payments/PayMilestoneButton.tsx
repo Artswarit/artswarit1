@@ -41,24 +41,27 @@ export function PayMilestoneButton({
   const { formatGatewayAmount, gatewayCurrency, isIndian } = usePaymentGateway();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  // Calculate earnings based on artist plan (in USD)
+  // Calculate earnings based on artist plan (in USD base)
   const earnings = calculateEarnings(amount, isProArtist);
 
-  // Gateway display amount (INR for Razorpay, converted from USD)
+  // Gateway display amounts — always show INR for Indian users
   const gatewayDisplayAmount = formatGatewayAmount(amount);
+  const artistPayoutDisplay = formatGatewayAmount(earnings.artistPayout);
+  const platformFeeDisplay = formatGatewayAmount(earnings.platformFee);
 
   const handlePayment = () => {
+    // Close confirm dialog FIRST so its backdrop doesn't block Razorpay overlay
     setConfirmOpen(false);
-    initiatePayment({
-      milestoneId,
-      onSuccess: (paymentId) => {
-        console.log('Payment successful:', paymentId);
-        onSuccess?.();
-      },
-      onFailure: (error) => {
-        console.error('Payment failed:', error);
-      },
-    });
+    // Small delay allows dialog to unmount before Razorpay mounts
+    setTimeout(() => {
+      initiatePayment({
+        milestoneId,
+        onSuccess: (paymentId) => {
+          onSuccess?.();
+        },
+        onFailure: () => {},
+      });
+    }, 50);
   };
 
   return (
@@ -74,7 +77,7 @@ export function PayMilestoneButton({
         ) : (
           <DollarSign className="h-4 w-4 mr-1" />
         )}
-        Pay {gatewayDisplayAmount}
+        Fund Milestone ({gatewayDisplayAmount})
       </Button>
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
@@ -92,24 +95,20 @@ export function PayMilestoneButton({
               <PaymentMethodBadge showLegalCopy />
             </div>
 
-            {/* Base amount in USD */}
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Milestone Amount (USD)</span>
-              <span className="font-medium">${amount.toFixed(2)}</span>
-            </div>
-
-            {/* Actual payment amount in gateway currency */}
+            {/* Amount you pay */}
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground font-medium">You Pay ({gatewayCurrency})</span>
               <span className="font-bold text-lg text-primary">{gatewayDisplayAmount}</span>
             </div>
             
+            <div className="border-t border-border/40 my-1" />
+
             <div className="flex justify-between items-center text-sm">
               <span className="text-muted-foreground">
                 Artist Payout ({isProArtist ? '100%' : '85%'})
               </span>
               <span className={isProArtist ? 'text-primary font-semibold' : ''}>
-                ${earnings.artistPayout.toFixed(2)}
+                {artistPayoutDisplay}
               </span>
             </div>
             
@@ -117,7 +116,7 @@ export function PayMilestoneButton({
               <span className="text-muted-foreground">
                 Platform Fee ({earnings.feePercentage}%)
               </span>
-              <span>${earnings.platformFee.toFixed(2)}</span>
+              <span>{platformFeeDisplay}</span>
             </div>
             
             {isProArtist && (
@@ -131,7 +130,7 @@ export function PayMilestoneButton({
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Payment is final and non-refundable. Make sure you've reviewed the milestone deliverables.
+                Funding is held in escrow. The artist can only start work after funds are secured, and payout is released only when you approve the milestone.
               </AlertDescription>
             </Alert>
           </div>

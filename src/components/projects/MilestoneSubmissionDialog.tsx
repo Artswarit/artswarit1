@@ -51,8 +51,8 @@ export function MilestoneSubmissionDialog({
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const isPaid = milestone.status === 'paid';
-  const isFinalUpload = isPaid;
+  const isCompleted = milestone.status === 'COMPLETED';
+  const isFinalUpload = isCompleted;
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
@@ -138,19 +138,35 @@ export function MilestoneSubmissionDialog({
         });
       }
 
-      // Update milestone status if not final upload
+      // Update milestone status based on submission type
       if (!isFinalUpload) {
         const autoApproveAt = new Date();
         autoApproveAt.setDate(autoApproveAt.getDate() + 3); // Default 3 days
-
         await supabase
           .from('project_milestones')
           .update({
-            status: 'submitted',
+            status: 'REVIEW_PENDING',
             submitted_at: new Date().toISOString(),
             auto_approve_at: autoApproveAt.toISOString()
           })
           .eq('id', milestone.id);
+      } else {
+        // Final deliverables submitted → mark milestone complete
+        await supabase
+          .from('project_milestones')
+          .update({
+            status: 'COMPLETED',
+            submitted_at: new Date().toISOString()
+          })
+          .eq('id', milestone.id);
+        // Log activity
+        await supabase.from('project_activity_logs').insert({
+          project_id: projectId,
+          milestone_id: milestone.id,
+          user_id: user?.id,
+          action: 'milestone_completed',
+          details: { milestoneId: milestone.id }
+        });
       }
 
       toast.success(isFinalUpload ? 'Final files uploaded successfully' : 'Milestone submitted for review');

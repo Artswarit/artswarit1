@@ -65,26 +65,24 @@ export function MilestoneCard({
 }: MilestoneCardProps) {
   const { format: formatCurrency } = useCurrencyFormat();
   
-  const isPaid = milestone.status === 'paid';
-  const isSubmitted = milestone.status === 'submitted';
-  const isInProgress = milestone.status === 'in_progress';
-  const isRevisionRequested = milestone.status === 'revision_requested';
-  const isDisputed = milestone.status === 'disputed';
-  const isApproved = milestone.status === 'approved';
-  const isPending = milestone.status === 'pending';
-  const isPartiallyPaid = milestone.status === 'partially_paid';
+  // Status flags (separate from the isLocked prop, which refers to project-level lock)
+  const isLockedStatus = milestone.status === 'LOCKED';
+  const isWaitingFunds = milestone.status === 'WAITING_FUNDS';
+  const isActive = milestone.status === 'ACTIVE';
+  const isReviewPending = milestone.status === 'REVIEW_PENDING';
+  const isRevisionRequested = milestone.status === 'REVISION_REQUESTED';
+  const isCompleted = milestone.status === 'COMPLETED';
+  const isDisputed = milestone.status === 'DISPUTED';
 
-  // Clients can pay directly via Razorpay - no artist KYC required
-  // Payments go to platform first, then distributed to artists
-  const canPay = isClient && isApproved && !isDisputed;
-  // Payment is never blocked for clients - Razorpay handles everything
+  // Clients can fund milestones only when waiting for funds (escrow)
+  const canFund = isClient && isWaitingFunds && !isDisputed;
 
   return (
-    <Card className={`transition-all ${isPaid ? 'border-emerald-500/50 bg-emerald-500/5' : ''} ${isDisputed ? 'border-red-500/50 bg-red-500/5' : ''}`}>
+    <Card className={`transition-all ${isCompleted ? 'border-emerald-500/50 bg-emerald-500/5' : ''} ${isDisputed ? 'border-red-500/50 bg-red-500/5' : ''}`}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${isPaid ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground'}`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${isCompleted ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground'}`}>
               {index + 1}
             </div>
             <CardTitle className="text-lg">{milestone.title}</CardTitle>
@@ -122,7 +120,7 @@ export function MilestoneCard({
               <span>Revisions: {milestone.revision_count}/{milestone.max_revisions}</span>
             </div>
           )}
-          {milestone.auto_approve_at && isSubmitted && (
+          {milestone.auto_approve_at && isReviewPending && (
             <div className="flex items-center gap-1 text-yellow-600">
               <Calendar className="h-4 w-4" />
               <span>Auto-approves: {format(new Date(milestone.auto_approve_at), 'MMM d, yyyy')}</span>
@@ -145,8 +143,8 @@ export function MilestoneCard({
           />
         )}
 
-        {/* Client info when milestone is approved */}
-        {isClient && isApproved && (
+        {/* Client info when milestone is ready to review */}
+        {isClient && isReviewPending && (
           <div className="flex items-center gap-2 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
             <CheckCircle className="h-4 w-4 text-green-600" />
             <p className="text-sm text-green-600">
@@ -156,7 +154,7 @@ export function MilestoneCard({
         )}
 
         {/* Artist blocked from starting - Project not accepted */}
-        {isArtist && startBlockedReason === 'project_not_accepted' && isPending && (
+        {isArtist && startBlockedReason === 'project_not_accepted' && isWaitingFunds && (
           <div className="flex items-center gap-2 p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
             <CheckCircle className="h-4 w-4 text-amber-600" />
             <p className="text-sm text-amber-600">
@@ -166,7 +164,7 @@ export function MilestoneCard({
         )}
 
         {/* Artist blocked from starting - Payment not enabled */}
-        {isArtist && startBlockedReason === 'payment_not_enabled' && projectStatus === 'accepted' && isPending && (
+        {isArtist && startBlockedReason === 'payment_not_enabled' && projectStatus === 'accepted' && isWaitingFunds && (
           <div className="flex items-center justify-between gap-2 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
             <div className="flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-yellow-600" />
@@ -183,7 +181,7 @@ export function MilestoneCard({
         )}
 
         {/* Workflow Status Message */}
-        {isArtist && isApproved && (
+        {isArtist && isActive && (
           <div className="flex items-center gap-2 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
             <Clock className="h-4 w-4 text-green-600" />
             <p className="text-sm text-green-600">
@@ -192,7 +190,7 @@ export function MilestoneCard({
           </div>
         )}
 
-        {isClient && isInProgress && (
+        {isClient && isActive && (
           <div className="flex items-center gap-2 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
             <Play className="h-4 w-4 text-blue-600" />
             <p className="text-sm text-blue-600">
@@ -201,11 +199,11 @@ export function MilestoneCard({
           </div>
         )}
 
-        {isClient && isPending && index === 0 && (
+        {isClient && isWaitingFunds && index === 0 && (
           <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
             <Clock className="h-4 w-4 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
-              Waiting for artist to start work on this milestone.
+              Waiting for you to fund this milestone so the artist can start.
             </p>
           </div>
         )}
@@ -215,19 +213,19 @@ export function MilestoneCard({
           {/* Artist Actions */}
           {isArtist && (
             <>
-              {canStart && !startBlockedReason && (
+              {canStart && !startBlockedReason && (isActive || isRevisionRequested) && (
                 <Button size="sm" onClick={onStart} className="bg-primary hover:bg-primary/90">
                   <Play className="h-4 w-4 mr-1" />
                   Start Milestone
                 </Button>
               )}
-              {(isInProgress || isRevisionRequested) && (
+              {(isActive || isRevisionRequested) && (
                 <Button size="sm" onClick={onSubmit} className="bg-primary hover:bg-primary/90">
                   <Upload className="h-4 w-4 mr-1" />
                   Submit for Review
                 </Button>
               )}
-              {(isPaid || isPartiallyPaid) && (
+              {isCompleted && (
                 <Button size="sm" variant="outline" onClick={onSubmit}>
                   <Upload className="h-4 w-4 mr-1" />
                   Upload Final Files
@@ -239,13 +237,13 @@ export function MilestoneCard({
           {/* Client Actions */}
           {isClient && (
             <>
-              {isSubmitted && (
+              {isReviewPending && (
                 <Button size="sm" onClick={onReview} className="bg-primary hover:bg-primary/90">
                   <Eye className="h-4 w-4 mr-1" />
                   Review Submission
                 </Button>
               )}
-              {canPay && (
+              {canFund && (
                 <PayMilestoneButton
                   milestoneId={milestone.id}
                   amount={milestone.amount}
@@ -253,7 +251,7 @@ export function MilestoneCard({
                   onSuccess={onPaymentSuccess}
                 />
               )}
-              {(isPaid || isPartiallyPaid) && (
+              {isCompleted && (
                 <Button size="sm" variant="outline">
                   <FileText className="h-4 w-4 mr-1" />
                   Download Files
@@ -262,8 +260,8 @@ export function MilestoneCard({
             </>
           )}
 
-          {/* Dispute Button (Both parties) */}
-          {!isPaid && !isDisputed && (isClient || isArtist) && !isPending && (
+          {/* Dispute Button - only after submission (review/revision states) */}
+          {!isCompleted && !isDisputed && (isClient || isArtist) && (isReviewPending || isRevisionRequested) && (
             <Button size="sm" variant="destructive" onClick={onDispute}>
               <AlertTriangle className="h-4 w-4 mr-1" />
               Raise Dispute

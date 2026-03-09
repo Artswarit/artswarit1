@@ -67,13 +67,13 @@ const ReportDialog = ({
     setSubmitting(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('report-content', {
-        body: {
-          artworkId: contentType === 'artwork' ? contentId : null,
-          userId: contentType === 'user' ? contentId : null,
-          reason,
-          description: description.trim() || null,
-        },
+      const { error } = await supabase.from('reports').insert({
+        reporter_id: user.id,
+        artwork_id: contentType === 'artwork' ? contentId : null,
+        user_id: contentType === 'user' ? contentId : null,
+        reason,
+        description: description.trim() || null,
+        status: 'pending' // Enforce explicit pending status
       });
 
       if (error) throw error;
@@ -100,7 +100,7 @@ const ReportDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Flag className="h-5 w-5 text-red-500" />
@@ -116,26 +116,28 @@ const ReportDialog = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 py-4 shrink-0">
           <div className="space-y-3">
             <Label>Why are you reporting this?</Label>
-            <RadioGroup value={reason} onValueChange={setReason}>
+            <RadioGroup value={reason} onValueChange={setReason} className="gap-2">
               {REPORT_REASONS.map((r) => (
                 <div
                   key={r.value}
-                  className={`flex items-start space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${
+                  className={`flex items-start space-x-3 p-3 rounded-lg border transition-colors cursor-pointer w-full ${
                     reason === r.value
                       ? 'border-primary bg-primary/5'
                       : 'border-border hover:bg-muted/50'
                   }`}
                   onClick={() => setReason(r.value)}
                 >
-                  <RadioGroupItem value={r.value} id={r.value} className="mt-0.5" />
-                  <div className="flex-1">
-                    <Label htmlFor={r.value} className="font-medium cursor-pointer">
+                  <RadioGroupItem value={r.value} id={r.value} className="mt-0.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <Label htmlFor={r.value} className="font-medium cursor-pointer block truncate">
                       {r.label}
                     </Label>
-                    <p className="text-xs text-muted-foreground mt-0.5">{r.description}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 break-words">
+                      {r.description}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -153,7 +155,7 @@ const ReportDialog = ({
             />
           </div>
 
-          <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg">
+          <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg shrink-0">
             <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
             <p className="text-xs text-amber-800 dark:text-amber-200">
               False reports may result in action against your account. Please only report genuine violations.
@@ -161,7 +163,7 @@ const ReportDialog = ({
           </div>
         </div>
 
-        <DialogFooter className="flex-col sm:flex-row gap-2">
+        <DialogFooter className="flex-col sm:flex-row gap-2 pb-2 sm:pb-0 shrink-0">
           <Button variant="outline" onClick={onClose} disabled={submitting}>
             Cancel
           </Button>

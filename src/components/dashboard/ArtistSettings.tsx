@@ -19,30 +19,29 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Shield, Bell, Eye, Globe, Loader2, Download, UserX, Trash2, Mail, Key, Smartphone } from "lucide-react";
+import { Shield, Bell, Eye, Globe, Loader2, Trash2, Mail, Crown, Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import ChangeEmailForm from "@/components/settings/ChangeEmailForm";
-import RecoveryOptions from "@/components/settings/RecoveryOptions";
-import TwoFactorSetup from "@/components/settings/TwoFactorSetup";
 import AvailabilityCalendar from "@/components/dashboard/AvailabilityCalendar";
+import { useArtistPlan } from "@/hooks/useArtistPlan";
+import { FeatureLimitBanner } from "@/components/premium/FeatureLimitBanner";
 
 interface ArtistSettingsProps {
   isLoading: boolean;
 }
 
-const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
+const ArtistSettings = ({ isLoading: propLoading }: ArtistSettingsProps) => {
   const { user, signOut } = useAuth();
+  const { isProArtist, plan, loading: planLoading } = useArtistPlan(user?.id);
   const { toast } = useToast();
   const navigate = useNavigate();
+
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<any>(null);
-  const [downloadingData, setDownloadingData] = useState(false);
-  const [deactivating, setDeactivating] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const [settings, setSettings] = useState({
@@ -51,7 +50,7 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
     showEarnings: false,
     allowDirectMessages: true,
     autoAcceptProjects: false,
-    twoFactorAuth: false
+    twoFactorAuth: false,
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -71,7 +70,11 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
       .maybeSingle();
     
     if (error) {
-      console.error('Error fetching profile:', error);
+      toast({
+        variant: "destructive",
+        title: "Error fetching settings",
+        description: error.message
+      });
       return;
     }
     
@@ -79,12 +82,20 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
       setProfile(data);
       // Load settings from profile social_links or metadata
       const savedSettings = (data.social_links as any)?.settings || {};
-      setSettings(prev => ({
-        ...prev,
-        ...savedSettings
-      }));
+      setSettings(prev => {
+        // Only update if values are different to avoid unnecessary re-renders
+        if (JSON.stringify(prev) === JSON.stringify({ ...prev, ...savedSettings })) {
+          return prev;
+        }
+        return {
+          ...prev,
+          ...savedSettings
+        };
+      });
+    } else {
+      // No profile found
     }
-  }, [user?.id]);
+  }, [user?.id, toast]);
 
   useEffect(() => {
     fetchProfile();
@@ -99,7 +110,7 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
           table: 'profiles',
           filter: `id=eq.${user.id}`
@@ -115,11 +126,35 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
     };
   }, [user?.id, fetchProfile]);
 
+  // Cross-tab synchronization via localStorage
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== 'artswarit:settings') return;
+      try {
+        const payload = JSON.parse(e.newValue || '{}');
+        if (payload.userId !== user?.id) return;
+        setSettings(prev => ({ ...prev, [payload.key]: payload.value }));
+      } catch { void 0; }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [user?.id]);
+
   const handleSettingChange = async (key: string, value: boolean, e?: React.MouseEvent | React.ChangeEvent) => {
     // Prevent default to fix mobile refresh issue
     if (e && 'preventDefault' in e) {
       e.preventDefault();
       e.stopPropagation?.();
+    }
+
+    // Restriction: Auto-accept projects is for Pro artists only
+    if (key === 'autoAcceptProjects' && !isProArtist && value === true) {
+      toast({
+        title: "Pro Feature",
+        description: "Auto-accepting projects is available for Pro Artists only.",
+        variant: "default"
+      });
+      return;
     }
     
     const newSettings = {
@@ -134,19 +169,40 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
     if (!user?.id) return;
     try {
       const currentSocialLinks = (profile?.social_links as Record<string, unknown>) || {};
-      
+      const updatePayload: Record<string, unknown> = {
+        social_links: {
+          ...currentSocialLinks,
+          settings: newSettings
+        },
+        updated_at: new Date().toISOString()
+      };
+      // Mirror only to existing top-level columns
+      if (key === 'profileVisibility') updatePayload['profile_visibility'] = value;
+      if (key === 'emailNotifications') updatePayload['email_notifications'] = value;
+
       const { error } = await supabase
         .from('profiles')
-        .update({
-          social_links: {
-            ...currentSocialLinks,
-            settings: newSettings
-          },
-          updated_at: new Date().toISOString()
-        })
+        .update(updatePayload)
         .eq('id', user.id);
 
       if (error) throw error;
+      // Broadcast to other tabs immediately
+      try {
+        localStorage.setItem('artswarit:settings', JSON.stringify({ userId: user.id, key, value, ts: Date.now() }));
+      } catch { void 0; }
+      // Non-blocking logging
+      try {
+        await supabase.from('function_logs').insert({
+          action_type: 'settings_change',
+          function_name: 'ArtistSettings.handleSettingChange',
+          component_name: 'ArtistSettings',
+          user_id: user.id,
+          success: true,
+          input_data: { key, value },
+        });
+      } catch (logErr) {
+        // Logging failed silently
+      }
       
       toast({
         title: "Setting updated",
@@ -265,100 +321,6 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
     }
   };
 
-  const downloadUserData = async (e?: React.MouseEvent) => {
-    // Prevent default to fix mobile refresh issue
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    if (!user?.id) return;
-    
-    setDownloadingData(true);
-    try {
-      // Fetch all user data
-      const [profileRes, artworksRes, projectsRes, messagesRes] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', user.id).single(),
-        supabase.from('artworks').select('*').eq('artist_id', user.id),
-        supabase.from('projects').select('*').or(`artist_id.eq.${user.id},client_id.eq.${user.id}`),
-        supabase.from('messages').select('*').eq('sender_id', user.id)
-      ]);
-
-      const userData = {
-        exportDate: new Date().toISOString(),
-        profile: profileRes.data,
-        artworks: artworksRes.data || [],
-        projects: projectsRes.data || [],
-        messages: messagesRes.data || [],
-        settings
-      };
-
-      // Create and download JSON file
-      const blob = new Blob([JSON.stringify(userData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `my-data-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      toast({
-        title: "Data downloaded",
-        description: "Your data has been downloaded successfully."
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Download failed",
-        description: error.message
-      });
-    } finally {
-      setDownloadingData(false);
-    }
-  };
-
-  const deactivateAccount = async (e?: React.MouseEvent) => {
-    // Prevent default to fix mobile refresh issue
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    if (!user?.id) return;
-    
-    setDeactivating(true);
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          account_status: 'pending',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Account deactivated",
-        description: "Your account has been deactivated. You will be logged out."
-      });
-
-      setShowDeactivateDialog(false);
-      setTimeout(() => {
-        signOut();
-        navigate('/');
-      }, 1500);
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Deactivation failed",
-        description: error.message
-      });
-    } finally {
-      setDeactivating(false);
-    }
-  };
-
   const deleteAccount = async (e?: React.MouseEvent) => {
     // Prevent default to fix mobile refresh issue
     if (e) {
@@ -399,224 +361,243 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
     }
   };
 
-  if (isLoading) {
+  if (propLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-10 w-48 bg-gray-200 animate-pulse rounded-md"></div>
-        <div className="h-64 bg-gray-200 animate-pulse rounded-md"></div>
-        <div className="h-64 bg-gray-200 animate-pulse rounded-md"></div>
+        <div className="h-10 w-48 bg-gray-200 animate-pulse rounded-md" />
+        <div className="h-64 bg-gray-200 animate-pulse rounded-md" />
+        <div className="h-64 bg-gray-200 animate-pulse rounded-md" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Settings</h2>
+    <div className="space-y-6 sm:space-y-10 max-w-7xl mx-auto px-2 sm:px-0 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/40 backdrop-blur-md p-6 rounded-[2rem] border border-primary/5 shadow-sm">
+        <div>
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">Settings</h2>
+          <p className="text-sm font-medium text-muted-foreground/80 mt-1">Manage your account, privacy and preferences</p>
+        </div>
+        {!isProArtist && !planLoading && (
+          <Button 
+            onClick={() => navigate('/artist-dashboard/premium')}
+            className="w-full sm:w-auto bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white border-none shadow-lg shadow-indigo-500/20 rounded-xl h-12 px-6 font-bold transition-all active:scale-95"
+          >
+            <Crown className="h-4 w-4 mr-2" />
+            Upgrade to Pro
+          </Button>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                Notifications
-              </CardTitle>
-              <CardDescription>Manage your notification preferences</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10">
+        <div className="space-y-6 sm:space-y-10">
+          <Card className="rounded-[2rem] border-primary/10 shadow-xl backdrop-blur-md bg-background/95 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary/20">
+            <CardHeader className="pb-6 sm:pb-8 bg-primary/5 border-b border-primary/10">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+                  <Bell className="h-6 w-6" />
+                </div>
                 <div>
-                  <Label htmlFor="email-notifications">Email Notifications</Label>
-                  <p className="text-sm text-muted-foreground">Receive updates via email</p>
+                  <CardTitle className="text-xl sm:text-2xl font-black tracking-tight">
+                    Notifications
+                  </CardTitle>
+                  <CardDescription className="text-sm font-medium text-muted-foreground/80 mt-1">
+                    Manage your notification preferences
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6 sm:space-y-8 pt-6 sm:pt-8">
+              <div className="flex items-center justify-between group min-h-[56px] p-4 rounded-2xl hover:bg-primary/5 transition-colors">
+                <div className="space-y-1">
+                  <Label htmlFor="email-notifications" className="text-base sm:text-lg font-bold cursor-pointer">Email Notifications</Label>
+                  <p className="text-xs sm:text-sm text-muted-foreground/80 font-medium">Receive updates via email</p>
                 </div>
                 <Switch
                   id="email-notifications"
                   checked={settings.emailNotifications}
                   onCheckedChange={(checked) => handleSettingChange('emailNotifications', checked)}
+                  className="data-[state=checked]:bg-primary h-7 w-12"
                 />
               </div>
               
-              <Separator />
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="direct-messages">Direct Messages</Label>
-                  <p className="text-sm text-muted-foreground">Allow clients to message you directly</p>
+              <div className="flex items-center justify-between group min-h-[56px] p-4 rounded-2xl hover:bg-primary/5 transition-colors">
+                <div className="space-y-1">
+                  <Label htmlFor="direct-messages" className="text-base sm:text-lg font-bold cursor-pointer">Direct Messages</Label>
+                  <p className="text-xs sm:text-sm text-muted-foreground/80 font-medium">Allow clients to message you directly</p>
                 </div>
                 <Switch
                   id="direct-messages"
                   checked={settings.allowDirectMessages}
                   onCheckedChange={(checked) => handleSettingChange('allowDirectMessages', checked)}
+                  className="data-[state=checked]:bg-primary h-7 w-12"
                 />
               </div>
               
-              <Separator />
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="auto-accept">Auto-accept Projects</Label>
-                  <p className="text-sm text-muted-foreground">Automatically accept project invitations</p>
+              <div className="flex items-center justify-between group min-h-[56px] p-4 rounded-2xl hover:bg-primary/5 transition-colors">
+                <div className="space-y-1">
+                  <Label htmlFor="auto-accept" className="flex items-center gap-2 text-base sm:text-lg font-bold cursor-pointer">
+                    Auto-accept Projects
+                    {!isProArtist && <Crown className="h-4 w-4 text-yellow-500 shrink-0 animate-pulse" />}
+                  </Label>
+                  <p className="text-xs sm:text-sm text-muted-foreground/80 font-medium">Automatically accept project invitations</p>
                 </div>
-                <Switch
-                  id="auto-accept"
-                  checked={settings.autoAcceptProjects}
-                  onCheckedChange={(checked) => handleSettingChange('autoAcceptProjects', checked)}
-                />
+                <div className="flex items-center gap-4">
+                  {!isProArtist && <Lock className="h-4 w-4 text-muted-foreground/60 shrink-0" />}
+                  <Switch
+                    id="auto-accept"
+                    checked={settings.autoAcceptProjects}
+                    onCheckedChange={(checked) => handleSettingChange('autoAcceptProjects', checked)}
+                    disabled={!isProArtist}
+                    className="data-[state=checked]:bg-primary h-7 w-12"
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Eye className="h-5 w-5" />
-                Privacy
-              </CardTitle>
-              <CardDescription>Control your profile visibility and privacy</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
+          <Card className="rounded-[2rem] border-primary/10 shadow-xl backdrop-blur-md bg-background/95 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary/20">
+            <CardHeader className="pb-6 sm:pb-8 bg-primary/5 border-b border-primary/10">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+                  <Eye className="h-6 w-6" />
+                </div>
                 <div>
-                  <Label htmlFor="profile-visibility">Public Profile</Label>
-                  <p className="text-sm text-muted-foreground">Make your profile visible to everyone</p>
+                  <CardTitle className="text-xl sm:text-2xl font-black tracking-tight">
+                    Privacy
+                  </CardTitle>
+                  <CardDescription className="text-sm font-medium text-muted-foreground/80 mt-1">
+                    Control your profile visibility and privacy
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6 sm:space-y-8 pt-6 sm:pt-8">
+              <div className="flex items-center justify-between group min-h-[56px] p-4 rounded-2xl hover:bg-primary/5 transition-colors">
+                <div className="space-y-1">
+                  <Label htmlFor="profile-visibility" className="text-base sm:text-lg font-bold cursor-pointer">Public Profile</Label>
+                  <p className="text-xs sm:text-sm text-muted-foreground/80 font-medium">Make your profile visible to everyone</p>
                 </div>
                 <Switch
                   id="profile-visibility"
                   checked={settings.profileVisibility}
                   onCheckedChange={(checked) => handleSettingChange('profileVisibility', checked)}
+                  className="data-[state=checked]:bg-primary h-7 w-12"
                 />
               </div>
               
-              <Separator />
               
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="show-earnings">Show Earnings</Label>
-                  <p className="text-sm text-muted-foreground">Display your earnings publicly</p>
+              
+              <div className="flex items-center justify-between group min-h-[56px] p-4 rounded-2xl hover:bg-primary/5 transition-colors">
+                <div className="space-y-1">
+                  <Label htmlFor="show-earnings" className="text-base sm:text-lg font-bold cursor-pointer">Show Earnings</Label>
+                  <p className="text-xs sm:text-sm text-muted-foreground/80 font-medium">Display your earnings publicly</p>
                 </div>
                 <Switch
                   id="show-earnings"
                   checked={settings.showEarnings}
                   onCheckedChange={(checked) => handleSettingChange('showEarnings', checked)}
+                  className="data-[state=checked]:bg-primary h-7 w-12"
                 />
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-6 sm:space-y-10">
           {/* Email Change */}
-          <ChangeEmailForm />
-
-          {/* Two-Factor Authentication */}
-          <TwoFactorSetup />
-
-          {/* Recovery Options */}
-          <RecoveryOptions />
+          <div className="rounded-[2rem] border-primary/10 shadow-xl backdrop-blur-md bg-background/95 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary/20">
+            <ChangeEmailForm />
+          </div>
 
           {/* Availability Calendar */}
-          <AvailabilityCalendar />
+          <div className="rounded-[2rem] border-primary/10 shadow-xl backdrop-blur-md bg-background/95 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary/20">
+            <AvailabilityCalendar />
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Change Password</CardTitle>
-              <CardDescription>Update your account password</CardDescription>
+          <Card className="rounded-[2rem] border-primary/10 shadow-xl backdrop-blur-md bg-background/95 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary/20">
+            <CardHeader className="pb-6 sm:pb-8 bg-primary/5 border-b border-primary/10">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+                  <Lock className="h-6 w-6" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl sm:text-2xl font-black tracking-tight">
+                    Security
+                  </CardTitle>
+                  <CardDescription className="text-sm font-medium text-muted-foreground/80 mt-1">
+                    Update your account password
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6 pt-6 sm:pt-8">
               <div className="space-y-2">
-                <Label htmlFor="new-password">New Password</Label>
+                <Label htmlFor="new-password" className="text-sm font-bold ml-1">New Password</Label>
                 <Input
                   id="new-password"
                   name="newPassword"
                   type="password"
                   value={passwordData.newPassword}
                   onChange={handlePasswordChange}
+                  className="h-12 sm:h-14 bg-muted/50 border-none focus-visible:ring-primary/20 rounded-2xl px-6 font-medium min-h-[48px]"
+                  placeholder="Enter new password"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm New Password</Label>
+                <Label htmlFor="confirm-password" className="text-sm font-bold ml-1">Confirm New Password</Label>
                 <Input
                   id="confirm-password"
                   name="confirmPassword"
                   type="password"
                   value={passwordData.confirmPassword}
                   onChange={handlePasswordChange}
+                  className="h-12 sm:h-14 bg-muted/50 border-none focus-visible:ring-primary/20 rounded-2xl px-6 font-medium min-h-[48px]"
+                  placeholder="Confirm new password"
                 />
               </div>
               
-              <Button onClick={changePassword} disabled={saving || !passwordData.newPassword} className="w-full">
-                {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              <Button 
+                onClick={changePassword} 
+                disabled={saving || !passwordData.newPassword} 
+                className="w-full h-12 sm:h-14 font-black text-lg rounded-2xl transition-all active:scale-[0.98] shadow-lg shadow-primary/20 min-h-[48px] mt-2"
+              >
+                {saving ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : null}
                 Update Password
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="h-5 w-5" />
-                Account Actions
-              </CardTitle>
-              <CardDescription>Manage your account</CardDescription>
+          <Card className="rounded-[2rem] border-destructive/20 bg-destructive/5 shadow-xl backdrop-blur-md overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-destructive/30">
+            <CardHeader className="pb-6 sm:pb-8 bg-destructive/10 border-b border-destructive/10">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-destructive/20 text-destructive">
+                  <Trash2 className="h-6 w-6" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl sm:text-2xl font-black tracking-tight text-destructive">
+                    Danger Zone
+                  </CardTitle>
+                  <CardDescription className="text-sm font-medium text-destructive/70 mt-1">
+                    Permanently delete your account
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <Button 
-                variant="outline" 
-                className="w-full" 
-                onClick={downloadUserData}
-                disabled={downloadingData}
-              >
-                {downloadingData ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Download className="h-4 w-4 mr-2" />
-                )}
-                Download My Data
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => setShowDeactivateDialog(true)}
-              >
-                <UserX className="h-4 w-4 mr-2" />
-                Deactivate Account
-              </Button>
-              
+            <CardContent className="pt-8 pb-8">
               <Button 
                 variant="destructive" 
-                className="w-full"
+                className="w-full h-12 sm:h-14 font-black text-lg rounded-2xl transition-all active:scale-[0.98] shadow-lg shadow-destructive/20 min-h-[48px]"
                 onClick={() => setShowDeleteDialog(true)}
               >
-                <Trash2 className="h-4 w-4 mr-2" />
+                <Trash2 className="h-5 w-5 mr-2" />
                 Delete Account
               </Button>
             </CardContent>
           </Card>
         </div>
       </div>
-
-      {/* Deactivate Confirmation Dialog */}
-      <AlertDialog open={showDeactivateDialog} onOpenChange={setShowDeactivateDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Deactivate Account?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Your account will be hidden and you will be logged out. You can reactivate it by contacting support.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deactivating}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={deactivateAccount} disabled={deactivating}>
-              {deactivating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-              Deactivate
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
@@ -627,12 +608,12 @@ const ArtistSettings = ({ isLoading }: ArtistSettingsProps) => {
               This action cannot be undone. All your artworks, projects, messages, and profile data will be permanently deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel disabled={deleting} className="h-12 sm:h-10 min-h-[48px] sm:min-h-[40px] rounded-xl sm:rounded-md">Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={deleteAccount} 
               disabled={deleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 h-12 sm:h-10 min-h-[48px] sm:min-h-[40px] rounded-xl sm:rounded-md"
             >
               {deleting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
               Delete Forever

@@ -7,8 +7,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const RAZORPAY_KEY_ID = Deno.env.get('RAZORPAY_KEY_ID')!;
-const RAZORPAY_KEY_SECRET = Deno.env.get('RAZORPAY_KEY_SECRET')!;
+// const RAZORPAY_KEY_ID = Deno.env.get('RAZORPAY_KEY_ID')!;
+// const RAZORPAY_KEY_SECRET = Deno.env.get('RAZORPAY_KEY_SECRET')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 
@@ -54,7 +54,7 @@ serve(async (req) => {
       bank_iban 
     } = await req.json();
 
-    console.log(`Creating Razorpay account for artist: ${userId}`);
+    // console.log(`Creating Razorpay account for artist: ${userId}`);
 
     // Check if account already exists
     const { data: existingAccount } = await supabase
@@ -121,7 +121,7 @@ serve(async (req) => {
       });
     }
 
-    console.log('Artist payment account created/updated successfully');
+    // console.log('Artist payment account created/updated successfully');
 
     // Create notification
     await supabase.from('notifications').insert({

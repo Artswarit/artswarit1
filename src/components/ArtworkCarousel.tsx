@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Carousel,
@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const ArtworkCarousel = () => {
   const { artworks, loading } = usePublicArtworks();
+  const navigate = useNavigate();
 
   // Get top 6 artworks for carousel
   const featuredArtwork = artworks.slice(0, 6);
@@ -103,13 +104,16 @@ const ArtworkCarousel = () => {
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
                       <h3 className="text-white text-2xl font-semibold">{artwork.title}</h3>
-                      <Link 
-                        to={`/artist/${artwork.artistId}`} 
-                        className="text-gray-200 text-lg hover:text-white transition-colors"
-                        onClick={(e) => e.stopPropagation()}
+                      <span 
+                        className="text-gray-200 text-lg hover:text-white transition-colors cursor-pointer"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          navigate(`/artist/${artwork.artistId}`);
+                        }}
                       >
                         by {artwork.artist}
-                      </Link>
+                      </span>
                       
                       {/* Stats display */}
                       <div className="flex items-center space-x-4 mt-3 text-gray-200">

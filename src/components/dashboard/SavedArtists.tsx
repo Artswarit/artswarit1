@@ -35,6 +35,9 @@ const SavedArtists = () => {
 
   const [selectedArtist, setSelectedArtist] = useState<SavedArtist | null>(null);
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(6);
+
+  const ITEMS_PER_PAGE = 6;
 
   const fetchSavedArtists = async () => {
     if (!user) return [];
@@ -45,7 +48,6 @@ const SavedArtists = () => {
       .eq('client_id', user.id);
 
     if (savedError) {
-      console.error("Error fetching saved artists:", savedError);
       throw new Error(savedError.message);
     }
 
@@ -60,7 +62,6 @@ const SavedArtists = () => {
       .in('id', artistIds);
 
     if (profilesError) {
-      console.error("Error fetching profiles:", profilesError);
       throw new Error(profilesError.message);
     }
 
@@ -184,7 +185,7 @@ const SavedArtists = () => {
     <div className="space-y-4 sm:space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">Saved Artists</h2>
+          <h2 className="text-xl sm:text-2xl font-black tracking-tight uppercase">Saved Artists</h2>
           <p className="text-muted-foreground text-sm">Artists you've saved for future projects</p>
         </div>
         <Button asChild variant="outline" className="w-full sm:w-auto">
@@ -214,8 +215,9 @@ const SavedArtists = () => {
       )}
 
       {!isLoading && savedArtists && savedArtists.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {savedArtists.map((artist, index) => (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {savedArtists.slice(0, visibleCount).map((artist, index) => (
             <Card 
               key={artist.id} 
               className={cn(
@@ -239,12 +241,12 @@ const SavedArtists = () => {
                     size="sm"
                     onClick={() => handleRemoveArtist(artist.id)}
                     disabled={unsaveArtistMutation.isPending}
-                    className="h-8 w-8 p-0 shrink-0"
+                    className="h-10 w-10 sm:h-9 sm:w-9 p-0 shrink-0"
                   >
                     {unsaveArtistMutation.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <Heart className="h-4 w-4 fill-current text-red-500" />
+                      <Heart className="h-5 w-5 sm:h-4 sm:w-4 fill-current text-red-500" />
                     )}
                   </Button>
                 </div>
@@ -269,28 +271,46 @@ const SavedArtists = () => {
                 <div className="flex gap-2">
                   <Button 
                     size="sm" 
-                    className="flex-1 text-xs sm:text-sm h-8 sm:h-9" 
+                    className="flex-1 text-xs sm:text-sm h-11 sm:h-9 font-bold" 
                     onClick={() => handleOpenRequestDialog(artist)}
                   >
-                    <Send className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    <Send className="h-4 w-4 mr-1" />
                     Request
                   </Button>
-                  <Button variant="outline" size="sm" asChild className="text-xs sm:text-sm h-8 sm:h-9">
+                  <Button variant="outline" size="sm" asChild className="flex-1 sm:flex-initial text-xs sm:text-sm h-11 sm:h-9 font-bold">
                     <Link to={`/artist/${artist.id}`}>View</Link>
                   </Button>
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
+            ))}
+          </div>
+
+          {/* Load More */}
+          {visibleCount < savedArtists.length && (
+            <div className="flex justify-center pt-4">
+              <Button
+                variant="outline"
+                className="h-12 px-10 rounded-2xl font-black text-xs uppercase tracking-widest border-primary/20 hover:bg-primary/5 hover:border-primary/40 transition-all"
+                onClick={() => setVisibleCount(c => c + ITEMS_PER_PAGE)}
+              >
+                Load More · {Math.min(ITEMS_PER_PAGE, savedArtists.length - visibleCount)} of {savedArtists.length - visibleCount} remaining
+              </Button>
+            </div>
+          )}
+        </>
       ) : (
         !isLoading && (
-          <div className="text-center py-12 sm:py-16 bg-muted/30 rounded-lg border border-dashed animate-fade-in">
-            <Heart className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/50 mb-3 sm:mb-4" />
-            <h3 className="text-sm sm:text-lg font-medium text-muted-foreground mb-1 sm:mb-2">No saved artists yet</h3>
-            <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">Start exploring and save artists you'd like to work with</p>
-            <Button asChild size="sm" className="text-sm">
-              <Link to="/explore">Explore Artists</Link>
+          <div className="flex flex-col items-center justify-center py-20 px-6 rounded-[3rem] border-2 border-dashed border-border/40 bg-muted/20 backdrop-blur-sm">
+            <div className="rounded-[2rem] bg-muted/50 p-6 mb-6 shadow-inner">
+              <Heart className="h-10 w-10 text-muted-foreground/40" />
+            </div>
+            <h3 className="text-xl font-black text-foreground mb-2 tracking-tight">No saved artists yet</h3>
+            <p className="text-sm sm:text-base text-muted-foreground text-center max-w-sm mb-8 font-medium leading-relaxed opacity-70">
+              Build your roster of artists. Save artists you discover and revisit them when you're ready to collaborate.
+            </p>
+            <Button asChild className="gap-3 h-12 px-8 rounded-2xl font-black shadow-lg shadow-primary/20 hover:shadow-xl transition-all hover:-translate-y-0.5">
+              <Link to="/explore-artists">Discover Artists</Link>
             </Button>
           </div>
         )
@@ -298,10 +318,10 @@ const SavedArtists = () => {
 
       {/* Project Request Dialog - Uses same CreateProjectForm as Artist Profile */}
       <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create Project Request</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto rounded-3xl p-4 sm:p-6">
+          <DialogHeader className="mb-4 sm:mb-6">
+            <DialogTitle className="text-xl sm:text-2xl font-bold">Create Project Request</DialogTitle>
+            <DialogDescription className="text-sm">
               Send a detailed project request to {selectedArtist?.name}
             </DialogDescription>
           </DialogHeader>

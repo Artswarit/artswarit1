@@ -189,11 +189,11 @@ const ArtistNotifications = ({ isLoading }: ArtistNotificationsProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center px-1">
         <div className="flex items-center gap-2">
-          <h2 className="text-xl font-semibold">Notifications</h2>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Notifications</h2>
           {unreadCount > 0 && (
-            <span className="bg-destructive text-destructive-foreground text-xs rounded-full px-2 py-1">
+            <span className="bg-destructive text-destructive-foreground text-[10px] sm:text-xs font-bold rounded-full px-2 py-0.5 sm:py-1">
               {unreadCount} new
             </span>
           )}
@@ -203,26 +203,52 @@ const ArtistNotifications = ({ isLoading }: ArtistNotificationsProps) => {
           variant="ghost" 
           onClick={markAllAsRead}
           disabled={unreadCount === 0}
+          className="text-xs sm:text-sm h-11 sm:h-9"
         >
           Mark all as read
         </Button>
       </div>
 
-      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-6 w-full overflow-x-auto flex flex-nowrap md:justify-start">
-          <TabsTrigger value="all">
-            All
-            {unreadCount > 0 && (
-              <span className="ml-1 bg-destructive text-destructive-foreground text-xs rounded-full px-1.5 py-0.5">
-                {unreadCount}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="unread">Unread</TabsTrigger>
-          <TabsTrigger value="payment">Payments</TabsTrigger>
-          <TabsTrigger value="like">Likes</TabsTrigger>
-          <TabsTrigger value="comment">Comments</TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+          <TabsList className="mb-6 w-full h-auto min-h-[52px] sm:min-h-0 p-1 bg-muted/50 rounded-xl flex flex-nowrap md:justify-start gap-1">
+            <TabsTrigger 
+              value="all" 
+              className="flex-1 md:flex-none min-w-[80px] min-h-[44px] sm:min-h-[40px] px-4 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+            >
+              All
+              {unreadCount > 0 && (
+                <span className="ml-1.5 bg-destructive text-destructive-foreground text-[10px] rounded-full px-1.5 py-0.5 font-bold">
+                  {unreadCount}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger 
+              value="unread" 
+              className="flex-1 md:flex-none min-w-[80px] min-h-[44px] sm:min-h-[40px] px-4 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+            >
+              Unread
+            </TabsTrigger>
+            <TabsTrigger 
+              value="payment" 
+              className="flex-1 md:flex-none min-w-[80px] min-h-[44px] sm:min-h-[40px] px-4 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+            >
+              Payments
+            </TabsTrigger>
+            <TabsTrigger 
+              value="like" 
+              className="flex-1 md:flex-none min-w-[80px] min-h-[44px] sm:min-h-[40px] px-4 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+            >
+              Likes
+            </TabsTrigger>
+            <TabsTrigger 
+              value="comment" 
+              className="flex-1 md:flex-none min-w-[80px] min-h-[44px] sm:min-h-[40px] px-4 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+            >
+              Comments
+            </TabsTrigger>
+          </TabsList>
+        </div>
         
         <Card>
           <CardHeader>
@@ -241,35 +267,37 @@ const ArtistNotifications = ({ isLoading }: ArtistNotificationsProps) => {
             </CardDescription>
           </CardHeader>
           <CardContent className="px-0">
-            <div className="divide-y">
+            <div className="divide-y divide-border/50">
               {displayedNotifications.length === 0 ? (
-                <div className="py-8 text-center">
-                  <p className="text-muted-foreground">No notifications found</p>
+                <div className="py-12 text-center">
+                  <p className="text-muted-foreground font-medium">No notifications found</p>
                 </div>
               ) : (
                 displayedNotifications.map((notification) => (
                   <div 
                     key={notification.id} 
-                    className={`px-6 py-4 hover:bg-muted/50 cursor-pointer ${!notification.is_read ? "bg-muted/30" : ""}`}
+                    className={`px-4 sm:px-6 py-4 sm:py-5 hover:bg-muted/50 cursor-pointer transition-colors ${!notification.is_read ? "bg-primary/[0.03]" : ""}`}
                     onClick={() => markAsRead(notification.id)}
                   >
-                    <div className="flex gap-4">
-                      <div className="mt-1">
+                    <div className="flex gap-3 sm:gap-4">
+                      <div className="mt-1 p-2 bg-muted/50 rounded-lg shrink-0">
                         {getNotificationIcon(notification.type)}
                       </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start">
-                          <h4 className="font-medium">{notification.title}</h4>
-                          <span className="text-xs text-muted-foreground">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start gap-2">
+                          <h4 className={`text-sm sm:text-base font-semibold leading-tight truncate ${!notification.is_read ? "text-foreground" : "text-foreground/70"}`}>
+                            {notification.title}
+                          </h4>
+                          <span className="text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap font-medium">
                             {formatTime(notification.created_at)}
                           </span>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 leading-relaxed line-clamp-2">
                           {notification.message}
                         </p>
                       </div>
                       {!notification.is_read && (
-                        <div className="h-2 w-2 mt-2 rounded-full bg-primary"></div>
+                        <div className="h-2 w-2 mt-2 rounded-full bg-primary shrink-0 shadow-[0_0_8px_rgba(var(--primary),0.5)]"></div>
                       )}
                     </div>
                   </div>
@@ -278,10 +306,10 @@ const ArtistNotifications = ({ isLoading }: ArtistNotificationsProps) => {
             </div>
           </CardContent>
           {hasMore && (
-            <CardFooter className="border-t p-4 flex justify-center">
+            <CardFooter className="border-t border-border/50 p-4 sm:p-6 flex justify-center bg-muted/5">
               <Button 
                 variant="outline" 
-                className="w-full md:w-auto"
+                className="w-full sm:w-auto min-h-[48px] sm:min-h-[40px] font-bold uppercase tracking-wider text-xs"
                 onClick={handleLoadMore}
                 disabled={loadingMore}
               >

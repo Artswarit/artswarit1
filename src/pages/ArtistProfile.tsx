@@ -23,6 +23,10 @@ import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 import { CreateProjectForm } from "@/components/projects/CreateProjectForm";
 import ReportDialog from "@/components/reports/ReportDialog";
 import BlockUserButton from "@/components/blocks/BlockUserButton";
+import { useArtistAvailability } from "@/hooks/useArtistAvailability";
+import { format as formatDate } from "date-fns";
+import { Calendar, TrendingUp } from "lucide-react";
+import LogoLoader from "@/components/ui/LogoLoader";
 
 // --- Demo Data for fallback ---
 const ARTIST_UUID_1 = "11111111-1111-1111-1111-111111111111";
@@ -38,7 +42,7 @@ const artistsData = {
     bio: "Multi-platinum musician passionate about creating moving music and telling stories.",
     followers: 12035,
     likes: 3204,
-    isVerified: true,
+    isVerified: false,
     specialties: ["Pop", "Rock", "Electronic"],
     location: "Los Angeles, CA",
     cover:
@@ -65,7 +69,7 @@ const artistsData = {
     bio: "Award-winning author, creative in fantasy and science fiction novels.",
     followers: 8621,
     likes: 1945,
-    isVerified: true,
+    isVerified: false,
     specialties: ["Fantasy", "Sci-Fi", "Short Stories"],
     location: "New York, NY",
     cover:
@@ -95,9 +99,15 @@ export default function ArtistProfile() {
   const { toast } = useToast();
   const { format, userCurrencySymbol } = useCurrencyFormat();
   const [loading, setLoading] = useState(true);
+  const [artistSettings, setArtistSettings] = useState<{ profileVisibility: boolean; allowDirectMessages: boolean; vacationMode: boolean; showEarnings: boolean }>({
+    profileVisibility: true,
+    allowDirectMessages: true,
+    vacationMode: false,
+    showEarnings: false
+  });
+  const { availability, isOnVacation, nextVacationStart, nextVacationEnd, nextVacationNote, nextBusyStart, nextBusyEnd, nextBusyNote, lastVacationSetDate, lastBusySetDate } = useArtistAvailability(id);
 
   // DIAGNOSTIC: Show login state and preview context
-  console.log("[ARTIST PROFILE] Rendered. RouteID:", routeId, "Mapped ID:", id, "User:", user);
 
   const [profileState, setProfileState] = useState<any>(() => {
     // fallback demo data for local dev: artistData
@@ -108,6 +118,7 @@ export default function ArtistProfile() {
   const [artistServices, setArtistServices] = useState<any[]>([]);
   const [artistReviews, setArtistReviews] = useState<any[]>([]);
   const [completedProjectsCount, setCompletedProjectsCount] = useState(0);
+  const [monthlyEarnings, setMonthlyEarnings] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState<number>(
     profileState?.followers || 0
@@ -198,7 +209,23 @@ export default function ArtistProfile() {
         const completedProjects = projectsResult.data || [];
         
         // Set completed projects count
+        const monthStart = new Date();
+        monthStart.setDate(1);
+        monthStart.setHours(0, 0, 0, 0);
+        const { data: monthlyEarningsData } = await supabase
+          .from('transactions')
+          .select('amount')
+          .eq('seller_id', id)
+          .eq('status', 'success')
+          .gte('created_at', monthStart.toISOString());
+        const computedMonthly = (monthlyEarningsData ?? []).reduce(
+          (sum: number, row: any) => sum + (Number(row.amount) || 0),
+          0
+        );
+        setMonthlyEarnings(computedMonthly);
+
         setCompletedProjectsCount(completedProjects.length);
+
 
         // Get all artwork IDs to fetch likes
         const artworkIds = artworksData.map(a => a.id);
@@ -244,7 +271,6 @@ export default function ArtistProfile() {
         }
 
         if (!artistData) {
-          console.error('Artist not found');
           setProfileState(null);
           setLoading(false);
           return;
@@ -271,6 +297,7 @@ export default function ArtistProfile() {
             likes: likesPerArtwork[art.id] || 0,
             views: viewsPerArtwork[art.id] || 0,
             price: art.price || 0,
+            currency: (art.metadata as any)?.currency || 'USD',
             metadata: art.metadata, // Include metadata for access_type
             access_type: (art.metadata as any)?.access_type || 'free',
           })),
@@ -280,26 +307,25 @@ export default function ArtistProfile() {
         setFollowersCount(followersData.length);
         setArtistServices(servicesData);
 
-        // Enrich reviews with client info
-        const enrichedReviews = [];
-        for (const rev of reviewsData) {
-          const { data: clientData } = await supabase
-            .from('public_profiles')
-            .select('full_name, avatar_url')
-            .eq('id', rev.client_id)
-            .maybeSingle();
-          
-          enrichedReviews.push({
-            ...rev,
-            clientName: clientData?.full_name || 'Anonymous',
-            clientAvatar: clientData?.avatar_url || null,
-            artist_response: rev.artist_response,
-            artist_response_at: rev.artist_response_at,
-          });
-        }
+        // Enrich reviews with client info — all in parallel
+        const enrichedReviews = await Promise.all(
+          reviewsData.map(async (rev) => {
+            const { data: clientData } = await supabase
+              .from('public_profiles')
+              .select('full_name, avatar_url')
+              .eq('id', rev.client_id)
+              .maybeSingle();
+            return {
+              ...rev,
+              clientName: clientData?.full_name || 'Anonymous',
+              clientAvatar: clientData?.avatar_url || null,
+              artist_response: rev.artist_response,
+              artist_response_at: rev.artist_response_at,
+            };
+          })
+        );
         setArtistReviews(enrichedReviews);
       } catch (err) {
-        console.error('Error fetching artist profile:', err);
         setProfileState(null);
       } finally {
         setLoading(false);
@@ -309,8 +335,76 @@ export default function ArtistProfile() {
     fetchArtistProfile();
   }, [id]);
 
+  // Load visibility/messaging/vacation settings — try auth route first, then public fallback
+  useEffect(() => {
+    const loadSettings = async () => {
+      if (!id) return;
+
+      // Try the auth-protected profiles table first (artist viewing own profile)
+      let profileData: any = null;
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('social_links, profile_visibility, is_on_vacation')
+          .eq('id', id)
+          .maybeSingle();
+        profileData = data;
+      } catch (_) { /* RLS may block non-auth reads — fall through */ }
+
+      // Fallback: public_profiles view is always readable
+      if (!profileData) {
+        const { data: pub } = await supabase
+          .from('public_profiles')
+          .select('social_links, profile_visibility, is_on_vacation')
+          .eq('id', id)
+          .maybeSingle();
+        profileData = pub;
+      }
+
+      type ProfileRow = import('@/integrations/supabase/types').Tables<'profiles'>;
+      const sl = profileData?.social_links as ProfileRow['social_links'];
+      const saved = (() => {
+        if (!sl || typeof sl !== 'object') return {};
+        const obj = sl as Record<string, unknown>;
+        const maybe = obj['settings'];
+        return typeof maybe === 'object' && maybe
+          ? (maybe as { profileVisibility?: boolean; allowDirectMessages?: boolean; vacationMode?: boolean; showEarnings?: boolean })
+          : {};
+      })();
+
+      setArtistSettings({
+        profileVisibility: profileData?.profile_visibility ?? saved.profileVisibility ?? true,
+        allowDirectMessages: saved.allowDirectMessages ?? true,
+        vacationMode: (profileData?.is_on_vacation ?? saved.vacationMode ?? false) as boolean,
+        showEarnings: saved.showEarnings ?? false,
+      });
+    };
+
+    loadSettings();
+    if (!id) return;
+    const channel = supabase
+      .channel(`artist-profile-settings:${id}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${id}` }, loadSettings)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [id]);
+
   // Check if current user is the artist (owner)
   const isArtistOwner = user?.id === id;
+  if (!isArtistOwner && artistSettings.profileVisibility === false) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center p-4">
+          <GlassCard className="p-8 text-center">
+            <p className="text-lg font-bold">This artist profile is currently not publicly visible.</p>
+            <p className="mt-2 text-muted-foreground">Please check back later.</p>
+          </GlassCard>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   // Refresh reviews function
   const refreshReviews = async () => {
@@ -323,26 +417,25 @@ export default function ArtistProfile() {
         .eq('artist_id', id)
         .order('created_at', { ascending: false });
 
-      const enrichedReviews = [];
-      for (const rev of reviewsData || []) {
-        const { data: clientData } = await supabase
-          .from('public_profiles')
-          .select('full_name, avatar_url')
-          .eq('id', rev.client_id)
-          .maybeSingle();
-
-        enrichedReviews.push({
-          ...rev,
-          clientName: clientData?.full_name || 'Anonymous',
-          clientAvatar: clientData?.avatar_url || null,
-          artist_response: rev.artist_response,
-          artist_response_at: rev.artist_response_at,
-        });
-      }
+      // Parallel enrichment
+      const enrichedReviews = await Promise.all(
+        (reviewsData || []).map(async (rev) => {
+          const { data: clientData } = await supabase
+            .from('public_profiles')
+            .select('full_name, avatar_url')
+            .eq('id', rev.client_id)
+            .maybeSingle();
+          return {
+            ...rev,
+            clientName: clientData?.full_name || 'Anonymous',
+            clientAvatar: clientData?.avatar_url || null,
+            artist_response: rev.artist_response,
+            artist_response_at: rev.artist_response_at,
+          };
+        })
+      );
       setArtistReviews(enrichedReviews);
-    } catch (err) {
-      console.error('Error refreshing reviews:', err);
-    }
+    } catch { /* silent */ }
   };
 
   // Get supabase user is now handled by useAuth
@@ -450,7 +543,6 @@ export default function ArtistProfile() {
               .eq('status', 'completed');
             
             setCompletedProjectsCount(projectsData?.length || 0);
-            console.log('[ARTIST PROFILE] Projects updated, completed count:', projectsData?.length || 0);
           }
         )
         .subscribe();
@@ -537,7 +629,6 @@ export default function ArtistProfile() {
         });
 
         if (userError) {
-          console.error("Error creating user record:", userError);
           // Continue anyway - they might just need to be in profiles
         }
       }
@@ -593,6 +684,13 @@ export default function ArtistProfile() {
       toast({
         title: "Not logged in",
         description: "Please sign in to message artists.",
+      });
+      return;
+    }
+    if (artistSettings.allowDirectMessages === false) {
+      toast({
+        title: "Messaging disabled",
+        description: "This artist has disabled direct messages.",
       });
       return;
     }
@@ -699,26 +797,26 @@ export default function ArtistProfile() {
       });
       return;
     }
+    if (!isArtistOwner && artistSettings.vacationMode === true) {
+      toast({
+        title: "Artist unavailable",
+        description: "This artist is currently on vacation and not accepting new requests.",
+      });
+      return;
+    }
     setIsRequestDialogOpen(true);
   };
 
-  // Add state for the modal and selected artwork
-  const [selectedArtwork, setSelectedArtwork] = useState<any | null>(null);
-
-  // Function to handle artwork click and show modal
   const handleArtworkClick = (art: any) => {
-    setSelectedArtwork(art);
+    if (!art?.id) return;
+    navigate(`/artwork/${art.id}`);
   };
-
-  // Function to close modal
-  const closeModal = () => setSelectedArtwork(null);
 
   // Extra robust: always show demo data for /artist/1 and /artist/2, regardless of login
   useEffect(() => {
     if (id === ARTIST_UUID_1 || id === ARTIST_UUID_2) {
       setProfileState(artistsData[id]);
       setFollowersCount(artistsData[id].followers);
-      console.log("[ARTIST PROFILE] Loaded demo artist profile, ignoring auth state");
     }
   }, [id]);
 
@@ -728,10 +826,7 @@ export default function ArtistProfile() {
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
         <Navbar />
         <div className="flex-1 flex items-center justify-center p-4">
-          <GlassCard className="p-8 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-            <p className="mt-4 text-muted-foreground">Loading artist profile...</p>
-          </GlassCard>
+          <LogoLoader text="Loading artist profile..." />
         </div>
         <Footer />
       </div>
@@ -816,6 +911,7 @@ export default function ArtistProfile() {
           isFollowing={isFollowing}
           onFollow={handleFollow}
           onMessage={handleMessage}
+            canMessage={artistSettings.allowDirectMessages}
           isSaved={isSaved}
           onSave={handleToggleSave}
           onRequest={handleRequestProject}
@@ -823,6 +919,100 @@ export default function ArtistProfile() {
           loadingSave={loadingSave}
         />
       </div>
+      
+      {(
+        artistSettings.vacationMode ||
+        isOnVacation ||
+        (nextVacationStart && nextVacationEnd) ||
+        (nextBusyStart && nextBusyEnd)
+      ) && (
+        <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 mt-3">
+          {/*
+            Prefer showing Busy dates when vacation mode is on but there is no vacation range.
+            Otherwise show Vacation if its range exists; else Busy if that exists.
+          */}
+          {(() => {
+            const hasVac = !!nextVacationStart || !!nextVacationEnd;
+            const hasBusy = !!nextBusyStart || !!nextBusyEnd;
+            const showBusy =
+              (!hasVac && hasBusy) ||
+              (!artistSettings.vacationMode && !isOnVacation && hasBusy);
+            const bannerClass = showBusy
+              ? 'border-amber-200/60 dark:border-amber-800 bg-card/50 backdrop-blur-sm'
+              : 'border-red-200/60 dark:border-red-800 bg-card/50 backdrop-blur-sm';
+            const accentText = showBusy
+              ? 'text-amber-700 dark:text-amber-400'
+              : 'text-red-700 dark:text-red-400';
+            const scheduledVac = !showBusy && nextVacationStart && new Date(nextVacationStart) > new Date();
+            return (
+              <div
+                className={`group flex items-center justify-between rounded-xl px-4 py-3 border shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.01] ${bannerClass}`}
+                role="status"
+                aria-live="polite"
+              >
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <span className={`grid place-items-center rounded-lg p-2 ${showBusy ? 'bg-amber-100/60' : 'bg-red-100/60'}`}>
+                    <Calendar className={`${showBusy ? 'text-amber-700' : 'text-red-700'} w-4 h-4`} aria-hidden="true" />
+                  </span>
+                  <span className={`text-xs sm:text-sm font-black uppercase tracking-widest ${accentText}`}>
+                    {showBusy ? 'Busy' : 'Vacation'}
+                  </span>
+                  {showBusy ? (
+                    <>
+                      {/* removed duplicate status word */}
+                      {(nextBusyStart || nextBusyEnd) && (
+                        <span className="text-xs sm:text-sm font-semibold text-foreground">
+                          {nextBusyStart && formatDate(new Date(nextBusyStart), 'MMM d, yyyy')}
+                          {nextBusyStart && nextBusyEnd && ' - '}
+                          {nextBusyEnd && formatDate(new Date(nextBusyEnd), 'MMM d, yyyy')}
+                        </span>
+                      )}
+                      {/* removed Set on timestamp */}
+                    </>
+                  ) : (
+                    <>
+                      {/* removed duplicate status word */}
+                      {(nextVacationStart || nextVacationEnd) && (
+                        <span className="text-xs sm:text-sm font-semibold text-foreground">
+                          {nextVacationStart && formatDate(new Date(nextVacationStart), 'MMM d, yyyy')}
+                          {nextVacationStart && nextVacationEnd && ' - '}
+                          {nextVacationEnd && formatDate(new Date(nextVacationEnd), 'MMM d, yyyy')}
+                        </span>
+                      )}
+                      {/* removed Set on timestamp */}
+                    </>
+                  )}
+                </div>
+                {/* removed trailing Updated label for minimal banner */}
+              </div>
+            );
+          })()}
+        </div>
+      )}
+      
+      {artistSettings.showEarnings && (
+        <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 mt-3">
+          <div
+            className="group flex items-center justify-between rounded-xl px-4 py-3 border border-emerald-200/60 dark:border-emerald-800 bg-card/50 backdrop-blur-sm shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.01]"
+            aria-label="Monthly earnings"
+          >
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="grid place-items-center rounded-lg p-2 bg-emerald-100/60">
+                <TrendingUp className="text-emerald-700 w-4 h-4" aria-hidden="true" />
+              </span>
+              <span className="text-xs sm:text-sm font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-400">
+                Earnings
+              </span>
+              <span className="text-xs sm:text-sm font-extrabold text-foreground">
+                {format(monthlyEarnings)}
+              </span>
+            </div>
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-[10px] sm:text-xs text-muted-foreground">
+              This month
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Main content - responsive container with proper spacing */}
       <main className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 flex-1 pb-4 sm:pb-6 lg:pb-8 mt-3 sm:mt-4 lg:mt-6">
@@ -855,61 +1045,6 @@ export default function ArtistProfile() {
             currentUserId={user?.id || null}
           />
         </GlassCard>
-        
-        {/* Artwork Details Modal - fully responsive */}
-        {selectedArtwork && (
-          <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4"
-            onClick={closeModal}
-          >
-            <div
-              className="bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-md sm:max-w-xl w-full relative p-3 sm:p-4 lg:p-6 max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                className="absolute top-2 right-2 sm:top-3 sm:right-3 text-gray-500 hover:text-red-500 text-lg sm:text-xl font-bold z-10 p-1"
-                onClick={closeModal}
-                aria-label="Close"
-              >
-                ×
-              </button>
-              <img
-                src={selectedArtwork.img}
-                alt={selectedArtwork.title}
-                className="w-full rounded-lg mb-3 sm:mb-4 object-cover max-h-40 sm:max-h-48 lg:max-h-64"
-              />
-              <h3 className="text-base sm:text-lg lg:text-xl font-bold mb-2">{selectedArtwork.title}</h3>
-              <div className="flex flex-wrap gap-2 sm:gap-4 text-gray-600 text-xs sm:text-sm mb-2">
-                <span className="flex items-center gap-1">
-                  <Heart className="w-4 h-4 text-red-500" />
-                  {selectedArtwork.likes}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Eye className="w-4 h-4 text-blue-500" />
-                  {selectedArtwork.views}
-                </span>
-                {selectedArtwork.price !== undefined && (
-                  <span>
-                    {selectedArtwork.price === 0 ? "Free" : format(selectedArtwork.price)}
-                  </span>
-                )}
-                {selectedArtwork.isPremium && (
-                  <span className="bg-yellow-200 rounded px-2 py-0.5 text-yellow-900 font-medium text-xs">
-                    Premium
-                  </span>
-                )}
-                {selectedArtwork.isExclusive && (
-                  <span className="bg-purple-200 rounded px-2 py-0.5 text-purple-800 font-medium text-xs">
-                    Exclusive
-                  </span>
-                )}
-              </div>
-              <p className="text-gray-700 text-xs sm:text-sm lg:text-base">
-                {selectedArtwork.description || "No description for this artwork."}
-              </p>
-            </div>
-          </div>
-        )}
       </main>
 
       {/* Project Request Modal - Full form with milestones */}

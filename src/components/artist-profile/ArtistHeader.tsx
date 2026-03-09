@@ -3,7 +3,7 @@ import GlassCard from "@/components/ui/glass-card";
 import { Badge } from "@/components/ui/badge";
 import StatCard from "./StatCard";
 import ArtistActionsBar from "./ArtistActionsBar";
-import { Verified, Star, Save, FilePlus, Crown } from "lucide-react";
+import { Star, Save, FilePlus, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useArtistPlan } from "@/hooks/useArtistPlan";
 
@@ -12,6 +12,7 @@ type Props = {
   onFollow: () => void;
   isFollowing: boolean;
   onMessage: () => void;
+  canMessage?: boolean;
   isSaved: boolean;
   onSave: () => void;
   onRequest: () => void;
@@ -43,6 +44,7 @@ const ArtistHeader: React.FC<Props> = ({
   onFollow,
   isFollowing,
   onMessage,
+  canMessage = true,
   isSaved,
   onSave,
   onRequest,
@@ -118,11 +120,11 @@ const ArtistHeader: React.FC<Props> = ({
                 <h1 className="text-xl sm:text-3xl lg:text-5xl font-bold font-heading drop-shadow-lg">
                   {artist.name}
                 </h1>
-                {/* Show Pro badge if artist is Pro subscriber (real-time) */}
+                {/* Show Premium badge if artist is Pro subscriber (real-time) */}
                 {isProArtist && (
                   <span className="relative isolate inline-block">
                     <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-yellow-900 flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm font-semibold border border-yellow-100/40 overflow-hidden relative">
-                      <Crown size={14} /> Pro Artist
+                      <Crown size={14} /> Premium Artist
                       <span
                         className="pointer-events-none absolute left-0 top-0 h-full w-full z-10"
                         aria-hidden="true"
@@ -138,26 +140,6 @@ const ArtistHeader: React.FC<Props> = ({
 }
                       `}
                     </style>
-                  </span>
-                )}
-                {/* Show verified badge for Pro artists */}
-                {(artist.isVerified || isProArtist) && (
-                  <Badge className="bg-blue-600/90 text-white flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm font-semibold border border-white/40">
-                    <Verified size={14} /> Verified
-                  </Badge>
-                )}
-                {/* Legacy premium badge - only show if not already showing Pro badge */}
-                {artist.premium && !isProArtist && (
-                  <span className="relative isolate inline-block">
-                    <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-yellow-900 flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 text-xs sm:text-sm font-semibold border border-yellow-100/40 overflow-hidden relative">
-                      <Star size={14} /> Premium
-                      <span
-                        className="pointer-events-none absolute left-0 top-0 h-full w-full z-10"
-                        aria-hidden="true"
-                      >
-                        <span className="absolute left-[-60%] top-0 h-full w-[80%] bg-gradient-to-r from-transparent via-white/60 to-transparent blur-[2px] opacity-60 animate-[shine-move_1.5s_linear_infinite]" />
-                      </span>
-                    </Badge>
                   </span>
                 )}
               </div>
@@ -202,6 +184,7 @@ const ArtistHeader: React.FC<Props> = ({
               isFollowing={isFollowing}
               onFollow={onFollow}
               onMessage={onMessage}
+              canMessage={canMessage}
               isSaved={isSaved}
               onSave={onSave}
               onRequest={onRequest}

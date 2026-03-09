@@ -173,7 +173,11 @@ const ClientProfile = () => {
     }
   };
 
-  const saveProfile = async () => {
+  const saveProfile = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (!user?.id) return;
     
     // Validation

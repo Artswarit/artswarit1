@@ -72,21 +72,23 @@ const ArtworkAnalytics = ({ data }: ArtworkAnalyticsProps) => {
   ];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Performance Analytics</CardTitle>
+    <Card className="rounded-[2rem] shadow-xl shadow-primary/5 border-primary/10 backdrop-blur-md overflow-hidden transition-all duration-300 hover:shadow-primary/10">
+      <CardHeader className="border-b border-primary/5 pb-4">
+        <CardTitle className="text-xl font-black uppercase tracking-widest text-primary/80">Performance Analytics</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <CardContent className="p-4 sm:p-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           {stats.map((stat, index) => (
-            <div key={index} className="p-3 border rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+            <div key={index} className="p-4 sm:p-5 border border-primary/10 rounded-[1.5rem] bg-background/50 hover:bg-background hover:border-primary/30 transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-1 group">
+              <div className="flex items-center justify-between mb-3">
+                <div className={`p-2 rounded-xl bg-muted/50 group-hover:bg-background transition-colors ${stat.color}`}>
+                  <stat.icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                </div>
                 {formatGrowth(stat.growth)}
               </div>
               <div className="space-y-1">
-                <p className="text-2xl font-bold">{stat.value}</p>
-                <p className="text-xs text-gray-600">{stat.title}</p>
+                <p className="text-2xl sm:text-3xl font-black tracking-tighter text-foreground group-hover:text-primary transition-colors">{stat.value}</p>
+                <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-[0.15em]">{stat.title}</p>
               </div>
             </div>
           ))}
