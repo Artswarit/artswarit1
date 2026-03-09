@@ -429,7 +429,7 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
                         isPremium={art.isPremium}
                         isExclusive={art.isExclusive}
                         isUnlocked={isUnlocked as any}
-                        onViewFull={() => onArtworkClick?.({ ...art, isUnlocked })}
+                        onViewFull={() => onArtworkClick?.({ ...art } as any)}
                         onUnlock={() => handleUnlockArtwork(art.id)}
                         onRequestAccess={() => handleRequestAccess(art.id, art.artistName)}
                       />
