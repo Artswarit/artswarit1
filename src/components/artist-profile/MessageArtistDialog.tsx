@@ -246,8 +246,7 @@ const MessageArtistDialog: React.FC<MessageArtistDialogProps> = ({
           attachments: pendingAttachments.length > 0 ? JSON.parse(JSON.stringify(pendingAttachments)) : [],
         })
         .select()
-        .single()
-        .abortSignal(controllerRef.current?.signal);
+        .single();
 
       if (msgError) {
         if (msgError.name === 'AbortError' || (msgError as any).code === 'ABORT') return;
