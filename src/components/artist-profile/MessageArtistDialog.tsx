@@ -225,8 +225,7 @@ const MessageArtistDialog: React.FC<MessageArtistDialogProps> = ({
             status: "active",
           })
           .select("id")
-          .single()
-          .abortSignal(controllerRef.current?.signal);
+          .single();
 
         if (convError) {
           if (convError.name === 'AbortError' || (convError as any).code === 'ABORT') return;
