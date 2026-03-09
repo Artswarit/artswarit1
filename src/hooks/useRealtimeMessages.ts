@@ -145,8 +145,7 @@ export const useRealtimeMessages = () => {
           const { data: lastMsgData } = await lastMsgQuery
             .order('created_at', { ascending: false })
             .limit(1)
-            .maybeSingle()
-            .abortSignal(signal);
+            .maybeSingle();
 
           // Get unread count
           const clearedAt = conv.client_id === user.id ? conv.client_last_cleared_at : conv.artist_last_cleared_at;
