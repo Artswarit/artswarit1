@@ -156,13 +156,13 @@ const ProjectManagement = () => {
   const checkProjectReady = useCallback(async (projectId: string) => {
     const { data: milestones } = await supabase
       .from('project_milestones')
-      .select('status, paid_at, progress')
+      .select('status, paid_at')
       .eq('project_id', projectId);
-    const ms = milestones ?? [];
+    const ms = (milestones ?? []) as any[];
     const hasMilestones = ms.length > 0;
-    const allComplete = hasMilestones && ms.every(m => (m.progress ?? 0) === 100 || m.status === 'COMPLETED' || m.status === 'APPROVED');
+    const allComplete = hasMilestones && ms.every(m => m.status === 'approved' || m.status === 'paid');
     const allPaid = hasMilestones && ms.every(m => Boolean(m.paid_at));
-    const noDispute = hasMilestones && ms.every(m => m.status !== 'DISPUTED');
+    const noDispute = hasMilestones && ms.every(m => m.status !== 'disputed');
     const ready = hasMilestones && allComplete && allPaid && noDispute;
     setReadyMap(prev => ({ ...prev, [projectId]: ready }));
   }, []);

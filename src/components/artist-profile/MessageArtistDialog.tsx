@@ -93,8 +93,7 @@ const MessageArtistDialog: React.FC<MessageArtistDialogProps> = ({
           .select("id, client_last_cleared_at")
           .eq("client_id", currentUserId)
           .eq("artist_id", artistId)
-          .maybeSingle()
-          .abortSignal(controllerRef.current?.signal);
+          .maybeSingle();
 
         if (fetchError) {
           if (fetchError.name === 'AbortError' || (fetchError as any).code === 'ABORT') return;
@@ -226,8 +225,7 @@ const MessageArtistDialog: React.FC<MessageArtistDialogProps> = ({
             status: "active",
           })
           .select("id")
-          .single()
-          .abortSignal(controllerRef.current?.signal);
+          .single();
 
         if (convError) {
           if (convError.name === 'AbortError' || (convError as any).code === 'ABORT') return;
@@ -248,8 +246,7 @@ const MessageArtistDialog: React.FC<MessageArtistDialogProps> = ({
           attachments: pendingAttachments.length > 0 ? JSON.parse(JSON.stringify(pendingAttachments)) : [],
         })
         .select()
-        .single()
-        .abortSignal(controllerRef.current?.signal);
+        .single();
 
       if (msgError) {
         if (msgError.name === 'AbortError' || (msgError as any).code === 'ABORT') return;

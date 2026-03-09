@@ -321,7 +321,7 @@ const MessageClientDialog: React.FC<MessageClientDialogProps> = ({
         )}
 
         <div className="flex gap-2 pt-2 border-t items-end">
-          <AttachmentInput onAttach={handleAttach} disabled={sending} className="min-h-[48px] min-w-[48px]" />
+          <AttachmentInput onAttach={handleAttach} disabled={sending} />
           <Textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}

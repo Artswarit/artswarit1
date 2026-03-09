@@ -34,7 +34,7 @@ const ExclusiveMembers = () => {
 
     supabase
       .from("exclusive_memberships")
-      .select("id, client_id, status, created_at, profiles:client_id (id, full_name, avatar_url)")
+      .select("id, client_id, status, created_at, profiles!exclusive_memberships_client_id_fkey (id, full_name, avatar_url)")
       .eq("artist_id", user.id)
       .order("created_at", { ascending: false })
       .then(({ data, error }) => {

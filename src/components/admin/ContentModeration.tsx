@@ -173,7 +173,7 @@ export default function ContentModeration() {
       // Hide artwork & inject banned flag
       if (selectedReport.artwork_id) {
         const { data: currentArtwork } = await supabase.from('artworks').select('metadata').eq('id', selectedReport.artwork_id).single();
-        const existingMetadata = currentArtwork?.metadata || {};
+        const existingMetadata = (typeof currentArtwork?.metadata === 'object' && currentArtwork?.metadata !== null ? currentArtwork.metadata : {}) as Record<string, unknown>;
         
         await supabase.from('artworks').update({ 
           status: 'archived',
