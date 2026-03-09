@@ -6,6 +6,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.8";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 serve(async (req) => {
@@ -38,7 +39,7 @@ serve(async (req) => {
 
     // Find or create customer
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    let customerId = customers.data.length > 0 ? customers.data[0].id : undefined;
+    const customerId = customers.data.length > 0 ? customers.data[0].id : undefined;
 
     // NEW PLAN CONFIG: Pro Artist only at ₹499/month (49900 paise)
     // Keeping monthly as the only option since the new model is simpler
@@ -72,7 +73,7 @@ serve(async (req) => {
         currency: "inr",
         product_data: {
           name: config.name,
-          description: "0% platform fees • Unlimited portfolio • Verified badge • Priority ranking"
+          description: "0% platform fees • Unlimited portfolio • Priority ranking • Featured rotation"
         },
         unit_amount: config.price,
         recurring: config.interval ? { interval: config.interval } : undefined

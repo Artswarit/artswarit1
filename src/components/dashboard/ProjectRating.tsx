@@ -204,17 +204,21 @@ const ProjectRating = () => {
 
   const renderStars = (currentRating: number, interactive = false) => {
     return Array.from({ length: 5 }, (_, index) => (
-      <Star
+      <div
         key={index}
-        className={`h-5 w-5 ${interactive ? "cursor-pointer" : ""} ${
-          index < (interactive ? hoverRating || rating : currentRating)
-            ? "fill-yellow-400 text-yellow-400"
-            : "fill-gray-200 text-gray-200"
-        }`}
+        className={interactive ? "p-2 sm:p-1" : ""}
         onClick={interactive ? () => setRating(index + 1) : undefined}
         onMouseEnter={interactive ? () => setHoverRating(index + 1) : undefined}
         onMouseLeave={interactive ? () => setHoverRating(0) : undefined}
-      />
+      >
+        <Star
+          className={`${interactive ? "h-10 w-10 sm:h-8 sm:w-8 cursor-pointer" : "h-5 w-5"} ${
+            index < (interactive ? hoverRating || rating : currentRating)
+              ? "fill-yellow-400 text-yellow-400"
+              : "fill-gray-200 text-gray-200"
+          }`}
+        />
+      </div>
     ));
   };
 
@@ -263,7 +267,7 @@ const ProjectRating = () => {
 
                 <CardContent className="space-y-3">
                   <Button
-                    className="w-full bg-gradient-to-r from-artswarit-purple to-blue-500"
+                    className="w-full h-[48px] bg-gradient-to-r from-artswarit-purple to-blue-500 font-bold"
                     onClick={() => {
                       setSelectedProject(project);
                       setDialogOpen(true);
@@ -376,14 +380,19 @@ const ProjectRating = () => {
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={submitting}>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setDialogOpen(false)} 
+              disabled={submitting}
+              className="h-[48px] w-full sm:w-auto font-bold"
+            >
               Cancel
             </Button>
             <Button
               onClick={handleSubmitRating}
               disabled={rating === 0 || submitting}
-              className="bg-gradient-to-r from-artswarit-purple to-blue-500"
+              className="h-[48px] w-full sm:w-auto bg-gradient-to-r from-artswarit-purple to-blue-500 font-bold"
             >
               {submitting ? "Submitting..." : "Submit Rating"}
             </Button>

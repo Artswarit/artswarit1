@@ -150,16 +150,14 @@ export function MilestoneReviewDialog({
   const handleApprove = async () => {
     setProcessing(true);
     try {
-      const { error } = await supabase
-        .from('project_milestones')
-        .update({
-          status: 'approved',
-          approved_at: new Date().toISOString(),
-          auto_approve_at: null
-        })
-        .eq('id', milestone.id);
+      // Call secure edge function to release escrow payout and complete milestone
+      const { data, error } = await supabase.functions.invoke('release-milestone-payout', {
+        body: { milestoneId: milestone.id },
+      });
 
-      if (error) throw error;
+      if (error || !data?.success) {
+        throw new Error(data?.error || error?.message || 'Failed to release payout');
+      }
 
       // Log activity
       await supabase.from('project_activity_logs').insert({
@@ -170,7 +168,7 @@ export function MilestoneReviewDialog({
         details: { milestoneId: milestone.id }
       });
 
-      toast.success('Milestone approved! You can now proceed to payment.');
+      toast.success('Milestone approved and payout released from escrow.');
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
@@ -200,13 +198,15 @@ export function MilestoneReviewDialog({
 
       if (revisionError) throw revisionError;
 
-      // Update milestone status
+      // Update milestone status and store latest rejection reason
+      const newRevisionCount = milestone.revision_count + 1;
       const { error: updateError } = await supabase
         .from('project_milestones')
         .update({
-          status: 'revision_requested',
-          revision_count: milestone.revision_count + 1,
-          auto_approve_at: null
+          status: 'REVISION_REQUESTED',
+          revision_count: newRevisionCount,
+          auto_approve_at: null,
+          rejection_reason: revisionReason
         })
         .eq('id', milestone.id);
 
@@ -260,13 +260,23 @@ export function MilestoneReviewDialog({
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : (
-          <Tabs defaultValue="latest">
-            <TabsList>
-              <TabsTrigger value="latest">Latest Submission</TabsTrigger>
-              {submissions.length > 1 && (
-                <TabsTrigger value="history">History ({submissions.length})</TabsTrigger>
-              )}
-            </TabsList>
+          <>
+            {milestone.status === 'DISPUTED' && (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  A dispute is active for this milestone. Approval and payout are blocked until admin resolves it.
+                </AlertDescription>
+              </Alert>
+            )}
+            <Tabs defaultValue="latest">
+            <div className="overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+              <TabsList className="w-full h-auto min-h-[48px] sm:min-h-0 p-1 bg-muted/50 rounded-lg flex items-stretch gap-1">
+                <TabsTrigger value="latest" className="flex-1 min-w-[120px] py-2 sm:py-2.5 px-3 rounded-md transition-all">Latest Submission</TabsTrigger>
+                {submissions.length > 1 && (
+                  <TabsTrigger value="history" className="flex-1 min-w-[120px] py-2 sm:py-2.5 px-3 rounded-md transition-all">History ({submissions.length})</TabsTrigger>
+                )}
+              </TabsList>
+            </div>
 
             <TabsContent value="latest" className="space-y-4 mt-4">
               {submissions.length === 0 ? (
@@ -360,7 +370,8 @@ export function MilestoneReviewDialog({
                 </div>
               ))}
             </TabsContent>
-          </Tabs>
+            </Tabs>
+          </>
         )}
 
         <DialogFooter className="gap-2">
@@ -379,7 +390,7 @@ export function MilestoneReviewDialog({
           )}
           <Button 
             onClick={handleApprove}
-            disabled={processing || submissions.length === 0}
+            disabled={processing || submissions.length === 0 || milestone.status === 'DISPUTED'}
             className="bg-emerald-600 hover:bg-emerald-700"
           >
             <CheckCircle className="h-4 w-4 mr-1" />

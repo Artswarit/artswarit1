@@ -6,11 +6,13 @@ import { useFeatureGating } from "@/hooks/useFeatureGating";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface FeatureLimitBannerProps {
-  type: "portfolio" | "service";
-  onUpgrade: () => void;
+  type?: "portfolio" | "service";
+  onUpgrade?: () => void;
+  title?: string;
+  description?: string;
 }
 
-export function FeatureLimitBanner({ type, onUpgrade }: FeatureLimitBannerProps) {
+export function FeatureLimitBanner({ type, onUpgrade, title, description }: FeatureLimitBannerProps) {
   const { user } = useAuth();
   const { 
     portfolioCount, 
@@ -28,12 +30,42 @@ export function FeatureLimitBanner({ type, onUpgrade }: FeatureLimitBannerProps)
   if (loading || isProArtist) return null;
 
   const isPortfolio = type === "portfolio";
-  const count = isPortfolio ? portfolioCount : serviceCount;
-  const limit = isPortfolio ? portfolioLimit : serviceLimit;
-  const remaining = isPortfolio ? portfolioRemaining : servicesRemaining;
+  const count = isPortfolio ? portfolioCount : (serviceCount || 0);
+  const limit = isPortfolio ? portfolioLimit : (serviceLimit || 0);
+  const remaining = isPortfolio ? portfolioRemaining : (servicesRemaining || 0);
   const canAdd = isPortfolio ? canUploadPortfolio : canAddService;
   const icon = isPortfolio ? <Image className="h-5 w-5" /> : <Wrench className="h-5 w-5" />;
   const label = isPortfolio ? "portfolio items" : "services";
+
+  // If title/description provided, use them instead of progress tracking
+  if (title || description) {
+    return (
+      <Card className="border border-yellow-200 bg-yellow-50">
+        <CardContent className="py-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 flex-1">
+              <div className="p-2 rounded-lg bg-yellow-100 text-yellow-600">
+                <Crown className="h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-yellow-800">{title || "Upgrade to Pro"}</p>
+                <p className="text-xs text-yellow-700/80">{description}</p>
+              </div>
+            </div>
+            
+            <Button
+              size="sm"
+              onClick={onUpgrade}
+              className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-medium shrink-0"
+            >
+              <Crown className="h-4 w-4 mr-1" />
+              Go Pro
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   // Don't show if plenty of room left
   if (remaining > 2) return null;

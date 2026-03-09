@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -249,6 +249,9 @@ const MessageClientDialog: React.FC<MessageClientDialogProps> = ({
             </Avatar>
             <span>Message {clientName}</span>
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Send a message to {clientName}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 min-h-0">
@@ -317,21 +320,21 @@ const MessageClientDialog: React.FC<MessageClientDialogProps> = ({
           </div>
         )}
 
-        <div className="flex gap-2 pt-2 border-t">
-          <AttachmentInput onAttach={handleAttach} disabled={sending} />
+        <div className="flex gap-2 pt-2 border-t items-end">
+          <AttachmentInput onAttach={handleAttach} disabled={sending} className="min-h-[48px] min-w-[48px]" />
           <Textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyPress}
             placeholder={`Write a message to ${clientName}...`}
-            className="min-h-[60px] max-h-[120px] resize-none"
+            className="min-h-[48px] max-h-[120px] resize-none flex-1"
             disabled={sending}
           />
           <Button
             onClick={handleSend}
             disabled={sending || (!message.trim() && pendingAttachments.length === 0)}
             size="icon"
-            className="h-[60px] w-[60px] shrink-0"
+            className="h-[48px] w-[48px] sm:h-[60px] sm:w-[60px] shrink-0 min-h-[48px] min-w-[48px]"
           >
             {sending ? (
               <Loader2 className="h-5 w-5 animate-spin" />

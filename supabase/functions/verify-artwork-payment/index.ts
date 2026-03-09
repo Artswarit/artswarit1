@@ -99,6 +99,25 @@ serve(async (req) => {
       throw new Error("Artwork not found");
     }
 
+    // Handle currency logic: if stored as INR, use directly. If USD, convert to INR.
+    // const storedCurrency = (artwork.metadata as any)?.currency || 'USD';
+    // const USD_TO_INR_RATE = 83.5;
+    // let priceINR: number;
+    // let priceUSD: number;
+
+    // if (storedCurrency === 'INR') {
+    //   priceINR = Number(artwork.price);
+    //   priceUSD = priceINR / USD_TO_INR_RATE;
+    // } else {
+    //   priceUSD = Number(artwork.price);
+    //   priceINR = priceUSD * USD_TO_INR_RATE;
+    // }
+
+    // Convert to paise (Razorpay uses smallest currency unit)
+    // const amountInPaise = Math.round(priceINR * 100);
+    
+    // console.log(`Artwork order (${storedCurrency}): $${priceUSD.toFixed(2)} USD = ₹${priceINR.toFixed(2)} INR = ${amountInPaise} paise`);
+
     // Record the unlock in artwork_unlocks table
     const { error: unlockError } = await supabaseAdmin
       .from("artwork_unlocks")
@@ -128,7 +147,7 @@ serve(async (req) => {
       },
     });
 
-    console.log("Artwork unlock verified:", { artworkId, userId: user.id, paymentId: razorpay_payment_id });
+    // console.log("Artwork unlock verified:", { artworkId, userId: user.id, paymentId: razorpay_payment_id });
 
     return new Response(
       JSON.stringify({

@@ -49,10 +49,6 @@ export function PlanComparisonPanel({
     text: "Direct client chat",
     included: true
   }, {
-    icon: <Crown className="h-4 w-4" />,
-    text: "Verified badge",
-    included: true
-  }, {
     icon: <TrendingUp className="h-4 w-4" />,
     text: "Priority ranking",
     included: true

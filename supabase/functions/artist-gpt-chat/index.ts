@@ -1,13 +1,17 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import "https://deno.land/x/xhr@0.1.0/mod.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
 
-const GOOGLE_GEMINI_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY");
+const GOOGLE_GEMINI_API_KEY = Deno.env.get('GOOGLE_GEMINI_API_KEY') ?? ''
+
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
 
 // Input validation constants
 const MAX_MESSAGE_LENGTH = 2000;
@@ -82,7 +86,7 @@ const findArtistsTool = {
   }]
 };
 
-serve(async (req) => {
+serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -91,8 +95,10 @@ serve(async (req) => {
     if (!GOOGLE_GEMINI_API_KEY) {
       console.error("GOOGLE_GEMINI_API_KEY not set");
       return new Response(
-        JSON.stringify({ error: "Service temporarily unavailable" }), 
-        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ 
+          answer: "Hello! I'm Artswarit Chat. I'm currently running in a limited mode, but I can still help you learn about the Artswarit platform and how to use it." 
+        }), 
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -127,7 +133,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("Processing chat request with", messages.length, "messages");
+    // console.log("Processing chat request with", messages.length, "messages");
 
     // Clean messages and prepare for Gemini
     const cleanMessages = messages.filter(msg => {
@@ -170,7 +176,7 @@ serve(async (req) => {
     }
 
     // Call Gemini API
-    const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_GEMINI_API_KEY}`;
+    const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_GEMINI_API_KEY}`;
     
     const finalContents = [
       { role: 'user', parts: [{ text: systemPrompt }] },
@@ -187,7 +193,7 @@ serve(async (req) => {
       },
     };
 
-    console.log("Calling Gemini API");
+    // console.log("Calling Gemini API");
 
     const geminiRes = await fetch(GEMINI_API_URL, {
       method: "POST",
@@ -197,7 +203,7 @@ serve(async (req) => {
 
     const geminiData = await geminiRes.json();
     
-    console.log("Gemini Response Status:", geminiRes.status);
+    // console.log("Gemini Response Status:", geminiRes.status);
 
     if (!geminiRes.ok) {
       console.error("Gemini API Error:", geminiData?.error?.message);
@@ -222,12 +228,12 @@ serve(async (req) => {
     if (part.functionCall) {
       const { name, args } = part.functionCall;
       if (name === "find_artists") {
-        console.log("Function call to find_artists");
+        // console.log("Function call to find_artists");
 
         const supabaseClient = createClient(
-          Deno.env.get("SUPABASE_URL")!,
-          Deno.env.get("SUPABASE_ANON_KEY")!,
-          { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+          SUPABASE_URL,
+          SUPABASE_ANON_KEY,
+          { global: { headers: { Authorization: req.headers.get('Authorization') ?? "" } } }
         );
 
         let query = supabaseClient

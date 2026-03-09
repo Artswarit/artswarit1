@@ -33,32 +33,40 @@ const Login = () => {
     if (!user) return;
     
     try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('role, full_name, bio, avatar_url, tags')
-        .eq('id', user.id)
-        .single();
+      // Check both profile role AND user_roles table for admin status
+      const [profileResult, adminResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('role, full_name, bio, avatar_url, tags')
+          .eq('id', user.id)
+          .single(),
+        supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'admin')
+          .maybeSingle(),
+      ]);
 
-      if (error) {
-        console.error('Error fetching profile for redirect:', error);
-        // If no profile exists, the user may need to wait for DB trigger
-        // Redirect to home and let the app handle it
+      if (profileResult.error) {
+        console.error('Error fetching profile for redirect:', profileResult.error);
         navigate('/');
         return;
       }
 
-      // Note: profile completion enforcement is handled inside dashboards
+      const profile = profileResult.data;
+      const isAdmin = profile?.role === 'admin' || adminResult.data?.role === 'admin';
 
-      if (profile?.role === 'artist' || profile?.role === 'premium') {
-        navigate('/artist-dashboard');
-      } else if (profile?.role === 'admin') {
+      // Admin users always go to admin dashboard
+      if (isAdmin) {
         navigate('/admin-dashboard');
+      } else if (profile?.role === 'artist' || profile?.role === 'premium') {
+        navigate('/artist-dashboard');
       } else {
         navigate('/client-dashboard');
       }
     } catch (error) {
       console.error('Error in redirectBasedOnRole:', error);
-      // Default to home if profile fetch fails
       navigate('/');
     }
   };
@@ -100,8 +108,8 @@ const Login = () => {
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Navbar />
       <div className="flex-1 flex items-center justify-center px-3 sm:px-6 lg:px-8 py-[80px]">
-        <div className="w-full max-w-sm sm:max-w-md space-y-6">
-          <div className="text-center">
+        <div className="w-full max-w-sm sm:max-w-md space-y-4">
+          <div className="text-center space-y-0">
             <LogoWithName />
           </div>
 

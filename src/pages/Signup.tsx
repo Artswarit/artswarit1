@@ -66,7 +66,10 @@ const Signup = () => {
         // Redirect will happen automatically via auth state change
       }
     } else {
-      console.log(`${provider} signup not implemented yet`);
+      toast({
+        title: "Coming Soon",
+        description: `${provider} signup is not implemented yet.`,
+      });
     }
   };
   
@@ -99,8 +102,8 @@ const Signup = () => {
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Navbar />
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20 sm:py-24">
-        <div className="w-full max-w-md space-y-6 sm:space-y-8">
-          <div className="text-center">
+        <div className="w-full max-w-md space-y-4 sm:space-y-5">
+          <div className="text-center space-y-1">
             <LogoWithName />
           </div>
           <SignupHeader />

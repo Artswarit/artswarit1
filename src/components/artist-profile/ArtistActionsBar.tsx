@@ -12,6 +12,7 @@ interface ArtistActionsBarProps {
   onRequest: () => void;
   loadingFollow?: boolean;
   loadingSave: boolean;
+  canMessage?: boolean;
 }
 
 const ArtistActionsBar: React.FC<ArtistActionsBarProps> = ({
@@ -23,6 +24,7 @@ const ArtistActionsBar: React.FC<ArtistActionsBarProps> = ({
   onRequest,
   loadingFollow = false,
   loadingSave,
+  canMessage = true,
 }) => {
   return (
     <div className="flex flex-col gap-2 w-full">
@@ -48,12 +50,14 @@ const ArtistActionsBar: React.FC<ArtistActionsBarProps> = ({
       {/* Message Button - Full width responsive */}
       <Button
         onClick={onMessage}
+        disabled={!canMessage}
         variant="outline"
-        className="w-full border-blue-400 text-blue-700 hover:bg-blue-200/60 hover:text-blue-900 text-sm min-h-[44px]"
+        className={`w-full text-sm min-h-[44px] ${!canMessage ? 'border-gray-300 text-gray-500 cursor-not-allowed' : 'border-blue-400 text-blue-700 hover:bg-blue-200/60 hover:text-blue-900'}`}
+        title={!canMessage ? 'Direct messages are disabled by this artist' : undefined}
       >
         <MessageCircle size={16} className="mr-2" />
-        <span className="hidden xs:inline">Message Artist</span>
-        <span className="xs:hidden">Message</span>
+        <span className="hidden xs:inline">{canMessage ? 'Message Artist' : 'Messages Disabled'}</span>
+        <span className="xs:hidden">{canMessage ? 'Message' : 'Disabled'}</span>
       </Button>
 
       {/* Action Buttons Row - Always stacked on mobile for better touch targets */}

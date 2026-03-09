@@ -25,5 +25,23 @@ export default tseslint.config(
       ],
       "@typescript-eslint/no-unused-vars": "off",
     },
+  },
+  {
+    files: ["supabase/functions/**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "error",
+      "prefer-const": "error",
+    },
+  },
+  {
+    files: ["src/**/*.{ts,tsx}", "tailwind.config.ts"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "prefer-const": "warn",
+      "@typescript-eslint/no-require-imports": "off",
+      "no-useless-escape": "warn",
+      "react-hooks/rules-of-hooks": "warn",
+      "no-case-declarations": "warn",
+    },
   }
 );

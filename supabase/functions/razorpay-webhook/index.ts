@@ -22,8 +22,6 @@ serve(async (req) => {
     const signature = req.headers.get('x-razorpay-signature');
     const body = await req.text();
     
-    console.log('Webhook received:', body.substring(0, 200));
-
     // Verify webhook signature
     if (signature) {
       const encoder = new TextEncoder();
@@ -50,7 +48,7 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      console.log('Webhook signature verified');
+      // console.log('Webhook signature verified');
     }
 
     const payload = JSON.parse(body);
@@ -85,8 +83,6 @@ serve(async (req) => {
       const orderId = payment.order_id;
       const paymentId = payment.id;
 
-      console.log(`Processing payment.captured: order=${orderId}, payment=${paymentId}`);
-
       // Find the payment record
       const { data: paymentRecord, error: fetchError } = await supabaseAdmin
         .from('payments')
@@ -109,7 +105,6 @@ serve(async (req) => {
 
       // Skip if already processed
       if (paymentRecord.status === 'success') {
-        console.log('Payment already marked as success');
         await supabaseAdmin.from('webhook_logs').update({
           processed: true,
           processed_at: new Date().toISOString(),
@@ -127,9 +122,9 @@ serve(async (req) => {
         paid_at: new Date().toISOString(),
       }).eq('id', paymentRecord.id);
 
-      // Update milestone status
+      // Update milestone status to ACTIVE (funds secured in escrow)
       await supabaseAdmin.from('project_milestones').update({
-        status: 'paid',
+        status: 'ACTIVE',
         paid_at: new Date().toISOString(),
         payment_id: paymentId,
       }).eq('id', paymentRecord.milestone_id);
@@ -159,15 +154,13 @@ serve(async (req) => {
         },
       });
 
-      console.log('Payment processed successfully via webhook');
+      // console.log('Payment processed successfully via webhook');
     }
 
     // Handle payment.failed event
     if (eventType === 'payment.failed') {
       const payment = payload.payload.payment.entity;
       const orderId = payment.order_id;
-
-      console.log(`Processing payment.failed: order=${orderId}`);
 
       await supabaseAdmin.from('payments').update({
         status: 'failed',

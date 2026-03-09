@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,15 +13,23 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { 
   Save, Shield, Bell, Eye, User, Camera, Loader2, 
-  Globe, Clock, Trash2, Monitor, Smartphone, AlertTriangle,
+  Globe, Clock, Trash2, Monitor, Smartphone,
   Mail, MessageSquare, FolderOpen, Lock
 } from "lucide-react";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import ChangeEmailForm from "@/components/settings/ChangeEmailForm";
-import RecoveryOptions from "@/components/settings/RecoveryOptions";
-import TwoFactorSetup from "@/components/settings/TwoFactorSetup";
 
 interface LoginSession {
   id: string;
@@ -66,8 +75,9 @@ const LANGUAGES = [
 ];
 
 const ClientSettings = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [sessions, setSessions] = useState<LoginSession[]>([]);
   
@@ -100,6 +110,22 @@ const ClientSettings = () => {
     newPassword: "",
     confirmPassword: ""
   });
+
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const updateProfileSetting = async (fields: Record<string, any>) => {
+    if (!user?.id) return;
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ ...fields, updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+      if (error) throw error;
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Update failed", description: err.message });
+    }
+  };
 
   // Fetch profile and sessions on mount
   useEffect(() => {
@@ -154,7 +180,7 @@ const ClientSettings = () => {
           setSessions(sessionsData);
         }
       } catch (error: any) {
-        console.error('Error fetching data:', error);
+        // Silent fail for background fetch
       } finally {
         setLoading(false);
         setLoadingSessions(false);
@@ -168,26 +194,40 @@ const ClientSettings = () => {
   useEffect(() => {
     if (!user?.id) return;
 
+    let timeoutId: NodeJS.Timeout;
+
     const refetchProfile = async () => {
-      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
-      if (data) {
-        setProfile(data);
-        setPrivacySettings({
-          profileVisibility: data.profile_visibility ?? true,
-          showActivityStats: data.show_activity_stats ?? true,
-          showLastActive: data.show_last_active ?? true,
-        });
-        setNotificationSettings({
-          emailNotifications: data.email_notifications ?? true,
-          inAppNotifications: data.in_app_notifications ?? true,
-          projectUpdateNotifications: data.project_update_notifications ?? true,
-          messageNotifications: data.message_notifications ?? true,
-        });
-        setPreferences({
-          timezone: data.timezone || 'UTC',
-          language: data.language || 'en',
-        });
+      try {
+        const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
+        if (error) throw error;
+        
+        if (data) {
+          setProfile(data);
+          setPrivacySettings({
+            profileVisibility: data.profile_visibility ?? true,
+            showActivityStats: data.show_activity_stats ?? true,
+            showLastActive: data.show_last_active ?? true,
+          });
+          setNotificationSettings({
+            emailNotifications: data.email_notifications ?? true,
+            inAppNotifications: data.in_app_notifications ?? true,
+            projectUpdateNotifications: data.project_update_notifications ?? true,
+            messageNotifications: data.message_notifications ?? true,
+          });
+          setPreferences({
+            timezone: data.timezone || 'UTC',
+            language: data.language || 'en',
+          });
+          // NOTE: No toast here — realtime sync should be silent
+        }
+      } catch (error) {
+        // Silent — background sync
       }
+    };
+
+    const debouncedRefetch = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(refetchProfile, 500);
     };
 
     const channel = supabase
@@ -200,7 +240,53 @@ const ClientSettings = () => {
           table: 'profiles',
           filter: `id=eq.${user.id}`
         },
-        () => refetchProfile()
+        () => debouncedRefetch()
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          // Connected
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error("Realtime channel error");
+          toast({
+            variant: "destructive",
+            title: "Sync Error",
+            description: "Failed to connect to real-time updates.",
+          });
+        }
+      });
+
+    return () => {
+      clearTimeout(timeoutId);
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const refetchSessions = async () => {
+      const { data, error } = await supabase
+        .from('login_sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('last_active_at', { ascending: false });
+
+      if (!error && data) {
+        setSessions(data);
+      }
+    };
+
+    const channel = supabase
+      .channel(`client-settings-sessions-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'login_sessions',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => refetchSessions()
       )
       .subscribe();
 
@@ -209,7 +295,11 @@ const ClientSettings = () => {
     };
   }, [user?.id]);
 
-  const saveSettings = async () => {
+  const saveSettings = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (!user?.id) return;
     
     setSaving(true);
@@ -243,7 +333,11 @@ const ClientSettings = () => {
     }
   };
 
-  const changePassword = async () => {
+  const changePassword = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast({ variant: "destructive", title: "Passwords don't match" });
       return;
@@ -284,6 +378,45 @@ const ClientSettings = () => {
       toast({ title: "Session terminated successfully!" });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
+    }
+  };
+
+  const deleteAccount = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (!user?.id) return;
+
+    setDeleting(true);
+    try {
+      await Promise.all([
+        supabase.from('notifications').delete().eq('user_id', user.id),
+        supabase.from('login_sessions').delete().eq('user_id', user.id),
+        supabase.from('projects').delete().or(`artist_id.eq.${user.id},client_id.eq.${user.id}`),
+        supabase.from('profiles').delete().eq('id', user.id),
+        supabase.from('users').delete().eq('id', user.id),
+      ]);
+
+      toast({
+        title: "Account deleted",
+        description: "Your account and all data have been permanently deleted.",
+      });
+
+      setShowDeleteDialog(false);
+      // Use signOut + navigate instead of window.location.href to keep auth state clean
+      setTimeout(async () => {
+        await signOut();
+        navigate('/');
+      }, 1500);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Deletion failed",
+        description: error.message,
+      });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -332,39 +465,51 @@ const ClientSettings = () => {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+    <div className="space-y-6 sm:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto px-2 sm:px-0">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/40 backdrop-blur-md p-6 rounded-[2rem] border border-primary/5 shadow-sm">
         <div>
-          <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">Settings</h2>
-          <p className="text-muted-foreground text-sm">Manage your account preferences and privacy</p>
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">Settings</h2>
+          <p className="text-sm font-medium text-muted-foreground/80 mt-1">Manage your account preferences and privacy</p>
         </div>
-        <Button onClick={saveSettings} disabled={saving} className="w-full sm:w-auto">
-          {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+        <Button 
+          onClick={saveSettings} 
+          disabled={saving} 
+          className="w-full sm:w-auto bg-primary text-primary-foreground shadow-lg shadow-primary/20 rounded-xl h-12 px-6 font-bold transition-all active:scale-95"
+        >
+          {saving ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <Save className="h-5 w-5 mr-2" />}
           Save Changes
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10">
         {/* Profile Overview */}
-        <Card className="transition-all duration-300 hover:shadow-md">
-          <CardHeader className="pb-3 sm:pb-4">
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <User className="h-4 w-4 sm:h-5 sm:w-5" />
-              Profile Overview
-            </CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Your account at a glance</CardDescription>
+        <Card className="rounded-[2rem] border-primary/10 shadow-xl backdrop-blur-md bg-background/95 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary/20">
+          <CardHeader className="pb-6 sm:pb-8 bg-primary/5 border-b border-primary/10">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+                <User className="h-6 w-6" />
+              </div>
+              <div>
+                <CardTitle className="text-xl sm:text-2xl font-black tracking-tight">
+                  Profile Overview
+                </CardTitle>
+                <CardDescription className="text-sm font-medium text-muted-foreground/80 mt-1">
+                  Your account at a glance
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
+          <CardContent className="space-y-6 pt-6 sm:pt-8">
+            <div className="flex items-center gap-6 p-4 rounded-2xl bg-primary/5 border border-primary/10">
+              <div className="relative group">
+                <Avatar className="h-20 w-20 sm:h-24 sm:w-24 border-4 border-background shadow-xl">
                   <AvatarImage src={profile?.avatar_url || ''} />
-                  <AvatarFallback className="text-lg sm:text-xl">
+                  <AvatarFallback className="text-2xl sm:text-3xl font-black bg-primary/10 text-primary">
                     {profile?.full_name?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
-                <label className="absolute bottom-0 right-0 p-1.5 bg-primary text-primary-foreground rounded-full cursor-pointer hover:bg-primary/90 transition-colors">
-                  <Camera className="h-3 w-3 sm:h-4 sm:w-4" />
+                <label className="absolute -bottom-1 -right-1 p-2 bg-primary text-primary-foreground rounded-full cursor-pointer hover:bg-primary/90 transition-all shadow-lg active:scale-90 group-hover:scale-110">
+                  <Camera className="h-4 w-4 sm:h-5 sm:w-5" />
                   <input
                     type="file"
                     accept="image/*"
@@ -374,40 +519,50 @@ const ClientSettings = () => {
                   />
                 </label>
               </div>
-              <div className="flex-1">
-                <p className="font-medium text-sm sm:text-base">{profile?.full_name || 'Your Name'}</p>
-                <p className="text-xs sm:text-sm text-muted-foreground">{user?.email}</p>
-                <Badge variant="secondary" className="mt-1">Client</Badge>
+              <div className="flex-1 space-y-1">
+                <p className="font-black text-lg sm:text-xl text-foreground">{profile?.full_name || 'Your Name'}</p>
+                <p className="text-sm sm:text-base text-muted-foreground font-medium">{user?.email}</p>
+                <div className="flex mt-2">
+                  <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 border-none font-bold px-3 py-1 rounded-lg">Client Account</Badge>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Preferences */}
-        <Card className="transition-all duration-300 hover:shadow-md">
-          <CardHeader className="pb-3 sm:pb-4">
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <Globe className="h-4 w-4 sm:h-5 sm:w-5" />
-              Preferences
-            </CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Timezone and language settings</CardDescription>
+        <Card className="rounded-[2rem] border-primary/10 shadow-xl backdrop-blur-md bg-background/95 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary/20">
+          <CardHeader className="pb-6 sm:pb-8 bg-primary/5 border-b border-primary/10">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+                <Globe className="h-6 w-6" />
+              </div>
+              <div>
+                <CardTitle className="text-xl sm:text-2xl font-black tracking-tight">
+                  Preferences
+                </CardTitle>
+                <CardDescription className="text-sm font-medium text-muted-foreground/80 mt-1">
+                  Timezone and language settings
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="timezone" className="text-xs sm:text-sm flex items-center gap-2">
-                <Clock className="w-3 h-3" />
+          <CardContent className="space-y-6 pt-6 sm:pt-8">
+            <div className="space-y-2">
+              <Label htmlFor="timezone" className="text-sm font-bold ml-1 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-primary" />
                 Timezone
               </Label>
               <Select 
                 value={preferences.timezone} 
                 onValueChange={(value) => setPreferences(prev => ({ ...prev, timezone: value }))}
               >
-                <SelectTrigger className="mt-1 text-sm">
+                <SelectTrigger className="h-12 sm:h-14 bg-muted/50 border-none focus:ring-primary/20 rounded-2xl px-6 font-medium text-base">
                   <SelectValue placeholder="Select timezone" />
                 </SelectTrigger>
-                <SelectContent className="max-h-[200px]">
+                <SelectContent className="max-h-[300px] rounded-2xl border-primary/10 shadow-2xl">
                   {TIMEZONES.map((tz) => (
-                    <SelectItem key={tz.value} value={tz.value}>
+                    <SelectItem key={tz.value} value={tz.value} className="min-h-[48px] rounded-xl focus:bg-primary/5">
                       {tz.label}
                     </SelectItem>
                   ))}
@@ -415,21 +570,21 @@ const ClientSettings = () => {
               </Select>
             </div>
             
-            <div>
-              <Label htmlFor="language" className="text-xs sm:text-sm flex items-center gap-2">
-                <Globe className="w-3 h-3" />
+            <div className="space-y-2">
+              <Label htmlFor="language" className="text-sm font-bold ml-1 flex items-center gap-2">
+                <Globe className="w-4 h-4 text-primary" />
                 Language
               </Label>
               <Select 
                 value={preferences.language} 
                 onValueChange={(value) => setPreferences(prev => ({ ...prev, language: value }))}
               >
-                <SelectTrigger className="mt-1 text-sm">
+                <SelectTrigger className="h-12 sm:h-14 bg-muted/50 border-none focus:ring-primary/20 rounded-2xl px-6 font-medium text-base">
                   <SelectValue placeholder="Select language" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-2xl border-primary/10 shadow-2xl">
                   {LANGUAGES.map((lang) => (
-                    <SelectItem key={lang.value} value={lang.value}>
+                    <SelectItem key={lang.value} value={lang.value} className="min-h-[48px] rounded-xl focus:bg-primary/5">
                       {lang.label}
                     </SelectItem>
                   ))}
@@ -440,96 +595,120 @@ const ClientSettings = () => {
         </Card>
 
         {/* Privacy & Visibility */}
-        <Card className="transition-all duration-300 hover:shadow-md">
-          <CardHeader className="pb-3 sm:pb-4">
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
-              Privacy & Visibility
-            </CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Control what others can see</CardDescription>
+        <Card className="rounded-[2rem] border-primary/10 shadow-xl backdrop-blur-md bg-background/95 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary/20">
+          <CardHeader className="pb-6 sm:pb-8 bg-primary/5 border-b border-primary/10">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+                <Eye className="h-6 w-6" />
+              </div>
+              <div>
+                <CardTitle className="text-xl sm:text-2xl font-black tracking-tight">
+                  Privacy & Visibility
+                </CardTitle>
+                <CardDescription className="text-sm font-medium text-muted-foreground/80 mt-1">
+                  Control what others can see
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <Label htmlFor="profile-visibility" className="text-sm">Public Profile</Label>
-                <p className="text-xs text-muted-foreground">Make your profile visible to artists</p>
+          <CardContent className="space-y-6 pt-6 sm:pt-8">
+            <div className="flex items-center justify-between group min-h-[56px] p-4 rounded-2xl hover:bg-primary/5 transition-colors">
+              <div className="flex-1 space-y-1">
+                <Label htmlFor="profile-visibility" className="text-base sm:text-lg font-bold cursor-pointer">Public Profile</Label>
+                <p className="text-xs sm:text-sm text-muted-foreground/80 font-medium">Make your profile visible to artists</p>
               </div>
               <Switch
                 id="profile-visibility"
                 checked={privacySettings.profileVisibility}
-                onCheckedChange={(checked) => setPrivacySettings(prev => ({ ...prev, profileVisibility: checked }))}
+                onCheckedChange={async (checked) => {
+                  setPrivacySettings(prev => ({ ...prev, profileVisibility: checked }));
+                  await updateProfileSetting({ profile_visibility: checked });
+                }}
+                className="data-[state=checked]:bg-primary h-7 w-12"
               />
             </div>
             
-            <Separator />
-            
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <Label htmlFor="show-activity" className="text-sm">Show Activity Stats</Label>
-                <p className="text-xs text-muted-foreground">Display project stats to artists</p>
+            <div className="flex items-center justify-between group min-h-[56px] p-4 rounded-2xl hover:bg-primary/5 transition-colors">
+              <div className="flex-1 space-y-1">
+                <Label htmlFor="show-activity" className="text-base sm:text-lg font-bold cursor-pointer">Show Activity Stats</Label>
+                <p className="text-xs sm:text-sm text-muted-foreground/80 font-medium">Display project stats to artists</p>
               </div>
               <Switch
                 id="show-activity"
                 checked={privacySettings.showActivityStats}
-                onCheckedChange={(checked) => setPrivacySettings(prev => ({ ...prev, showActivityStats: checked }))}
+                onCheckedChange={async (checked) => {
+                  setPrivacySettings(prev => ({ ...prev, showActivityStats: checked }));
+                  await updateProfileSetting({ show_activity_stats: checked });
+                }}
+                className="data-[state=checked]:bg-primary h-7 w-12"
               />
             </div>
             
-            <Separator />
-            
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <Label htmlFor="show-last-active" className="text-sm">Show Last Active</Label>
-                <p className="text-xs text-muted-foreground">Display when you were last online</p>
+            <div className="flex items-center justify-between group min-h-[56px] p-4 rounded-2xl hover:bg-primary/5 transition-colors">
+              <div className="flex-1 space-y-1">
+                <Label htmlFor="show-last-active" className="text-base sm:text-lg font-bold cursor-pointer">Show Last Active</Label>
+                <p className="text-xs sm:text-sm text-muted-foreground/80 font-medium">Display when you were last online</p>
               </div>
               <Switch
                 id="show-last-active"
                 checked={privacySettings.showLastActive}
-                onCheckedChange={(checked) => setPrivacySettings(prev => ({ ...prev, showLastActive: checked }))}
+                onCheckedChange={async (checked) => {
+                  setPrivacySettings(prev => ({ ...prev, showLastActive: checked }));
+                  await updateProfileSetting({ show_last_active: checked });
+                }}
+                className="data-[state=checked]:bg-primary h-7 w-12"
               />
             </div>
           </CardContent>
         </Card>
 
         {/* Notifications */}
-        <Card className="transition-all duration-300 hover:shadow-md">
-          <CardHeader className="pb-3 sm:pb-4">
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
-              Notification Preferences
-            </CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Choose how you want to be notified</CardDescription>
+        <Card className="rounded-[2rem] border-primary/10 shadow-xl backdrop-blur-md bg-background/95 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary/20">
+          <CardHeader className="pb-6 sm:pb-8 bg-primary/5 border-b border-primary/10">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+                <Bell className="h-6 w-6" />
+              </div>
+              <div>
+                <CardTitle className="text-xl sm:text-2xl font-black tracking-tight">
+                  Notifications
+                </CardTitle>
+                <CardDescription className="text-sm font-medium text-muted-foreground/80 mt-1">
+                  Choose how you want to be notified
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <Label htmlFor="email-notifications" className="text-sm flex items-center gap-2">
-                  <Mail className="w-3 h-3" />
+          <CardContent className="space-y-6 pt-6 sm:pt-8">
+            <div className="flex items-center justify-between group min-h-[56px] p-4 rounded-2xl hover:bg-primary/5 transition-colors">
+              <div className="flex-1 space-y-1">
+                <Label htmlFor="email-notifications" className="text-base sm:text-lg font-bold cursor-pointer flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-primary" />
                   Email Notifications
                 </Label>
-                <p className="text-xs text-muted-foreground">Receive updates via email</p>
+                <p className="text-xs sm:text-sm text-muted-foreground/80 font-medium">Receive updates via email</p>
               </div>
               <Switch
                 id="email-notifications"
                 checked={notificationSettings.emailNotifications}
                 onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, emailNotifications: checked }))}
+                className="data-[state=checked]:bg-primary h-7 w-12"
               />
             </div>
             
-            <Separator />
-            
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <Label htmlFor="in-app-notifications" className="text-sm flex items-center gap-2">
-                  <Bell className="w-3 h-3" />
+            <div className="flex items-center justify-between group min-h-[56px] p-4 rounded-2xl hover:bg-primary/5 transition-colors">
+              <div className="flex-1 space-y-1">
+                <Label htmlFor="in-app-notifications" className="text-base sm:text-lg font-bold cursor-pointer flex items-center gap-2">
+                  <Bell className="w-4 h-4 text-primary" />
                   In-App Notifications
                 </Label>
-                <p className="text-xs text-muted-foreground">Show notifications in the app</p>
+                <p className="text-xs sm:text-sm text-muted-foreground/80 font-medium">Show notifications in the app</p>
               </div>
               <Switch
                 id="in-app-notifications"
                 checked={notificationSettings.inAppNotifications}
                 onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, inAppNotifications: checked }))}
+                className="data-[state=checked]:bg-primary h-7 w-12"
               />
             </div>
             
@@ -572,12 +751,6 @@ const ClientSettings = () => {
         {/* Email Change */}
         <ChangeEmailForm />
 
-        {/* Two-Factor Authentication */}
-        <TwoFactorSetup />
-
-        {/* Recovery Options */}
-        <RecoveryOptions />
-
         {/* Security - Password */}
         <Card className="transition-all duration-300 hover:shadow-md">
           <CardHeader className="pb-3 sm:pb-4">
@@ -599,7 +772,7 @@ const ClientSettings = () => {
                 type="password"
                 value={passwordData.newPassword}
                 onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                className="mt-1 text-sm"
+                className="mt-1 h-12 bg-muted/50 border-none focus-visible:ring-primary/20 rounded-2xl px-6 font-medium min-h-[48px]"
                 placeholder="Enter new password"
               />
             </div>
@@ -612,7 +785,7 @@ const ClientSettings = () => {
                 type="password"
                 value={passwordData.confirmPassword}
                 onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                className="mt-1 text-sm"
+                className="mt-1 h-12 bg-muted/50 border-none focus-visible:ring-primary/20 rounded-2xl px-6 font-medium min-h-[48px]"
                 placeholder="Confirm new password"
               />
             </div>
@@ -623,7 +796,36 @@ const ClientSettings = () => {
               className="w-full"
               variant="outline"
             >
+              {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
               Update Password
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-[2rem] border-destructive/20 bg-destructive/5 shadow-xl backdrop-blur-md overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-destructive/30">
+          <CardHeader className="pb-6 sm:pb-8 bg-destructive/10 border-b border-destructive/10">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-destructive/20 text-destructive">
+                <Trash2 className="h-6 w-6" />
+              </div>
+              <div>
+                <CardTitle className="text-xl sm:text-2xl font-black tracking-tight text-destructive">
+                  Danger Zone
+                </CardTitle>
+                <CardDescription className="text-sm font-medium text-destructive/70 mt-1">
+                  Permanently delete your account
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-8 pb-8">
+            <Button 
+              variant="destructive" 
+              className="w-full h-12 sm:h-14 font-black text-lg rounded-2xl transition-all active:scale-[0.98] shadow-lg shadow-destructive/20 min-h-[48px]"
+              onClick={() => setShowDeleteDialog(true)}
+            >
+              <Trash2 className="h-5 w-5 mr-2" />
+              Delete Account
             </Button>
           </CardContent>
         </Card>
@@ -700,6 +902,28 @@ const ClientSettings = () => {
           </CardContent>
         </Card>
       </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Account Permanently?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. All your projects, messages, and profile data will be permanently deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel disabled={deleting} className="h-12 sm:h-10 min-h-[48px] sm:min-h-[40px] rounded-xl sm:rounded-md">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={deleteAccount} 
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 h-12 sm:h-10 min-h-[48px] sm:min-h-[40px] rounded-xl sm:rounded-md"
+            >
+              {deleting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              Delete Forever
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

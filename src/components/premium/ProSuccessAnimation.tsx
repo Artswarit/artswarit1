@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Crown, Sparkles, CheckCircle, Star, Zap, PartyPopper } from "lucide-react";
 import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 interface ProSuccessAnimationProps {
   open: boolean;
@@ -29,15 +30,21 @@ export function ProSuccessAnimation({
   }, [open]);
 
   const features = [
-    { icon: <Crown className="h-4 w-4" />, text: "Verified badge appears" },
     { icon: <Star className="h-4 w-4" />, text: "Priority ranking activated" },
     { icon: <Zap className="h-4 w-4" />, text: "Unlimited portfolio unlocked" },
-    { icon: <CheckCircle className="h-4 w-4" />, text: "0% platform fee applied" }
+    { icon: <CheckCircle className="h-4 w-4" />, text: "0% platform fee applied" },
+    { icon: <Sparkles className="h-4 w-4" />, text: "Featured rotation enabled" }
   ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md text-center overflow-hidden">
+        <DialogHeader>
+          <VisuallyHidden>
+            <DialogTitle>Pro Success Animation</DialogTitle>
+            <DialogDescription>Animation showing pro success status</DialogDescription>
+          </VisuallyHidden>
+        </DialogHeader>
         {/* Confetti Animation */}
         {showConfetti && (
           <div className="absolute inset-0 pointer-events-none overflow-hidden">

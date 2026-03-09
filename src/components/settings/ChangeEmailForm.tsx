@@ -48,15 +48,56 @@ const ChangeEmailForm = () => {
       return;
     }
 
+    // Basic format validation
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(newEmail)) {
+      toast({
+        title: "Invalid email format",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
+      // Uniqueness check against profiles
+      const { data: existing } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', newEmail)
+        .limit(1);
+      if (existing && existing.length > 0) {
+        toast({
+          title: "Email already in use",
+          description: "Please use a different email address.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.updateUser({
         email: newEmail,
       });
 
       if (error) throw error;
 
+      if (user?.id) {
+        await supabase
+          .from('profiles')
+          .update({ email: newEmail, updated_at: new Date().toISOString() })
+          .eq('id', user.id);
+        await supabase.from('project_activity_logs').insert({
+          project_id: null,
+          milestone_id: null,
+          user_id: user.id,
+          action: 'email_changed',
+          details: { newEmail },
+        });
+      }
+      
       setEmailSent(true);
       toast({
         title: "Verification email sent",

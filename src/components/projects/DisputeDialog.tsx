@@ -122,10 +122,10 @@ export function DisputeDialog({
         });
       }
 
-      // Update milestone status to disputed
+      // Update milestone status to DISPUTED
       await supabase
         .from('project_milestones')
-        .update({ status: 'disputed' })
+        .update({ status: 'DISPUTED' })
         .eq('id', milestone.id);
 
       // Log activity
@@ -157,7 +157,9 @@ export function DisputeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      {/* Make the dispute dialog scrollable so long content isn't cut off
+          on smaller screens for both artist and client views */}
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive">
             <AlertTriangle className="h-5 w-5" />

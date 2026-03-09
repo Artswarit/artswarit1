@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, MapPin, CheckCircle } from 'lucide-react';
+import { Loader2, MapPin, CheckCircle, Pencil, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface BillingAddress {
@@ -46,6 +46,8 @@ export function BillingAddressForm() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [profile, setProfile] = useState<any>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [hasData, setHasData] = useState(false);
   const [formData, setFormData] = useState<BillingAddress>({
     name: '',
     addressLine1: '',
@@ -80,7 +82,11 @@ export function BillingAddressForm() {
           ...prev,
           ...socialLinks.billing_address,
         }));
+        setHasData(true);
+      } else {
+        setIsEditing(true); // Default to edit mode if no data
       }
+      
       if (data.full_name && !formData.name) {
         setFormData(prev => ({ ...prev, name: data.full_name || '' }));
       }
@@ -156,6 +162,8 @@ export function BillingAddressForm() {
       if (error) throw error;
       
       setSaved(true);
+      setHasData(true);
+      setIsEditing(false);
       toast.success('Billing address saved successfully!');
       setTimeout(() => setSaved(false), 3000);
     } catch (error) {
@@ -168,12 +176,81 @@ export function BillingAddressForm() {
 
   const isIndia = formData.country === 'IN';
 
+  const getCountryName = (code: string) => {
+    return COUNTRIES.find(c => c.code === code)?.name || code;
+  };
+
+  if (!isEditing && hasData) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              <CardTitle>Billing Address</CardTitle>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+          </div>
+          <CardDescription>
+            Your billing address for invoices and receipts.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <span className="text-sm text-muted-foreground">Name / Company</span>
+                <p className="font-medium">{formData.name}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-sm text-muted-foreground">Country</span>
+                <p className="font-medium">{getCountryName(formData.country)}</p>
+              </div>
+              <div className="space-y-1 sm:col-span-2">
+                <span className="text-sm text-muted-foreground">Address</span>
+                <p className="font-medium">
+                  {formData.addressLine1}
+                  {formData.addressLine2 && <><br />{formData.addressLine2}</>}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-sm text-muted-foreground">City</span>
+                <p className="font-medium">{formData.city}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-sm text-muted-foreground">State / Postal Code</span>
+                <p className="font-medium">{formData.state}, {formData.postalCode}</p>
+              </div>
+              {formData.gstNumber && (
+                <div className="space-y-1 sm:col-span-2">
+                  <span className="text-sm text-muted-foreground">GSTIN</span>
+                  <p className="font-medium font-mono">{formData.gstNumber}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <MapPin className="h-5 w-5" />
-          <CardTitle>Billing Address</CardTitle>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-5 w-5" />
+            <CardTitle>{hasData ? 'Edit Billing Address' : 'Add Billing Address'}</CardTitle>
+          </div>
+          {hasData && (
+            <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
+          )}
         </div>
         <CardDescription>
           Your billing address for invoices and receipts. Not required for payments.

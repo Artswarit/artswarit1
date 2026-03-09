@@ -22,8 +22,8 @@ interface CurrencyContextType {
   countries: CountryCurrency[];
   exchangeRates: ExchangeRates;
   loading: boolean;
-  convertPrice: (amountInUSD: number, targetCurrency?: string) => number;
-  formatPrice: (amountInUSD: number, targetCurrency?: string) => string;
+  convertPrice: (amount: number, sourceCurrency?: string, targetCurrency?: string) => number;
+  formatPrice: (amount: number, sourceCurrency?: string, targetCurrency?: string) => string;
   getCurrencySymbol: (currencyCode: string) => string;
   updateUserLocation: (country: string, city: string) => Promise<void>;
   refetchRates: () => Promise<void>;
@@ -189,11 +189,22 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   }, [user, fetchUserPreferences]);
 
-  // Convert price from USD to target currency
-  const convertPrice = useCallback((amountInUSD: number, targetCurrency?: string): number => {
-    const currency = targetCurrency || userCurrency;
-    const rate = exchangeRates[currency] || 1;
-    return amountInUSD * rate;
+  // Convert price from source currency to target currency
+  const convertPrice = useCallback((amount: number, sourceCurrency: string = 'USD', targetCurrency?: string): number => {
+    const target = targetCurrency || userCurrency;
+    
+    // If currencies are same, no conversion needed
+    if (sourceCurrency === target) {
+      return amount;
+    }
+
+    // Convert source to USD first
+    const sourceRate = exchangeRates[sourceCurrency] || 1;
+    const amountInUSD = amount / sourceRate;
+
+    // Convert USD to target
+    const targetRate = exchangeRates[target] || 1;
+    return amountInUSD * targetRate;
   }, [userCurrency, exchangeRates]);
 
   // Get currency symbol
@@ -203,15 +214,15 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [countries]);
 
   // Format price with currency symbol
-  const formatPrice = useCallback((amountInUSD: number, targetCurrency?: string): string => {
-    const currency = targetCurrency || userCurrency;
-    const convertedAmount = convertPrice(amountInUSD, currency);
-    const symbol = getCurrencySymbol(currency);
+  const formatPrice = useCallback((amount: number, sourceCurrency: string = 'USD', targetCurrency?: string): string => {
+    const target = targetCurrency || userCurrency;
+    const convertedAmount = convertPrice(amount, sourceCurrency, target);
+    const symbol = getCurrencySymbol(target);
     
     // Format based on currency
     const formatter = new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: currency === 'JPY' || currency === 'KRW' ? 0 : 2,
-      maximumFractionDigits: currency === 'JPY' || currency === 'KRW' ? 0 : 2,
+      minimumFractionDigits: target === 'JPY' || target === 'KRW' ? 0 : 2,
+      maximumFractionDigits: target === 'JPY' || target === 'KRW' ? 0 : 2,
     });
 
     return `${symbol}${formatter.format(convertedAmount)}`;

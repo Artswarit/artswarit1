@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import GlassCard from "@/components/ui/glass-card";
 import { User, Loader2 } from "lucide-react";
+import LogoLoader from "@/components/ui/LogoLoader";
 
 // Client Profile Components
 import ClientProfileHeader from "@/components/client-profile/ClientProfileHeader";
@@ -346,10 +347,7 @@ export default function UserProfile() {
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-background">
         <Navbar />
         <div className="flex-1 flex items-center justify-center p-4 mt-16">
-          <GlassCard className="p-8 text-center">
-            <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto" />
-            <p className="mt-4 text-muted-foreground">Loading client profile...</p>
-          </GlassCard>
+          <LogoLoader text="Loading profile..." />
         </div>
         <Footer />
       </div>

@@ -1,15 +1,14 @@
-import { Crown, Verified, Sparkles } from "lucide-react";
+import { Crown, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useArtistPlan } from "@/hooks/useArtistPlan";
 
 interface ProBadgeProps {
   userId?: string;
   size?: "sm" | "md" | "lg";
-  showVerified?: boolean;
   className?: string;
 }
 
-export function ProBadge({ userId, size = "md", showVerified = true, className = "" }: ProBadgeProps) {
+export function ProBadge({ userId, size = "md", className = "" }: ProBadgeProps) {
   const { isProArtist, loading } = useArtistPlan(userId);
 
   if (loading || !isProArtist) return null;
@@ -28,19 +27,12 @@ export function ProBadge({ userId, size = "md", showVerified = true, className =
 
   return (
     <div className={`inline-flex items-center gap-1.5 ${className}`}>
-      {showVerified && (
-        <Badge className="bg-blue-600/90 text-white flex items-center gap-1 font-semibold border border-blue-300/40">
-          <Verified size={iconSizes[size]} />
-          <span className={sizeClasses[size]}>Verified</span>
-        </Badge>
-      )}
-      
       <span className="relative isolate inline-block">
         <Badge 
           className={`bg-gradient-to-r from-yellow-400 to-orange-500 text-yellow-900 flex items-center gap-1 font-semibold border border-yellow-100/40 overflow-hidden relative ${sizeClasses[size]}`}
         >
           <Crown size={iconSizes[size]} />
-          Pro
+          Premium
           <span
             className="pointer-events-none absolute left-0 top-0 h-full w-full z-10"
             aria-hidden="true"

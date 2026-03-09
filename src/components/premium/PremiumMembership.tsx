@@ -87,10 +87,6 @@ const PremiumMembership = () => {
     label: "Unlimited Services",
     description: "Offer any number of services"
   }, {
-    icon: Shield,
-    label: "Verified Badge",
-    description: "Build trust with clients"
-  }, {
     icon: Zap,
     label: "0% Platform Fee",
     description: "Keep 100% of earnings"

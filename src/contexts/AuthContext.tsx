@@ -1,13 +1,29 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+
+interface UserProfile {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  role: string | null;
+  cover_url: string | null;
+  tags: string[] | null;
+  location: string | null;
+  website: string | null;
+}
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  subscription: any | null;
+  isPremium: boolean;
+  profile: UserProfile | null;
+  refreshProfile: () => Promise<void>;
   signUp: (email: string, password: string, userData: { full_name: string; role: string; country?: string }) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
@@ -28,20 +44,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [subscription, setSubscription] = useState<any | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const { toast } = useToast();
+  const isPremium = subscription?.is_active === true && subscription?.subscription_tier === 'pro';
 
+  // Fetch the current user's profile from the DB
+  const refreshProfile = useCallback(async (userId?: string) => {
+    const uid = userId;
+    if (!uid) return;
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url, bio, role, cover_url, tags, location, website')
+        .eq('id', uid)
+        .maybeSingle();
+      if (data) setProfile(data as UserProfile);
+    } catch { /* silent */ }
+  }, []);
   useEffect(() => {
+    // Fetch initial subscription
+    const fetchSubscription = async (userId: string) => {
+      try {
+        const { data, error } = await supabase
+          .from('subscribers')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('is_active', true)
+          .maybeSingle();
+        
+        if (error) {
+          return;
+        }
+        setSubscription(data);
+      } catch (err) {
+        // Silent failure for background subscription fetch
+      }
+    };
+
     // Set up auth state listener - MUST be synchronous to avoid deadlocks
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         // Only synchronous state updates here
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
         
+        if (session?.user) {
+          fetchSubscription(session.user.id);
+          refreshProfile(session.user.id);
+        } else {
+          setSubscription(null);
+          setProfile(null);
+        }
+        
         if (event === 'SIGNED_IN' && session?.user) {
-          console.log('User signed in:', session.user.email);
-          
           // Check if there's a pending signup role (from Google OAuth signup)
           const pendingRole = localStorage.getItem('pendingSignupRole');
           if (pendingRole) {
@@ -54,7 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }, 0);
           }
         } else if (event === 'SIGNED_OUT') {
-          console.log('User signed out');
+          // signed out — no logging in production
         }
       }
     );
@@ -64,10 +121,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      if (session?.user) {
+        fetchSubscription(session.user.id);
+        refreshProfile(session.user.id);
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => authSubscription.unsubscribe();
   }, []);
+
+  // Real-time subscription for subscription changes
+  useEffect(() => {
+    if (!user) return;
+
+    const subChannel = supabase
+      .channel(`user-subscription-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'subscribers',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          if (payload.new && (payload.new as any).is_active) {
+            setSubscription(payload.new);
+          } else {
+            setSubscription(null);
+          }
+        }
+      )
+      .subscribe();
+
+    // Real-time profile sync: avatar/bio/name updated in Settings propagates everywhere
+    const profileChannel = supabase
+      .channel(`user-profile-sync-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` },
+        () => refreshProfile(user.id)
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subChannel);
+      supabase.removeChannel(profileChannel);
+    };
+  }, [user, refreshProfile]);
 
   // Handle Google signup profile creation - extracted to avoid async in callback
   const handleGoogleSignupProfile = async (user: User, pendingRole: string) => {
@@ -91,11 +192,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
           
         if (profileError) {
-          console.error('Error creating profile for Google user:', profileError);
+          // Silent error for background profile creation
         }
       }
     } catch (error) {
-      console.error('Error in handleGoogleSignupProfile:', error);
+      // Silent error
     }
   };
 
@@ -114,7 +215,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        console.error('Signup error:', error);
         toast({
           title: "Sign up failed",
           description: error.message,
@@ -130,7 +230,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { error: null };
     } catch (error: any) {
-      console.error('Signup error:', error);
       return { error };
     } finally {
       setLoading(false);
@@ -207,7 +306,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { error: null };
     } catch (error: any) {
-      console.error('Signout error:', error);
       return { error };
     } finally {
       setLoading(false);
@@ -225,7 +323,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        console.error('Google signin error:', error);
         toast({
           title: "Google sign in failed",
           description: error.message,
@@ -236,7 +333,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { error: null };
     } catch (error: any) {
-      console.error('Google signin error:', error);
       return { error };
     } finally {
       setLoading(false);
@@ -247,6 +343,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     session,
     loading,
+    subscription,
+    isPremium,
+    profile,
+    refreshProfile,
     signUp,
     signIn,
     signOut,

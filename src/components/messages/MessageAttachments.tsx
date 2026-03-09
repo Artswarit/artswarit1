@@ -16,10 +16,11 @@ interface AttachmentInputProps {
   disabled?: boolean;
 }
 
-export const AttachmentInput: React.FC<AttachmentInputProps> = ({ onAttach, disabled }) => {
+export const AttachmentInput = ({ onAttach, disabled }: AttachmentInputProps) => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -36,16 +37,24 @@ export const AttachmentInput: React.FC<AttachmentInputProps> = ({ onAttach, disa
     }
 
     setUploading(true);
+    abortControllerRef.current = new AbortController();
+
     try {
       const fileExt = file.name.split(".").pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `message-attachments/${fileName}`;
 
+      const uploadOptions: any = {
+        signal: abortControllerRef.current?.signal
+      };
+
       const { error: uploadError } = await supabase.storage
         .from("media")
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
+        .upload(filePath, file, uploadOptions);
+      if (uploadError) {
+        if (uploadError.name === 'AbortError') return;
+        throw uploadError;
+      }
 
       const { data: urlData } = supabase.storage
         .from("media")
@@ -63,7 +72,8 @@ export const AttachmentInput: React.FC<AttachmentInputProps> = ({ onAttach, disa
         title: "File attached",
         description: `${file.name} is ready to send.`,
       });
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'AbortError') return;
       console.error("Error uploading file:", error);
       toast({
         variant: "destructive",
@@ -77,6 +87,12 @@ export const AttachmentInput: React.FC<AttachmentInputProps> = ({ onAttach, disa
       }
     }
   };
+
+  React.useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
   return (
     <>
@@ -94,7 +110,7 @@ export const AttachmentInput: React.FC<AttachmentInputProps> = ({ onAttach, disa
         size="icon"
         onClick={() => fileInputRef.current?.click()}
         disabled={disabled || uploading}
-        className="shrink-0"
+        className="shrink-0 h-11 w-11 sm:h-12 sm:w-12 rounded-xl"
       >
         {uploading ? (
           <Loader2 className="h-5 w-5 animate-spin" />
@@ -115,8 +131,10 @@ export const AttachmentPreview: React.FC<AttachmentPreviewProps> = ({
   attachment,
   onRemove,
 }) => {
-  const isImage = attachment.type.startsWith("image/");
+  if (!attachment) return null;
+  const isImage = attachment.type?.startsWith("image/");
   const formatFileSize = (bytes: number) => {
+    if (typeof bytes !== 'number' || isNaN(bytes)) return '0 B';
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -126,8 +144,8 @@ export const AttachmentPreview: React.FC<AttachmentPreviewProps> = ({
     <div className="relative inline-flex items-center gap-2 p-2 bg-muted rounded-lg max-w-[200px]">
       {isImage ? (
         <img
-          src={attachment.url}
-          alt={attachment.name}
+          src={attachment.url || ""}
+          alt={attachment.name || "Attachment"}
           className="h-10 w-10 object-cover rounded"
         />
       ) : (
@@ -136,17 +154,17 @@ export const AttachmentPreview: React.FC<AttachmentPreviewProps> = ({
         </div>
       )}
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium truncate">{attachment.name}</p>
-        <p className="text-xs text-muted-foreground">{formatFileSize(attachment.size)}</p>
+        <p className="text-xs font-medium truncate">{attachment.name || "Unnamed file"}</p>
+        <p className="text-xs text-muted-foreground">{formatFileSize(attachment.size || 0)}</p>
       </div>
       <Button
         type="button"
         variant="ghost"
         size="icon"
-        className="h-6 w-6 absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
+        className="h-8 w-8 absolute -top-3 -right-3 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90 shadow-md border-2 border-background"
         onClick={onRemove}
       >
-        <X className="h-3 w-3" />
+        <X className="h-4 w-4" />
       </Button>
     </div>
   );
@@ -157,36 +175,38 @@ interface AttachmentDisplayProps {
   isOwnMessage?: boolean;
 }
 
-export const AttachmentDisplay: React.FC<AttachmentDisplayProps> = ({
+export const AttachmentDisplay = ({
   attachments,
   isOwnMessage = false,
-}) => {
+}: AttachmentDisplayProps) => {
   if (!attachments || attachments.length === 0) return null;
 
   const formatFileSize = (bytes: number) => {
+    if (typeof bytes !== 'number' || isNaN(bytes)) return '0 B';
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   return (
-    <div className="space-y-2 mt-2">
+    <div className="flex flex-col gap-2 mt-2">
       {attachments.map((attachment, index) => {
+        if (!attachment) return null;
         const isImage = attachment.type?.startsWith("image/");
 
         if (isImage) {
           return (
             <a
               key={index}
-              href={attachment.url}
+              href={attachment.url || "#"}
               target="_blank"
               rel="noopener noreferrer"
               className="block"
             >
               <img
-                src={attachment.url}
-                alt={attachment.name}
-                className="max-w-[200px] max-h-[200px] rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                src={attachment.url || ""}
+                alt={attachment.name || "Image attachment"}
+                className="max-w-[280px] sm:max-w-[400px] max-h-[300px] sm:max-h-[500px] rounded-2xl object-cover cursor-pointer hover:opacity-90 transition-opacity shadow-sm border border-border/10"
               />
             </a>
           );
@@ -195,21 +215,23 @@ export const AttachmentDisplay: React.FC<AttachmentDisplayProps> = ({
         return (
           <a
             key={index}
-            href={attachment.url}
+            href={attachment.url || "#"}
             target="_blank"
             rel="noopener noreferrer"
-            className={`flex items-center gap-2 p-2 rounded-lg transition-colors ${
+            className={`flex items-center gap-3 p-3 rounded-2xl transition-all border border-border/10 max-w-[300px] sm:max-w-[400px] ${
               isOwnMessage
-                ? "bg-primary-foreground/10 hover:bg-primary-foreground/20"
+                ? "bg-primary-foreground/10 hover:bg-primary-foreground/20 text-primary-foreground"
                 : "bg-background hover:bg-muted"
             }`}
           >
-            <FileText className="h-5 w-5 shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{attachment.name}</p>
-              <p className="text-xs opacity-70">{formatFileSize(attachment.size)}</p>
+            <div className={`p-2 rounded-xl ${isOwnMessage ? 'bg-primary-foreground/10' : 'bg-primary/5 text-primary'}`}>
+              <FileText className="h-5 w-5 shrink-0" />
             </div>
-            <Download className="h-4 w-4 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold truncate">{attachment.name || "Unnamed file"}</p>
+              <p className="text-[10px] opacity-70 font-medium uppercase tracking-widest">{formatFileSize(attachment.size || 0)}</p>
+            </div>
+            <Download className="h-4 w-4 shrink-0 opacity-50" />
           </a>
         );
       })}

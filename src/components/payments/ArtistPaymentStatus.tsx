@@ -79,12 +79,12 @@ export function ArtistPaymentStatus() {
                 <span className="text-muted-foreground">Country</span>
                 <span>{account?.country || 'N/A'}</span>
               </div>
-              <Button variant="outline" className="w-full mt-4" onClick={() => setDialogOpen(true)}>
+              <Button variant="outline" className="w-full mt-4 h-12 sm:h-10 min-h-[48px] sm:min-h-[40px]" onClick={() => setDialogOpen(true)}>
                 Update Details
               </Button>
             </div>
           ) : (
-            <Button className="w-full" onClick={() => setDialogOpen(true)}>
+            <Button className="w-full h-12 sm:h-11 min-h-[48px] sm:min-h-[44px]" onClick={() => setDialogOpen(true)}>
               Enable Payments
             </Button>
           )}

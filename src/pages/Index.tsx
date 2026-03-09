@@ -10,6 +10,7 @@ import AnimatedHeroSlider from "@/components/AnimatedHeroSlider";
 import ArtworkCarousel from "@/components/ArtworkCarousel";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useCategoryCounts } from "@/hooks/useCategoryCounts";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Mock data - In a real application, this would come from an API
 const allArtists = [{
@@ -17,8 +18,6 @@ const allArtists = [{
   name: "Alex Rivera",
   category: "Musician",
   imageUrl: "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
-  verified: true,
-  premium: true,
   followers: 12543,
   likes: 4580,
   views: 28750,
@@ -28,8 +27,6 @@ const allArtists = [{
   name: "Maya Johnson",
   category: "Writer",
   imageUrl: "https://images.unsplash.com/photo-1544717305-2782549b5136?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
-  verified: true,
-  premium: false,
   followers: 8765,
   likes: 3240,
   views: 19500,
@@ -39,8 +36,6 @@ const allArtists = [{
   name: "Jordan Smith",
   category: "Rapper",
   imageUrl: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
-  verified: false,
-  premium: true,
   followers: 6421,
   likes: 2870,
   views: 16200,
@@ -50,8 +45,6 @@ const allArtists = [{
   name: "Taylor Reed",
   category: "Editor",
   imageUrl: "https://images.unsplash.com/photo-1573496358961-3c82861ab8f4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=688&q=80",
-  verified: false,
-  premium: false,
   followers: 3827,
   likes: 1950,
   views: 9800,
@@ -61,8 +54,6 @@ const allArtists = [{
   name: "Elena Rodriguez",
   category: "Photographer",
   imageUrl: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1171&q=80",
-  verified: true,
-  premium: true,
   followers: 11243,
   likes: 4120,
   views: 24600,
@@ -72,8 +63,6 @@ const allArtists = [{
   name: "Marcus Bell",
   category: "Illustrator",
   imageUrl: "https://images.unsplash.com/photo-1610088441520-4352457e7095?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
-  verified: true,
-  premium: false,
   followers: 9876,
   likes: 3680,
   views: 21300,
@@ -83,8 +72,6 @@ const allArtists = [{
   name: "Sarah Chen",
   category: "Voice Artist",
   imageUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
-  verified: false,
-  premium: true,
   followers: 7650,
   likes: 3050,
   views: 18200,
@@ -94,8 +81,6 @@ const allArtists = [{
   name: "Jamal Wilson",
   category: "Animator",
   imageUrl: "https://images.unsplash.com/photo-1463453091185-61582044d556?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
-  verified: true,
-  premium: false,
   followers: 5430,
   likes: 2340,
   views: 13800,
@@ -105,8 +90,6 @@ const allArtists = [{
   name: "Lisa Zhang",
   category: "Musician",
   imageUrl: "https://images.unsplash.com/photo-1494790108755-2616c4e7e01c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
-  verified: true,
-  premium: true,
   followers: 8900,
   likes: 2100,
   views: 15400,
@@ -116,8 +99,6 @@ const allArtists = [{
   name: "David Park",
   category: "Writer",
   imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
-  verified: false,
-  premium: false,
   followers: 4200,
   likes: 1800,
   views: 9200,
@@ -127,8 +108,6 @@ const allArtists = [{
   name: "Maria Santos",
   category: "Rapper",
   imageUrl: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
-  verified: true,
-  premium: false,
   followers: 7800,
   likes: 3400,
   views: 18600,
@@ -151,7 +130,7 @@ const testimonials = [{
 }];
 const Index = () => {
   const [featuredArtists, setFeaturedArtists] = useState([]);
-  const { getCount } = useCategoryCounts();
+  const { getCount, loading: categoriesLoading } = useCategoryCounts();
 
   // Base categories with icons and slugs
   const baseCategories = [{
@@ -266,9 +245,16 @@ const Index = () => {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {categories.slice(0, 6).map((category, index) => (
-              <CategoryCard key={index} {...category} />
-            ))}
+            {categoriesLoading ? (
+              // Skeleton loading state for categories
+              Array.from({ length: 6 }).map((_, index) => (
+                <Skeleton key={index} className="h-32 w-full rounded-xl" />
+              ))
+            ) : (
+              categories.slice(0, 6).map((category, index) => (
+                <CategoryCard key={index} {...category} />
+              ))
+            )}
           </div>
           <div className="text-center mt-8">
             <p className="text-base sm:text-lg italic text-muted-foreground mb-4 px-4">

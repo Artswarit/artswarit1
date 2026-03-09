@@ -11,13 +11,13 @@ const TagDisplay: React.FC<TagDisplayProps> = ({ tags, onTagClick }) => {
   return (
     <div className="flex flex-wrap gap-2 my-2">
       {tags.map((tag) => (
-        <button
-          className="bg-gradient-to-r from-purple-200 to-blue-100 text-purple-800 px-3 py-1 rounded-full text-xs shadow hover:bg-purple-300/40 transition"
+        <span
+          className="bg-gradient-to-r from-purple-200 to-blue-100 text-purple-800 px-3 py-1 rounded-full text-xs shadow"
           key={tag}
           onClick={() => onTagClick?.(tag)}
         >
           {tag}
-        </button>
+        </span>
       ))}
     </div>
   );

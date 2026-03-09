@@ -1315,7 +1315,7 @@ export type Database = {
           project_id: string
           revision_count: number | null
           sort_order: number
-          status: string
+          status: Database["public"]["Enums"]["milestone_status"]
           submitted_at: string | null
           title: string
           updated_at: string
@@ -1338,7 +1338,7 @@ export type Database = {
           project_id: string
           revision_count?: number | null
           sort_order?: number
-          status?: string
+          status?: Database["public"]["Enums"]["milestone_status"]
           submitted_at?: string | null
           title: string
           updated_at?: string
@@ -1361,7 +1361,7 @@ export type Database = {
           project_id?: string
           revision_count?: number | null
           sort_order?: number
-          status?: string
+          status?: Database["public"]["Enums"]["milestone_status"]
           submitted_at?: string | null
           title?: string
           updated_at?: string
@@ -2544,13 +2544,13 @@ export type Database = {
         | "resolved_cancelled"
       media_type_enum: "image" | "video" | "audio" | "3d_model"
       milestone_status:
-        | "pending"
-        | "in_progress"
-        | "submitted"
-        | "revision_requested"
-        | "approved"
-        | "paid"
-        | "disputed"
+        | "LOCKED"
+        | "WAITING_FUNDS"
+        | "ACTIVE"
+        | "REVIEW_PENDING"
+        | "REVISION_REQUESTED"
+        | "COMPLETED"
+        | "DISPUTED"
       notification_type: "success" | "error" | "info" | "warning"
       project_status: "pending" | "accepted" | "completed" | "cancelled"
       subscription_tier: "monthly" | "yearly" | "lifetime"

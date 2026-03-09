@@ -34,47 +34,47 @@ const ArtworkActions = ({ artwork, onUpdate, onDelete }: ArtworkActionsProps) =>
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-white/80">
-            <MoreHorizontal className="h-4 w-4" />
+          <Button variant="ghost" size="icon" className="h-12 w-12 hover:bg-white/80 transition-all active:scale-95 rounded-xl">
+            <MoreHorizontal className="h-6 w-6" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem onClick={() => setIsEditModalOpen(true)} className="cursor-pointer">
-            <Edit className="h-4 w-4 mr-2" />
-            Edit Details & Pricing
+        <DropdownMenuContent align="end" className="w-64 p-2 rounded-[1.5rem] border-primary/10 shadow-2xl backdrop-blur-xl bg-background/95 animate-in fade-in zoom-in-95 duration-200">
+          <DropdownMenuItem onClick={() => setIsEditModalOpen(true)} className="cursor-pointer min-h-[48px] sm:min-h-[44px] gap-3 px-4 rounded-xl hover:bg-primary/5 focus:bg-primary/5 transition-colors">
+            <Edit className="h-5 w-5 text-primary/70" />
+            <span className="font-bold text-sm">Edit Details & Pricing</span>
           </DropdownMenuItem>
           
-          <DropdownMenuItem onClick={handlePinToggle} className="cursor-pointer">
+          <DropdownMenuItem onClick={handlePinToggle} className="cursor-pointer min-h-[48px] sm:min-h-[44px] gap-3 px-4 rounded-xl hover:bg-primary/5 focus:bg-primary/5 transition-colors">
             {artwork.is_pinned ? (
               <>
-                <PinOff className="h-4 w-4 mr-2" />
-                Unpin from Profile
+                <PinOff className="h-5 w-5 text-primary/70" />
+                <span className="font-bold text-sm">Unpin from Profile</span>
               </>
             ) : (
               <>
-                <Pin className="h-4 w-4 mr-2" />
-                Pin to Profile
+                <Pin className="h-5 w-5 text-primary/70" />
+                <span className="font-bold text-sm">Pin to Profile</span>
               </>
             )}
           </DropdownMenuItem>
 
-          <DropdownMenuItem onClick={handleSaleToggle} className="cursor-pointer">
-            <DollarSign className="h-4 w-4 mr-2" />
-            {artwork.is_for_sale ? "Remove from Sale" : "Mark for Sale"}
+          <DropdownMenuItem onClick={handleSaleToggle} className="cursor-pointer min-h-[48px] sm:min-h-[44px] gap-3 px-4 rounded-xl hover:bg-primary/5 focus:bg-primary/5 transition-colors">
+            <DollarSign className="h-5 w-5 text-primary/70" />
+            <span className="font-bold text-sm">{artwork.is_for_sale ? "Remove from Sale" : "Mark for Sale"}</span>
           </DropdownMenuItem>
 
-          <DropdownMenuItem className="cursor-pointer">
-            <Eye className="h-4 w-4 mr-2" />
-            View Public Page
+          <DropdownMenuItem className="cursor-pointer min-h-[48px] sm:min-h-[44px] gap-3 px-4 rounded-xl hover:bg-primary/5 focus:bg-primary/5 transition-colors">
+            <Eye className="h-5 w-5 text-primary/70" />
+            <span className="font-bold text-sm">View Public Page</span>
           </DropdownMenuItem>
 
           {onDelete && (
             <DropdownMenuItem 
               onClick={() => onDelete(artwork.id)}
-              className="text-red-600 cursor-pointer"
+              className="text-destructive cursor-pointer min-h-[48px] sm:min-h-[44px] gap-3 px-4 rounded-xl hover:bg-destructive/5 focus:bg-destructive/5 transition-colors"
             >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
+              <Trash2 className="h-5 w-5" />
+              <span className="font-bold text-sm">Delete</span>
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>

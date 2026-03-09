@@ -5,6 +5,7 @@ import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 serve(async (req) => {
@@ -59,7 +60,7 @@ serve(async (req) => {
       )
     }
 
-    console.log('Verified webhook event:', event.type)
+    // console.log('Verified webhook event:', event.type)
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session

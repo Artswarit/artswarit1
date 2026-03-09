@@ -4,6 +4,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 const GOOGLE_GEMINI_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY");
@@ -87,10 +88,16 @@ function validateInput(input: unknown): ValidatedInput {
   return { messages, userRole, location };
 }
 
-async function fetchGemini(payload: any) {
-  const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_GEMINI_API_KEY}`;
+type GeminiContent = { role: string; parts: { text: string }[] };
+type GeminiPayload = {
+  contents: GeminiContent[];
+  system_instruction?: { parts: { text: string }[] };
+};
+
+async function fetchGemini(payload: GeminiPayload) {
+  const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_GEMINI_API_KEY}`;
   
-  console.log("[edge] Sending request to Gemini");
+  // console.log("[edge] Sending request to Gemini");
   const geminiRes = await fetch(GEMINI_API_URL, {
     method: "POST",
     headers: {
@@ -99,7 +106,7 @@ async function fetchGemini(payload: any) {
     body: JSON.stringify(payload),
   });
   const data = await geminiRes.json();
-  console.log("[edge] Gemini response status:", geminiRes.status);
+  // console.log("[edge] Gemini response status:", geminiRes.status);
   return { status: geminiRes.status, data };
 }
 
@@ -157,7 +164,6 @@ serve(async (req) => {
     // Take only the part of conversation starting from the first user.
     const conversationMessages = messages.slice(firstUserMessageIndex);
 
-    // Merge consecutive messages from the same role.
     const geminiContents: { role: string, parts: { text: string }[] }[] = [];
     if (conversationMessages.length > 0) {
         let lastContent = {
@@ -176,27 +182,46 @@ serve(async (req) => {
         }
         geminiContents.push(lastContent);
     }
-    
-    const payload = {
+
+    const payload: GeminiPayload = {
       contents: geminiContents,
-      systemInstruction: {
+      system_instruction: {
         parts: [{ text: fullSystemPrompt }]
-      },
-      generationConfig: {
-        temperature: 0.5,
-        maxOutputTokens: 300,
       },
     };
 
-    // Issue the request (with one fallback retry)
     let geminiResult = await fetchGemini(payload);
     if (geminiResult.status !== 200) {
       console.warn("[edge] Gemini primary call failed, retrying once...");
       geminiResult = await fetchGemini(payload);
     }
-    const { data } = geminiResult;
 
-    const answer = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    const { status, data } = geminiResult;
+
+    if (status !== 200) {
+      const errorMessage =
+        (data &&
+          typeof data === "object" &&
+          "error" in data &&
+          (data as any).error &&
+          typeof (data as any).error.message === "string" &&
+          (data as any).error.message) ||
+        "Assistant service is currently unavailable. Please try again later.";
+
+      console.error("[edge] Gemini error status:", status, "body:", JSON.stringify(data));
+
+      return new Response(
+        JSON.stringify({ error: errorMessage }),
+        { status: 502, headers: corsHeaders }
+      );
+    }
+
+    const answer =
+      data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ??
+      (Array.isArray(data?.candidates?.[0]?.content)
+        ? data.candidates[0].content[0]?.parts?.[0]?.text?.trim()
+        : undefined);
+
     if (!answer) {
       console.error("[edge] No answer returned from Gemini");
       return new Response(
@@ -209,4 +234,4 @@ serve(async (req) => {
     console.error("[edge] Caught error:", e);
     return new Response(JSON.stringify({ error: "An unexpected error occurred. Please try again." }), { status: 500, headers: corsHeaders });
   }
-});
+}, { port: 8787 });

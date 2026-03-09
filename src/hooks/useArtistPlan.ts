@@ -18,7 +18,7 @@ export const PLANS = {
     ]
   },
   pro: {
-    name: "Pro Artist",
+    name: "Premium Artist",
     price: 499, // ₹499/month
     platformFee: 0, // 0%
     portfolioLimit: Infinity,
@@ -27,7 +27,7 @@ export const PLANS = {
       "0% platform fee (keep 100%)",
       "Unlimited portfolio",
       "Unlimited services",
-      "Verified badge",
+      "Premium badge",
       "Priority ranking",
       "Featured rotation",
       "Trust-first experience"
@@ -108,18 +108,15 @@ export const useArtistPlan = (userId: string | undefined | null) => {
         startedAt: null
       });
     }
-    
     setLoading(false);
   }, [userId]);
 
   useEffect(() => {
     fetchPlan();
-  }, [fetchPlan]);
 
-  // Real-time subscription to plan changes
-  useEffect(() => {
     if (!userId) return;
 
+    // Real-time subscription for plan changes
     const channel = supabase
       .channel(`artist-plan-${userId}`)
       .on(
@@ -130,8 +127,8 @@ export const useArtistPlan = (userId: string | undefined | null) => {
           table: 'subscribers',
           filter: `user_id=eq.${userId}`
         },
-        (payload) => {
-          console.log('Plan subscription update:', payload);
+        () => {
+          console.log('Plan update received');
           fetchPlan();
         }
       )

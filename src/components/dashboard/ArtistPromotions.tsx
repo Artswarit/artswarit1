@@ -63,11 +63,13 @@ const ArtistPromotions = ({ isLoading = false }: ArtistPromotionsProps) => {
         <Button>Create New</Button>
       </div>
       <Tabs defaultValue="active" className="w-full">
-        <TabsList>
-          <TabsTrigger value="active">Active</TabsTrigger>
-          <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
-          <TabsTrigger value="ended">Ended</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+          <TabsList className="w-full h-auto min-h-[52px] sm:min-h-0 p-1 bg-muted/50 rounded-lg flex items-stretch gap-1">
+            <TabsTrigger value="active" className="flex-1 min-w-[80px] py-2 sm:py-2.5 px-3 rounded-md transition-all">Active</TabsTrigger>
+            <TabsTrigger value="scheduled" className="flex-1 min-w-[80px] py-2 sm:py-2.5 px-3 rounded-md transition-all">Scheduled</TabsTrigger>
+            <TabsTrigger value="ended" className="flex-1 min-w-[80px] py-2 sm:py-2.5 px-3 rounded-md transition-all">Ended</TabsTrigger>
+          </TabsList>
+        </div>
         <TabsContent value="active">
           {promotions
             .filter((promo) => promo.status === "active")

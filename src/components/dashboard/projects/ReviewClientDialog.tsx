@@ -126,10 +126,10 @@ const ReviewClientDialog: React.FC<ReviewClientDialogProps> = ({
             onClick={() => setRating(star)}
             onMouseEnter={() => setHoverRating(star)}
             onMouseLeave={() => setHoverRating(0)}
-            className="focus:outline-none transition-transform hover:scale-110"
+            className="focus:outline-none transition-transform hover:scale-110 p-1.5 sm:p-1"
           >
             <Star
-              className={`w-8 h-8 transition-colors ${
+              className={`w-10 h-10 sm:w-8 sm:h-8 transition-colors ${
                 star <= (hoverRating || rating)
                   ? "fill-yellow-400 text-yellow-400"
                   : "text-muted-foreground"
@@ -145,78 +145,85 @@ const ReviewClientDialog: React.FC<ReviewClientDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
+      <DialogContent className="max-w-md w-[92vw] sm:w-full p-6 sm:p-8 rounded-[2rem] border-none shadow-2xl bg-background/95 backdrop-blur-xl overflow-hidden">
+        <DialogHeader className="mb-6 space-y-2">
+          <DialogTitle className="text-2xl font-black tracking-tight">
             {existingReview ? "Edit Review" : "Review Client"}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm sm:text-base font-medium text-muted-foreground/80 leading-relaxed">
             Share your experience working with this client on "{project.title}"
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-6 py-2">
           {/* Client Info */}
-          <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-            <Avatar className="h-12 w-12">
+          <div className="flex items-center gap-4 p-4 bg-muted/30 backdrop-blur-md rounded-2xl border border-border/10">
+            <Avatar className="h-14 w-14 border-2 border-background shadow-lg">
               <AvatarImage src={project.clientAvatar} />
-              <AvatarFallback>{initials}</AvatarFallback>
+              <AvatarFallback className="bg-primary/10 text-primary font-black text-lg">{initials}</AvatarFallback>
             </Avatar>
-            <div>
-              <p className="font-medium">{project.client || "Client"}</p>
-              <p className="text-sm text-muted-foreground">for {project.title}</p>
+            <div className="space-y-0.5">
+              <p className="font-black text-foreground/90">{project.client || "Client"}</p>
+              <p className="text-xs font-bold text-muted-foreground/60 uppercase tracking-widest">Project: {project.title}</p>
             </div>
           </div>
 
           {/* Rating */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Rating *</label>
-            <div className="flex justify-center py-2">{renderStars()}</div>
-            <p className="text-xs text-center text-muted-foreground">
-              {rating === 0 && "Click to rate"}
-              {rating === 1 && "Poor"}
-              {rating === 2 && "Fair"}
-              {rating === 3 && "Good"}
-              {rating === 4 && "Very Good"}
-              {rating === 5 && "Excellent"}
-            </p>
+          <div className="space-y-3">
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">Overall Rating *</label>
+            <div className="flex flex-col items-center gap-2 p-4 bg-muted/20 rounded-2xl border border-border/5">
+              <div className="flex justify-center py-2">{renderStars()}</div>
+              <p className="text-xs font-black uppercase tracking-widest text-primary/80">
+                {rating === 0 && "Select a rating"}
+                {rating === 1 && "Poor"}
+                {rating === 2 && "Fair"}
+                {rating === 3 && "Good"}
+                {rating === 4 && "Very Good"}
+                {rating === 5 && "Excellent"}
+              </p>
+            </div>
           </div>
 
           {/* Review Text */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Review (Optional)</label>
-            <Textarea
-              value={reviewText}
-              onChange={(e) => setReviewText(e.target.value)}
-              placeholder="Share your experience working with this client..."
-              rows={4}
-              maxLength={500}
-            />
-            <p className="text-xs text-muted-foreground text-right">
-              {reviewText.length}/500
-            </p>
+          <div className="space-y-3">
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">Your Experience (Optional)</label>
+            <div className="relative">
+              <Textarea
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+                placeholder="Share your experience working with this client..."
+                className="min-h-[120px] bg-muted/30 border-border/40 focus:ring-primary/20 rounded-2xl font-medium p-4 resize-none leading-relaxed placeholder:text-muted-foreground/40"
+                maxLength={500}
+              />
+              <div className="absolute bottom-3 right-4 px-2 py-1 rounded-lg bg-background/50 backdrop-blur-sm border border-border/10">
+                <p className="text-[10px] font-black text-muted-foreground/60">
+                  {reviewText.length}/500
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex flex-col sm:flex-row gap-3 mt-8">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
+            className="h-14 flex-1 font-black text-[10px] uppercase tracking-widest rounded-2xl border-border/60 hover:bg-muted/50 transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting || rating === 0}>
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="h-14 flex-1 font-black text-[10px] uppercase tracking-widest rounded-2xl bg-primary text-primary-foreground shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+          >
             {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Submitting...
-              </>
-            ) : existingReview ? (
-              "Update Review"
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
             ) : (
-              "Submit Review"
+              <Star className="h-4 w-4 mr-2" />
             )}
+            {existingReview ? "Update Review" : "Submit Review"}
           </Button>
         </DialogFooter>
       </DialogContent>

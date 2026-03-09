@@ -30,7 +30,6 @@ const FeatureAudit = () => {
     { name: 'Music Upload & Streaming', description: 'Audio content upload and playback', status: 'partial', category: 'content', priority: 'high', icon: Music, location: 'Artwork Upload' },
     { name: 'Video Upload & Streaming', description: 'Video content upload and playback', status: 'partial', category: 'content', priority: 'high', icon: Video, location: 'Artwork Upload' },
     { name: 'Content Approval System', description: 'Moderation workflow for uploaded content', status: 'implemented', category: 'content', priority: 'high', icon: CheckCircle, location: 'Admin Dashboard' },
-    { name: 'AI Content Detection', description: 'Detect AI-generated content automatically', status: 'implemented', category: 'content', priority: 'medium', icon: Shield, location: 'Artwork Upload' },
     
     // Discovery & Search
     { name: 'Artist Discovery', description: 'Browse and discover artists by category', status: 'implemented', category: 'discovery', priority: 'high', icon: Search, location: 'Explore Artists' },

@@ -1,9 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.8'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 serve(async (req) => {
@@ -16,23 +17,21 @@ serve(async (req) => {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
+      { auth: { autoRefreshToken: false, persistSession: false } }
     )
 
     // Get the authorization header from the request
-    const authHeader = req.headers.get('Authorization')!
-    supabase.auth.setSession({
-      access_token: authHeader.replace('Bearer ', ''),
-      refresh_token: '',
-    })
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    const token = authHeader.replace('Bearer ', '')
 
     // Get user from auth token
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token)
     
     if (userError || !user) {
       console.error('Authentication error:', userError)
@@ -91,7 +90,13 @@ serve(async (req) => {
     }
 
     // Update user profile
-    const updateData: any = {}
+    type UpdatePayload = {
+      name?: string;
+      bio?: string;
+      profile_pic_url?: string;
+      cover_photo_url?: string;
+    };
+    const updateData: UpdatePayload = {}
     if (name) updateData.name = name
     if (bio !== undefined) updateData.bio = bio
     if (profilePicUrl) updateData.profile_pic_url = profilePicUrl

@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Edit, Save, Upload, Camera, Plus, X, MapPin, Globe, Briefcase, Clock, DollarSign, Instagram, Twitter, Linkedin, Youtube, Flag } from "lucide-react";
+import { Edit, Save, Upload, Camera, Plus, X, MapPin, Globe, Briefcase, Clock, DollarSign, Instagram, Twitter, Linkedin, Youtube, Flag, Crown, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useAuth } from "@/contexts/AuthContext";
 type UploadType = "avatar" | "cover";
 interface ArtistProfileProps {
   isLoading: boolean;
@@ -32,6 +33,7 @@ const ArtistProfile = ({
     userCurrencySymbol,
     formatPrice
   } = useCurrency();
+  const { isPremium } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -162,7 +164,11 @@ const ArtistProfile = ({
       tags: prev.tags.filter(tag => tag !== tagToRemove)
     }));
   }, []);
-  const saveProfile = useCallback(async () => {
+  const saveProfile = useCallback(async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     setIsSaving(true);
 
     // Find the currency for the selected country
@@ -184,7 +190,11 @@ const ArtistProfile = ({
     setIsSaving(false);
     setIsEditing(false);
   }, [editForm, updateProfile, countries]);
-  const toggleEdit = useCallback(() => {
+  const toggleEdit = useCallback((e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (!isEditing && profile) {
       const socialLinks = profile.social_links || {};
       setEditForm({
@@ -220,13 +230,13 @@ const ArtistProfile = ({
       </div>;
   }
   return <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Artist Profile</h2>
-        {isEditing ? <Button onClick={saveProfile} disabled={isSaving} className="flex items-center gap-2">
-            {isSaving ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> : <Save className="h-4 w-4" />}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
+        <h2 className="text-xl sm:text-2xl font-black tracking-tight uppercase">Artist Profile</h2>
+        {isEditing ? <Button onClick={saveProfile} disabled={isSaving} className="w-full sm:w-auto flex items-center justify-center gap-2 h-12 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all active:scale-95 min-h-[48px]">
+            {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
             Save All Changes
-          </Button> : <Button onClick={toggleEdit} className="flex items-center gap-2">
-            <Edit className="h-4 w-4" />
+          </Button> : <Button onClick={toggleEdit} className="w-full sm:w-auto flex items-center justify-center gap-2 h-12 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all active:scale-95 min-h-[48px]">
+            <Edit className="h-5 w-5" />
             Edit Profile
           </Button>}
       </div>
@@ -234,24 +244,29 @@ const ArtistProfile = ({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Image Card */}
         <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Image</CardTitle>
-              <CardDescription>Your public profile photo</CardDescription>
+          <Card className="border-border/50 shadow-sm overflow-hidden rounded-3xl">
+            <CardHeader className="bg-muted/30">
+              <CardTitle className="text-lg font-black uppercase tracking-tight">Profile Image</CardTitle>
+              <CardDescription className="text-xs font-medium">Your public profile photo</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="relative mx-auto w-40 h-40 rounded-full overflow-hidden border group">
-                <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
-                  {isUploadingAvatar ? <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div> : <Camera className="h-8 w-8 text-white" />}
+            <CardContent className="space-y-4 pt-6">
+              <div className="relative mx-auto w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-xl group">
+                <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer backdrop-blur-[2px]" onClick={() => avatarInputRef.current?.click()}>
+                  {isUploadingAvatar ? <Loader2 className="h-10 w-10 animate-spin text-white" /> : <Camera className="h-10 w-10 text-white drop-shadow-lg" />}
                 </div>
                 <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={isUploadingAvatar} />
               </div>
               
-              <div className="text-center">
-                <h3 className="font-semibold text-lg">{displayName}</h3>
-                <p className="text-muted-foreground">@{tagName}</p>
-                {profile?.is_verified && <Badge variant="secondary" className="mt-2">Verified</Badge>}
+              <div className="text-center space-y-1">
+                <h3 className="font-black text-xl flex items-center justify-center gap-2">
+                  {displayName}
+                  {isPremium && <Crown className="h-5 w-5 text-yellow-500 fill-yellow-500 drop-shadow-sm" />}
+                </h3>
+                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">@{tagName}</p>
+                <div className="flex flex-wrap justify-center gap-2 mt-3">
+                  {isPremium && <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 font-bold px-3 py-1 rounded-full border-none shadow-sm">Premium</Badge>}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -259,18 +274,18 @@ const ArtistProfile = ({
 
         {/* Cover Image Card */}
         <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Cover Image</CardTitle>
-              <CardDescription>Displayed at the top of your profile page</CardDescription>
+          <Card className="border-border/50 shadow-sm overflow-hidden rounded-3xl h-full">
+            <CardHeader className="bg-muted/30">
+              <CardTitle className="text-lg font-black uppercase tracking-tight">Cover Image</CardTitle>
+              <CardDescription className="text-xs font-medium">Displayed at the top of your profile page</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="relative w-full h-40 rounded-md overflow-hidden group cursor-pointer" onClick={() => coverInputRef.current?.click()}>
-                <img src={coverUrl} alt="Cover" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {isUploadingCover ? <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div> : <div className="flex items-center gap-2 text-white">
-                      <Upload className="h-6 w-6" />
-                      <span>Change Cover</span>
+            <CardContent className="pt-6">
+              <div className="relative w-full h-40 sm:h-52 rounded-2xl overflow-hidden group cursor-pointer shadow-inner" onClick={() => coverInputRef.current?.click()}>
+                <img src={coverUrl} alt="Cover" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-[2px]">
+                  {isUploadingCover ? <Loader2 className="h-10 w-10 animate-spin text-white" /> : <div className="flex flex-col items-center gap-2 text-white">
+                      <Upload className="h-10 w-10 drop-shadow-lg" />
+                      <span className="font-black uppercase tracking-widest text-xs">Change Cover</span>
                     </div>}
                 </div>
                 <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} disabled={isUploadingCover} />
@@ -281,138 +296,138 @@ const ArtistProfile = ({
       </div>
 
       {/* Basic Info Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Basic Information</CardTitle>
-          <CardDescription>Your display name, bio, and basic details</CardDescription>
+      <Card className="border-border/50 shadow-sm overflow-hidden rounded-3xl">
+        <CardHeader className="bg-muted/30">
+          <CardTitle className="text-lg font-black uppercase tracking-tight">Basic Information</CardTitle>
+          <CardDescription className="text-xs font-medium">Your display name, bio, and basic details</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {isEditing ? <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <CardContent className="space-y-6 pt-6">
+          {isEditing ? <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="displayName">Display Name *</Label>
-                <Input id="displayName" value={editForm.displayName} onChange={e => handleChange('displayName', e.target.value)} placeholder="Your display name" />
+                <Label htmlFor="displayName" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Display Name *</Label>
+                <Input id="displayName" value={editForm.displayName} onChange={e => handleChange('displayName', e.target.value)} placeholder="Your display name" className="h-12 rounded-xl bg-muted/30 border-none focus-visible:ring-primary/20 font-medium min-h-[48px]" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="country">
-                  <Flag className="h-4 w-4 inline mr-1" />
+                <Label htmlFor="country" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
+                  <Flag className="h-3 w-3 inline mr-1 mb-0.5" />
                   Country *
                 </Label>
                 <Select value={editForm.country} onValueChange={value => handleChange('country', value)}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full h-12 rounded-xl bg-muted/30 border-none focus:ring-primary/20 font-medium min-h-[48px]">
                     <SelectValue placeholder="Select your country" />
                   </SelectTrigger>
-                  <SelectContent className="max-h-[300px] z-[9999] bg-background border border-border shadow-lg" position="popper" sideOffset={4}>
-                    {countries.length === 0 ? <div className="p-4 text-center text-muted-foreground">Loading countries...</div> : countries.map(country => <SelectItem key={country.country_code} value={country.country_code}>
+                  <SelectContent className="max-h-[300px] z-[9999] bg-background border border-border shadow-2xl rounded-2xl" position="popper" sideOffset={4}>
+                    {countries.length === 0 ? <div className="p-4 text-center text-muted-foreground">Loading countries...</div> : countries.map(country => <SelectItem key={country.country_code} value={country.country_code} className="rounded-lg m-1 font-medium">
                           {country.country_name} ({country.currency_symbol} {country.currency_code})
                         </SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="city">
-                  <MapPin className="h-4 w-4 inline mr-1" />
+                <Label htmlFor="city" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
+                  <MapPin className="h-3 w-3 inline mr-1 mb-0.5" />
                   City *
                 </Label>
-                <Input id="city" value={editForm.city} onChange={e => handleChange('city', e.target.value)} placeholder="Enter your city name" />
+                <Input id="city" value={editForm.city} onChange={e => handleChange('city', e.target.value)} placeholder="Enter your city name" className="h-12 rounded-xl bg-muted/30 border-none focus-visible:ring-primary/20 font-medium min-h-[48px]" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="location">
-                  <MapPin className="h-4 w-4 inline mr-1" />
+                <Label htmlFor="location" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
+                  <MapPin className="h-3 w-3 inline mr-1 mb-0.5" />
                   Full Address (optional)
                 </Label>
-                <Input id="location" value={editForm.location} onChange={e => handleChange('location', e.target.value)} placeholder="e.g., Los Angeles, CA" />
+                <Input id="location" value={editForm.location} onChange={e => handleChange('location', e.target.value)} placeholder="e.g., Los Angeles, CA" className="h-12 rounded-xl bg-muted/30 border-none focus-visible:ring-primary/20 font-medium min-h-[48px]" />
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="bio">Bio *</Label>
-                <textarea id="bio" value={editForm.bio} onChange={e => handleChange('bio', e.target.value)} className="w-full min-h-[120px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none" placeholder="Tell others about yourself and your art..." />
+                <Label htmlFor="bio" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Bio *</Label>
+                <textarea id="bio" value={editForm.bio} onChange={e => handleChange('bio', e.target.value)} className="w-full min-h-[120px] rounded-2xl border-none bg-muted/30 px-4 py-3 text-sm font-medium ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 resize-none" placeholder="Tell others about yourself and your art..." />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="website">
-                  <Globe className="h-4 w-4 inline mr-1" />
+                <Label htmlFor="website" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
+                  <Globe className="h-3 w-3 inline mr-1 mb-0.5" />
                   Website
                 </Label>
-                <Input id="website" value={editForm.website} onChange={e => handleChange('website', e.target.value)} placeholder="https://yourwebsite.com" />
+                <Input id="website" value={editForm.website} onChange={e => handleChange('website', e.target.value)} placeholder="https://yourwebsite.com" className="h-12 rounded-xl bg-muted/30 border-none focus-visible:ring-primary/20 font-medium min-h-[48px]" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="experienceYears">
-                  <Briefcase className="h-4 w-4 inline mr-1" />
+                <Label htmlFor="experienceYears" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
+                  <Briefcase className="h-3 w-3 inline mr-1 mb-0.5" />
                   Experience (years)
                 </Label>
-                <Input id="experienceYears" type="number" min="0" value={editForm.experienceYears} onChange={e => handleChange('experienceYears', e.target.value)} placeholder="e.g., 5" />
+                <Input id="experienceYears" type="number" min="0" value={editForm.experienceYears} onChange={e => handleChange('experienceYears', e.target.value)} placeholder="e.g., 5" className="h-12 rounded-xl bg-muted/30 border-none focus-visible:ring-primary/20 font-medium min-h-[48px]" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="hourlyRate">
-                  <DollarSign className="h-4 w-4 inline mr-1" />
+                <Label htmlFor="hourlyRate" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
+                  <DollarSign className="h-3 w-3 inline mr-1 mb-0.5" />
                   Hourly Rate ({userCurrencySymbol || '$'})
                 </Label>
-                <Input id="hourlyRate" type="number" min="0" value={editForm.hourlyRate} onChange={e => handleChange('hourlyRate', e.target.value)} placeholder="e.g., 50" />
+                <Input id="hourlyRate" type="number" min="0" value={editForm.hourlyRate} onChange={e => handleChange('hourlyRate', e.target.value)} placeholder="e.g., 50" className="h-12 rounded-xl bg-muted/30 border-none focus-visible:ring-primary/20 font-medium min-h-[48px]" />
               </div>
-            </div> : <div className="space-y-4">
+            </div> : <div className="space-y-6">
               <div>
-                <h3 className="font-semibold text-lg">{displayName}</h3>
-                <p className="text-muted-foreground">@{tagName}</p>
+                <h3 className="font-black text-2xl tracking-tight">{displayName}</h3>
+                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">@{tagName}</p>
               </div>
-              <p className="text-sm">{bio}</p>
-              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                {profile?.country && <span className="flex items-center gap-1">
-                    <Flag className="h-4 w-4" />
+              <p className="text-sm font-medium leading-relaxed max-w-2xl text-foreground/80">{bio}</p>
+              <div className="flex flex-wrap gap-4 sm:gap-6 pt-2">
+                {profile?.country && <div className="flex items-center gap-2 px-4 py-2 bg-muted/30 rounded-full text-xs font-bold uppercase tracking-widest">
+                    <Flag className="h-4 w-4 text-primary" />
                     {countries.find(c => c.country_code === profile.country)?.country_name || profile.country}
                     {profile?.city && `, ${profile.city}`}
-                  </span>}
-                {profile?.location && <span className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
+                  </div>}
+                {profile?.location && <div className="flex items-center gap-2 px-4 py-2 bg-muted/30 rounded-full text-xs font-bold uppercase tracking-widest">
+                    <MapPin className="h-4 w-4 text-primary" />
                     {profile.location}
-                  </span>}
-                {profile?.website && <a href={profile.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-primary hover:underline">
+                  </div>}
+                {profile?.website && <a href={profile.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-xs font-bold uppercase tracking-widest text-primary hover:bg-primary/20 transition-colors">
                     <Globe className="h-4 w-4" />
                     Website
                   </a>}
-                {profile?.experience_years && <span className="flex items-center gap-1">
-                    <Briefcase className="h-4 w-4" />
-                    {profile.experience_years} years experience
-                  </span>}
-                {profile?.hourly_rate && <span className="flex items-center gap-1">
-                    
-                    {formatPrice(profile.hourly_rate)}/hour
-                  </span>}
+                {profile?.experience_years && <div className="flex items-center gap-2 px-4 py-2 bg-muted/30 rounded-full text-xs font-bold uppercase tracking-widest">
+                    <Briefcase className="h-4 w-4 text-primary" />
+                    {profile.experience_years} years exp
+                  </div>}
+                {profile?.hourly_rate && <div className="flex items-center gap-2 px-4 py-2 bg-primary/5 border border-primary/10 rounded-full text-xs font-black uppercase tracking-widest text-primary">
+                    <DollarSign className="h-4 w-4" />
+                    {formatPrice(profile.hourly_rate)}/hr
+                  </div>}
               </div>
             </div>}
         </CardContent>
       </Card>
 
       {/* Categories/Tags Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Categories & Skills *</CardTitle>
-          <CardDescription>Add categories and skills that describe your work. This helps clients find you.</CardDescription>
+      <Card className="border-border/50 shadow-sm overflow-hidden rounded-3xl">
+        <CardHeader className="bg-muted/30">
+          <CardTitle className="text-lg font-black uppercase tracking-tight">Categories & Skills *</CardTitle>
+          <CardDescription className="text-xs font-medium">Add categories and skills that describe your work. This helps clients find you.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {(isEditing ? editForm.tags : profile?.tags || []).map(tag => <Badge key={tag} variant="secondary" className="px-3 py-1 text-sm flex items-center gap-1 bg-primary/10 text-primary">
+        <CardContent className="pt-6">
+          <div className="flex flex-wrap gap-2.5 mb-6">
+            {(isEditing ? editForm.tags : profile?.tags || []).map(tag => <Badge key={tag} variant="secondary" className="px-4 py-1.5 text-xs font-black uppercase tracking-widest flex items-center gap-2 bg-primary/10 text-primary border-none rounded-full">
                 {tag}
-                {isEditing && <button onClick={() => handleRemoveTag(tag)} className="ml-1 hover:text-destructive" type="button">
-                    <X className="h-3 w-3" />
+                {isEditing && <button onClick={() => handleRemoveTag(tag)} className="ml-1 hover:text-destructive transition-colors" type="button">
+                    <X className="h-3.5 w-3.5" />
                   </button>}
               </Badge>)}
-            {(isEditing ? editForm.tags : profile?.tags || []).length === 0 && <p className="text-sm text-muted-foreground">No categories added yet</p>}
+            {(isEditing ? editForm.tags : profile?.tags || []).length === 0 && <p className="text-sm font-medium text-muted-foreground italic">No categories added yet</p>}
           </div>
 
-          {isEditing && <div className="space-y-4">
+          {isEditing && <div className="space-y-6">
               <div className="flex gap-2">
-                <Input value={newTag} onChange={e => setNewTag(e.target.value)} placeholder="Add a custom tag" onKeyDown={e => {
+                <Input value={newTag} onChange={e => setNewTag(e.target.value)} placeholder="Add a custom tag" className="h-12 rounded-xl bg-muted/30 border-none font-medium min-h-[48px]" onKeyDown={e => {
               if (e.key === 'Enter') {
                 e.preventDefault();
                 handleAddTag(newTag);
               }
             }} />
-                <Button type="button" onClick={() => handleAddTag(newTag)} size="icon">
-                  <Plus className="h-4 w-4" />
+                <Button type="button" onClick={() => handleAddTag(newTag)} size="icon" className="h-12 w-12 rounded-xl shrink-0 shadow-lg shadow-primary/10 min-h-[48px] min-w-[48px]">
+                  <Plus className="h-5 w-5" />
                 </Button>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground mb-2">Popular categories (click to add):</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3 ml-1">Popular categories (click to add):</p>
                 <div className="flex flex-wrap gap-2">
-                  {AVAILABLE_CATEGORIES.filter(cat => !editForm.tags.includes(cat)).slice(0, 12).map(category => <Button key={category} type="button" variant="outline" size="sm" onClick={() => handleAddTag(category)} className="text-xs">
+                  {AVAILABLE_CATEGORIES.filter(cat => !editForm.tags.includes(cat)).slice(0, 12).map(category => <Button key={category} type="button" variant="outline" size="sm" onClick={() => handleAddTag(category)} className="text-[10px] font-black uppercase tracking-widest rounded-full border-muted-foreground/20 hover:bg-primary/5 hover:text-primary hover:border-primary/30 transition-all h-9">
                       + {category}
                     </Button>)}
                 </div>
@@ -422,59 +437,55 @@ const ArtistProfile = ({
       </Card>
 
       {/* Social Links Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Social Links</CardTitle>
-          <CardDescription>Connect your social media profiles</CardDescription>
+      <Card className="border-border/50 shadow-sm overflow-hidden rounded-3xl">
+        <CardHeader className="bg-muted/30">
+          <CardTitle className="text-lg font-black uppercase tracking-tight">Social Links</CardTitle>
+          <CardDescription className="text-xs font-medium">Connect your social media profiles</CardDescription>
         </CardHeader>
-        <CardContent>
-          {isEditing ? <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <CardContent className="pt-6">
+          {isEditing ? <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="instagram" className="flex items-center gap-2">
-                  <Instagram className="h-4 w-4 text-pink-500" />
-                  Instagram
+                <Label htmlFor="instagram" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2">
+                    <Instagram className="h-3.5 w-3.5" /> Instagram
                 </Label>
-                <Input id="instagram" value={editForm.socialLinks.instagram} onChange={e => handleSocialLinkChange('instagram', e.target.value)} placeholder="https://instagram.com/username" />
+                <Input id="instagram" value={editForm.socialLinks.instagram} onChange={e => handleSocialLinkChange('instagram', e.target.value)} placeholder="Instagram URL" className="h-12 rounded-xl bg-muted/30 border-none font-medium min-h-[48px]" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="twitter" className="flex items-center gap-2">
-                  <Twitter className="h-4 w-4 text-sky-500" />
-                  Twitter / X
+                <Label htmlFor="twitter" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2">
+                    <Twitter className="h-3.5 w-3.5" /> Twitter / X
                 </Label>
-                <Input id="twitter" value={editForm.socialLinks.twitter} onChange={e => handleSocialLinkChange('twitter', e.target.value)} placeholder="https://twitter.com/username" />
+                <Input id="twitter" value={editForm.socialLinks.twitter} onChange={e => handleSocialLinkChange('twitter', e.target.value)} placeholder="Twitter URL" className="h-12 rounded-xl bg-muted/30 border-none font-medium min-h-[48px]" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="linkedin" className="flex items-center gap-2">
-                  <Linkedin className="h-4 w-4 text-blue-600" />
-                  LinkedIn
+                <Label htmlFor="linkedin" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2">
+                    <Linkedin className="h-3.5 w-3.5" /> LinkedIn
                 </Label>
-                <Input id="linkedin" value={editForm.socialLinks.linkedin} onChange={e => handleSocialLinkChange('linkedin', e.target.value)} placeholder="https://linkedin.com/in/username" />
+                <Input id="linkedin" value={editForm.socialLinks.linkedin} onChange={e => handleSocialLinkChange('linkedin', e.target.value)} placeholder="LinkedIn URL" className="h-12 rounded-xl bg-muted/30 border-none font-medium min-h-[48px]" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="youtube" className="flex items-center gap-2">
-                  <Youtube className="h-4 w-4 text-red-500" />
-                  YouTube
+                <Label htmlFor="youtube" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2">
+                    <Youtube className="h-3.5 w-3.5" /> YouTube
                 </Label>
-                <Input id="youtube" value={editForm.socialLinks.youtube} onChange={e => handleSocialLinkChange('youtube', e.target.value)} placeholder="https://youtube.com/@username" />
+                <Input id="youtube" value={editForm.socialLinks.youtube} onChange={e => handleSocialLinkChange('youtube', e.target.value)} placeholder="YouTube URL" className="h-12 rounded-xl bg-muted/30 border-none font-medium min-h-[48px]" />
               </div>
             </div> : <div className="flex flex-wrap gap-4">
-              {profile?.social_links?.instagram && <a href={profile.social_links.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm hover:text-primary">
-                  <Instagram className="h-5 w-5 text-pink-500" />
-                  Instagram
+              {profile?.social_links?.instagram && <a href={profile.social_links.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 bg-[#E1306C]/10 rounded-full text-[#E1306C] hover:bg-[#E1306C]/20 transition-colors">
+                  <Instagram className="h-5 w-5" />
+                  <span className="text-xs font-black uppercase tracking-widest">Instagram</span>
                 </a>}
-              {profile?.social_links?.twitter && <a href={profile.social_links.twitter} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm hover:text-primary">
-                  <Twitter className="h-5 w-5 text-sky-500" />
-                  Twitter
+              {profile?.social_links?.twitter && <a href={profile.social_links.twitter} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 bg-black/10 rounded-full text-black hover:bg-black/20 transition-colors">
+                  <Twitter className="h-5 w-5" />
+                  <span className="text-xs font-black uppercase tracking-widest">Twitter</span>
                 </a>}
-              {profile?.social_links?.linkedin && <a href={profile.social_links.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm hover:text-primary">
-                  <Linkedin className="h-5 w-5 text-blue-600" />
-                  LinkedIn
+              {profile?.social_links?.linkedin && <a href={profile.social_links.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 bg-[#0077B5]/10 rounded-full text-[#0077B5] hover:bg-[#0077B5]/20 transition-colors">
+                  <Linkedin className="h-5 w-5" />
+                  <span className="text-xs font-black uppercase tracking-widest">LinkedIn</span>
                 </a>}
-              {profile?.social_links?.youtube && <a href={profile.social_links.youtube} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm hover:text-primary">
-                  <Youtube className="h-5 w-5 text-red-500" />
-                  YouTube
+              {profile?.social_links?.youtube && <a href={profile.social_links.youtube} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 bg-[#FF0000]/10 rounded-full text-[#FF0000] hover:bg-[#FF0000]/20 transition-colors">
+                  <Youtube className="h-5 w-5" />
+                  <span className="text-xs font-black uppercase tracking-widest">YouTube</span>
                 </a>}
-              {!profile?.social_links?.instagram && !profile?.social_links?.twitter && !profile?.social_links?.linkedin && !profile?.social_links?.youtube && <p className="text-sm text-muted-foreground">No social links added yet</p>}
+              {!profile?.social_links?.instagram && !profile?.social_links?.twitter && !profile?.social_links?.linkedin && !profile?.social_links?.youtube && <p className="text-sm font-medium text-muted-foreground italic">No social links added yet</p>}
             </div>}
         </CardContent>
       </Card>

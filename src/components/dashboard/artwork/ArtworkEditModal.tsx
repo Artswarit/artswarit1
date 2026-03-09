@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { X, Plus, Save, Loader2, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface ArtworkEditModalProps {
   artwork: any;
@@ -26,6 +27,7 @@ const visibilityOptions = [
 
 const ArtworkEditModal = ({ artwork, isOpen, onClose, onSave }: ArtworkEditModalProps) => {
   const { toast } = useToast();
+  const { userCurrency, userCurrencySymbol } = useCurrency();
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
@@ -81,7 +83,11 @@ const ArtworkEditModal = ({ artwork, isOpen, onClose, onSave }: ArtworkEditModal
     }));
   };
 
-  const handleSave = async () => {
+  const handleSave = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (!artwork?.id) return;
     
     setSaving(true);
@@ -98,6 +104,7 @@ const ArtworkEditModal = ({ artwork, isOpen, onClose, onSave }: ArtworkEditModal
         visibility: formData.visibility,
         access_type: formData.accessType,
         schedule_release: formData.scheduleRelease,
+        currency: userCurrency,
         likes_count: (artwork.metadata as any)?.likes_count || 0,
         views_count: (artwork.metadata as any)?.views_count || 0
       };
@@ -148,57 +155,74 @@ const ArtworkEditModal = ({ artwork, isOpen, onClose, onSave }: ArtworkEditModal
 
   const categories = [
     "Digital Art", "Music", "Hip-Hop", "Abstract Art", "Landscape", 
-    "Portrait", "Music Video", "Contemporary", "Traditional", "Photography"
+    "Portrait", "Music Video", "Contemporary", "Traditional", "Photography",
+    "Musicians", "Writers", "Rappers", "Editors", "Scriptwriters", 
+    "Photographers", "Illustrators", "Voice Artists", "Animators", 
+    "UI/UX Designers", "Singers", "Dancers"
   ];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Eye className="h-5 w-5" />
-            Edit Artwork
-          </DialogTitle>
-          <DialogDescription>
-            Update your artwork details, visibility, and pricing
-          </DialogDescription>
+      <DialogContent className="max-w-2xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto rounded-[2rem] sm:rounded-[2.5rem] border-primary/10 shadow-2xl backdrop-blur-xl bg-background/95 p-0">
+        <DialogHeader className="p-6 sm:p-8 bg-primary/5 border-b border-primary/10">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+              <Eye className="h-6 w-6" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl sm:text-2xl font-black tracking-tight">
+                Edit Artwork
+              </DialogTitle>
+              <DialogDescription className="text-sm font-medium text-muted-foreground/80 mt-1">
+                Update your artwork details, visibility, and pricing
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="p-6 sm:p-8 space-y-8">
           {/* Artwork Preview */}
-          <div className="flex gap-4">
-            <img
-              src={artwork?.imageUrl || artwork?.media_url}
-              alt={artwork?.title}
-              className="w-24 h-24 object-cover rounded-lg"
-            />
-            <div className="flex-1">
-              <h3 className="font-semibold">{artwork?.title}</h3>
-              <p className="text-sm text-muted-foreground">Current Status: {artwork?.status || artwork?.approval_status}</p>
+          <div className="flex gap-5 p-4 bg-muted/30 rounded-3xl border border-primary/5 shadow-inner">
+            <div className="relative group shrink-0">
+              <img
+                src={artwork?.imageUrl || artwork?.media_url}
+                alt={artwork?.title}
+                className="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-2xl shadow-md transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-black/10 group-hover:ring-primary/20 transition-all" />
+            </div>
+            <div className="flex flex-col justify-center min-w-0">
+              <h3 className="text-lg font-black truncate text-foreground/90">{artwork?.title}</h3>
+              <div className="flex items-center gap-2 mt-2">
+                <Badge variant="outline" className="px-3 py-1 rounded-full border-primary/20 bg-primary/5 text-[10px] font-black uppercase tracking-widest text-primary">
+                  {artwork?.status || artwork?.approval_status || 'Active'}
+                </Badge>
+              </div>
             </div>
           </div>
 
           {/* Basic Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2.5">
+              <Label htmlFor="title" className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Title</Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
                 placeholder="Artwork title"
+                className="h-14 rounded-2xl bg-muted/20 border-primary/10 focus:border-primary/30 focus:ring-4 focus:ring-primary/5 transition-all font-medium"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
+            <div className="space-y-2.5">
+              <Label htmlFor="category" className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Category</Label>
               <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
-                <SelectTrigger>
+                <SelectTrigger className="h-14 rounded-2xl bg-muted/20 border-primary/10 focus:border-primary/30 focus:ring-4 focus:ring-primary/5 transition-all font-medium">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-2xl border-primary/10 shadow-xl backdrop-blur-xl">
                   {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
+                    <SelectItem key={category} value={category} className="min-h-[44px] rounded-xl focus:bg-primary/5">
                       {category}
                     </SelectItem>
                   ))}
@@ -208,138 +232,155 @@ const ArtworkEditModal = ({ artwork, isOpen, onClose, onSave }: ArtworkEditModal
           </div>
 
           {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="description" className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Description</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
               placeholder="Describe your artwork..."
-              rows={3}
+              rows={4}
+              className="rounded-2xl bg-muted/20 border-primary/10 focus:border-primary/30 focus:ring-4 focus:ring-primary/5 transition-all font-medium resize-none p-4"
             />
           </div>
 
           {/* Visibility & Pricing Section */}
-          <div className="space-y-4 p-4 bg-muted/30 rounded-lg border">
+          <div className="space-y-6 p-6 bg-primary/5 rounded-[2rem] border border-primary/10 shadow-sm">
             <div>
-              <h3 className="font-semibold text-foreground">Visibility & Pricing</h3>
-              <p className="text-sm text-muted-foreground">Set who can see your artwork and how they can access it</p>
+              <h3 className="text-sm font-black uppercase tracking-widest text-foreground">Visibility & Pricing</h3>
+              <p className="text-xs font-medium text-muted-foreground mt-1">Set who can see your artwork and how they can access it</p>
             </div>
 
             {/* Visibility */}
-            <div className="space-y-2">
-              <Label>Visibility</Label>
+            <div className="space-y-2.5">
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70 ml-1">Visibility</Label>
               <Select value={formData.visibility} onValueChange={(value) => handleInputChange('visibility', value)}>
-                <SelectTrigger>
+                <SelectTrigger className="h-14 rounded-2xl bg-background border-primary/10 focus:border-primary/30 focus:ring-4 focus:ring-primary/5 transition-all font-medium">
                   <SelectValue placeholder="Select visibility" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-2xl border-primary/10 shadow-xl backdrop-blur-xl">
                   {visibilityOptions.map(option => (
-                    <SelectItem key={option.id} value={option.id}>{option.label}</SelectItem>
+                    <SelectItem key={option.id} value={option.id} className="min-h-[44px] rounded-xl focus:bg-primary/5">{option.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
             {/* Access Type */}
-            <div className="space-y-2">
-              <Label>Access Type</Label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
-                <div 
-                  className={`border rounded-lg p-3 cursor-pointer transition-all hover:border-primary hover:shadow-md ${
-                    formData.accessType === "free" ? "border-primary bg-primary/5" : "border-border"
+            <div className="space-y-3">
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70 ml-1">Access Type</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <button 
+                  type="button"
+                  className={`relative overflow-hidden rounded-2xl p-4 text-left transition-all hover:-translate-y-1 active:scale-95 min-h-[100px] border-2 shadow-sm ${
+                    formData.accessType === "free" ? "border-primary bg-primary/10 ring-4 ring-primary/5" : "border-background/50 bg-background hover:border-primary/30"
                   }`}
                   onClick={() => handleInputChange('accessType', 'free')}
                 >
-                  <p className="font-medium text-sm">Free</p>
-                  <p className="text-xs text-muted-foreground mt-1">Available to everyone at no cost</p>
-                </div>
+                  <p className="font-black text-sm uppercase tracking-tight">Free</p>
+                  <p className="text-[10px] font-medium text-muted-foreground mt-2 leading-relaxed">Available to everyone at no cost</p>
+                  {formData.accessType === "free" && <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary animate-pulse" />}
+                </button>
                 
-                <div 
-                  className={`border rounded-lg p-3 cursor-pointer transition-all hover:border-primary hover:shadow-md ${
-                    formData.accessType === "premium" ? "border-primary bg-primary/5" : "border-border"
+                <button 
+                  type="button"
+                  className={`relative overflow-hidden rounded-2xl p-4 text-left transition-all hover:-translate-y-1 active:scale-95 min-h-[100px] border-2 shadow-sm ${
+                    formData.accessType === "premium" ? "border-primary bg-primary/10 ring-4 ring-primary/5" : "border-background/50 bg-background hover:border-primary/30"
                   }`}
                   onClick={() => handleInputChange('accessType', 'premium')}
                 >
-                  <p className="font-medium text-sm">Premium</p>
-                  <p className="text-xs text-muted-foreground mt-1">Paid access to this content only</p>
-                </div>
+                  <p className="font-black text-sm uppercase tracking-tight">Premium</p>
+                  <p className="text-[10px] font-medium text-muted-foreground mt-2 leading-relaxed">Paid access to this content only</p>
+                  {formData.accessType === "premium" && <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary animate-pulse" />}
+                </button>
                 
-                <div 
-                  className={`border rounded-lg p-3 cursor-pointer transition-all hover:border-primary hover:shadow-md ${
-                    formData.accessType === "exclusive" ? "border-primary bg-primary/5" : "border-border"
+                <button 
+                  type="button"
+                  className={`relative overflow-hidden rounded-2xl p-4 text-left transition-all hover:-translate-y-1 active:scale-95 min-h-[100px] border-2 shadow-sm ${
+                    formData.accessType === "exclusive" ? "border-primary bg-primary/10 ring-4 ring-primary/5" : "border-background/50 bg-background hover:border-primary/30"
                   }`}
                   onClick={() => handleInputChange('accessType', 'exclusive')}
                 >
-                  <p className="font-medium text-sm">Exclusive</p>
-                  <p className="text-xs text-muted-foreground mt-1">Special collectors-only content</p>
-                </div>
+                  <p className="font-black text-sm uppercase tracking-tight">Exclusive</p>
+                  <p className="text-[10px] font-medium text-muted-foreground mt-2 leading-relaxed">Special collectors-only content</p>
+                  {formData.accessType === "exclusive" && <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary animate-pulse" />}
+                </button>
               </div>
             </div>
 
-            {/* Price field - only show for premium/exclusive */}
-            {(formData.accessType === "premium" || formData.accessType === "exclusive") && (
-              <div className="space-y-2">
-                <Label htmlFor="price">Price (USD)*</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  value={formData.price}
-                  onChange={(e) => handleInputChange('price', e.target.value)}
-                  placeholder="Enter price in USD"
-                  min="0"
-                  step="0.01"
-                />
-                <p className="text-xs text-muted-foreground">Enter price in USD. It will be displayed in user's preferred currency.</p>
+            {/* Price field - only show for premium */}
+            {formData.accessType === "premium" && (
+              <div className="space-y-2.5 animate-in fade-in slide-in-from-top-4 duration-500">
+                <Label htmlFor="price" className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Price ({userCurrency === 'INR' ? 'INR' : 'USD'})*</Label>
+                <div className="relative group">
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-primary font-black text-lg group-focus-within:scale-110 transition-transform">{userCurrencySymbol}</span>
+                  <Input
+                    id="price"
+                    type="number"
+                    className="pl-12 h-14 rounded-2xl bg-background border-primary/10 focus:border-primary/30 focus:ring-4 focus:ring-primary/5 transition-all font-black text-lg"
+                    value={formData.price}
+                    onChange={(e) => handleInputChange('price', e.target.value)}
+                    placeholder="0.00"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
               </div>
             )}
 
             {/* Schedule for future release */}
-            <div className="flex items-center justify-between">
-              <Label htmlFor="schedule">Schedule for future release</Label>
+            <div className="flex items-center justify-between p-4 bg-background/50 rounded-2xl border border-primary/5 shadow-inner">
+              <div className="space-y-0.5">
+                <Label htmlFor="schedule" className="text-sm font-black uppercase tracking-tight cursor-pointer">Schedule for future release</Label>
+                <p className="text-[10px] font-medium text-muted-foreground">Automatically publish at a later date</p>
+              </div>
               <Switch
                 id="schedule"
                 checked={formData.scheduleRelease}
                 onCheckedChange={(checked) => handleInputChange('scheduleRelease', checked)}
+                className="data-[state=checked]:bg-primary scale-110"
               />
             </div>
           </div>
 
           {/* Pin to Profile */}
-          <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
-            <div>
-              <Label htmlFor="is_pinned" className="font-medium">Pin to Profile</Label>
-              <p className="text-xs text-muted-foreground">Pinned artworks appear first on your profile</p>
+          <div className="flex items-center justify-between p-6 bg-primary/5 rounded-[2rem] border border-primary/10 shadow-sm">
+            <div className="space-y-1">
+              <Label htmlFor="is_pinned" className="text-sm font-black uppercase tracking-widest cursor-pointer">Pin to Profile</Label>
+              <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">Feature on your profile</p>
             </div>
             <Switch
               id="is_pinned"
               checked={formData.is_pinned}
               onCheckedChange={(checked) => handleInputChange('is_pinned', checked)}
+              className="data-[state=checked]:bg-primary scale-125"
             />
           </div>
 
           {/* Tags */}
-          <div className="space-y-2">
-            <Label>Tags</Label>
-            <div className="flex flex-wrap gap-2 mb-2">
+          <div className="space-y-4">
+            <Label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Tags</Label>
+            <div className="flex flex-wrap gap-3">
               {formData.tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="flex items-center gap-1">
-                  {tag}
+                <Badge key={tag} variant="secondary" className="pl-4 pr-1.5 py-1.5 flex items-center gap-2 rounded-2xl bg-background border border-primary/10 text-primary shadow-sm hover:border-primary/30 transition-all group">
+                  <span className="text-xs font-black uppercase tracking-wider">{tag}</span>
                   <button
                     onClick={() => removeTag(tag)}
-                    className="hover:text-destructive"
+                    className="hover:bg-destructive/10 hover:text-destructive p-1.5 rounded-xl transition-all flex items-center justify-center min-w-[44px] min-h-[44px] active:scale-90"
                     type="button"
+                    aria-label={`Remove ${tag} tag`}
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-4 w-4" />
                   </button>
                 </Badge>
               ))}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <Input
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
-                placeholder="Add a tag"
+                placeholder="Add a tag..."
+                className="h-14 rounded-2xl bg-muted/20 border-primary/10 focus:border-primary/30 focus:ring-4 focus:ring-primary/5 transition-all font-medium"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
@@ -347,24 +388,24 @@ const ArtworkEditModal = ({ artwork, isOpen, onClose, onSave }: ArtworkEditModal
                   }
                 }}
               />
-              <Button type="button" onClick={addTag} size="sm">
-                <Plus className="h-4 w-4" />
+              <Button type="button" onClick={addTag} size="icon" className="h-14 w-14 rounded-2xl shrink-0 shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-95 transition-all">
+                <Plus className="h-7 w-7" />
               </Button>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={onClose} disabled={saving}>
+          <div className="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-primary/10">
+            <Button variant="outline" onClick={onClose} disabled={saving} className="h-14 rounded-2xl sm:px-10 font-black uppercase tracking-widest text-xs border-primary/10 hover:bg-primary/5 hover:border-primary/30 transition-all active:scale-95 order-2 sm:order-1">
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={saving} className="flex items-center gap-2">
+            <Button onClick={handleSave} disabled={saving} className="h-14 rounded-2xl sm:px-10 font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 hover:shadow-primary/30 active:scale-95 transition-all gap-3 order-1 sm:order-2">
               {saving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
-                <Save className="h-4 w-4" />
+                <Save className="h-5 w-5" />
               )}
-              {saving ? "Saving..." : "Save Changes"}
+              {saving ? "Saving Changes..." : "Save Changes"}
             </Button>
           </div>
         </div>

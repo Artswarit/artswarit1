@@ -5,10 +5,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 };
 
-const RAZORPAY_KEY_ID = Deno.env.get('RAZORPAY_KEY_ID')!;
-const RAZORPAY_KEY_SECRET = Deno.env.get('RAZORPAY_KEY_SECRET')!;
+const RAZORPAY_KEY_ID = Deno.env.get('RAZORPAY_KEY_ID')?.trim();
+const RAZORPAY_KEY_SECRET = Deno.env.get('RAZORPAY_KEY_SECRET')?.trim();
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 
@@ -24,8 +26,12 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
+      console.error('Missing or invalid Authorization header');
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'Unauthorized' 
+      }), {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -37,15 +43,44 @@ serve(async (req) => {
     const token = authHeader.replace('Bearer ', '');
     const { data: claimsData, error: claimsError } = await supabase.auth.getUser(token);
     if (claimsError || !claimsData?.user) {
-      console.error('Auth error:', claimsError);
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
+      console.error('Auth verify error:', claimsError);
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'Unauthorized' 
+      }), {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     const userId = claimsData.user.id;
-    const { milestoneId } = await req.json();
+    
+    // Robust JSON parsing
+    let milestoneId;
+    try {
+      const body = await req.json();
+      milestoneId = body.milestoneId;
+    } catch (_e) {
+      console.error('JSON parse error:', _e);
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'Invalid request body' 
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (!milestoneId) {
+      console.error('Missing milestoneId in request');
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'Milestone ID is required' 
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     console.log(`Creating order for milestone: ${milestoneId}, user: ${userId}`);
 
@@ -57,12 +92,15 @@ serve(async (req) => {
         project:projects(*)
       `)
       .eq('id', milestoneId)
-      .single();
+      .maybeSingle();
 
     if (milestoneError || !milestone) {
       console.error('Milestone fetch error:', milestoneError);
-      return new Response(JSON.stringify({ error: 'Milestone not found' }), {
-        status: 404,
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'Milestone not found' 
+      }), {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -70,17 +108,23 @@ serve(async (req) => {
     // Validate: Only project client can pay
     if (milestone.project.client_id !== userId) {
       console.error('User is not the client:', userId, milestone.project.client_id);
-      return new Response(JSON.stringify({ error: 'Only the project client can initiate payment' }), {
-        status: 403,
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'Only the project client can initiate payment' 
+      }), {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Validate: Milestone must be approved
-    if (milestone.status !== 'approved') {
-      console.error('Milestone not approved:', milestone.status);
-      return new Response(JSON.stringify({ error: `Payment only allowed for approved milestones. Current status: ${milestone.status}` }), {
-        status: 400,
+    // Validate: Milestone must be in WAITING_FUNDS state (escrow mode)
+    if (milestone.status !== 'WAITING_FUNDS') {
+      console.error('Milestone not in WAITING_FUNDS state:', milestone.status);
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: `Funding only allowed when milestone is waiting for funds. Current status: ${milestone.status}` 
+      }), {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -91,19 +135,18 @@ serve(async (req) => {
       .select('id')
       .eq('milestone_id', milestoneId)
       .eq('status', 'success')
-      .single();
+      .maybeSingle();
 
     if (existingPayment) {
       console.error('Milestone already paid:', milestoneId);
-      return new Response(JSON.stringify({ error: 'This milestone has already been paid' }), {
-        status: 400,
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'This milestone has already been paid' 
+      }), {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-
-    // Note: Artist bank details are optional - platform collects payment
-    // and handles artist payouts separately through admin dashboard
-    console.log(`Processing payment for artist: ${milestone.project.artist_id}`);
 
     // Check if artist is a Pro subscriber (0% fee) or Starter (15% fee)
     const { data: subscription } = await supabase
@@ -118,18 +161,37 @@ serve(async (req) => {
     const isProArtist = !!subscription;
     const commissionRate = isProArtist ? PRO_COMMISSION : STARTER_COMMISSION;
     
-    console.log(`Artist ${milestone.project.artist_id} is ${isProArtist ? 'Pro' : 'Starter'} - Commission: ${commissionRate * 100}%`);
+    // Calculate amounts
+    const storedCurrency = milestone.project.currency || 'USD';
+    const amountBase = Number(milestone.amount);
+    const USD_TO_INR_RATE = 83.5; 
+    
+    let amountINR: number;
+    let amountUSD: number;
 
-    // Calculate amounts based on artist plan
-    // IMPORTANT: milestone.amount is stored in USD, but Razorpay MUST receive INR
-    // Convert USD to INR for Razorpay (approximate rate, backend should use live rate)
-    const amountUSD = Number(milestone.amount);
-    const USD_TO_INR_RATE = 83.5; // Fallback rate - should ideally be fetched from API
-    const amountINR = Math.round(amountUSD * USD_TO_INR_RATE * 100) / 100;
+    if (storedCurrency === 'INR') {
+      amountINR = amountBase;
+      amountUSD = amountINR / USD_TO_INR_RATE;
+    } else {
+      amountUSD = amountBase;
+      amountINR = Math.round(amountUSD * USD_TO_INR_RATE * 100) / 100;
+    }
     
     const platformFee = Math.round(amountUSD * commissionRate * 100) / 100;
     const artistPayout = Math.round((amountUSD - platformFee) * 100) / 100;
-    const amountInPaise = Math.round(amountINR * 100); // Razorpay uses smallest currency unit (paise)
+    const amountInPaise = Math.round(amountINR * 100);
+
+    // Check for required environment variables
+    if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
+      console.error('Missing Razorpay keys');
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'Payment gateway configuration missing. Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.' 
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     // Create Razorpay order
     const razorpayAuth = btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`);
@@ -142,15 +204,16 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         amount: amountInPaise,
-        currency: 'INR', // Razorpay MUST receive INR for Indian payments
+        currency: 'INR',
         receipt: `ms_${milestoneId.slice(0, 8)}`,
         notes: {
           milestone_id: milestoneId,
           project_id: milestone.project_id,
           client_id: userId,
           artist_id: milestone.project.artist_id,
-          amount_usd: amountUSD, // Store original USD amount
-          amount_inr: amountINR, // Store converted INR amount
+          amount_usd: amountUSD, 
+          amount_inr: amountINR,
+          stored_currency: storedCurrency,
           platform_fee_usd: platformFee,
           artist_payout_usd: artistPayout,
           is_pro_artist: isProArtist,
@@ -161,18 +224,21 @@ serve(async (req) => {
     });
 
     if (!orderResponse.ok) {
-      const errorText = await orderResponse.text();
-      console.error('Razorpay order creation failed:', errorText);
-      return new Response(JSON.stringify({ error: 'Failed to create payment order' }), {
-        status: 500,
+      const errorData = await orderResponse.json().catch(() => ({}));
+      console.error('Razorpay order creation failed:', errorData);
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: errorData.error?.description || 'Failed to create payment order',
+        details: errorData 
+      }), {
+        status: 200, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     const order = await orderResponse.json();
-    console.log('Razorpay order created:', order.id);
 
-    // Create payment record - store amounts in USD (base currency)
+    // Create payment record
     const { error: paymentError } = await supabase
       .from('payments')
       .insert({
@@ -180,26 +246,26 @@ serve(async (req) => {
         project_id: milestone.project_id,
         client_id: userId,
         artist_id: milestone.project.artist_id,
-        amount: amountUSD, // Store in USD (base currency)
+        amount: amountBase,
         platform_fee: platformFee,
         artist_payout: artistPayout,
-        currency: 'USD', // Base currency for storage
+        currency: storedCurrency,
         razorpay_order_id: order.id,
         status: 'pending',
       });
 
     if (paymentError) {
       console.error('Payment record creation failed:', paymentError);
-      // Don't fail the request, order was created
     }
 
     return new Response(JSON.stringify({
+      success: true,
       orderId: order.id,
-      amount: amountInPaise, // Amount in paise for Razorpay
-      amountINR: amountINR, // Display amount in INR
-      amountUSD: amountUSD, // Original USD amount
-      currency: 'INR', // Gateway currency
-      baseCurrency: 'USD', // Base storage currency
+      amount: amountInPaise,
+      amountINR: amountINR,
+      amountUSD: amountUSD,
+      currency: 'INR',
+      baseCurrency: 'USD',
       keyId: RAZORPAY_KEY_ID,
       milestoneId,
       projectId: milestone.project_id,
@@ -212,10 +278,13 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Error creating milestone order:', error);
+    console.error('Global error in create-milestone-order:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      status: 500,
+    return new Response(JSON.stringify({ 
+      success: false,
+      error: errorMessage 
+    }), {
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

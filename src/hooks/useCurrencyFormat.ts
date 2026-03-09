@@ -16,29 +16,29 @@ export const useCurrencyFormat = () => {
     countries 
   } = useCurrency();
 
-  // Format a price in USD to user's local currency
-  const format = useCallback((amountInUSD: number | null | undefined): string => {
-    if (amountInUSD === null || amountInUSD === undefined) {
+  // Format a price from source currency to user's local currency
+  const format = useCallback((amount: number | null | undefined, sourceCurrency: string = 'USD'): string => {
+    if (amount === null || amount === undefined) {
       return `${userCurrencySymbol}0`;
     }
-    return formatPrice(amountInUSD);
+    return formatPrice(amount, sourceCurrency);
   }, [formatPrice, userCurrencySymbol]);
 
   // Format with specific currency override
-  const formatWithCurrency = useCallback((amountInUSD: number | null | undefined, currency: string): string => {
-    if (amountInUSD === null || amountInUSD === undefined) {
-      const symbol = getCurrencySymbol(currency);
+  const formatWithCurrency = useCallback((amount: number | null | undefined, targetCurrency: string, sourceCurrency: string = 'USD'): string => {
+    if (amount === null || amount === undefined) {
+      const symbol = getCurrencySymbol(targetCurrency);
       return `${symbol}0`;
     }
-    return formatPrice(amountInUSD, currency);
+    return formatPrice(amount, sourceCurrency, targetCurrency);
   }, [formatPrice, getCurrencySymbol]);
 
   // Get just the converted amount (number)
-  const convert = useCallback((amountInUSD: number | null | undefined): number => {
-    if (amountInUSD === null || amountInUSD === undefined) {
+  const convert = useCallback((amount: number | null | undefined, sourceCurrency: string = 'USD'): number => {
+    if (amount === null || amount === undefined) {
       return 0;
     }
-    return convertPrice(amountInUSD);
+    return convertPrice(amount, sourceCurrency);
   }, [convertPrice]);
 
   // Format a price range (e.g., "$10 - $50")

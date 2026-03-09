@@ -136,7 +136,11 @@ const ClientPayments = () => {
 
       setPayments(enrichedPayments);
     } catch (error: any) {
-      console.error('Error fetching payments:', error);
+      toast({
+        title: "Error fetching payments",
+        description: "Please check your connection and try again.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }

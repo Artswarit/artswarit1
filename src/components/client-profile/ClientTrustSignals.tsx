@@ -66,7 +66,7 @@ const ClientTrustSignals: React.FC<ClientTrustSignalsProps> = ({ signals }) => {
           <TrustItem
             icon={<Clock className="w-5 h-5" />}
             label="On-Time Payment Rate"
-            value={signals.totalPayments > 0 ? `${signals.onTimePaymentRate}%` : "No history"}
+            value={signals.totalPayments > 0 ? `${signals.onTimePaymentRate.toFixed(1)}%` : "No history"}
             status={signals.totalPayments > 0 ? paymentRateStatus : 'neutral'}
           />
           

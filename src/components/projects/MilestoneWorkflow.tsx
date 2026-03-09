@@ -181,16 +181,16 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { color: string; icon: React.ReactNode }> = {
-      pending: { color: 'bg-muted text-muted-foreground', icon: <Clock className="h-3 w-3" /> },
-      in_progress: { color: 'bg-blue-500/20 text-blue-600', icon: <FileText className="h-3 w-3" /> },
-      submitted: { color: 'bg-yellow-500/20 text-yellow-600', icon: <Upload className="h-3 w-3" /> },
-      revision_requested: { color: 'bg-orange-500/20 text-orange-600', icon: <AlertCircle className="h-3 w-3" /> },
-      approved: { color: 'bg-green-500/20 text-green-600', icon: <CheckCircle className="h-3 w-3" /> },
-      paid: { color: 'bg-emerald-500/20 text-emerald-600', icon: <DollarSign className="h-3 w-3" /> },
-      disputed: { color: 'bg-red-500/20 text-red-600', icon: <AlertTriangle className="h-3 w-3" /> }
+      LOCKED: { color: 'bg-muted text-muted-foreground', icon: <Lock className="h-3 w-3" /> },
+      WAITING_FUNDS: { color: 'bg-amber-500/20 text-amber-600', icon: <Clock className="h-3 w-3" /> },
+      ACTIVE: { color: 'bg-blue-500/20 text-blue-600', icon: <FileText className="h-3 w-3" /> },
+      REVIEW_PENDING: { color: 'bg-yellow-500/20 text-yellow-600', icon: <Upload className="h-3 w-3" /> },
+      REVISION_REQUESTED: { color: 'bg-orange-500/20 text-orange-600', icon: <AlertCircle className="h-3 w-3" /> },
+      COMPLETED: { color: 'bg-emerald-500/20 text-emerald-600', icon: <DollarSign className="h-3 w-3" /> },
+      DISPUTED: { color: 'bg-red-500/20 text-red-600', icon: <AlertTriangle className="h-3 w-3" /> }
     };
 
-    const config = statusConfig[status] || statusConfig.pending;
+    const config = statusConfig[status] || statusConfig.LOCKED;
     return (
       <Badge className={`${config.color} gap-1`}>
         {config.icon}
@@ -201,8 +201,8 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
 
   const calculateProgress = () => {
     if (milestones.length === 0) return 0;
-    const paidMilestones = milestones.filter(m => m.status === 'paid').length;
-    return (paidMilestones / milestones.length) * 100;
+    const completedMilestones = milestones.filter(m => m.status === 'COMPLETED').length;
+    return (completedMilestones / milestones.length) * 100;
   };
 
   const getTotalBudget = () => {
@@ -210,7 +210,7 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
   };
 
   const getPaidAmount = () => {
-    return milestones.filter(m => m.status === 'paid').reduce((sum, m) => sum + (m.amount || 0), 0);
+    return milestones.filter(m => m.status === 'COMPLETED').reduce((sum, m) => sum + (m.amount || 0), 0);
   };
 
   const canStartMilestone = (milestone: Milestone, index: number) => {
@@ -218,9 +218,12 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
     if (isArtist && (!isPayoutsEnabled || project?.status !== 'accepted')) {
       return false;
     }
-    if (index === 0) return milestone.status === 'pending';
+    // In escrow model, artist can only start when the milestone is ACTIVE (funded)
+    // and previous milestone (if any) has been COMPLETED.
+    if (index === 0) return milestone.status === 'ACTIVE' || milestone.status === 'REVISION_REQUESTED';
     const previousMilestone = milestones[index - 1];
-    return previousMilestone.status === 'paid' && milestone.status === 'pending';
+    const currentReady = milestone.status === 'ACTIVE' || milestone.status === 'REVISION_REQUESTED';
+    return previousMilestone.status === 'COMPLETED' && currentReady;
   };
 
   const getStartBlockedReason = () => {
@@ -239,7 +242,7 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
     try {
       const { error } = await supabase
         .from('project_milestones')
-        .update({ status: 'in_progress' })
+        .update({ status: 'ACTIVE' })
         .eq('id', milestoneId);
 
       if (error) throw error;
@@ -360,10 +363,12 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
 
       {/* Milestones */}
       <Tabs defaultValue="milestones">
-        <TabsList>
-          <TabsTrigger value="milestones">Milestones ({milestones.length})</TabsTrigger>
-          <TabsTrigger value="activity">Activity Log</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+          <TabsList className="w-full h-auto min-h-[48px] sm:min-h-0 p-1 bg-muted/50 rounded-lg flex items-stretch gap-1">
+            <TabsTrigger value="milestones" className="flex-1 min-w-[140px] py-2 sm:py-2.5 px-3 rounded-md transition-all">Milestones ({milestones.length})</TabsTrigger>
+            <TabsTrigger value="activity" className="flex-1 min-w-[140px] py-2 sm:py-2.5 px-3 rounded-md transition-all">Activity Log</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="milestones" className="space-y-4 mt-4">
           {milestones.length === 0 ? (

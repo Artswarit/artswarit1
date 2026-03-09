@@ -1,9 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.8'
+
+type TransactionRow = {
+  amount: number | string | null
+}
+
+type ArtworkRow = {
+  metadata?: {
+    views?: number | null
+  } | null
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 serve(async (req) => {
@@ -16,23 +27,21 @@ serve(async (req) => {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
+      { auth: { autoRefreshToken: false, persistSession: false } }
     )
 
     // Get the authorization header from the request
-    const authHeader = req.headers.get('Authorization')!
-    supabase.auth.setSession({
-      access_token: authHeader.replace('Bearer ', ''),
-      refresh_token: '',
-    })
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    const token = authHeader.replace('Bearer ', '')
 
     // Get user from auth token
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token)
     
     if (userError || !user) {
       console.error('Authentication error:', userError)
@@ -87,7 +96,11 @@ serve(async (req) => {
       .eq('status', 'success')
 
     const totalSales = salesData?.length || 0
-    const totalEarnings = salesData?.reduce((sum, sale) => sum + Number(sale.amount), 0) || 0
+    const totalEarnings =
+      (salesData as TransactionRow[] | null)?.reduce(
+        (sum, sale) => sum + Number(sale.amount ?? 0),
+        0
+      ) ?? 0
 
     // Get monthly earnings
     const { data: monthlySalesData } = await supabase
@@ -97,7 +110,11 @@ serve(async (req) => {
       .eq('status', 'success')
       .gte('created_at', currentMonthStart.toISOString())
 
-    const monthlyEarnings = monthlySalesData?.reduce((sum, sale) => sum + Number(sale.amount), 0) || 0
+    const monthlyEarnings =
+      (monthlySalesData as TransactionRow[] | null)?.reduce(
+        (sum, sale) => sum + Number(sale.amount ?? 0),
+        0
+      ) ?? 0
 
     // Get total views (sum of views from all artworks)
     const { data: artworksData } = await supabase
@@ -105,11 +122,11 @@ serve(async (req) => {
       .select('metadata')
       .eq('artist_id', user.id)
 
-    // Note: This assumes views are stored in metadata. Adjust based on actual schema
-    const totalViews = artworksData?.reduce((sum, artwork) => {
-      const views = artwork.metadata?.views || 0
-      return sum + views
-    }, 0) || 0
+    const totalViews =
+      (artworksData as ArtworkRow[] | null)?.reduce((sum, artwork) => {
+        const views = artwork.metadata?.views ?? 0
+        return sum + views
+      }, 0) ?? 0
 
     const stats = {
       total_artworks: totalArtworks || 0,
