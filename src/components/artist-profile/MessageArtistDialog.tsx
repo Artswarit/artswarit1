@@ -93,8 +93,7 @@ const MessageArtistDialog: React.FC<MessageArtistDialogProps> = ({
           .select("id, client_last_cleared_at")
           .eq("client_id", currentUserId)
           .eq("artist_id", artistId)
-          .maybeSingle()
-          .abortSignal(controllerRef.current?.signal);
+          .maybeSingle();
 
         if (fetchError) {
           if (fetchError.name === 'AbortError' || (fetchError as any).code === 'ABORT') return;
