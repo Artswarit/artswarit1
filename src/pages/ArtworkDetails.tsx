@@ -1,15 +1,11 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft, Eye, Heart, Maximize2, Bookmark,
-  Crown, Lock, ExternalLink, Music, Share2,
+  Crown, Lock, Music, Send, MessageCircle, Share2,
 } from "lucide-react";
 import ArtworkFeedback from "@/components/artwork/ArtworkFeedback";
-import SocialShareButtons from "@/components/artwork/SocialShareButtons";
 import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,6 +15,7 @@ import {
   Dialog, DialogContent, DialogTrigger,
   DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export default function ArtworkDetails() {
@@ -35,13 +32,15 @@ export default function ArtworkDetails() {
   const [animateLike, setAnimateLike] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
+  const [doubleTapLike, setDoubleTapLike] = useState(false);
+  const lastTapRef = useRef(0);
   const { format } = useCurrencyFormat();
+  const commentSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function init() {
       if (!id) return;
 
-      // Fire view tracking
       const viewData: { artwork_id: string; user_id?: string } = { artwork_id: id };
       if (user?.id) viewData.user_id = user.id;
       supabase.from("artwork_views").insert(viewData).then(() => {});
@@ -66,7 +65,6 @@ export default function ArtworkDetails() {
       const meta = (data.metadata as any) || {};
       const accessType = meta.access_type || "free";
 
-      // Gate premium / exclusive
       if (accessType === "premium" || accessType === "exclusive") {
         if (!user?.id) {
           setAccessDenied(true);
@@ -76,11 +74,10 @@ export default function ArtworkDetails() {
         const isOwner = data.artist_id === user.id;
         if (!isOwner) {
           const { data: purchase } = await supabase
-            .from("transactions")
+            .from("artwork_unlocks")
             .select("id")
             .eq("artwork_id", id)
-            .eq("buyer_id", user.id)
-            .eq("status", "success")
+            .eq("user_id", user.id)
             .maybeSingle();
           if (!purchase) {
             setAccessDenied(true);
@@ -124,7 +121,6 @@ export default function ArtworkDetails() {
       });
       setLoading(false);
 
-      // Real-time
       const likesChannel = supabase
         .channel(`details-likes-${id}`)
         .on("postgres_changes", { event: "*", schema: "public", table: "artwork_likes", filter: `artwork_id=eq.${id}` },
@@ -199,148 +195,186 @@ export default function ArtworkDetails() {
     }
   };
 
-  // ── Loading ───────────────────────────────────────────────────────────────
+  const handleDoubleTap = () => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      if (!isLiked) {
+        handleLike();
+        setDoubleTapLike(true);
+        setTimeout(() => setDoubleTapLike(false), 1000);
+      }
+    }
+    lastTapRef.current = now;
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: artwork?.title, url });
+      } catch {}
+    } else if (navigator.clipboard) {
+      await navigator.clipboard.writeText(url);
+      toast({ title: "Link copied!" });
+    }
+  };
+
+  const scrollToComments = () => {
+    commentSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // ── Loading ───────────────────────────────────────────────
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Navbar />
-        <main className="flex-1 pt-20">
-          <div className="max-w-3xl mx-auto px-4 py-8 space-y-5 animate-pulse">
-            <div className="h-7 bg-muted rounded-xl w-1/3" />
-            <div className="w-full aspect-[4/3] bg-muted rounded-3xl" />
-            <div className="h-14 bg-muted rounded-2xl" />
-            <div className="h-20 bg-muted rounded-2xl" />
-            <div className="h-64 bg-muted rounded-2xl" />
+        <main className="flex-1 pt-16">
+          <div className="max-w-lg mx-auto animate-pulse">
+            <div className="flex items-center gap-3 p-3">
+              <div className="w-9 h-9 rounded-full bg-muted" />
+              <div className="h-4 bg-muted rounded w-28" />
+            </div>
+            <div className="w-full aspect-square bg-muted" />
+            <div className="p-3 space-y-3">
+              <div className="h-8 bg-muted rounded w-40" />
+              <div className="h-4 bg-muted rounded w-full" />
+              <div className="h-4 bg-muted rounded w-3/4" />
+            </div>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
 
-  // ── Access Denied ─────────────────────────────────────────────────────────
+  // ── Access Denied ─────────────────────────────────────────
   if (accessDenied) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Navbar />
         <main className="flex-1 flex items-center justify-center px-4 pt-20">
-          <div className="max-w-sm w-full text-center space-y-6 p-8 rounded-[2.5rem] border border-amber-400/20 bg-amber-50/50 dark:bg-amber-950/20 shadow-xl">
-            <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg">
+          <div className="max-w-sm w-full text-center space-y-6 p-8 rounded-2xl border border-border/40 bg-card shadow-xl">
+            <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg">
               <Crown className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-black tracking-tight mb-2">Premium Content</h1>
-              <p className="text-sm text-muted-foreground font-medium leading-relaxed">
+              <h1 className="text-xl font-bold tracking-tight mb-2">Premium Content</h1>
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 Purchase this artwork to unlock full access.
               </p>
             </div>
             <div className="flex flex-col gap-3">
               {!user?.id ? (
-                <Button asChild className="h-12 rounded-xl font-black">
-                  <Link to="/auth">Sign in to Purchase</Link>
+                <Button asChild className="h-12 rounded-xl font-semibold">
+                  <Link to="/login">Sign in to Purchase</Link>
                 </Button>
               ) : (
-                <Button className="h-12 rounded-xl font-black bg-gradient-to-r from-amber-400 to-orange-500 text-white border-none shadow-lg hover:shadow-xl transition-all">
+                <Button className="h-12 rounded-xl font-semibold bg-gradient-to-r from-amber-400 to-orange-500 text-white border-none shadow-lg">
                   <Lock className="h-4 w-4 mr-2" /> Unlock Artwork
                 </Button>
               )}
-              <Button variant="ghost" className="rounded-xl font-bold" onClick={() => navigate(-1)}>
+              <Button variant="ghost" className="rounded-xl font-medium" onClick={() => navigate(-1)}>
                 <ArrowLeft className="h-4 w-4 mr-2" /> Go Back
               </Button>
             </div>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
 
-  // ── Not Found ─────────────────────────────────────────────────────────────
+  // ── Not Found ─────────────────────────────────────────────
   if (!artwork) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Navbar />
         <main className="flex-1 flex items-center justify-center px-4 pt-20">
           <div className="text-center space-y-4">
-            <h1 className="text-2xl font-black">Artwork Not Found</h1>
+            <h1 className="text-2xl font-bold">Artwork Not Found</h1>
             <p className="text-muted-foreground">This artwork doesn't exist or has been removed.</p>
-            <Button asChild variant="outline" className="rounded-xl font-bold h-11">
+            <Button asChild variant="outline" className="rounded-xl h-11">
               <Link to="/explore">Back to Explore</Link>
             </Button>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
-
-  const accessLabel =
-    artwork.accessType === "premium" ? "Premium" :
-    artwork.accessType === "exclusive" ? "Exclusive" : null;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
 
-      {/* ── Sticky top nav ───────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border/30 h-14 flex items-center px-4">
-        <div className="max-w-3xl w-full mx-auto flex items-center justify-between">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-1.5 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </button>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleBookmark}
-              title={isBookmarked ? "Remove from saved" : "Save artwork"}
-              className={cn(
-                "h-9 w-9 rounded-xl flex items-center justify-center transition-all duration-300 active:scale-90",
-                isBookmarked
-                  ? "bg-primary/10 text-primary"
-                  : "bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted"
-              )}
-            >
-              <Bookmark className={cn("h-4 w-4", isBookmarked && "fill-current")} />
+      <main className="flex-1 pt-14 pb-4">
+        <div className="max-w-lg mx-auto">
+
+          {/* ── ARTIST HEADER (Instagram-style post header) ─────────── */}
+          <div className="flex items-center gap-3 px-3 sm:px-4 py-3">
+            <button onClick={() => navigate(-1)} className="mr-1 text-muted-foreground hover:text-foreground transition-colors sm:hidden">
+              <ArrowLeft className="h-5 w-5" />
             </button>
+            <Link
+              to={`/artist/${artwork.artistId}`}
+              className="flex items-center gap-3 flex-1 min-w-0 group"
+            >
+              {artwork.artistAvatar ? (
+                <img
+                  src={artwork.artistAvatar}
+                  alt={artwork.artist}
+                  className="w-9 h-9 rounded-full object-cover ring-2 ring-primary/20 group-hover:ring-primary/50 transition-all"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center text-primary font-bold text-sm shrink-0">
+                  {artwork.artist?.charAt(0)?.toUpperCase()}
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="font-semibold text-sm text-foreground truncate group-hover:text-primary transition-colors">
+                  {artwork.artist}
+                </p>
+                {artwork.category && (
+                  <p className="text-[11px] text-muted-foreground truncate">{artwork.category}</p>
+                )}
+              </div>
+            </Link>
+            {/* Access badge */}
+            {artwork.accessType !== "free" && (
+              <span className={cn(
+                "text-[10px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1",
+                artwork.accessType === "exclusive"
+                  ? "bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-400"
+                  : "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400"
+              )}>
+                <Crown className="h-3 w-3" />
+                {artwork.accessType === "exclusive" ? "Exclusive" : "Premium"}
+              </span>
+            )}
           </div>
-        </div>
-      </div>
 
-      <main className="flex-1 pb-16">
-        <div className="max-w-3xl mx-auto px-4 pt-6 space-y-6">
-
-          {/* ── IMAGE / VIDEO / AUDIO ──────────────────────────────────── */}
-          <div className="group relative rounded-2xl overflow-hidden bg-muted/20 border border-border/30">
+          {/* ── MEDIA (Full-width Instagram style) ─────────────────── */}
+          <div
+            className="relative w-full bg-black/5 dark:bg-white/5 select-none"
+            onClick={handleDoubleTap}
+          >
             {/* IMAGE */}
             {artwork.type === "image" && artwork.imageUrl && (
               <>
                 <img
                   src={artwork.imageUrl}
                   alt={artwork.title}
-                  className="w-full h-auto object-contain"
-                  style={{ display: "block" }}
+                  className="w-full h-auto object-contain max-h-[80vh]"
+                  draggable={false}
                 />
-                {/* Fullscreen trigger */}
+                {/* Fullscreen */}
                 <Dialog>
                   <DialogTrigger asChild>
-                    <button
-                      className="absolute top-3 right-3 h-9 w-9 rounded-xl bg-black/40 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-black/60 hover:scale-110"
-                      title="View fullscreen"
-                    >
-                      <Maximize2 className="h-4 w-4" />
+                    <button className="absolute top-3 right-3 h-8 w-8 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity">
+                      <Maximize2 className="h-3.5 w-3.5" />
                     </button>
                   </DialogTrigger>
                   <DialogContent className="max-w-[98vw] max-h-[98vh] p-0 border-none bg-background rounded-2xl overflow-hidden flex items-center justify-center">
                     <DialogTitle className="sr-only">Fullscreen — {artwork.title}</DialogTitle>
                     <DialogDescription className="sr-only">Full size view of {artwork.title}</DialogDescription>
-                    <img
-                      src={artwork.imageUrl}
-                      alt={artwork.title}
-                      className="max-w-full max-h-[96vh] object-contain rounded-2xl"
-                    />
+                    <img src={artwork.imageUrl} alt={artwork.title} className="max-w-full max-h-[96vh] object-contain" />
                   </DialogContent>
                 </Dialog>
               </>
@@ -348,9 +382,8 @@ export default function ArtworkDetails() {
 
             {/* VIDEO */}
             {artwork.type === "video" && artwork.videoUrl && (
-              <video controls playsInline className="w-full h-auto block">
+              <video controls playsInline className="w-full h-auto block max-h-[80vh]">
                 <source src={artwork.videoUrl} type="video/mp4" />
-                Your browser does not support video.
               </video>
             )}
 
@@ -358,180 +391,149 @@ export default function ArtworkDetails() {
             {(artwork.type === "audio" || artwork.type === "music") && (
               <div className="p-6 space-y-4">
                 {artwork.imageUrl ? (
-                  <img
-                    src={artwork.imageUrl}
-                    alt={artwork.title}
-                    className="w-full rounded-xl object-cover max-h-72"
-                  />
+                  <img src={artwork.imageUrl} alt={artwork.title} className="w-full rounded-xl object-cover max-h-72" />
                 ) : (
-                  <div className="w-full h-40 rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
-                    <Music className="h-12 w-12 text-primary/40" />
+                  <div className="w-full h-48 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                    <Music className="h-14 w-14 text-primary/30" />
                   </div>
                 )}
                 {artwork.audioUrl && (
-                  <audio controls className="w-full rounded-lg">
+                  <audio controls className="w-full">
                     <source src={artwork.audioUrl} type="audio/mpeg" />
                   </audio>
                 )}
               </div>
             )}
+
+            {/* Double-tap heart animation */}
+            {doubleTapLike && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                <Heart className="h-24 w-24 text-white fill-white drop-shadow-2xl animate-ping" style={{ animationDuration: '0.6s', animationIterationCount: 1 }} />
+              </div>
+            )}
           </div>
 
-          {/* ── STATS BAR: like · views · share ───────────────────────── */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Like */}
-            <div className="relative">
-              <button
-                onClick={handleLike}
-                disabled={isLiking}
-                aria-label={isLiked ? "Unlike" : "Like"}
-                className={cn(
-                  "flex items-center gap-2 px-4 h-10 rounded-xl text-sm font-bold transition-all duration-300 active:scale-95",
-                  isLiked
-                    ? "bg-red-100 dark:bg-red-500/15 text-red-500 border border-red-200 dark:border-red-500/20"
-                    : "bg-muted/60 text-muted-foreground border border-transparent hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-400 hover:border-red-200/50"
-                )}
-              >
-                <Heart
-                  className={cn(
-                    "h-4 w-4 transition-transform duration-300",
-                    isLiked && "fill-current scale-110",
-                    animateLike && "animate-bounce"
-                  )}
-                />
-                <span>{likeCount}</span>
-              </button>
-              <LikeParticles trigger={animateLike} />
-            </div>
+          {/* ── ACTION BAR (Instagram-style) ────────────────────────── */}
+          <div className="flex items-center px-3 sm:px-4 py-2.5">
+            {/* Left actions */}
+            <div className="flex items-center gap-4">
+              {/* Like */}
+              <div className="relative">
+                <button
+                  onClick={handleLike}
+                  disabled={isLiking}
+                  aria-label={isLiked ? "Unlike" : "Like"}
+                  className="flex items-center justify-center transition-transform duration-200 active:scale-75"
+                >
+                  <Heart
+                    className={cn(
+                      "h-6 w-6 transition-all duration-300",
+                      isLiked
+                        ? "text-red-500 fill-red-500 scale-110"
+                        : "text-foreground hover:text-muted-foreground"
+                    )}
+                  />
+                </button>
+                <LikeParticles trigger={animateLike} />
+              </div>
 
-            {/* Views */}
-            <div className="flex items-center gap-2 px-4 h-10 rounded-xl bg-muted/60 text-muted-foreground text-sm font-bold border border-transparent">
-              <Eye className="h-4 w-4" />
-              <span>{viewCount}</span>
+              {/* Comment */}
+              <button
+                onClick={scrollToComments}
+                aria-label="Comments"
+                className="flex items-center justify-center transition-transform duration-200 active:scale-90"
+              >
+                <MessageCircle className="h-6 w-6 text-foreground hover:text-muted-foreground transition-colors" />
+              </button>
+
+              {/* Share */}
+              <button
+                onClick={handleShare}
+                aria-label="Share"
+                className="flex items-center justify-center transition-transform duration-200 active:scale-90"
+              >
+                <Send className="h-5.5 w-5.5 text-foreground hover:text-muted-foreground transition-colors -rotate-12" />
+              </button>
             </div>
 
             {/* Spacer */}
             <div className="flex-1" />
 
-            {/* Share */}
-            <SocialShareButtons url={window.location.href} title={artwork.title} imageUrl={artwork.imageUrl} />
-          </div>
-
-          {/* ── TITLE + BADGES + PRICE ────────────────────────────────── */}
-          <div className="space-y-3">
-            <div className="flex items-center flex-wrap gap-2">
-              {artwork.category && (
-                <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest border-primary/20 bg-primary/5 text-primary rounded-lg">
-                  {artwork.category}
-                </Badge>
-              )}
-              {accessLabel && (
-                <Badge
-                  className={cn(
-                    "text-[10px] font-black uppercase tracking-widest border-none rounded-lg",
-                    artwork.accessType === "exclusive"
-                      ? "bg-fuchsia-600/90 text-white"
-                      : "bg-purple-600/90 text-white"
-                  )}
-                >
-                  <Crown className="h-2.5 w-2.5 mr-1" />
-                  {accessLabel}
-                </Badge>
-              )}
-            </div>
-
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight">
-              {artwork.title}
-            </h1>
-
-            {artwork.price > 0 && (
-              <div className="inline-flex items-center px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-black text-lg">
-                {format(artwork.price, artwork.currency)}
-              </div>
-            )}
-          </div>
-
-          {/* ── ARTIST CARD ───────────────────────────────────────────── */}
-          <Link
-            to={`/artist/${artwork.artistId}`}
-            className="flex items-center gap-3.5 p-4 rounded-2xl border border-border/40 bg-muted/20 hover:bg-muted/40 hover:border-primary/20 transition-all duration-300 group"
-          >
-            {artwork.artistAvatar ? (
-              <img
-                src={artwork.artistAvatar}
-                alt={artwork.artist}
-                className="w-11 h-11 rounded-xl object-cover ring-2 ring-background shadow-sm group-hover:scale-105 transition-transform duration-300"
+            {/* Bookmark */}
+            <button
+              onClick={handleBookmark}
+              aria-label={isBookmarked ? "Remove from saved" : "Save"}
+              className="flex items-center justify-center transition-transform duration-200 active:scale-75"
+            >
+              <Bookmark
+                className={cn(
+                  "h-6 w-6 transition-all duration-300",
+                  isBookmarked
+                    ? "text-foreground fill-foreground"
+                    : "text-foreground hover:text-muted-foreground"
+                )}
               />
-            ) : (
-              <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-lg shrink-0">
-                {artwork.artist?.charAt(0)?.toUpperCase()}
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-black text-muted-foreground/50 uppercase tracking-widest mb-0.5">
-                Artist
-              </p>
-              <p className="font-black text-foreground truncate group-hover:text-primary transition-colors duration-200">
-                {artwork.artist}
-              </p>
-            </div>
-            <ExternalLink className="h-4 w-4 text-muted-foreground/30 group-hover:text-primary transition-colors duration-200 shrink-0" />
-          </Link>
+            </button>
+          </div>
 
-          {/* ── DESCRIPTION ───────────────────────────────────────────── */}
-          {artwork.description && (
-            <div className="p-4 sm:p-5 rounded-2xl border border-border/30 bg-muted/10">
-              <p className="text-sm text-muted-foreground leading-relaxed font-medium whitespace-pre-wrap">
+          {/* ── LIKES COUNT ─────────────────────────────────────────── */}
+          <div className="px-3 sm:px-4">
+            <p className="text-sm font-semibold text-foreground">
+              {likeCount.toLocaleString()} {likeCount === 1 ? 'like' : 'likes'}
+            </p>
+          </div>
+
+          {/* ── TITLE & DESCRIPTION (Instagram caption style) ──────── */}
+          <div className="px-3 sm:px-4 pt-1.5 pb-1 space-y-1">
+            <p className="text-sm">
+              <Link to={`/artist/${artwork.artistId}`} className="font-semibold text-foreground hover:text-muted-foreground transition-colors mr-1.5">
+                {artwork.artist}
+              </Link>
+              <span className="font-medium text-foreground">{artwork.title}</span>
+            </p>
+            {artwork.description && (
+              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                 {artwork.description}
               </p>
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* ── TAGS ──────────────────────────────────────────────────── */}
+          {/* ── TAGS ────────────────────────────────────────────────── */}
           {artwork.tags?.length > 0 && (
-            <div className="flex items-center flex-wrap gap-2">
-              {artwork.tags.map((tag: string) => (
-                <span
-                  key={tag}
-                  className="px-3 py-1.5 rounded-lg bg-muted/50 text-xs font-bold text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors cursor-default"
-                >
-                  #{tag}
-                </span>
-              ))}
+            <div className="px-3 sm:px-4 pb-1">
+              <p className="text-sm text-primary/80">
+                {artwork.tags.map((tag: string) => `#${tag}`).join(' ')}
+              </p>
             </div>
           )}
 
-          {/* ── PURCHASE CTA (premium / exclusive) ────────────────────── */}
-          {(artwork.accessType === "premium" || artwork.accessType === "exclusive") && artwork.price > 0 && (
-            <Button className="w-full h-13 rounded-2xl font-black bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 hover:from-amber-500 hover:via-orange-600 hover:to-red-600 text-white border-none shadow-lg shadow-orange-500/20 transition-all hover:shadow-xl hover:-translate-y-0.5">
-              <Crown className="h-4 w-4 mr-2" />
-              Purchase for {format(artwork.price, artwork.currency)}
-            </Button>
+          {/* ── VIEWS ───────────────────────────────────────────────── */}
+          <div className="px-3 sm:px-4 pb-2">
+            <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+              <Eye className="h-3 w-3" />
+              {viewCount.toLocaleString()} views
+            </p>
+          </div>
+
+          {/* ── PRICE / PURCHASE CTA ────────────────────────────────── */}
+          {artwork.price > 0 && (artwork.accessType === "premium" || artwork.accessType === "exclusive") && (
+            <div className="px-3 sm:px-4 pb-3">
+              <Button className="w-full h-11 rounded-xl font-semibold bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 hover:from-amber-500 hover:via-orange-600 hover:to-red-600 text-white border-none shadow-md">
+                <Crown className="h-4 w-4 mr-2" />
+                Purchase for {format(artwork.price, artwork.currency)}
+              </Button>
+            </div>
           )}
 
-          {/* ── SEPARATOR ─────────────────────────────────────────────── */}
-          <div className="border-t border-border/30" />
+          {/* ── SEPARATOR ──────────────────────────────────────────── */}
+          <div className="border-t border-border/30 mx-3 sm:mx-4" />
 
-          {/* ── COMMENTS & REVIEWS ────────────────────────────────────── */}
-          {id && <ArtworkFeedback artworkId={id} />}
-
-          {/* ── BACK BUTTON ───────────────────────────────────────────── */}
-          <div className="flex justify-center pt-4 pb-8">
-            <Button
-              asChild
-              variant="outline"
-              className="h-11 px-8 rounded-xl font-black border-border/40 hover:bg-muted/50 transition-all"
-            >
-              <Link to="/explore">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Explore
-              </Link>
-            </Button>
+          {/* ── COMMENTS & REVIEWS ─────────────────────────────────── */}
+          <div ref={commentSectionRef} className="px-3 sm:px-4">
+            {id && <ArtworkFeedback artworkId={id} />}
           </div>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

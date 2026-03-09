@@ -134,10 +134,10 @@ export function DisputeManagement() {
 
       // Update milestone status based on resolution
       if (selectedDispute.milestone_id) {
-        let newStatus: Database['public']['Enums']['milestone_status'] = 'WAITING_FUNDS';
-        if (resolutionType === 'approved') newStatus = 'COMPLETED';
-        if (resolutionType === 'revision') newStatus = 'REVISION_REQUESTED';
-        if (resolutionType === 'cancelled') newStatus = 'WAITING_FUNDS';
+        let newStatus = 'pending' as string;
+        if (resolutionType === 'approved') newStatus = 'approved';
+        if (resolutionType === 'revision') newStatus = 'revision_requested';
+        if (resolutionType === 'cancelled') newStatus = 'pending';
 
         await supabase
           .from('project_milestones')

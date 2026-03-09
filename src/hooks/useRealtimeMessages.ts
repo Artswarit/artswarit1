@@ -145,8 +145,7 @@ export const useRealtimeMessages = () => {
           const { data: lastMsgData } = await lastMsgQuery
             .order('created_at', { ascending: false })
             .limit(1)
-            .maybeSingle()
-            .abortSignal(signal);
+            .maybeSingle();
 
           // Get unread count
           const clearedAt = conv.client_id === user.id ? conv.client_last_cleared_at : conv.artist_last_cleared_at;
@@ -205,7 +204,7 @@ export const useRealtimeMessages = () => {
       const conv = conversations.find(c => c.id === conversationId);
       let clearedAt: string | null | undefined = null;
       if (conv) {
-        clearedAt = conv.client_id === user.id ? conv.client_last_cleared_at : conv.artist_last_cleared_at;
+        clearedAt = conv.clientId === user.id ? conv.client_last_cleared_at : conv.artist_last_cleared_at;
       }
 
       let query = supabase
@@ -276,8 +275,7 @@ export const useRealtimeMessages = () => {
           attachments: attachments && attachments.length > 0 ? JSON.parse(JSON.stringify(attachments)) : []
         })
         .select()
-        .single()
-        .abortSignal(signal);
+        .single();
 
       if (error) {
         if (error.name === 'AbortError' || (error as any).code === 'ABORT' || error.message?.includes('signal is aborted')) return null;
@@ -370,7 +368,7 @@ export const useRealtimeMessages = () => {
               const conv = conversations.find(c => c.id === activeConversationId);
               let clearedAt: string | null | undefined = null;
               if (conv) {
-                clearedAt = conv.client_id === user.id ? conv.client_last_cleared_at : conv.artist_last_cleared_at;
+                clearedAt = conv.clientId === user.id ? conv.client_last_cleared_at : conv.artist_last_cleared_at;
               }
               
               if (clearedAt && new Date(newMsg.created_at) <= new Date(clearedAt)) {
