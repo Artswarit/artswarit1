@@ -204,7 +204,7 @@ export const useRealtimeMessages = () => {
       const conv = conversations.find(c => c.id === conversationId);
       let clearedAt: string | null | undefined = null;
       if (conv) {
-        clearedAt = conv.client_id === user.id ? conv.client_last_cleared_at : conv.artist_last_cleared_at;
+        clearedAt = conv.clientId === user.id ? conv.client_last_cleared_at : conv.artist_last_cleared_at;
       }
 
       let query = supabase
