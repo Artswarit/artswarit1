@@ -9,6 +9,7 @@ import { Music, BookOpen, Edit, Pencil, User, Briefcase, ArrowRight } from "luci
 import AnimatedHeroSlider from "@/components/AnimatedHeroSlider";
 import ArtworkCarousel from "@/components/ArtworkCarousel";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 import { useCategoryCounts } from "@/hooks/useCategoryCounts";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -210,7 +211,9 @@ const Index = () => {
           <Carousel opts={{
           align: "start",
           loop: true
-        }} className="w-full">
+        }} plugins={[
+          Autoplay({ delay: 4000, stopOnInteraction: false, stopOnMouseEnter: true })
+        ]} className="w-full group">
             <CarouselContent className="-ml-2 md:-ml-4">
               {featuredArtists.map(artist => (
                 <CarouselItem key={artist.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
@@ -220,8 +223,8 @@ const Index = () => {
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="hidden sm:flex left-2 bg-white/80 backdrop-blur-md border border-white/30 text-primary hover:bg-white/90" />
-            <CarouselNext className="hidden sm:flex right-2 bg-white/80 backdrop-blur-md border border-white/30 text-primary hover:bg-white/90" />
+            <CarouselPrevious className="left-2 bg-white/80 backdrop-blur-md border border-white/30 text-primary hover:bg-white/90 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <CarouselNext className="right-2 bg-white/80 backdrop-blur-md border border-white/30 text-primary hover:bg-white/90 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </Carousel>
         </div>
       </section>

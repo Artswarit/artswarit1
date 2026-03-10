@@ -108,12 +108,12 @@ serve(async (req) => {
     if (artwork.media_url) {
       try {
         const url = new URL(artwork.media_url)
-        // Handle Supabase storage URLs
-        if (url.pathname.includes('/storage/v1/object/public/media/')) {
-          filePath = url.pathname.split('/storage/v1/object/public/media/')[1]
-        } else if (url.pathname.includes('/media/')) {
+        // Handle Supabase storage URLs — bucket is 'artworks'
+        if (url.pathname.includes('/storage/v1/object/public/artworks/')) {
+          filePath = url.pathname.split('/storage/v1/object/public/artworks/')[1]
+        } else if (url.pathname.includes('/artworks/')) {
           // Fallback for other formats
-          const parts = url.pathname.split('/media/')
+          const parts = url.pathname.split('/artworks/')
           filePath = parts[parts.length - 1]
         }
         
@@ -155,8 +155,7 @@ serve(async (req) => {
     const cleanupResults = await Promise.all([
       cleanup('reports', 'artwork_id'),
       cleanup('saved_artworks', 'artwork_id'),
-      cleanup('likes', 'artwork_id'),
-      cleanup('comments', 'artwork_id'),
+      cleanup('artwork_likes', 'artwork_id'),
       cleanup('artwork_views', 'artwork_id'),
       cleanup('artwork_feedback', 'artwork_id'),
       cleanup('project_files', 'artwork_id'),
@@ -229,7 +228,7 @@ serve(async (req) => {
     if (filePath) {
       console.log(`Deleting file from storage: ${filePath}`)
       const { error: storageError } = await supabaseAdmin.storage
-        .from('media')
+        .from('artworks')
         .remove([filePath])
 
       if (storageError) {
