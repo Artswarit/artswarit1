@@ -169,7 +169,7 @@ const ArtistDashboard = () => {
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50/50 dark:bg-background">
         <Navbar />
-        <main className="container mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-20 sm:pt-28 pb-12 sm:pb-20">
+        <main className="w-full max-w-[1400px] mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-20 sm:pt-28 pb-12 sm:pb-20">
           <DashboardHeader
             user={user}
             profile={profile}

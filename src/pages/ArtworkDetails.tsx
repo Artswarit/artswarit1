@@ -63,6 +63,19 @@ export default function ArtworkDetails() {
 
       const data = artworkRes.data;
       const meta = (data.metadata as any) || {};
+      
+      // Block access to banned content immediately
+      if (meta.admin_banned) {
+        setArtwork(null);
+        setLoading(false);
+        toast({
+          title: "Content Unavailable",
+          description: "This artwork has been removed for violating community guidelines.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       const accessType = meta.access_type || "free";
 
       if (accessType === "premium" || accessType === "exclusive") {
@@ -228,20 +241,22 @@ export default function ArtworkDetails() {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Navbar />
-        <main className="flex-1 pt-16">
-          <div className="max-w-lg mx-auto animate-pulse">
-            <div className="flex items-center gap-3 p-3">
+        <main className="flex-1 pt-24 pb-4">
+        <div className="max-w-6xl mx-auto px-0 sm:px-4 lg:px-8 animate-pulse">
+          <div className="bg-card sm:rounded-2xl border-x-0 sm:border border-border/40 overflow-hidden shadow-sm">
+            <div className="flex items-center gap-3 p-3 sm:p-4">
               <div className="w-9 h-9 rounded-full bg-muted" />
               <div className="h-4 bg-muted rounded w-28" />
             </div>
             <div className="w-full aspect-square bg-muted" />
-            <div className="p-3 space-y-3">
+            <div className="p-4 space-y-3">
               <div className="h-8 bg-muted rounded w-40" />
               <div className="h-4 bg-muted rounded w-full" />
               <div className="h-4 bg-muted rounded w-3/4" />
             </div>
           </div>
-        </main>
+        </div>
+      </main>
       </div>
     );
   }
@@ -304,8 +319,9 @@ export default function ArtworkDetails() {
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
 
-      <main className="flex-1 pt-14 pb-4">
-        <div className="max-w-lg mx-auto">
+      <main className="flex-1 pt-24 pb-4">
+        <div className="max-w-6xl mx-auto px-0 sm:px-4 lg:px-8">
+          <div className="bg-card sm:rounded-2xl border-x-0 sm:border border-border/40 overflow-hidden shadow-sm">
 
           {/* ── ARTIST HEADER (Instagram-style post header) ─────────── */}
           <div className="flex items-center gap-3 px-3 sm:px-4 py-3">
@@ -352,18 +368,20 @@ export default function ArtworkDetails() {
 
           {/* ── MEDIA (Full-width Instagram style) ─────────────────── */}
           <div
-            className="relative w-full bg-black/5 dark:bg-white/5 select-none"
+            className="relative w-full select-none"
             onClick={handleDoubleTap}
           >
             {/* IMAGE */}
             {artwork.type === "image" && artwork.imageUrl && (
               <>
-                <img
-                  src={artwork.imageUrl}
-                  alt={artwork.title}
-                  className="w-full h-auto object-contain max-h-[80vh]"
-                  draggable={false}
-                />
+                <div className="bg-muted/30 flex items-center justify-center">
+                  <img
+                    src={artwork.imageUrl}
+                    alt={artwork.title}
+                    className="w-full h-auto max-h-[90vh] object-contain block mx-auto"
+                    draggable={false}
+                  />
+                </div>
                 {/* Fullscreen */}
                 <Dialog>
                   <DialogTrigger asChild>
@@ -529,11 +547,12 @@ export default function ArtworkDetails() {
           <div className="border-t border-border/30 mx-3 sm:mx-4" />
 
           {/* ── COMMENTS & REVIEWS ─────────────────────────────────── */}
-          <div ref={commentSectionRef} className="px-3 sm:px-4">
+          <div ref={commentSectionRef} className="px-3 sm:px-4 pb-6">
             {id && <ArtworkFeedback artworkId={id} />}
           </div>
         </div>
-      </main>
-    </div>
-  );
+      </div>
+    </main>
+  </div>
+);
 }

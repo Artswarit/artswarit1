@@ -30,6 +30,7 @@ interface ReportedItem {
   artwork_title?: string;
   artwork_image?: string;
   artwork_artist_id?: string;
+  artwork_status?: string;
   artist_name?: string;
   reporter_name?: string;
 }
@@ -95,14 +96,14 @@ export default function ContentModeration() {
       });
 
       // Fetch artworks
-      let artworkMap: Record<string, { title: string; media_url: string; artist_id: string }> = {};
+      let artworkMap: Record<string, { title: string; media_url: string; artist_id: string; status: string }> = {};
       if (artworkIds.size > 0) {
         const { data: artworks } = await supabase
           .from('artworks')
-          .select('id, title, media_url, artist_id')
+          .select('id, title, media_url, artist_id, status')
           .in('id', Array.from(artworkIds));
         (artworks || []).forEach((a: any) => {
-          artworkMap[a.id] = { title: a.title, media_url: a.media_url, artist_id: a.artist_id };
+          artworkMap[a.id] = { title: a.title, media_url: a.media_url, artist_id: a.artist_id, status: a.status };
           if (a.artist_id) userIds.add(a.artist_id);
         });
       }
@@ -124,6 +125,7 @@ export default function ContentModeration() {
           artwork_title: artwork?.title || 'Unknown Artwork',
           artwork_image: artwork?.media_url || '',
           artwork_artist_id: artwork?.artist_id,
+          artwork_status: artwork?.status,
           artist_name: artwork?.artist_id ? nameMap[artwork.artist_id] || artwork.artist_id.slice(0, 8) : 'Unknown',
           reporter_name: nameMap[r.reporter_id] || r.reporter_id.slice(0, 8),
         };
@@ -167,18 +169,71 @@ export default function ContentModeration() {
     if (!selectedReport || !reason.trim()) return;
     setProcessing(true);
     try {
-      // Update report status
-      await supabase.from('reports').update({ status: 'resolved' }).eq('id', selectedReport.id);
-
-      // Hide artwork & inject banned flag
+      // Resolve ALL pending reports for this artwork/user
       if (selectedReport.artwork_id) {
-        const { data: currentArtwork } = await supabase.from('artworks').select('metadata').eq('id', selectedReport.artwork_id).single();
-        const existingMetadata = (typeof currentArtwork?.metadata === 'object' && currentArtwork?.metadata !== null ? currentArtwork.metadata : {}) as Record<string, unknown>;
+        await supabase.from('reports')
+          .update({ status: 'resolved' })
+          .eq('artwork_id', selectedReport.artwork_id)
+          .eq('status', 'pending');
+      } else if (selectedReport.user_id) {
+        await supabase.from('reports')
+          .update({ status: 'resolved' })
+          .eq('user_id', selectedReport.user_id)
+          .eq('status', 'pending');
+      }
+
+      // Actually delete the artwork and its media via Edge Function
+      if (selectedReport.artwork_id) {
+        setProcessing(true);
+        console.log('Invoking delete function for artwork:', selectedReport.artwork_id);
         
-        await supabase.from('artworks').update({ 
-          status: 'archived',
-          metadata: { ...existingMetadata, admin_banned: true, ban_reason: reason }
-        }).eq('id', selectedReport.artwork_id);
+        try {
+          const { data, error: deleteError } = await supabase.functions.invoke('delete-artwork-and-media', {
+            body: { artworkId: selectedReport.artwork_id }
+          });
+          
+          if (deleteError) {
+            console.error('Edge function error object:', deleteError);
+            
+            // Try to extract a human-readable error from the error object or response
+            let errorMsg = 'Unknown error';
+            
+            if (typeof deleteError === 'string') {
+              errorMsg = deleteError;
+            } else if (deleteError instanceof Error) {
+              errorMsg = deleteError.message;
+            } else if (deleteError.context?.json) {
+              // Try to get JSON from the response body if it exists
+              try {
+                const body = await deleteError.context.json();
+                errorMsg = body.error || body.message || JSON.stringify(body);
+              } catch (e) {
+                errorMsg = deleteError.message || 'Server error';
+              }
+            } else if (data?.error) {
+              errorMsg = data.error;
+            }
+
+            throw new Error(errorMsg);
+          }
+          
+          toast.success('Artwork and media permanently deleted');
+        } catch (edgeErr: any) {
+          console.error('Moderation cleanup error:', edgeErr);
+          
+          // If the function fails, fallback to archiving immediately
+          const { error: archiveError } = await supabase.from('artworks').update({ 
+            status: 'archived',
+            metadata: { admin_banned: true, ban_reason: reason }
+          }).eq('id', selectedReport.artwork_id);
+          
+          if (archiveError) {
+            console.error('Archive fallback failed:', archiveError);
+            throw new Error(`Deletion and Archive both failed: ${archiveError.message}`);
+          }
+          
+          toast.warning(`Permanant deletion failed, but artwork was hidden: ${edgeErr.message}`);
+        }
       }
 
       // Notify artist and Issue Automatic Strike
@@ -211,11 +266,13 @@ export default function ContentModeration() {
         takedown_within_3hrs: withinDeadline,
       });
 
-      toast.success('Content removed and artist notified');
+      toast.success('Content removed and report resolved');
       fetchReports();
       setDialogOpen(false);
+      setSelectedReport(null);
     } catch (err: any) {
-      toast.error(err.message || 'Failed');
+      console.error('Full moderation error:', err);
+      toast.error(err.message || 'Failed to moderate content');
     } finally { setProcessing(false); }
   };
 
@@ -283,6 +340,7 @@ export default function ContentModeration() {
                         <div className="flex-1 min-w-0 space-y-1.5">
                           <div className="flex items-center gap-2 flex-wrap">
                             <h4 className="font-bold text-sm truncate">{r.artwork_title}</h4>
+                            {r.artwork_status === 'archived' && <Badge variant="outline" className="text-[10px] h-4 bg-red-100 text-red-600 border-red-200">ALREADY REMOVED</Badge>}
                             <Badge className="bg-red-600 text-white border-0 text-[9px]">URGENT</Badge>
                             <CountdownTimer flaggedAt={r.created_at} />
                           </div>
@@ -313,6 +371,7 @@ export default function ContentModeration() {
                         <div className="flex-1 min-w-0 space-y-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <h4 className="font-bold text-sm truncate">{r.artwork_title}</h4>
+                            {r.artwork_status === 'archived' && <Badge variant="outline" className="text-[10px] h-4 bg-red-100 text-red-600 border-red-200">ALREADY REMOVED</Badge>}
                             <CountdownTimer flaggedAt={r.created_at} />
                           </div>
                           <p className="text-xs text-muted-foreground line-clamp-1">{r.reason}</p>
@@ -343,7 +402,12 @@ export default function ContentModeration() {
                 {resolvedReports.slice(0, 10).map(r => (
                   <div key={r.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/30 opacity-60">
                     {r.artwork_image && <img src={r.artwork_image} alt="" className="w-10 h-10 rounded object-cover" />}
-                    <div className="flex-1 min-w-0"><p className="text-xs font-bold truncate">{r.artwork_title}</p></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold truncate">{r.artwork_title}</p>
+                      {r.artwork_status === 'archived' && (
+                        <Badge variant="outline" className="text-[10px] h-4 bg-red-100 text-red-600 border-red-200">Already Removed</Badge>
+                      )}
+                    </div>
                     <Badge className={r.status === 'resolved' ? 'bg-red-500/20 text-red-600' : 'bg-slate-500/20 text-slate-600'}>
                       {r.status === 'resolved' ? 'Removed' : 'Dismissed'}
                     </Badge>
@@ -357,19 +421,27 @@ export default function ContentModeration() {
 
       {/* ── Detail Dialog ── */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[95vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-red-600" /> Content Review</DialogTitle>
-            <DialogDescription>Review flagged content. Removal hides artwork and notifies artist.</DialogDescription>
+            <DialogTitle className="flex items-center gap-2 text-2xl font-bold"><AlertTriangle className="h-6 w-6 text-red-600" /> Content Review</DialogTitle>
+            <DialogDescription className="text-base">Review flagged content. Removal hides artwork and notifies artist.</DialogDescription>
           </DialogHeader>
           {selectedReport && (
-            <div className="space-y-4">
-              {selectedReport.artwork_image && <img src={selectedReport.artwork_image} alt="" className="w-full h-48 object-cover rounded-xl border" />}
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div><Label className="text-[10px] text-muted-foreground uppercase tracking-widest">Artwork</Label><p className="font-bold">{selectedReport.artwork_title}</p></div>
-                <div><Label className="text-[10px] text-muted-foreground uppercase tracking-widest">Artist</Label><p className="font-bold">{selectedReport.artist_name}</p></div>
-                <div><Label className="text-[10px] text-muted-foreground uppercase tracking-widest">Reported By</Label><p className="font-bold">{selectedReport.reporter_name}</p></div>
-                <div><Label className="text-[10px] text-muted-foreground uppercase tracking-widest">Timer</Label><div className="mt-1"><CountdownTimer flaggedAt={selectedReport.created_at} /></div></div>
+            <div className="space-y-6">
+              {selectedReport.artwork_image && (
+                <div className="w-full bg-slate-950 rounded-2xl overflow-hidden border-2 border-slate-800 flex items-center justify-center min-h-[400px] max-h-[600px] shadow-2xl">
+                  <img 
+                    src={selectedReport.artwork_image} 
+                    alt="" 
+                    className="max-w-full max-h-[600px] object-contain transition-all duration-500 hover:scale-105" 
+                  />
+                </div>
+              )}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-muted/30 border">
+                <div><Label className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Artwork</Label><p className="font-bold text-sm truncate">{selectedReport.artwork_title}</p></div>
+                <div><Label className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Artist</Label><p className="font-bold text-sm truncate">{selectedReport.artist_name}</p></div>
+                <div><Label className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Reported By</Label><p className="font-bold text-sm truncate">{selectedReport.reporter_name}</p></div>
+                <div><Label className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Timer</Label><div className="mt-1"><CountdownTimer flaggedAt={selectedReport.created_at} /></div></div>
               </div>
               <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/30">
                 <Label className="text-[10px] text-red-600 uppercase tracking-widest font-bold">Report Reason</Label>

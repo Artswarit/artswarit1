@@ -37,6 +37,7 @@ export const useArtworks = () => {
           artist_id
         `)
         .eq('artist_id', userId)
+        .neq('status', 'archived')
         .order('created_at', { ascending: false });
 
       if (error) {
