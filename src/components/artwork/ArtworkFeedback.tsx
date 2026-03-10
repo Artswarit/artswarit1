@@ -1,12 +1,13 @@
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useArtworkFeedback, Feedback as FeedbackType } from '@/hooks/useArtworkFeedback';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { StarRating } from '@/components/ui/StarRating';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, X, Heart, ChevronDown, ChevronUp, Send } from 'lucide-react';
+import { Loader2, X, Heart, ChevronDown, ChevronUp, Send, Smile } from 'lucide-react';
+import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -65,18 +66,37 @@ const UsernameLink = ({ name, avatarUrl, userId, className }: { name: string; av
 };
 
 /* ── Mention renderer ────────────────────────────────────── */
-const renderContentWithMentions = (content: string) => {
-  const parts = content.split(/(@\w[\w\s]*?)(?=\s|$)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith('@')) {
-      return (
-        <span key={i} className="text-primary font-semibold cursor-pointer hover:underline">
-          {part}
-        </span>
-      );
+const renderContentWithMentions = (content: string, userMap: Map<string, { id: string; avatarUrl: string | null }>) => {
+    if (!userMap || userMap.size === 0) {
+        return <span>{content}</span>;
     }
-    return <span key={i}>{part}</span>;
-  });
+
+    // Create a regex from all known usernames in the thread, sorted by length to match longest first
+    const sortedUsernames = Array.from(userMap.keys()).sort((a, b) => b.length - a.length);
+    // Escape special characters for regex
+    const escapedUsernames = sortedUsernames.map(u => '@' + u.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const regex = new RegExp(`(${escapedUsernames.join('|')})`, 'g');
+
+    const parts = content.split(regex);
+
+    return parts.filter(part => part).map((part, i) => {
+        if (part.startsWith('@')) {
+            const username = part.substring(1);
+            const userData = userMap.get(username);
+            if (userData) {
+                return (
+                    <UsernameLink
+                        key={i}
+                        name={username}
+                        avatarUrl={userData.avatarUrl}
+                        userId={userData.id}
+                    />
+                );
+            }
+        }
+        // Return plain text for non-mentions or parts that failed to match
+        return <span key={i}>{part}</span>;
+    });
 };
 
 /* ── Single Comment ──────────────────────────────────────── */
@@ -99,6 +119,20 @@ const CommentItem = ({
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const replyInputRef = useRef<HTMLInputElement>(null);
+
+  // Create a map of all users in the thread for mention rendering
+  const userMap = useMemo(() => {
+    const map = new Map<string, { id: string; avatarUrl: string | null }>();
+    if (feedback.profiles?.full_name && feedback.user_id) {
+        map.set(feedback.profiles.full_name, { id: feedback.user_id, avatarUrl: feedback.profiles.avatar_url ?? null });
+    }
+    replies.forEach(reply => {
+        if (reply.profiles?.full_name && reply.user_id) {
+            map.set(reply.profiles.full_name, { id: reply.user_id, avatarUrl: reply.profiles.avatar_url ?? null });
+        }
+    });
+    return map;
+  }, [feedback, replies]);
 
   const userName = feedback.profiles?.full_name ?? 'Anonymous';
   const userId = (feedback as any).user_id || '';
@@ -175,10 +209,10 @@ const CommentItem = ({
 
         {/* Body */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm leading-snug">
+          <div className="text-sm leading-snug">
             <UsernameLink name={userName} avatarUrl={feedback.profiles?.avatar_url ?? null} userId={userId} className="mr-1.5" />
-            <span className="text-foreground/90">{renderContentWithMentions(feedback.content)}</span>
-          </p>
+            <span className="text-foreground/90">{renderContentWithMentions(feedback.content, userMap)}</span>
+          </div>
           {feedback.rating && (
             <StarRating rating={feedback.rating} onRatingChange={() => {}} readOnly className="mt-1" starClassName="w-3 h-3" />
           )}
@@ -258,10 +292,10 @@ const CommentItem = ({
                         </Avatar>
                       </Link>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[13px] leading-snug">
+                        <div className="text-[13px] leading-snug">
                           <UsernameLink name={replyName} avatarUrl={reply.profiles?.avatar_url ?? null} userId={reply.user_id} className="mr-1 text-[13px]" />
-                          <span className="text-foreground/90">{renderContentWithMentions(reply.content)}</span>
-                        </p>
+                          <span className="text-foreground/90">{renderContentWithMentions(reply.content, userMap)}</span>
+                        </div>
                         <div className="flex items-center gap-3 mt-1">
                           <span className="text-[10px] text-muted-foreground">
                             {formatDistanceToNow(new Date(reply.created_at), { addSuffix: false })}
@@ -304,6 +338,7 @@ const ArtworkFeedback = ({ artworkId, isOpen, onClose }: ArtworkFeedbackProps) =
   const [newComment, setNewComment] = useState('');
   const [newRating, setNewRating] = useState(0);
   const [showRating, setShowRating] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -317,6 +352,12 @@ const ArtworkFeedback = ({ artworkId, isOpen, onClose }: ArtworkFeedbackProps) =
     }
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
+
+  const onEmojiClick = (emojiData: EmojiClickData) => {
+    setNewComment(prev => prev + emojiData.emoji);
+    setShowEmojiPicker(false);
+    inputRef.current?.focus();
+  };
 
   const handleSubmit = () => {
     if (!newComment.trim()) return;
@@ -401,7 +442,12 @@ const ArtworkFeedback = ({ artworkId, isOpen, onClose }: ArtworkFeedbackProps) =
         </div>
 
         {/* Input bar */}
-        <div className="border-t border-border/40 px-4 py-3 bg-background safe-area-pb">
+        <div className="border-t border-border/40 px-4 py-3 bg-background safe-area-pb relative">
+          {showEmojiPicker && (
+            <div className="absolute bottom-full right-4 z-10">
+              <EmojiPicker onEmojiClick={onEmojiClick} />
+            </div>
+          )}
           {!user ? (
             <p className="text-center text-sm text-muted-foreground py-1">
               <Link to="/login" className="text-primary font-semibold hover:underline">Log in</Link>
@@ -432,6 +478,13 @@ const ArtworkFeedback = ({ artworkId, isOpen, onClose }: ArtworkFeedbackProps) =
                     onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                     disabled={isAddingFeedback}
                   />
+                  <button
+                    onClick={() => setShowEmojiPicker(prev => !prev)}
+                    className="text-muted-foreground hover:text-foreground mr-2 transition-colors"
+                    title="Add emoji"
+                  >
+                    <Smile className="h-4 w-4" />
+                  </button>
                   {!showRating && (
                     <button
                       onClick={() => setShowRating(true)}

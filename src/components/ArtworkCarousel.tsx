@@ -10,6 +10,7 @@ import {
 import { Eye, Heart } from "lucide-react";
 import { usePublicArtworks } from "@/hooks/usePublicArtworks";
 import { Skeleton } from "@/components/ui/skeleton";
+import Autoplay from "embla-carousel-autoplay";
 
 const ArtworkCarousel = () => {
   const { artworks, loading } = usePublicArtworks();
@@ -79,7 +80,10 @@ const ArtworkCarousel = () => {
             align: "start",
             loop: true,
           }}
-          className="w-full"
+          plugins={[
+            Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true })
+          ]}
+          className="w-full group"
         >
           <CarouselContent>
             {featuredArtwork.map((artwork) => (
@@ -132,8 +136,8 @@ const ArtworkCarousel = () => {
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="left-2 bg-white/80 backdrop-blur-md border border-white/30 text-primary hover:bg-white/90" />
-          <CarouselNext className="right-2 bg-white/80 backdrop-blur-md border border-white/30 text-primary hover:bg-white/90" />
+          <CarouselPrevious className="left-2 bg-white/80 backdrop-blur-md border border-white/30 text-primary hover:bg-white/90 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <CarouselNext className="right-2 bg-white/80 backdrop-blur-md border border-white/30 text-primary hover:bg-white/90 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </Carousel>
         
         <div className="mt-12 text-center md:hidden">
