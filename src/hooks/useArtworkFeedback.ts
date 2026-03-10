@@ -8,6 +8,8 @@ export type Feedback = {
   content: string;
   rating: number | null;
   created_at: string;
+  user_id: string;
+  reply_count: number;
   profiles: {
     full_name: string | null;
     avatar_url: string | null;
