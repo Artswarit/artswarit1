@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useArtworkFeedback, Feedback as FeedbackType } from '@/hooks/useArtworkFeedback';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -20,22 +20,94 @@ type Reply = {
   profiles: { full_name: string | null; avatar_url: string | null } | null;
 };
 
+/* ── Mini Profile Popover ────────────────────────────────── */
+const MiniProfileCard = ({ name, avatarUrl, userId }: { name: string; avatarUrl: string | null; userId: string }) => (
+  <div className="absolute bottom-full left-0 mb-2 z-50 bg-card border border-border rounded-xl shadow-xl p-3 min-w-[180px] pointer-events-auto animate-in fade-in-0 zoom-in-95 duration-150">
+    <Link to={`/artist/${userId}`} className="flex items-center gap-2.5 group">
+      <Avatar className="h-10 w-10">
+        <AvatarImage src={avatarUrl ?? undefined} />
+        <AvatarFallback className="text-sm bg-muted">{name?.charAt(0)?.toUpperCase() ?? 'U'}</AvatarFallback>
+      </Avatar>
+      <div className="min-w-0">
+        <p className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors truncate">{name}</p>
+        <p className="text-[11px] text-muted-foreground">View profile</p>
+      </div>
+    </Link>
+  </div>
+);
+
+/* ── Username with hover card ────────────────────────────── */
+const UsernameLink = ({ name, avatarUrl, userId, className }: { name: string; avatarUrl: string | null; userId: string; className?: string }) => {
+  const [showCard, setShowCard] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout>();
+
+  const handleEnter = () => {
+    clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setShowCard(true), 400);
+  };
+  const handleLeave = () => {
+    clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setShowCard(false), 200);
+  };
+
+  return (
+    <span className="relative inline-block" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+      {showCard && <MiniProfileCard name={name} avatarUrl={avatarUrl} userId={userId} />}
+      <Link
+        to={`/artist/${userId}`}
+        className={cn("font-semibold text-foreground hover:text-primary transition-colors cursor-pointer", className)}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {name}
+      </Link>
+    </span>
+  );
+};
+
+/* ── Mention renderer ────────────────────────────────────── */
+const renderContentWithMentions = (content: string) => {
+  const parts = content.split(/(@\w[\w\s]*?)(?=\s|$)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('@')) {
+      return (
+        <span key={i} className="text-primary font-semibold cursor-pointer hover:underline">
+          {part}
+        </span>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+};
+
 /* ── Single Comment ──────────────────────────────────────── */
-const CommentItem = ({ feedback, artworkId }: { feedback: FeedbackType; artworkId: string }) => {
+const CommentItem = ({
+  feedback,
+  artworkId,
+  onReplyToParent,
+}: {
+  feedback: FeedbackType & { user_id?: string; reply_count?: number };
+  artworkId: string;
+  onReplyToParent?: (username: string, parentId: string) => void;
+}) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [showReplies, setShowReplies] = useState(false);
   const [replies, setReplies] = useState<Reply[]>([]);
+  const [replyCount, setReplyCount] = useState(feedback.reply_count ?? 0);
   const [loadingReplies, setLoadingReplies] = useState(false);
   const [replyText, setReplyText] = useState('');
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const replyInputRef = useRef<HTMLInputElement>(null);
 
-  const fetchReplies = async () => {
+  const userName = feedback.profiles?.full_name ?? 'Anonymous';
+  const userId = (feedback as any).user_id || '';
+
+  const fetchReplies = useCallback(async () => {
     setLoadingReplies(true);
-    const { data } = await supabase
+    const { data, count } = await supabase
       .from('artwork_feedback')
-      .select('id, content, created_at, user_id')
+      .select('id, content, created_at, user_id', { count: 'exact' })
       .eq('parent_id', feedback.id)
       .order('created_at', { ascending: true });
 
@@ -53,12 +125,20 @@ const CommentItem = ({ feedback, artworkId }: { feedback: FeedbackType; artworkI
     } else {
       setReplies([]);
     }
+    if (count !== null) setReplyCount(count);
     setLoadingReplies(false);
-  };
+  }, [feedback.id]);
 
   const toggleReplies = () => {
     if (!showReplies) fetchReplies();
     setShowReplies(!showReplies);
+  };
+
+  const handleStartReply = (mentionName?: string) => {
+    const mention = mentionName || userName;
+    setReplyText(`@${mention} `);
+    setShowReplyInput(true);
+    setTimeout(() => replyInputRef.current?.focus(), 50);
   };
 
   const handleReply = async () => {
@@ -83,12 +163,12 @@ const CommentItem = ({ feedback, artworkId }: { feedback: FeedbackType; artworkI
   return (
     <div className="py-3">
       <div className="flex gap-3">
-        {/* Avatar */}
-        <Link to={`/artist/${feedback.profiles?.full_name ? '' : ''}#`} className="shrink-0">
-          <Avatar className="h-9 w-9">
+        {/* Avatar - clickable to profile */}
+        <Link to={`/artist/${userId}`} className="shrink-0 cursor-pointer">
+          <Avatar className="h-9 w-9 hover:ring-2 hover:ring-primary/30 transition-all">
             <AvatarImage src={feedback.profiles?.avatar_url ?? undefined} />
             <AvatarFallback className="text-xs bg-muted">
-              {feedback.profiles?.full_name?.charAt(0)?.toUpperCase() ?? 'U'}
+              {userName.charAt(0)?.toUpperCase()}
             </AvatarFallback>
           </Avatar>
         </Link>
@@ -96,10 +176,8 @@ const CommentItem = ({ feedback, artworkId }: { feedback: FeedbackType; artworkI
         {/* Body */}
         <div className="flex-1 min-w-0">
           <p className="text-sm leading-snug">
-            <span className="font-semibold text-foreground mr-1.5">
-              {feedback.profiles?.full_name ?? 'Anonymous'}
-            </span>
-            <span className="text-foreground/90">{feedback.content}</span>
+            <UsernameLink name={userName} avatarUrl={feedback.profiles?.avatar_url ?? null} userId={userId} className="mr-1.5" />
+            <span className="text-foreground/90">{renderContentWithMentions(feedback.content)}</span>
           </p>
           {feedback.rating && (
             <StarRating rating={feedback.rating} onRatingChange={() => {}} readOnly className="mt-1" starClassName="w-3 h-3" />
@@ -108,7 +186,7 @@ const CommentItem = ({ feedback, artworkId }: { feedback: FeedbackType; artworkI
             <span className="text-[11px] text-muted-foreground">{timeAgo}</span>
             {user && (
               <button
-                onClick={() => setShowReplyInput(!showReplyInput)}
+                onClick={() => handleStartReply()}
                 className="text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
               >
                 Reply
@@ -116,10 +194,11 @@ const CommentItem = ({ feedback, artworkId }: { feedback: FeedbackType; artworkI
             )}
           </div>
 
-          {/* Reply input */}
+          {/* Inline reply input */}
           {showReplyInput && (
             <div className="flex items-center gap-2 mt-2">
               <input
+                ref={replyInputRef}
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 placeholder="Reply..."
@@ -134,51 +213,74 @@ const CommentItem = ({ feedback, artworkId }: { feedback: FeedbackType; artworkI
               >
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </button>
+              <button
+                onClick={() => { setShowReplyInput(false); setReplyText(''); }}
+                className="text-[11px] text-muted-foreground hover:text-foreground"
+              >
+                Cancel
+              </button>
             </div>
           )}
 
-          {/* View replies toggle */}
-          <button
-            onClick={toggleReplies}
-            className="flex items-center gap-1 mt-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <div className="w-6 h-px bg-muted-foreground/40" />
-            {showReplies ? (
-              <>Hide replies <ChevronUp className="h-3 w-3" /></>
-            ) : (
-              <>View replies <ChevronDown className="h-3 w-3" /></>
-            )}
-          </button>
-
-          {/* Replies */}
-          {showReplies && (
-            <div className="mt-2 space-y-2.5 pl-1">
-              {loadingReplies ? (
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              ) : replies.length > 0 ? (
-                replies.map((reply) => (
-                  <div key={reply.id} className="flex gap-2.5">
-                    <Avatar className="h-7 w-7 shrink-0">
-                      <AvatarImage src={reply.profiles?.avatar_url ?? undefined} />
-                      <AvatarFallback className="text-[10px] bg-muted">
-                        {reply.profiles?.full_name?.charAt(0)?.toUpperCase() ?? 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                      <p className="text-[13px] leading-snug">
-                        <span className="font-semibold text-foreground mr-1">
-                          {reply.profiles?.full_name ?? 'Anonymous'}
-                        </span>
-                        <span className="text-foreground/90">{reply.content}</span>
-                      </p>
-                      <span className="text-[10px] text-muted-foreground">
-                        {formatDistanceToNow(new Date(reply.created_at), { addSuffix: false })}
-                      </span>
-                    </div>
-                  </div>
-                ))
+          {/* View replies toggle - ONLY show if replyCount > 0 */}
+          {replyCount > 0 && (
+            <button
+              onClick={toggleReplies}
+              className="flex items-center gap-1 mt-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <div className="w-6 h-px bg-muted-foreground/40" />
+              {showReplies ? (
+                <>Hide replies <ChevronUp className="h-3 w-3" /></>
               ) : (
-                <p className="text-[11px] text-muted-foreground">No replies yet</p>
+                <>View {replyCount} {replyCount === 1 ? 'reply' : 'replies'} <ChevronDown className="h-3 w-3" /></>
+              )}
+            </button>
+          )}
+
+          {/* Replies - indented */}
+          {showReplies && (
+            <div className="mt-2 space-y-2.5 pl-1 border-l-2 border-border/30 ml-1">
+              {loadingReplies ? (
+                <div className="pl-3">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                </div>
+              ) : replies.length > 0 ? (
+                replies.map((reply) => {
+                  const replyName = reply.profiles?.full_name ?? 'Anonymous';
+                  return (
+                    <div key={reply.id} className="flex gap-2.5 pl-3">
+                      <Link to={`/artist/${reply.user_id}`} className="shrink-0 cursor-pointer">
+                        <Avatar className="h-7 w-7 hover:ring-2 hover:ring-primary/30 transition-all">
+                          <AvatarImage src={reply.profiles?.avatar_url ?? undefined} />
+                          <AvatarFallback className="text-[10px] bg-muted">
+                            {replyName.charAt(0)?.toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      </Link>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[13px] leading-snug">
+                          <UsernameLink name={replyName} avatarUrl={reply.profiles?.avatar_url ?? null} userId={reply.user_id} className="mr-1 text-[13px]" />
+                          <span className="text-foreground/90">{renderContentWithMentions(reply.content)}</span>
+                        </p>
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className="text-[10px] text-muted-foreground">
+                            {formatDistanceToNow(new Date(reply.created_at), { addSuffix: false })}
+                          </span>
+                          {user && (
+                            <button
+                              onClick={() => handleStartReply(replyName)}
+                              className="text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              Reply
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="text-[11px] text-muted-foreground pl-3">No replies yet</p>
               )}
             </div>
           )}
@@ -204,7 +306,6 @@ const ArtworkFeedback = ({ artworkId, isOpen, onClose }: ArtworkFeedbackProps) =
   const [showRating, setShowRating] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
 
   // Prevent body scroll when open
   useEffect(() => {
@@ -242,7 +343,6 @@ const ArtworkFeedback = ({ artworkId, isOpen, onClose }: ArtworkFeedbackProps) =
     <>
       {/* Overlay */}
       <div
-        ref={overlayRef}
         onClick={onClose}
         className={cn(
           'fixed inset-0 bg-black/50 z-50 transition-opacity duration-300',

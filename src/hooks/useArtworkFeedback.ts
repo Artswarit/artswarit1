@@ -8,6 +8,8 @@ export type Feedback = {
   content: string;
   rating: number | null;
   created_at: string;
+  user_id: string;
+  reply_count: number;
   profiles: {
     full_name: string | null;
     avatar_url: string | null;
@@ -15,24 +17,38 @@ export type Feedback = {
 };
 
 const fetchFeedback = async (artworkId: string): Promise<Feedback[]> => {
-  // First fetch feedback
+  // Fetch top-level feedback (no parent)
   const { data: feedbackData, error: feedbackError } = await supabase
     .from('artwork_feedback')
     .select('id, content, rating, created_at, user_id')
     .eq('artwork_id', artworkId)
+    .is('parent_id', null)
     .order('created_at', { ascending: false });
 
   if (feedbackError) throw new Error(feedbackError.message);
   if (!feedbackData || feedbackData.length === 0) return [];
 
-  // Fetch user profiles for the feedback
+  // Fetch reply counts for each feedback
+  const feedbackIds = feedbackData.map(f => f.id);
+  const { data: repliesData } = await supabase
+    .from('artwork_feedback')
+    .select('parent_id')
+    .in('parent_id', feedbackIds);
+
+  const replyCountMap = new Map<string, number>();
+  repliesData?.forEach(r => {
+    if (r.parent_id) {
+      replyCountMap.set(r.parent_id, (replyCountMap.get(r.parent_id) || 0) + 1);
+    }
+  });
+
+  // Fetch user profiles
   const userIds = [...new Set(feedbackData.map(f => f.user_id))];
   const { data: profilesData } = await supabase
     .from('public_profiles')
     .select('id, full_name, avatar_url')
     .in('id', userIds);
 
-  // Map profiles to feedback
   const profilesMap = new Map(profilesData?.map(p => [p.id, p]) || []);
   
   return feedbackData.map(f => ({
@@ -40,6 +56,8 @@ const fetchFeedback = async (artworkId: string): Promise<Feedback[]> => {
     content: f.content,
     rating: f.rating,
     created_at: f.created_at,
+    user_id: f.user_id,
+    reply_count: replyCountMap.get(f.id) || 0,
     profiles: profilesMap.get(f.user_id) || { full_name: 'Anonymous', avatar_url: null }
   }));
 };
