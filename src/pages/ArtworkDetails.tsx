@@ -541,14 +541,10 @@ export default function ArtworkDetails() {
             </div>
           )}
 
-          {/* ── SEPARATOR ──────────────────────────────────────────── */}
-          <div className="border-t border-border/30 mx-3 sm:mx-4" />
-
-          {/* ── COMMENTS & REVIEWS ─────────────────────────────────── */}
-          <div ref={commentSectionRef} className="px-3 sm:px-4 pb-6">
-            {id && <ArtworkFeedback artworkId={id} />}
           </div>
-        </div>
+
+          {/* ── COMMENT BOTTOM SHEET ───────────────────────────────── */}
+          {id && <ArtworkFeedback artworkId={id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} />}
       </div>
     </main>
   </div>
