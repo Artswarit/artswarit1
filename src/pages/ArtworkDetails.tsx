@@ -455,7 +455,7 @@ export default function ArtworkDetails() {
 
               {/* Comment */}
               <button
-                onClick={scrollToComments}
+                onClick={openComments}
                 aria-label="Comments"
                 className="flex items-center justify-center transition-transform duration-200 active:scale-90"
               >
