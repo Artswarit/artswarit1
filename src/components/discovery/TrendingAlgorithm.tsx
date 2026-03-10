@@ -169,7 +169,7 @@ const TrendingAlgorithm = () => {
       )
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'artworks' },
+        { event: '*', schema: 'public', table: 'artworks' },
         debouncedFetch
       )
       .subscribe();

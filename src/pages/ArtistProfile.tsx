@@ -1015,7 +1015,7 @@ export default function ArtistProfile() {
       )}
       
       {/* Main content - responsive container with proper spacing */}
-      <main className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 flex-1 pb-4 sm:pb-6 lg:pb-8 mt-3 sm:mt-4 lg:mt-6">
+      <main className="w-full max-w-[1400px] mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 flex-1 pb-4 sm:pb-6 lg:pb-8 mt-3 sm:mt-4 lg:mt-6">
         <TagDisplay tags={[profileState.category, ...(profileState.specialties || [])]} />
         <GlassCard className="p-3 sm:p-4 lg:p-6 xl:p-8 mt-3 sm:mt-4 shadow-lg">
           <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">

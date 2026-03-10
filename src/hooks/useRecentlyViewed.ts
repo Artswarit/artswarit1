@@ -50,6 +50,7 @@ export function useRecentlyViewed() {
             .from('artworks')
             .select('title, media_url')
             .eq('id', item.item_id)
+            .eq('status', 'public')
             .maybeSingle();
 
           if (artwork) {

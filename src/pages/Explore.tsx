@@ -314,7 +314,7 @@ const Explore = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 pointer-events-none" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_50%_-20%,rgba(120,119,198,0.1),transparent)] pointer-events-none" />
         
-        <div className="container relative mx-auto px-4 text-center">
+        <div className="max-w-[1400px] relative mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] sm:text-xs font-black uppercase tracking-widest mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
@@ -342,7 +342,7 @@ const Explore = () => {
 
       {/* Trending Section */}
       {trendingArtworks.length > 0 && !loading && (
-        <section className="container mx-auto px-4 py-12 animate-in fade-in duration-1000 delay-500">
+        <section className="max-w-[1400px] mx-auto px-4 py-12 animate-in fade-in duration-1000 delay-500">
           <div className="flex items-center justify-between mb-8 sm:mb-12">
             <div>
               <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-foreground">TRENDING NOW</h2>
@@ -380,7 +380,7 @@ const Explore = () => {
           />
         </div>
 
-        <main className="container mx-auto px-4">
+        <main className="max-w-[1400px] mx-auto px-4">
           {filteredArtworks && filteredArtworks.length > 0 ? (
             <div className="space-y-12">
               <div className={cn(

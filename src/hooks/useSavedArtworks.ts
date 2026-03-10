@@ -47,7 +47,8 @@ export function useSavedArtworks() {
         const { data: artworks } = await supabase
           .from('artworks')
           .select('id, title, media_url, artist_id')
-          .in('id', artworkIds);
+          .in('id', artworkIds)
+          .eq('status', 'public');
 
         // Get artist names
         const artistIds = [...new Set((artworks || []).map(a => a.artist_id).filter(Boolean))];

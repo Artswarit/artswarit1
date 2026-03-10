@@ -66,6 +66,7 @@ const ArtworkManagementCard = ({
   const [isHovered, setIsHovered] = useState(false);
 
   const getStatusLabel = (status: string) => {
+    if (artwork.metadata?.admin_banned) return 'Banned';
     switch (status) {
       case 'public': return 'Public';
       case 'private': return 'Private';
