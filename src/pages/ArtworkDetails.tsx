@@ -35,7 +35,7 @@ export default function ArtworkDetails() {
   const [doubleTapLike, setDoubleTapLike] = useState(false);
   const lastTapRef = useRef(0);
   const { format } = useCurrencyFormat();
-  const commentSectionRef = useRef<HTMLDivElement>(null);
+  const [commentsOpen, setCommentsOpen] = useState(false);
 
   useEffect(() => {
     async function init() {
