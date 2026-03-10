@@ -35,7 +35,7 @@ export default function ArtworkDetails() {
   const [doubleTapLike, setDoubleTapLike] = useState(false);
   const lastTapRef = useRef(0);
   const { format } = useCurrencyFormat();
-  const commentSectionRef = useRef<HTMLDivElement>(null);
+  const [commentsOpen, setCommentsOpen] = useState(false);
 
   useEffect(() => {
     async function init() {
@@ -232,9 +232,7 @@ export default function ArtworkDetails() {
     }
   };
 
-  const scrollToComments = () => {
-    commentSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const openComments = () => setCommentsOpen(true);
 
   // ── Loading ───────────────────────────────────────────────
   if (loading) {
@@ -457,7 +455,7 @@ export default function ArtworkDetails() {
 
               {/* Comment */}
               <button
-                onClick={scrollToComments}
+                onClick={openComments}
                 aria-label="Comments"
                 className="flex items-center justify-center transition-transform duration-200 active:scale-90"
               >
@@ -543,14 +541,10 @@ export default function ArtworkDetails() {
             </div>
           )}
 
-          {/* ── SEPARATOR ──────────────────────────────────────────── */}
-          <div className="border-t border-border/30 mx-3 sm:mx-4" />
-
-          {/* ── COMMENTS & REVIEWS ─────────────────────────────────── */}
-          <div ref={commentSectionRef} className="px-3 sm:px-4 pb-6">
-            {id && <ArtworkFeedback artworkId={id} />}
           </div>
-        </div>
+
+          {/* ── COMMENT BOTTOM SHEET ───────────────────────────────── */}
+          {id && <ArtworkFeedback artworkId={id} isOpen={commentsOpen} onClose={() => setCommentsOpen(false)} />}
       </div>
     </main>
   </div>
