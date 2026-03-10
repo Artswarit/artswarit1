@@ -232,9 +232,7 @@ export default function ArtworkDetails() {
     }
   };
 
-  const scrollToComments = () => {
-    commentSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const openComments = () => setCommentsOpen(true);
 
   // ── Loading ───────────────────────────────────────────────
   if (loading) {
