@@ -8,6 +8,7 @@ import TopFilters from '@/components/explore/TopFilters';
 import RecentlyViewed from '@/components/explore/RecentlyViewed';
 import GlassCard from '@/components/ui/glass-card';
 import { Loader2 } from 'lucide-react';
+import LogoLoader from '@/components/ui/LogoLoader';
 import { Button } from '@/components/ui/button';
 import ChatbotBubble from '@/components/explore/ChatbotBubble';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -22,14 +23,20 @@ const Explore = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const SCROLL_KEY = 'explore_scroll_y';
 
-  // Restore scroll position when returning via back button
+  // Restore scroll position only when returning via back button (popstate)
   useEffect(() => {
-    const saved = sessionStorage.getItem(SCROLL_KEY);
-    if (saved) {
-      const y = parseInt(saved, 10);
-      // Defer to let content paint first
-      const t = setTimeout(() => window.scrollTo({ top: y }), 80);
-      return () => clearTimeout(t);
+    const navType = (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming)?.type;
+    // Only restore when navigating back/forward, not on fresh visits or reloads
+    if (navType === 'back_forward') {
+      const saved = sessionStorage.getItem(SCROLL_KEY);
+      if (saved) {
+        const y = parseInt(saved, 10);
+        const t = setTimeout(() => window.scrollTo({ top: y }), 80);
+        return () => clearTimeout(t);
+      }
+    } else {
+      // Clear stale scroll position on fresh navigation
+      sessionStorage.removeItem(SCROLL_KEY);
     }
   }, []);
 
@@ -257,25 +264,8 @@ const Explore = () => {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Navbar />
-        <div className="flex-1 pt-20 sm:pt-24">
-          {/* Filter bar skeleton */}
-          <div className="sticky top-16 z-30 bg-background/90 backdrop-blur-md border-b border-border px-4 py-3">
-            <div className="h-10 bg-muted animate-pulse rounded-xl max-w-3xl mx-auto" />
-          </div>
-          {/* Grid skeleton — matches real layout exactly */}
-          <div className="container mx-auto px-4 py-8">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {Array.from({ length: 15 }).map((_, i) => (
-                <div key={i} className="animate-pulse rounded-2xl overflow-hidden bg-card border border-border" style={{ animationDelay: `${i * 40}ms` }}>
-                  <div className="aspect-[3/4] bg-muted" />
-                  <div className="p-3 space-y-2">
-                    <div className="h-3 bg-muted rounded-full w-3/4" />
-                    <div className="h-3 bg-muted rounded-full w-1/2" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="flex-1 flex items-center justify-center pt-20 sm:pt-24">
+          <LogoLoader text="Discovering artworks…" />
         </div>
       </div>
     );

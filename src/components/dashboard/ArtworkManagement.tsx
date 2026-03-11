@@ -24,6 +24,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Link } from 'react-router-dom';
+import LogoLoader from '@/components/ui/LogoLoader';
 
 const ArtworkManagement = () => {
   const { user } = useAuth();
@@ -266,10 +267,7 @@ const ArtworkManagement = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-muted-foreground">Loading your artworks...</p>
-        </div>
+        <LogoLoader text="Loading your artworks…" />
       </div>
     );
   }

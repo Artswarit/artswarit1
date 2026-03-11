@@ -18,6 +18,7 @@ import {
 import { format } from 'date-fns';
 import { writeAuditLog } from './auditHelpers';
 import { toast } from 'sonner';
+import LogoLoader from '@/components/ui/LogoLoader';
 
 /* ── Types ── */
 interface DisputeItem {
@@ -234,7 +235,7 @@ export default function DisputeSettlement() {
   const activeDisputes = disputes.filter(d => !isResolved(d.status));
   const resolvedDisputes = disputes.filter(d => isResolved(d.status));
 
-  if (loading) return <div className="flex items-center justify-center p-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
+  if (loading) return <div className="flex items-center justify-center p-12"><LogoLoader text="Loading disputes…" /></div>;
 
   return (
     <>

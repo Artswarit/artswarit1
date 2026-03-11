@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
+import LogoLoader from '@/components/ui/LogoLoader';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -32,7 +33,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole,
   if (loading || (adminOnly && adminLoading)) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        <LogoLoader text="Loading…" />
       </div>
     );
   }

@@ -26,6 +26,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertTriangle, Plus, Ban, ShieldAlert, Clock, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
+import LogoLoader from '@/components/ui/LogoLoader';
 
 interface Warning {
   id: string;
@@ -171,7 +172,7 @@ export function UserWarningsManagement() {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <LogoLoader text="Loading warnings…" />
       </div>
     );
   }

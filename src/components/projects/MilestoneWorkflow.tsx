@@ -16,6 +16,7 @@ import { ProjectActivityLog } from './ProjectActivityLog';
 import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 import { EnablePaymentsDialog } from '@/components/payments/EnablePaymentsDialog';
 import { useArtistPaymentAccount } from '@/hooks/useArtistPaymentAccount';
+import LogoLoader from '@/components/ui/LogoLoader';
 
 interface Milestone {
   id: string;
@@ -272,7 +273,7 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <LogoLoader text="Loading milestones…" />
       </div>
     );
   }

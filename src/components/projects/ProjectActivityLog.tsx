@@ -14,6 +14,7 @@ import {
   FileText,
   User
 } from 'lucide-react';
+import LogoLoader from '@/components/ui/LogoLoader';
 
 interface ActivityLog {
   id: string;
@@ -102,7 +103,7 @@ export function ProjectActivityLog({ projectId }: ProjectActivityLogProps) {
     return (
       <Card>
         <CardContent className="p-8 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <LogoLoader text="Loading activity…" />
         </CardContent>
       </Card>
     );

@@ -17,6 +17,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CheckCircle, RotateCcw, Clock, FileText, Image, Video, Music, Download, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
+import LogoLoader from '@/components/ui/LogoLoader';
 
 interface Milestone {
   id: string;
@@ -257,7 +258,7 @@ export function MilestoneReviewDialog({
 
         {loading ? (
           <div className="flex items-center justify-center p-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <LogoLoader text="Loading submissions…" />
           </div>
         ) : (
           <>

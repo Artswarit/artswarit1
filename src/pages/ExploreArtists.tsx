@@ -10,6 +10,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import LogoLoader from '@/components/ui/LogoLoader';
 
 interface Artist {
   id: string;
@@ -69,13 +70,18 @@ const ExploreArtists = () => {
   const [visibleArtists, setVisibleArtists] = useState(12);
   const ARTISTS_PER_PAGE = 12;
 
-  // Restore scroll position when returning via back
+  // Restore scroll position only when returning via back button
   useEffect(() => {
-    const saved = sessionStorage.getItem(SCROLL_KEY);
-    if (saved) {
-      const y = parseInt(saved, 10);
-      const t = setTimeout(() => window.scrollTo({ top: y }), 80);
-      return () => clearTimeout(t);
+    const navType = (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming)?.type;
+    if (navType === 'back_forward') {
+      const saved = sessionStorage.getItem(SCROLL_KEY);
+      if (saved) {
+        const y = parseInt(saved, 10);
+        const t = setTimeout(() => window.scrollTo({ top: y }), 80);
+        return () => clearTimeout(t);
+      }
+    } else {
+      sessionStorage.removeItem(SCROLL_KEY);
     }
   }, []);
 
@@ -527,20 +533,8 @@ const ExploreArtists = () => {
 
             {/* Artists Grid/List */}
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3, 4, 5, 6].map(i => (
-                  <div key={i} className="animate-pulse bg-card border rounded-2xl overflow-hidden">
-                    <div className="bg-muted h-48"></div>
-                    <div className="p-4 sm:p-5 space-y-3">
-                      <div className="h-5 bg-muted rounded-full w-3/4"></div>
-                      <div className="h-3 bg-muted rounded-full w-1/2"></div>
-                      <div className="flex gap-2 pt-2">
-                        <div className="h-8 bg-muted rounded-lg w-20"></div>
-                        <div className="h-8 bg-muted rounded-lg w-20"></div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="flex items-center justify-center py-24">
+                <LogoLoader text="Discovering artists…" />
               </div>
             ) : filteredArtists.length > 0 ? (
               <>

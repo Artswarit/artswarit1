@@ -565,5 +565,37 @@ button:not([disabled]):active,
 .razorpay-backdrop,
 iframe[src*="razorpay"],
 div[class*="razorpay"] {
-  z-index: 99999 !important;
+  z-index: 2147483647 !important; /* max 32-bit int – above everything */
+  pointer-events: auto !important;
+  position: fixed !important;
+}
+
+/* Razorpay's backdrop overlay */
+.razorpay-backdrop {
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Ensure Razorpay iframe receives all clicks */
+.razorpay-checkout-frame,
+iframe[src*="razorpay"] {
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* When Razorpay is open, prevent Radix/ShadCN overlays from stealing focus */
+body > .razorpay-container ~ [data-radix-dialog-overlay],
+body > .razorpay-container ~ [data-radix-alert-dialog-overlay] {
+  pointer-events: none !important;
+  z-index: 49 !important;
+}
+
+/* Prevent any stacking-context issues from body overflow */
+body.razorpay-active {
+  overflow: hidden !important;
 }

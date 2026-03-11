@@ -27,6 +27,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AlertTriangle, CheckCircle, RotateCcw, Ban, Eye, FileText, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
+import LogoLoader from '@/components/ui/LogoLoader';
 
 interface Dispute {
   id: string;
@@ -185,7 +186,7 @@ export function DisputeManagement() {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <LogoLoader text="Loading disputes…" />
       </div>
     );
   }

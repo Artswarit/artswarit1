@@ -333,7 +333,15 @@ export default function ArtistProfile() {
     }
 
     fetchArtistProfile();
-  }, [id]);
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Scroll to top when the profile finishes loading to counteract any
+  // scroll that may have happened during the loading phase
+  useEffect(() => {
+    if (!loading) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [loading]);
 
   // Load visibility/messaging/vacation settings — try auth route first, then public fallback
   useEffect(() => {

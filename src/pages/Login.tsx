@@ -21,16 +21,18 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Redirect if already logged in
   useEffect(() => {
     if (user && !loading) {
       redirectBasedOnRole();
     }
-  }, [user, loading]);
+  }, [user, loading, navigate]);
 
   const redirectBasedOnRole = async () => {
     if (!user) return;
+    setIsRedirecting(true);
     
     try {
       // Check both profile role AND user_roles table for admin status
@@ -68,6 +70,8 @@ const Login = () => {
     } catch (error) {
       console.error('Error in redirectBasedOnRole:', error);
       navigate('/');
+    } finally {
+      setIsRedirecting(false);
     }
   };
 
@@ -85,20 +89,10 @@ const Login = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    // Check if there's a pending signup role (user came from signup page)
-    const pendingRole = localStorage.getItem('pendingSignupRole');
-    
-    if (!pendingRole) {
-      // No pending role means user should sign up first to select a role
-      toast({
-        title: "Please Sign Up First",
-        description: "New users need to sign up and select their role (Artist or Client) before using Google sign-in.",
-        variant: "destructive"
-      });
-      navigate('/signup');
-      return;
-    }
-    
+    // Google OAuth works for both existing and new users.
+    // Existing users: Supabase auto-links to their account by email.
+    // New users: If no pendingSignupRole, they'll get assigned 'client' default.
+    // New users who want a specific role should sign up via the Signup page.
     setIsSubmitting(true);
     await signInWithGoogle();
     setIsSubmitting(false);

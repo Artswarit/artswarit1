@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 declare global {
@@ -57,12 +57,12 @@ export function useRazorpay() {
       }
 
       // Create order via edge function
-      const orderResp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-milestone-order`, {
+      const orderResp = await fetch(`${SUPABASE_URL}/functions/v1/create-milestone-order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
-          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          'apikey': SUPABASE_PUBLISHABLE_KEY,
         },
         body: JSON.stringify({ milestoneId }),
       });
@@ -89,12 +89,12 @@ export function useRazorpay() {
           
           try {
             // Verify payment
-            const verifyResp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-razorpay-payment`, {
+            const verifyResp = await fetch(`${SUPABASE_URL}/functions/v1/verify-razorpay-payment`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${session.access_token}`,
-                'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+                'apikey': SUPABASE_PUBLISHABLE_KEY,
               },
               body: JSON.stringify({
                 razorpay_order_id: response.razorpay_order_id,
@@ -127,11 +127,21 @@ export function useRazorpay() {
         },
         modal: {
           ondismiss: () => {
+            document.body.classList.remove('razorpay-active');
             setLoading(false);
             console.log('Payment modal closed');
           },
         },
       };
+
+      // Hide any remaining Radix/ShadCN overlays so they don't block Razorpay
+      document.querySelectorAll('[data-radix-dialog-overlay], [data-radix-alert-dialog-overlay]').forEach((el) => {
+        (el as HTMLElement).style.pointerEvents = 'none';
+        (el as HTMLElement).style.zIndex = '0';
+      });
+
+      // Mark body so CSS can prevent stacking issues
+      document.body.classList.add('razorpay-active');
 
       // Open Razorpay checkout
       const razorpay = new window.Razorpay(options);
@@ -139,11 +149,13 @@ export function useRazorpay() {
         console.error('Payment failed:', response.error);
         toast.error(response.error.description || 'Payment failed');
         onFailure?.(response.error.description);
+        document.body.classList.remove('razorpay-active');
         setLoading(false);
       });
       
       razorpay.open();
     } catch (error: any) {
+      document.body.classList.remove('razorpay-active');
       toast.error(error.message || 'Payment failed');
       onFailure?.(error.message);
     } finally {
