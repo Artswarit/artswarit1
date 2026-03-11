@@ -71,7 +71,7 @@ const EmailVerification = () => {
       if (profile?.role === 'artist' || profile?.role === 'premium') {
         navigate('/artist-dashboard');
       } else if (profile?.role === 'admin') {
-        navigate('/admin');
+        navigate('/admin-dashboard');
       } else {
         navigate('/client-dashboard');
       }

@@ -5,7 +5,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { computeProfileCompletion } from '@/hooks/useProfileCompletion';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import ProtectedRoute from '@/components/ProtectedRoute';
+
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import ArtworkManagement from '@/components/dashboard/ArtworkManagement';
 import ArtistProfile from '@/components/dashboard/ArtistProfile';
@@ -22,6 +22,7 @@ import ServicesManagement from '@/components/dashboard/services/ServicesManageme
 import ExclusiveMembers from '@/components/dashboard/ExclusiveMembers';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import LogoLoader from '@/components/ui/LogoLoader';
 
 const ArtistDashboard = () => {
   const { tab } = useParams();
@@ -119,33 +120,8 @@ const ArtistDashboard = () => {
 
   if (profileLoading && !profile) {
     return (
-      <div className="min-h-screen bg-gray-50/50 dark:bg-background">
-        <div className="h-16 bg-background border-b border-border" />{/* Navbar placeholder */}
-        <div className="container mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-20 sm:pt-28 pb-12">
-          {/* Header skeleton */}
-          <div className="flex items-center gap-4 mb-8 animate-pulse">
-            <div className="h-14 w-14 rounded-full bg-muted" />
-            <div className="space-y-2">
-              <div className="h-6 w-40 bg-muted rounded-xl" />
-              <div className="h-4 w-64 bg-muted rounded-xl" />
-            </div>
-          </div>
-          {/* Tab bar skeleton */}
-          <div className="h-[80px] bg-muted/50 rounded-[1.5rem] animate-pulse mb-8" />
-          {/* Content skeleton — 3-column card grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="animate-pulse bg-card border rounded-2xl overflow-hidden" style={{ animationDelay: `${i * 60}ms` }}>
-                <div className="bg-muted h-48" />
-                <div className="p-4 space-y-3">
-                  <div className="h-4 bg-muted rounded-full w-3/4" />
-                  <div className="h-3 bg-muted rounded-full w-1/2" />
-                  <div className="h-3 bg-muted rounded-full w-5/6" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="min-h-screen bg-gray-50/50 dark:bg-background flex items-center justify-center">
+        <LogoLoader text="Loading dashboard…" />
       </div>
     );
   }
@@ -166,7 +142,6 @@ const ArtistDashboard = () => {
   ];
 
   return (
-    <ProtectedRoute>
       <div className="min-h-screen bg-gray-50/50 dark:bg-background">
         <Navbar />
         <main className="w-full max-w-[1400px] mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-20 sm:pt-28 pb-12 sm:pb-20">
@@ -303,7 +278,6 @@ const ArtistDashboard = () => {
           <Footer />
         </div>
       </div>
-    </ProtectedRoute>
   );
 };
 

@@ -52,7 +52,7 @@ export function PayMilestoneButton({
   const handlePayment = () => {
     // Close confirm dialog FIRST so its backdrop doesn't block Razorpay overlay
     setConfirmOpen(false);
-    // Small delay allows dialog to unmount before Razorpay mounts
+    // Longer delay ensures Radix dialog overlay fully unmounts (close animation is 150ms)
     setTimeout(() => {
       initiatePayment({
         milestoneId,
@@ -61,7 +61,7 @@ export function PayMilestoneButton({
         },
         onFailure: () => {},
       });
-    }, 50);
+    }, 350);
   };
 
   return (
@@ -81,7 +81,7 @@ export function PayMilestoneButton({
       </Button>
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md mx-auto">
           <DialogHeader>
             <DialogTitle>Confirm Payment</DialogTitle>
             <DialogDescription>

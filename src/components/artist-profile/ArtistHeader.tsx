@@ -91,6 +91,8 @@ const ArtistHeader: React.FC<Props> = ({
         <img
           src={artist.cover}
           alt=""
+          loading="eager"
+          fetchPriority="high"
           className="w-full h-full object-cover object-center scale-105 blur-sm opacity-70 transition-all duration-300"
           style={{ filter: "blur(5px)" }}
         />

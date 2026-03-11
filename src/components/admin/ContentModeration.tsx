@@ -15,6 +15,7 @@ import {
 import { writeAuditLog } from './auditHelpers';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import LogoLoader from '@/components/ui/LogoLoader';
 
 /* ── Types (from Supabase `reports` + `artworks` tables) ── */
 interface ReportedItem {
@@ -294,7 +295,7 @@ export default function ContentModeration() {
     } finally { setProcessing(false); }
   };
 
-  if (loading) return <div className="flex items-center justify-center p-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
+  if (loading) return <div className="flex items-center justify-center p-12"><LogoLoader text="Loading reports…" /></div>;
 
   return (
     <>

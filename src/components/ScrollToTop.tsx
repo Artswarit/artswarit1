@@ -12,11 +12,12 @@ const ScrollToTop = () => {
       return;
     }
 
-    // Scroll to the top of the page when the route changes
+    // Scroll to the top of the page instantly when the route changes
+    // Using 'instant' instead of 'smooth' to avoid visible scroll animation
     window.scrollTo({
       top: 0,
       left: 0,
-      behavior: 'smooth'
+      behavior: 'instant'
     });
   }, [pathname]);
 

@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import LogoLoader from "@/components/ui/LogoLoader";
 
 export default function ArtworkDetails() {
   const { id } = useParams();
@@ -239,22 +240,9 @@ export default function ArtworkDetails() {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Navbar />
-        <main className="flex-1 pt-24 pb-4">
-        <div className="max-w-6xl mx-auto px-0 sm:px-4 lg:px-8 animate-pulse">
-          <div className="bg-card sm:rounded-2xl border-x-0 sm:border border-border/40 overflow-hidden shadow-sm">
-            <div className="flex items-center gap-3 p-3 sm:p-4">
-              <div className="w-9 h-9 rounded-full bg-muted" />
-              <div className="h-4 bg-muted rounded w-28" />
-            </div>
-            <div className="w-full aspect-square bg-muted" />
-            <div className="p-4 space-y-3">
-              <div className="h-8 bg-muted rounded w-40" />
-              <div className="h-4 bg-muted rounded w-full" />
-              <div className="h-4 bg-muted rounded w-3/4" />
-            </div>
-          </div>
+        <div className="flex-1 flex items-center justify-center pt-24">
+          <LogoLoader text="Loading artwork…" />
         </div>
-      </main>
       </div>
     );
   }

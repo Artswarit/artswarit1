@@ -408,7 +408,7 @@ const ArtistTabs: React.FC<ArtistTabsProps> = ({
         </div>
 
         {/* "All Art", "Premium", "Exclusive" tabs */}
-        <TabsContent value={tab} forceMount>
+        <TabsContent value={tab}>
           {isArtTab && <>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 my-4">
                 {paged.map(art => {

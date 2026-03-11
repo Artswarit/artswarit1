@@ -4,6 +4,8 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+import LogoLoader from '@/components/ui/LogoLoader';
+
 interface UserProfile {
   id: string;
   full_name: string | null;
@@ -82,9 +84,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
+    let authListenerFired = false;
+
     // Set up auth state listener - MUST be synchronous to avoid deadlocks
     const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        authListenerFired = true;
         // Only synchronous state updates here
         setSession(session);
         setUser(session?.user ?? null);
@@ -111,23 +116,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }, 0);
           }
         } else if (event === 'SIGNED_OUT') {
-          // signed out — no logging in production
+          // Clean up any stale pending signup role on sign out
+          localStorage.removeItem('pendingSignupRole');
         }
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      if (session?.user) {
-        fetchSubscription(session.user.id);
-        refreshProfile(session.user.id);
+    // Fallback: check for existing session only if onAuthStateChange hasn't fired yet
+    // This handles the edge case where the page loads with an existing session
+    const sessionTimeout = setTimeout(() => {
+      if (!authListenerFired) {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (!authListenerFired) {
+            setSession(session);
+            setUser(session?.user ?? null);
+            setLoading(false);
+            if (session?.user) {
+              fetchSubscription(session.user.id);
+              refreshProfile(session.user.id);
+            }
+          }
+        });
       }
-    });
+    }, 100);
 
-    return () => authSubscription.unsubscribe();
+    return () => {
+      clearTimeout(sessionTimeout);
+      authSubscription.unsubscribe();
+    };
   }, []);
 
   // Real-time subscription for subscription changes
@@ -175,28 +191,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data: existingProfile } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, role')
         .eq('id', user.id)
         .single();
       
-      // If no profile exists, create one with the selected role
-      if (!existingProfile) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: user.id,
-            email: user.email || '',
-            full_name: user.user_metadata?.full_name || user.user_metadata?.name || '',
-            role: pendingRole,
-            avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || ''
-          });
-          
-        if (profileError) {
-          // Silent error for background profile creation
-        }
+      if (existingProfile) {
+        // Profile already exists — this is a returning Google user.
+        // Don't overwrite their existing role with the pending role.
+        return;
+      }
+
+      // No profile exists — this is a new Google OAuth signup. Create profile with selected role.
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          email: user.email || '',
+          full_name: user.user_metadata?.full_name || user.user_metadata?.name || '',
+          role: pendingRole,
+          avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || ''
+        });
+        
+      if (profileError) {
+        console.error('Failed to create Google OAuth profile:', profileError);
+        toast({
+          title: "Profile Setup Issue",
+          description: "Your account was created but we couldn't set up your profile. Please update your profile in settings.",
+          variant: "destructive"
+        });
+      } else {
+        // Refresh profile after creation
+        refreshProfile(user.id);
       }
     } catch (error) {
-      // Silent error
+      console.error('Error in handleGoogleSignupProfile:', error);
     }
   };
 
@@ -205,7 +233,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       const redirectUrl = `${window.location.origin}/`;
       
-      const { error } = await supabase.auth.signUp({
+      const { error, data } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -221,6 +249,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           variant: "destructive"
         });
         return { error };
+      }
+
+      // Supabase returns a fake success for existing users (security measure).
+      // Detect this by checking if user.identities is empty or user already confirmed.
+      const identities = data?.user?.identities;
+      if (identities && identities.length === 0) {
+        toast({
+          title: "Account already exists",
+          description: "An account with this email already exists. Please sign in instead, or use 'Forgot Password' to reset your password.",
+          variant: "destructive"
+        });
+        return { error: { message: 'Account already exists' } };
       }
 
       toast({
@@ -355,7 +395,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {loading && <LogoLoader fullPage text="Loading Artswarit…" />}
+      <div style={loading ? { visibility: 'hidden', overflow: 'hidden', height: 0 } : undefined}>
+        {children}
+      </div>
     </AuthContext.Provider>
   );
 };

@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePremiumSubscription } from "@/hooks/usePremiumSubscription";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import LogoLoader from "@/components/ui/LogoLoader";
 
 export default function SubscriptionManagement() {
   const { user } = useAuth();
@@ -23,8 +23,7 @@ export default function SubscriptionManagement() {
 
   if (loading) return (
     <div className="flex flex-col items-center py-8">
-      <Loader2 className="animate-spin h-8 w-8 mx-auto mb-3" />
-      <span className="text-gray-500">Loading subscription...</span>
+      <LogoLoader text="Loading subscription..." />
     </div>
   );
 

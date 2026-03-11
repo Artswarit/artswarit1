@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -7,13 +7,19 @@ import Footer from "@/components/Footer";
 import SignupHeader from "@/components/auth/SignupHeader";
 import SocialLoginButtons from "@/components/auth/SocialLoginButtons";
 import SignupForm, { SignupFormData } from "@/components/auth/SignupForm";
-import TestLinks from "@/components/auth/TestLinks";
 import LogoWithName from "@/components/LogoWithName";
 
 const Signup = () => {
   const navigate = useNavigate();
-  const { signUp, signInWithGoogle, loading } = useAuth();
+  const { signUp, signInWithGoogle, loading, user } = useAuth();
   const { toast } = useToast();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user && !loading) {
+      navigate('/');
+    }
+  }, [user, loading, navigate]);
   
   const [formData, setFormData] = useState<SignupFormData>({
     name: "",
@@ -116,7 +122,6 @@ const Signup = () => {
             handleSubmit={handleSubmit}
             loading={loading}
           />
-          <TestLinks />
         </div>
       </div>
       <Footer />

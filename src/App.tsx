@@ -40,6 +40,7 @@ import Recommendations from "./pages/Recommendations";
 import Commissions from "./pages/Commissions";
 import Events from "./pages/Events";
 import Merchandise from "./pages/Merchandise";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -119,9 +120,9 @@ const AppRoutes = () => {
         <Route path="/profile/:id" element={<UserProfile />} />
         <Route path="/review/:id" element={<ReviewRedirect />} />
         <Route path="/artwork/:id" element={<ArtworkDetails />} />
-        <Route path="/artist-dashboard/:tab?" element={<ArtistDashboard />} />
-        <Route path="/client-dashboard" element={<ClientDashboard />} />
-        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/artist-dashboard/:tab?" element={<ProtectedRoute><ArtistDashboard /></ProtectedRoute>} />
+        <Route path="/client-dashboard" element={<ProtectedRoute><ClientDashboard /></ProtectedRoute>} />
+        <Route path="/admin-dashboard" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
         <Route path="/about-us" element={<AboutUs />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />

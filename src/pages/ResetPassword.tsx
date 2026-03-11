@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import LogoWithName from "@/components/LogoWithName";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Loader2, Lock, CheckCircle } from "lucide-react";
+import LogoLoader from "@/components/ui/LogoLoader";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -112,7 +113,7 @@ const ResetPassword = () => {
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-artswarit-purple" />
+          <LogoLoader text="Verifying session…" />
         </div>
         <Footer />
       </div>

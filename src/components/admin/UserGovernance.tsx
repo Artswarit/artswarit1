@@ -25,6 +25,7 @@ import {
 import { writeAuditLog } from './auditHelpers';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import LogoLoader from '@/components/ui/LogoLoader';
 
 /* ── Types ── */
 interface ManagedUser {
@@ -208,8 +209,7 @@ export default function UserGovernance() {
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center p-20 space-y-4">
-      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
-      <p className="text-sm font-medium animate-pulse text-muted-foreground">Aggregating Platform Data...</p>
+      <LogoLoader text="Aggregating platform data…" />
     </div>
   );
 
