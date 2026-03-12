@@ -303,10 +303,11 @@ const ArtworkManagementCard = ({
         </div>
 
         <div className="flex flex-col items-end gap-0.5 sm:gap-1 shrink-0 ml-auto">
+          {/* Access type badge only - no price display in list view */}
           {accessType !== 'free' && (
-            <div className="font-bold text-foreground text-fluid-xs sm:text-base whitespace-nowrap">
-              {accessType === 'exclusive' ? 'Request Access' : formatPrice(artwork.price)}
-            </div>
+            <Badge className={cn('text-[9px] px-1.5 h-4', accessConfig.className)}>
+              {accessConfig.label}
+            </Badge>
           )}
           <div className="flex md:hidden items-center gap-1.5 sm:gap-2 text-[8px] sm:text-[10px] text-muted-foreground opacity-70">
             <span className="flex items-center gap-0.5"><Heart className="h-2.5 w-2.5" /> {formatNumber(likes)}</span>
@@ -453,18 +454,18 @@ const ArtworkManagementCard = ({
 
       {/* Content */}
       <div className="flex flex-col flex-1 p-2.5 sm:p-4">
-        <div className="flex justify-between items-start mb-1.5 sm:mb-2">
+        <div className="flex justify-between items-start gap-2 mb-1.5 sm:mb-2">
           <div className="min-w-0 flex-1">
             <h4 className="font-bold text-fluid-xs sm:text-base text-foreground truncate group-hover:text-primary transition-colors leading-tight">
               {artwork.title}
             </h4>
             <p className="text-[9px] sm:text-xs text-muted-foreground truncate">{artwork.category}</p>
           </div>
-          {/* Only show price for premium/exclusive */}
+          {/* Only show access badge for premium/exclusive - no price/request access text */}
           {accessType !== 'free' && (
-            <div className="text-xs sm:text-base font-bold text-primary shrink-0 ml-2">
-              {accessType === 'exclusive' ? 'Request Access' : formatPrice(artwork.price)}
-            </div>
+            <Badge className={cn('text-[9px] px-1.5 py-0.5 h-5 shrink-0', accessConfig.className)}>
+              {accessConfig.label}
+            </Badge>
           )}
         </div>
 
