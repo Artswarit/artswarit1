@@ -398,16 +398,18 @@ const ArtworkManagementCard = ({
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
         
-        {/* Status Badge */}
+        {/* Badges */}
         <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
           <Badge className={cn('gap-1 px-2 py-1 backdrop-blur-md border border-white/20', statusConfig.className)}>
             <statusConfig.icon className="h-3 w-3" />
             {statusConfig.label}
           </Badge>
-          {/* Access Type Badge — always show so Premium/Exclusive is visible */}
-          <Badge className={cn('gap-1 px-2 py-1 backdrop-blur-md border border-white/20 text-[9px]', accessConfig.className)}>
-            {accessConfig.label}
-          </Badge>
+          {/* Only show access badge for Premium/Exclusive */}
+          {accessType !== 'free' && (
+            <Badge className={cn('gap-1 px-2 py-1 backdrop-blur-md border border-white/20 text-[9px]', accessConfig.className)}>
+              {accessConfig.label}
+            </Badge>
+          )}
         </div>
 
         {/* Pinned Badge */}
