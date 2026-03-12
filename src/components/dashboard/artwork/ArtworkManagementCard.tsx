@@ -303,9 +303,11 @@ const ArtworkManagementCard = ({
         </div>
 
         <div className="flex flex-col items-end gap-0.5 sm:gap-1 shrink-0 ml-auto">
-          <div className="font-bold text-foreground text-fluid-xs sm:text-base whitespace-nowrap">
-            {formatPrice(artwork.price)}
-          </div>
+          {accessType !== 'free' && (
+            <div className="font-bold text-foreground text-fluid-xs sm:text-base whitespace-nowrap">
+              {accessType === 'exclusive' ? 'Request Access' : formatPrice(artwork.price)}
+            </div>
+          )}
           <div className="flex md:hidden items-center gap-1.5 sm:gap-2 text-[8px] sm:text-[10px] text-muted-foreground opacity-70">
             <span className="flex items-center gap-0.5"><Heart className="h-2.5 w-2.5" /> {formatNumber(likes)}</span>
             <span className="flex items-center gap-0.5"><Eye className="h-2.5 w-2.5" /> {formatNumber(views)}</span>
