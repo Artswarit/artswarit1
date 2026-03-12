@@ -272,15 +272,17 @@ const ArtworkManagementCard = ({
             >
               {statusConfig.label}
             </Badge>
-            <Badge
-              variant="outline"
-              className={cn(
-                'text-[8px] sm:text-[10px] px-1 sm:px-1.5 h-3.5 sm:h-4 whitespace-nowrap',
-                accessConfig.className
-              )}
-            >
-              {accessConfig.label}
-            </Badge>
+            {accessType !== 'free' && (
+              <Badge
+                variant="outline"
+                className={cn(
+                  'text-[8px] sm:text-[10px] px-1 sm:px-1.5 h-3.5 sm:h-4 whitespace-nowrap',
+                  accessConfig.className
+                )}
+              >
+                {accessConfig.label}
+              </Badge>
+            )}
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2 text-[9px] sm:text-xs text-muted-foreground">
             <span className="truncate max-w-[70px] xs:max-w-[100px] sm:max-w-none">{artwork.category}</span>
