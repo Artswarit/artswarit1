@@ -456,9 +456,12 @@ const ArtworkManagementCard = ({
             </h4>
             <p className="text-[9px] sm:text-xs text-muted-foreground truncate">{artwork.category}</p>
           </div>
-          <div className="text-xs sm:text-base font-bold text-primary shrink-0 ml-2">
-            {formatPrice(artwork.price)}
-          </div>
+          {/* Only show price for premium/exclusive */}
+          {accessType !== 'free' && (
+            <div className="text-xs sm:text-base font-bold text-primary shrink-0 ml-2">
+              {accessType === 'exclusive' ? 'Request Access' : formatPrice(artwork.price)}
+            </div>
+          )}
         </div>
 
         <div className="mt-auto flex items-center justify-between pt-2 sm:pt-3 border-t border-border">
