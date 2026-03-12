@@ -272,15 +272,17 @@ const ArtworkManagementCard = ({
             >
               {statusConfig.label}
             </Badge>
-            <Badge
-              variant="outline"
-              className={cn(
-                'text-[8px] sm:text-[10px] px-1 sm:px-1.5 h-3.5 sm:h-4 whitespace-nowrap',
-                accessConfig.className
-              )}
-            >
-              {accessConfig.label}
-            </Badge>
+            {accessType !== 'free' && (
+              <Badge
+                variant="outline"
+                className={cn(
+                  'text-[8px] sm:text-[10px] px-1 sm:px-1.5 h-3.5 sm:h-4 whitespace-nowrap',
+                  accessConfig.className
+                )}
+              >
+                {accessConfig.label}
+              </Badge>
+            )}
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2 text-[9px] sm:text-xs text-muted-foreground">
             <span className="truncate max-w-[70px] xs:max-w-[100px] sm:max-w-none">{artwork.category}</span>
@@ -301,9 +303,11 @@ const ArtworkManagementCard = ({
         </div>
 
         <div className="flex flex-col items-end gap-0.5 sm:gap-1 shrink-0 ml-auto">
-          <div className="font-bold text-foreground text-fluid-xs sm:text-base whitespace-nowrap">
-            {formatPrice(artwork.price)}
-          </div>
+          {accessType !== 'free' && (
+            <div className="font-bold text-foreground text-fluid-xs sm:text-base whitespace-nowrap">
+              {accessType === 'exclusive' ? 'Request Access' : formatPrice(artwork.price)}
+            </div>
+          )}
           <div className="flex md:hidden items-center gap-1.5 sm:gap-2 text-[8px] sm:text-[10px] text-muted-foreground opacity-70">
             <span className="flex items-center gap-0.5"><Heart className="h-2.5 w-2.5" /> {formatNumber(likes)}</span>
             <span className="flex items-center gap-0.5"><Eye className="h-2.5 w-2.5" /> {formatNumber(views)}</span>
@@ -398,16 +402,18 @@ const ArtworkManagementCard = ({
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
         
-        {/* Status Badge */}
+        {/* Badges */}
         <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
           <Badge className={cn('gap-1 px-2 py-1 backdrop-blur-md border border-white/20', statusConfig.className)}>
             <statusConfig.icon className="h-3 w-3" />
             {statusConfig.label}
           </Badge>
-          {/* Access Type Badge — always show so Premium/Exclusive is visible */}
-          <Badge className={cn('gap-1 px-2 py-1 backdrop-blur-md border border-white/20 text-[9px]', accessConfig.className)}>
-            {accessConfig.label}
-          </Badge>
+          {/* Only show access badge for Premium/Exclusive */}
+          {accessType !== 'free' && (
+            <Badge className={cn('gap-1 px-2 py-1 backdrop-blur-md border border-white/20 text-[9px]', accessConfig.className)}>
+              {accessConfig.label}
+            </Badge>
+          )}
         </div>
 
         {/* Pinned Badge */}
@@ -454,9 +460,12 @@ const ArtworkManagementCard = ({
             </h4>
             <p className="text-[9px] sm:text-xs text-muted-foreground truncate">{artwork.category}</p>
           </div>
-          <div className="text-xs sm:text-base font-bold text-primary shrink-0 ml-2">
-            {formatPrice(artwork.price)}
-          </div>
+          {/* Only show price for premium/exclusive */}
+          {accessType !== 'free' && (
+            <div className="text-xs sm:text-base font-bold text-primary shrink-0 ml-2">
+              {accessType === 'exclusive' ? 'Request Access' : formatPrice(artwork.price)}
+            </div>
+          )}
         </div>
 
         <div className="mt-auto flex items-center justify-between pt-2 sm:pt-3 border-t border-border">
