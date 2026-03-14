@@ -3,12 +3,14 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import React from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import ScrollToTop from "./components/ScrollToTop";
 import { useScrollAnchor } from "./hooks/useScrollAnchor";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
+import { TopLoadingBar } from "./components/TopLoadingBar";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import UniversalChatbot from "./components/UniversalChatbot";
@@ -104,42 +106,94 @@ class ErrorBoundary extends React.Component<
   }
 }
 
+const PageTransition = ({ children }: { children: React.ReactNode }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -10 }}
+    transition={{ duration: 0.25, ease: "easeOut" }}
+  >
+    {children}
+  </motion.div>
+);
+
 const AppRoutes = () => {
+  const location = useLocation();
+  const state = location.state as { backgroundLocation?: Location };
+
   return (
     <ErrorBoundary>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/verify-email" element={<EmailVerification />} />
-        <Route path="/explore" element={<Explore />} />
-        <Route path="/explore-artists" element={<ExploreArtists />} />
-        <Route path="/categories" element={<Categories />} />
-        <Route path="/artist/:id" element={<ArtistProfile />} />
-        <Route path="/profile/:id" element={<UserProfile />} />
-        <Route path="/review/:id" element={<ReviewRedirect />} />
-        <Route path="/artwork/:id" element={<ArtworkDetails />} />
-        <Route path="/artist-dashboard/:tab?" element={<ProtectedRoute><ArtistDashboard /></ProtectedRoute>} />
-        <Route path="/client-dashboard" element={<ProtectedRoute><ClientDashboard /></ProtectedRoute>} />
-        <Route path="/admin-dashboard" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
-        <Route path="/about-us" element={<AboutUs />} />
-        <Route path="/terms-of-service" element={<TermsOfService />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="/refund-policy" element={<RefundPolicy />} />
-        <Route path="/contact-us" element={<ContactUs />} />
-        <Route path="/ai-detection" element={<AIDetection />} />
-        <Route path="/feature-audit" element={<FeatureAudit />} />
-        <Route path="/live-streaming" element={<LiveStreaming />} />
-        <Route path="/collections" element={<Collections />} />
-        <Route path="/trending" element={<Trending />} />
-        <Route path="/recommendations" element={<Recommendations />} />
-        <Route path="/commissions" element={<Commissions />} />
-        <Route path="/events" element={<Events />} />
-        <Route path="/merchandise" element={<Merchandise />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <AnimatePresence mode="wait">
+        <Routes location={state?.backgroundLocation || location} key={(state?.backgroundLocation || location).pathname}>
+          <Route path="/" element={<PageTransition><Index /></PageTransition>} />
+          <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+          <Route path="/signup" element={<PageTransition><Signup /></PageTransition>} />
+          <Route path="/forgot-password" element={<PageTransition><ForgotPassword /></PageTransition>} />
+          <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
+          <Route path="/verify-email" element={<PageTransition><EmailVerification /></PageTransition>} />
+          <Route path="/explore" element={<PageTransition><Explore /></PageTransition>} />
+          <Route path="/explore-artists" element={<PageTransition><ExploreArtists /></PageTransition>} />
+          <Route path="/categories" element={<PageTransition><Categories /></PageTransition>} />
+          <Route path="/artist/:id" element={<PageTransition><ArtistProfile /></PageTransition>} />
+          <Route path="/profile/:id" element={<PageTransition><UserProfile /></PageTransition>} />
+          <Route path="/review/:id" element={<PageTransition><ReviewRedirect /></PageTransition>} />
+          <Route path="/artwork/:id" element={<PageTransition><ArtworkDetails /></PageTransition>} />
+          <Route path="/artist-dashboard/:tab?" element={<ProtectedRoute><PageTransition><ArtistDashboard /></PageTransition></ProtectedRoute>} />
+          <Route path="/client-dashboard" element={<ProtectedRoute><PageTransition><ClientDashboard /></PageTransition></ProtectedRoute>} />
+          <Route path="/admin-dashboard" element={<ProtectedRoute adminOnly><PageTransition><AdminDashboard /></PageTransition></ProtectedRoute>} />
+          <Route path="/about-us" element={<PageTransition><AboutUs /></PageTransition>} />
+          <Route path="/terms-of-service" element={<PageTransition><TermsOfService /></PageTransition>} />
+          <Route path="/privacy-policy" element={<PageTransition><PrivacyPolicy /></PageTransition>} />
+          <Route path="/refund-policy" element={<PageTransition><RefundPolicy /></PageTransition>} />
+          <Route path="/contact-us" element={<PageTransition><ContactUs /></PageTransition>} />
+          <Route path="/ai-detection" element={<PageTransition><AIDetection /></PageTransition>} />
+          <Route path="/feature-audit" element={<PageTransition><FeatureAudit /></PageTransition>} />
+          <Route path="/live-streaming" element={<PageTransition><LiveStreaming /></PageTransition>} />
+          <Route path="/collections" element={<PageTransition><Collections /></PageTransition>} />
+          <Route path="/trending" element={<PageTransition><Trending /></PageTransition>} />
+          <Route path="/recommendations" element={<PageTransition><Recommendations /></PageTransition>} />
+          <Route path="/commissions" element={<PageTransition><Commissions /></PageTransition>} />
+          <Route path="/events" element={<PageTransition><Events /></PageTransition>} />
+          <Route path="/merchandise" element={<PageTransition><Merchandise /></PageTransition>} />
+          <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+        </Routes>
+      </AnimatePresence>
+
+      {/* Modal Routes */}
+      {state?.backgroundLocation && (
+        <Routes>
+          <Route 
+            path="/artwork/:id" 
+            element={
+              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+                <div className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-background rounded-3xl shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-10 duration-500">
+                  <ArtworkDetails isModal={true} />
+                </div>
+              </div>
+            } 
+          />
+          <Route 
+            path="/login" 
+            element={
+              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+                <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-background rounded-3xl shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-10 duration-500">
+                  <Login isModal={true} />
+                </div>
+              </div>
+            } 
+          />
+          <Route 
+            path="/signup" 
+            element={
+              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+                <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-background rounded-3xl shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-10 duration-500">
+                  <Signup isModal={true} />
+                </div>
+              </div>
+            } 
+          />
+        </Routes>
+      )}
     </ErrorBoundary>
   );
 };
@@ -147,21 +201,22 @@ const AppRoutes = () => {
 const App = () => {
   useScrollAnchor("availability-calendar");
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AuthProvider>
-          <CurrencyProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
+    <BrowserRouter>
+      <TopLoadingBar />
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <AuthProvider>
+            <CurrencyProvider>
+              <Toaster />
+              <Sonner />
               <ScrollToTop />
               <UniversalChatbot />
               <AppRoutes />
-            </BrowserRouter>
-          </CurrencyProvider>
-        </AuthProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+            </CurrencyProvider>
+          </AuthProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
   );
 };
 

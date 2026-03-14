@@ -244,7 +244,7 @@ const ArtworkCard = ({
     if ((e.target as HTMLElement).closest('a, button')) {
       return;
     }
-    navigate(`/artwork/${id}`);
+    navigate(`/artwork/${id}`, { state: { backgroundLocation: location } });
   };
 
   return (
@@ -259,7 +259,7 @@ const ArtworkCard = ({
           onMouseLeave={() => setIsHovered(false)}
         >
           {/* Image/Video Container */}
-          <div className="relative w-full aspect-[4/5] overflow-hidden bg-muted shrink-0">
+          <div className="relative w-full aspect-[3/4] overflow-hidden bg-muted shrink-0">
             {type === 'video' ? (
               <video
                 src={imageUrl}
@@ -267,54 +267,45 @@ const ArtworkCard = ({
                 loop
                 muted
                 playsInline
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
             ) : (
               <img
                 src={imageUrl}
                 alt={title}
                 loading="lazy"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
             )}
             
             {/* Visual type indicator for mobile */}
-            <div className="absolute top-3 right-3 sm:hidden">
-              <div className="bg-black/40 backdrop-blur-md p-1.5 rounded-full border border-white/10 text-white">
+            <div className="absolute top-4 right-4 sm:hidden">
+              <div className="bg-black/20 backdrop-blur-md p-2 rounded-full border border-white/10 text-white">
                 {getTypeIcon()}
               </div>
             </div>
-            
-            {/* Price badge overlay for mobile */}
-            {formattedPrice && (
-              <div className="absolute bottom-3 left-3 sm:hidden">
-                <div className="bg-primary/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-primary-foreground shadow-lg border border-primary/20">
-                  {formattedPrice}
-                </div>
-              </div>
-            )}
           
           {/* Subtle gradient on hover only */}
-          <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0 sm:opacity-0'}`} />
+          <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0 sm:opacity-0'}`} />
         </div>
 
         {/* Content */}
-        <div className="p-3 sm:p-4 flex flex-col flex-1 gap-2.5">
-          <div className="flex justify-between items-start gap-2">
+        <div className="p-4 sm:p-5 flex flex-col flex-1 gap-3">
+          <div className="flex justify-between items-start gap-3">
             <div className="flex flex-col min-w-0">
-              <h3 className="font-bold text-sm sm:text-base text-foreground line-clamp-1 group-hover:text-primary transition-colors duration-300 leading-tight">
+              <h3 className="font-black text-sm sm:text-base text-foreground line-clamp-1 group-hover:text-primary transition-colors duration-300 tracking-tight uppercase leading-none">
                 {title}
               </h3>
               <Link 
                 to={`/artist/${artistId}`}
-                className="text-xs text-muted-foreground hover:text-primary transition-colors duration-300 font-medium truncate mt-0.5"
+                className="text-[10px] sm:text-xs text-muted-foreground hover:text-primary transition-colors duration-300 font-bold uppercase tracking-widest mt-1.5"
                 onClick={e => e.stopPropagation()}
               >
-                {artist}
+                by {artist}
               </Link>
             </div>
             {formattedPrice && (
-              <span className="shrink-0 text-xs sm:text-sm font-bold text-primary bg-primary/5 px-2 py-1 rounded-md border border-primary/10">
+              <span className="shrink-0 text-[10px] sm:text-xs font-black text-primary bg-primary/5 px-2.5 py-1.5 rounded-lg border border-primary/10 tracking-widest uppercase">
                 {formattedPrice}
               </span>
             )}

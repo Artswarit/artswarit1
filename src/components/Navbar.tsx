@@ -144,10 +144,10 @@ const Navbar = () => {
           ) : (
             <div className="hidden sm:flex items-center gap-3">
               <Button variant="ghost" asChild className="font-bold text-sm px-6 rounded-xl hover:bg-primary/5 hover:text-primary transition-all">
-                <Link to="/login">Login</Link>
+                <Link to="/login" state={{ backgroundLocation: location }}>Login</Link>
               </Button>
               <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-black text-sm px-6 rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95">
-                <Link to="/signup">Sign Up</Link>
+                <Link to="/signup" state={{ backgroundLocation: location }}>Sign Up</Link>
               </Button>
             </div>
           )}
@@ -224,10 +224,10 @@ const Navbar = () => {
               {!user && (
                 <div className="grid grid-cols-2 gap-3 pt-4 border-t border-muted/20 mt-4">
                   <Button variant="outline" asChild className="rounded-2xl h-14 font-bold border-muted/30 hover:bg-primary/5 hover:text-primary transition-all" onClick={closeMenu}>
-                    <Link to="/login">Login</Link>
+                    <Link to="/login" state={{ backgroundLocation: location }}>Login</Link>
                   </Button>
                   <Button asChild className="rounded-2xl h-14 font-black bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all" onClick={closeMenu}>
-                    <Link to="/signup">Sign Up</Link>
+                    <Link to="/signup" state={{ backgroundLocation: location }}>Sign Up</Link>
                   </Button>
                 </div>
               )}

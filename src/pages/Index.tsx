@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -130,6 +130,7 @@ const testimonials = [{
   role: "Rapper"
 }];
 const Index = () => {
+  const location = useLocation();
   const [featuredArtists, setFeaturedArtists] = useState([]);
   const { getCount, loading: categoriesLoading } = useCategoryCounts();
 
@@ -311,7 +312,7 @@ const Index = () => {
         </div>
         <div className="text-center mt-8 sm:mt-10">
           <Button asChild size="lg" className="bg-gradient-to-r from-artswarit-purple to-blue-500 border-none">
-            <Link to="/signup">Get Started Now</Link>
+            <Link to="/signup" state={{ backgroundLocation: location }}>Get Started Now</Link>
           </Button>
         </div>
       </section>
@@ -360,7 +361,7 @@ const Index = () => {
             {/* Enhanced Buttons Container */}
             <div className="flex flex-col sm:flex-row justify-center gap-4 max-w-md mx-auto">
               <Button asChild className="group relative overflow-hidden bg-white text-artswarit-purple hover:bg-gray-50 font-medium px-6 py-3 text-sm transition-all duration-300 hover:scale-105 hover:shadow-lg">
-                <Link to="/signup" className="flex items-center justify-center gap-2 relative z-10">
+                <Link to="/signup" state={{ backgroundLocation: location }} className="flex items-center justify-center gap-2 relative z-10">
                   <User className="w-4 h-4 transition-transform group-hover:scale-110" />
                   <span>Join as Artist</span>
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -369,7 +370,7 @@ const Index = () => {
               </Button>
 
               <Button asChild className="group relative overflow-hidden bg-white text-artswarit-purple hover:bg-gray-50 font-medium px-6 py-3 text-sm transition-all duration-300 hover:scale-105 hover:shadow-lg">
-                <Link to="/signup?role=client" className="flex items-center justify-center gap-2 relative z-10">
+                <Link to="/signup?role=client" state={{ backgroundLocation: location }} className="flex items-center justify-center gap-2 relative z-10">
                   <Briefcase className="w-4 h-4 transition-transform group-hover:scale-110" />
                   <span>Join as Client</span>
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />

@@ -178,7 +178,7 @@ export const useArtworks = () => {
           media_type: artworkData.media_type || 'image',
           media_url: mediaUrl,
           price: artworkData.price ? parseFloat(artworkData.price) : null,
-          status: 'public',
+          status: artworkData.visibility === 'private' ? 'private' : 'public',
           tags: artworkData.tags || [],
           metadata: {
             visibility: artworkData.visibility || 'public',
