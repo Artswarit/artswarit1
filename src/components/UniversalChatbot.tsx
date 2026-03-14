@@ -238,11 +238,11 @@ const UniversalChatbot: React.FC = () => {
 
               {isLoading && (
                 <div className="flex items-end gap-1.5 justify-start">
-                  <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mb-0.5">
+                  <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mb-0.5 overflow-hidden">
                     <img
                       src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png"
                       alt=""
-                      className="h-3.5 w-3.5 object-contain"
+                      className="h-5 w-5 object-contain"
                     />
                   </div>
                   <div className="rounded-2xl rounded-bl-md px-4 py-2.5 bg-muted flex items-center gap-1">
