@@ -143,19 +143,19 @@ const UniversalChatbot: React.FC = () => {
 
   return (
     <>
-      {/* Collapsed: Inline bar at bottom-right */}
+      {/* Floating icon button */}
       {!open && (
-        <div className="fixed z-50 bottom-5 right-5 md:bottom-7 md:right-7 flex items-center gap-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <div
-            onClick={() => setOpen(true)}
-            className="flex items-center gap-2.5 bg-card border border-border rounded-full pl-4 pr-2 py-2 shadow-lg cursor-pointer hover:shadow-xl transition-all group"
-          >
-            <span className="text-sm text-muted-foreground select-none">Ask me anything...</span>
-            <div className="h-9 w-9 rounded-full bg-primary flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-              <MessageCircle className="h-4 w-4 text-primary-foreground" />
-            </div>
-          </div>
-        </div>
+        <button
+          onClick={() => setOpen(true)}
+          className="fixed z-50 bottom-5 right-5 md:bottom-7 md:right-7 h-14 w-14 rounded-full bg-primary shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center overflow-hidden ring-4 ring-primary/20 cursor-pointer"
+          aria-label="Open chatbot"
+        >
+          <img
+            src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png"
+            alt="Artswarit"
+            className="h-9 w-9 object-contain rounded-full bg-white p-0.5"
+          />
+        </button>
       )}
 
       {/* Expanded Chat Window */}
