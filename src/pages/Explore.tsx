@@ -10,7 +10,6 @@ import GlassCard from '@/components/ui/glass-card';
 import { Loader2 } from 'lucide-react';
 import LogoLoader from '@/components/ui/LogoLoader';
 import { Button } from '@/components/ui/button';
-import ChatbotBubble from '@/components/explore/ChatbotBubble';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const Explore = () => {
@@ -443,7 +442,6 @@ const Explore = () => {
       </div>
 
       <Footer />
-      <ChatbotBubble />
     </div>
   );
 };

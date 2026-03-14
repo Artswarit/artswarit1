@@ -7,7 +7,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const GOOGLE_GEMINI_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY");
+const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
 
 // Input validation constants
 const MAX_MESSAGE_LENGTH = 2000;
@@ -88,26 +88,30 @@ function validateInput(input: unknown): ValidatedInput {
   return { messages, userRole, location };
 }
 
-type GeminiContent = { role: string; parts: { text: string }[] };
-type GeminiPayload = {
-  contents: GeminiContent[];
-  system_instruction?: { parts: { text: string }[] };
+type GroqMessage = {
+  role: string;
+  content: string;
 };
 
-async function fetchGemini(payload: GeminiPayload) {
-  const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_GEMINI_API_KEY}`;
+type GroqPayload = {
+  model: string;
+  messages: GroqMessage[];
+  temperature?: number;
+};
+
+async function fetchGroq(payload: GroqPayload) {
+  const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
   
-  // console.log("[edge] Sending request to Gemini");
-  const geminiRes = await fetch(GEMINI_API_URL, {
+  const groqRes = await fetch(GROQ_API_URL, {
     method: "POST",
     headers: {
+      "Authorization": `Bearer ${GROQ_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
   });
-  const data = await geminiRes.json();
-  // console.log("[edge] Gemini response status:", geminiRes.status);
-  return { status: geminiRes.status, data };
+  const data = await groqRes.json();
+  return { status: groqRes.status, data };
 }
 
 serve(async (req) => {
@@ -115,8 +119,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  if (!GOOGLE_GEMINI_API_KEY) {
-    console.error("[edge] GOOGLE_GEMINI_API_KEY not set.");
+  if (!GROQ_API_KEY) {
+    console.error("[edge] GROQ_API_KEY not set.");
     return new Response(JSON.stringify({ error: "Service temporarily unavailable" }), { status: 503, headers: corsHeaders });
   }
 
@@ -145,70 +149,78 @@ serve(async (req) => {
 
     const { messages, userRole, location } = validated;
 
+    const artswaritInfo = `Artswarit is a comprehensive, modern platform connecting freelance artists and clients.
+Key platform features include:
+1. For Artists:
+   - Dashboard: Manage artworks, projects, earnings, and profile.
+   - Artworks: Upload portfolios, set pricing, add multiple media files, and categorize by art type. Visibility settings (Public, Free, Premium, Exclusive).
+   - Projects: Track milestones, submit completed work, and receive secure payouts.
+   - Pro Subscriptions: Artists can buy premium subscriptions via Razorpay for better visibility and limits.
+   - Earnings & Invoices: Track income, pending payouts, and generate invoices.
+2. For Clients:
+   - Explore & Search: Browse artists, view their portfolios, and filter by categories.
+   - Hire Artists: Start projects with milestone-based agreements. Fund milestones securely via Stripe or Razorpay.
+   - Messaging: Communicate in real-time with artists to discuss requirements.
+   - Client Dashboard: Track ongoing projects, saved artists, and payment history.
+3. For Admins:
+   - Moderation: Approve or reject pending artist profiles, moderate artworks, and handle user reports.
+   - Analytics: Oversee platform metrics, total revenue, and user growth.
+General Information:
+- Users can switch between roles or register as either Artist or Client.
+- Escrow system: Funds for milestones are held securely and released upon client approval.
+- Key Pages: About Us, Terms and Services, Privacy Policy, Refund Policy, Contact Page. Support must reference these when appropriate.
+
+STRICT INSTRUCTIONS:
+- You are Artswarit Assistant, the official AI support bot for Artswarit.
+- The information you provide must ALWAYS be correct and match the ACTUAL Artswarit platform features listed above.
+- NEVER assume features. NEVER invent or create new features.
+- If the user asks about something that is not available or not explicitly stated in Artswarit's features, you MUST reply: "This feature is currently not available in Artswarit."
+- Do not guess. Do not give generic internet answers.
+- Always respond professionally, concisely, and authentically as official Artswarit support.`;
+
     const rolePrompts: Record<string, string> = {
-      artist: "You are the Artswarit assistant for artists. Guide users about uploading, managing artworks, updating profile, earning, projects, and answering queries about the artist dashboard.",
-      client: "You are the Artswarit assistant for clients. Guide users about searching artists, starting projects, messaging, and answering queries about the client dashboard.",
-      admin: "You are the Artswarit assistant for admins. Guide users about platform moderation, approving artists/artworks, managing platform data, etc.",
-      general: "You are the Artswarit universal assistant. You help users across different tasks, features, and sections of the Artswarit platform."
+      artist: "You are speaking to an Artist.",
+      client: "You are speaking to a Client.",
+      admin: "You are speaking to an Admin.",
+      general: "You are speaking to a general user."
     };
     const contextPrompt = rolePrompts[userRole] || rolePrompts.general;
-    const fullSystemPrompt = contextPrompt + ` User is currently at: ${location}.`;
+    const fullSystemPrompt = `${artswaritInfo}\n\n${contextPrompt}\nUser role: ${userRole}\nUser is currently at: ${location}. Provide helpful, accurate, detailed, and comprehensive information about Artswarit in a short and concise manner.`;
 
-    // Gemini requires conversation history to start with a user message and have alternating roles.
-    const firstUserMessageIndex = messages.findIndex((msg) => msg.role === 'user');
-    
-    if (firstUserMessageIndex === -1) {
-      return new Response(JSON.stringify({ error: "No user message found in the history." }), { status: 400, headers: corsHeaders });
-    }
+    // Construct messages array for Groq (OpenAI format)
+    const groqMessages: GroqMessage[] = [
+      { role: "system", content: fullSystemPrompt },
+      ...messages.map(msg => ({
+        role: msg.role === "assistant" ? "assistant" : "user",
+        content: msg.content
+      }))
+    ];
 
-    // Take only the part of conversation starting from the first user.
-    const conversationMessages = messages.slice(firstUserMessageIndex);
-
-    const geminiContents: { role: string, parts: { text: string }[] }[] = [];
-    if (conversationMessages.length > 0) {
-        let lastContent = {
-            role: conversationMessages[0].role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: conversationMessages[0].content }]
-        };
-
-        for (let i = 1; i < conversationMessages.length; i++) {
-            const currentRole = conversationMessages[i].role === 'assistant' ? 'model' : 'user';
-            if (currentRole === lastContent.role) {
-                lastContent.parts[0].text += `\n${conversationMessages[i].content}`;
-            } else {
-                geminiContents.push(lastContent);
-                lastContent = { role: currentRole, parts: [{ text: conversationMessages[i].content }] };
-            }
-        }
-        geminiContents.push(lastContent);
-    }
-
-    const payload: GeminiPayload = {
-      contents: geminiContents,
-      system_instruction: {
-        parts: [{ text: fullSystemPrompt }]
-      },
+    const payload: GroqPayload = {
+      model: "llama-3.3-70b-versatile",
+      messages: groqMessages,
+      temperature: 0.7,
     };
 
-    let geminiResult = await fetchGemini(payload);
-    if (geminiResult.status !== 200) {
-      console.warn("[edge] Gemini primary call failed, retrying once...");
-      geminiResult = await fetchGemini(payload);
+    let groqResult = await fetchGroq(payload);
+    if (groqResult.status !== 200) {
+      console.warn("[edge] Groq primary call failed, retrying once...");
+      groqResult = await fetchGroq(payload);
     }
 
-    const { status, data } = geminiResult;
+    const { status, data } = groqResult;
 
     if (status !== 200) {
       const errorMessage =
         (data &&
           typeof data === "object" &&
           "error" in data &&
-          (data as any).error &&
-          typeof (data as any).error.message === "string" &&
-          (data as any).error.message) ||
+          (data as Record<string, unknown>).error &&
+          typeof ((data as Record<string, unknown>).error as Record<string, unknown>).message === "string" &&
+          ((data as Record<string, unknown>).error as Record<string, unknown>).message) ||
         "Assistant service is currently unavailable. Please try again later.";
 
-      console.error("[edge] Gemini error status:", status, "body:", JSON.stringify(data));
+      console.error("[edge] Groq error status:", status, "body:", JSON.stringify(data));
 
       return new Response(
         JSON.stringify({ error: errorMessage }),
@@ -216,14 +228,10 @@ serve(async (req) => {
       );
     }
 
-    const answer =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ??
-      (Array.isArray(data?.candidates?.[0]?.content)
-        ? data.candidates[0].content[0]?.parts?.[0]?.text?.trim()
-        : undefined);
+    const answer = data?.choices?.[0]?.message?.content?.trim();
 
     if (!answer) {
-      console.error("[edge] No answer returned from Gemini");
+      console.error("[edge] No answer returned from Groq");
       return new Response(
         JSON.stringify({ error: "Unable to process your request. Please try again." }),
         { status: 502, headers: corsHeaders }
