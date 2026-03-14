@@ -152,18 +152,24 @@ const UniversalChatbot: React.FC = () => {
     onClick: () => navigate("/explore")
   }];
   return <>
-      {!open && <button className="fixed z-50 bottom-6 right-6 md:bottom-8 md:right-8 bg-blue-700 rounded-full shadow-lg p-4 hover:scale-105 transition-all animate-fade-in" onClick={() => setOpen(true)} aria-label="Open chatbot">
-          
+      {!open && <button className="fixed z-50 bottom-6 right-6 md:bottom-8 md:right-8 bg-primary rounded-full shadow-2xl p-4 hover:scale-105 transition-transform animate-fade-in group flex items-center justify-center cursor-pointer" onClick={() => setOpen(true)} aria-label="Open chatbot">
+          <img src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png" alt="Artswarit Logo" className="h-8 w-8 object-contain bg-white rounded-full p-0.5" />
         </button>}
-      {open && <div className="fixed z-50 bottom-4 right-4 md:bottom-8 md:right-8 max-w-xs w-full animate-fade-in">
-          <Card className="shadow-xl border-blue-200 relative bg-white">
-            <div className="flex justify-between items-center border-b p-3 pb-2">
-              <div className="flex items-center gap-2 font-semibold text-blue-700">
-                <Bot className="h-5 w-5" />
+      {open && <div className="fixed z-50 bottom-4 right-4 md:bottom-8 md:right-8 max-w-xs w-full animate-fade-in shadow-2xl rounded-xl overflow-hidden border border-primary/20">
+          <Card className="shadow-none border-0 relative bg-white h-full flex flex-col">
+            <div className="flex justify-between items-center bg-primary text-primary-foreground p-4">
+              <div className="flex items-center gap-2 font-bold tracking-tight">
+                <div className="bg-white rounded-full p-0.5">
+                  <img src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png" alt="Artswarit Logo" className="h-5 w-5 object-contain" />
+                </div>
                 Artswarit Assistant
               </div>
-              <button onClick={() => setOpen(false)} aria-label="Close chatbot">
-                <X className="h-5 w-5 text-gray-400 hover:text-blue-900" />
+              <button 
+                onClick={() => setOpen(false)} 
+                className="p-1.5 hover:bg-white/20 rounded-full transition-colors cursor-pointer touch-manipulation" 
+                aria-label="Close chatbot"
+              >
+                <X className="h-5 w-5" />
               </button>
             </div>
             <div className="flex flex-wrap gap-2 p-3 pt-2">
@@ -177,21 +183,21 @@ const UniversalChatbot: React.FC = () => {
                   {label}
                 </Button>)}
             </div>
-            <div className="flex flex-col gap-1 px-2 py-2 overflow-y-auto max-h-60 min-h-[100px]" style={{
+            <div className="flex flex-col gap-2 px-3 py-3 overflow-y-auto max-h-72 min-h-[250px] bg-slate-50 flex-1" style={{
           scrollBehavior: "smooth"
         }} ref={chatRef}>
               {messages.map((msg, i) => <div key={i} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`rounded-lg px-4 py-2 text-sm max-w-[80%] whitespace-pre-line ${msg.sender === "user" ? "bg-blue-100 text-blue-900" : "bg-white border text-gray-900"}`}>
+                  <div className={`rounded-2xl px-4 py-2 text-sm max-w-[85%] whitespace-pre-line shadow-sm ${msg.sender === "user" ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-white border text-foreground rounded-bl-sm"}`}>
                     {msg.text}
                   </div>
                 </div>)}
               {isLoading && <div className="flex justify-start">
-                  <div className="rounded-lg px-4 py-2 text-sm bg-white border text-gray-900">
-                    <Loader2 className="inline-block mr-2 w-4 h-4 animate-spin" /> Assistant is typing...
+                  <div className="rounded-xl px-4 py-2 text-sm bg-white border text-gray-500 rounded-bl-none shadow-sm flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" /> Artswarit Assistant is typing...
                   </div>
                 </div>}
             </div>
-            <div className="flex items-center gap-2 px-3 py-2 border-t bg-blue-50">
+            <div className="flex items-center gap-2 px-3 py-3 border-t bg-white">
               <input ref={inputRef} className="flex-1 text-sm border-none outline-none bg-transparent" autoFocus={open} disabled={isLoading} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleInputKey} placeholder="Ask me anything…" />
               <Button size="icon" className="h-8 w-8" onClick={() => handleSend()} disabled={isLoading || !input.trim()} aria-label="Send message">
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}

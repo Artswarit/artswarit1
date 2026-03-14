@@ -11,6 +11,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import UniversalChatbot from "./components/UniversalChatbot";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -154,6 +155,7 @@ const App = () => {
             <Sonner />
             <BrowserRouter>
               <ScrollToTop />
+              <UniversalChatbot />
               <AppRoutes />
             </BrowserRouter>
           </CurrencyProvider>

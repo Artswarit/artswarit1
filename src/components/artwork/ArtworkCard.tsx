@@ -33,6 +33,7 @@ interface ArtworkCardProps {
   category?: string;
   audioUrl?: string;
   videoUrl?: string;
+  tags?: string[];
 }
 
 const ArtworkCard = ({
@@ -47,6 +48,7 @@ const ArtworkCard = ({
   price,
   currency = 'USD',
   category,
+  tags,
 }: ArtworkCardProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -252,12 +254,12 @@ const ArtworkCard = ({
         className="block"
       >
         <GlassCard 
-          className="group overflow-hidden hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer rounded-2xl sm:rounded-3xl border-border/20 shadow-sm hover:shadow-xl hover:shadow-primary/5"
+          className="group p-0 flex flex-col overflow-hidden hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer rounded-2xl sm:rounded-3xl border-border/20 shadow-sm hover:shadow-xl hover:shadow-primary/5 bg-background/50"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
           {/* Image/Video Container */}
-          <div className="relative aspect-[4/3] sm:aspect-square overflow-hidden bg-muted">
+          <div className="relative w-full aspect-[4/5] overflow-hidden bg-muted shrink-0">
             {type === 'video' ? (
               <video
                 src={imageUrl}
@@ -265,20 +267,20 @@ const ArtworkCard = ({
                 loop
                 muted
                 playsInline
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
             ) : (
               <img
                 src={imageUrl}
                 alt={title}
                 loading="lazy"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
             )}
             
             {/* Visual type indicator for mobile */}
             <div className="absolute top-3 right-3 sm:hidden">
-              <div className="bg-black/60 backdrop-blur-md p-2 rounded-full border border-white/20">
+              <div className="bg-black/40 backdrop-blur-md p-1.5 rounded-full border border-white/10 text-white">
                 {getTypeIcon()}
               </div>
             </div>
@@ -286,112 +288,109 @@ const ArtworkCard = ({
             {/* Price badge overlay for mobile */}
             {formattedPrice && (
               <div className="absolute bottom-3 left-3 sm:hidden">
-                <div className="bg-primary px-3 py-1.5 rounded-full text-xs font-black text-primary-foreground shadow-lg">
+                <div className="bg-primary/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-primary-foreground shadow-lg border border-primary/20">
                   {formattedPrice}
                 </div>
               </div>
             )}
           
           {/* Subtle gradient on hover only */}
-          <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0 sm:opacity-0'}`} />
+          <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0 sm:opacity-0'}`} />
         </div>
 
         {/* Content */}
-        <div className="p-4 sm:p-5 space-y-3 sm:space-y-4">
-          <div>
-            <div className="flex justify-between items-start gap-3">
-              <h3 className="font-black text-base sm:text-lg text-foreground line-clamp-2 group-hover:text-primary transition-colors duration-300 leading-tight tracking-tight">
+        <div className="p-3 sm:p-4 flex flex-col flex-1 gap-2.5">
+          <div className="flex justify-between items-start gap-2">
+            <div className="flex flex-col min-w-0">
+              <h3 className="font-bold text-sm sm:text-base text-foreground line-clamp-1 group-hover:text-primary transition-colors duration-300 leading-tight">
                 {title}
               </h3>
-              {formattedPrice && (
-                <span className="hidden sm:block text-sm sm:text-base font-black text-primary whitespace-nowrap bg-primary/5 px-3 py-1 rounded-full">
-                  {formattedPrice}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-2 mt-1.5">
               <Link 
                 to={`/artist/${artistId}`}
-                className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors duration-300 font-bold tracking-tight"
+                className="text-xs text-muted-foreground hover:text-primary transition-colors duration-300 font-medium truncate mt-0.5"
                 onClick={e => e.stopPropagation()}
               >
-                by <span className="text-foreground/80">{artist}</span>
+                {artist}
               </Link>
             </div>
+            {formattedPrice && (
+              <span className="shrink-0 text-xs sm:text-sm font-bold text-primary bg-primary/5 px-2 py-1 rounded-md border border-primary/10">
+                {formattedPrice}
+              </span>
+            )}
           </div>
           
-          <div className="flex flex-wrap gap-2">
-            {category && (
-              <span className="inline-flex items-center bg-primary/5 text-primary px-3 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-[0.1em] border border-primary/10">
+          <div className="flex flex-wrap gap-1.5 mt-0.5">
+            {category && !['image', 'video', 'audio'].includes(category.toLowerCase()) && (
+              <span className="inline-flex items-center text-muted-foreground text-[10px] font-medium px-2 py-0.5 rounded-sm bg-muted/30 border border-border/40">
                 {category}
               </span>
             )}
-            <span className="inline-flex items-center bg-muted/50 text-muted-foreground px-3 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-[0.1em] border border-border/10">
-              {type}
-            </span>
+            {tags && tags.slice(0, 1).map((tag, idx) => (
+              <span key={idx} className="inline-flex items-center text-muted-foreground text-[10px] font-medium px-2 py-0.5 rounded-sm bg-muted/30 border border-border/40">
+                {tag}
+              </span>
+            ))}
           </div>
           
           {/* Stats Row */}
-          <div className="flex items-center justify-between pt-4 sm:pt-5 border-t border-border/10">
-            <div className="flex items-center gap-4 sm:gap-5 text-xs sm:text-sm text-muted-foreground font-black tracking-widest uppercase">
+          <div className="flex items-center justify-between pt-2.5 mt-auto border-t border-border/10">
+            <div className="flex items-center gap-3 text-muted-foreground">
               <button 
                 onClick={handleLike}
                 disabled={isLiking}
                 className={cn(
-                  "flex items-center gap-2 transition-all duration-300 hover:text-red-500 min-h-[48px] sm:min-h-0 active:scale-90 pr-2",
+                  "flex items-center gap-1.5 transition-colors hover:text-red-500",
                   isLiked ? "text-red-500" : ""
                 )}
               >
                 <Heart className={cn(
-                  "w-5 h-5 sm:w-4 sm:h-4 transition-transform duration-300",
-                  isLiked ? "fill-current scale-110" : "scale-100",
-                  animateLike ? "scale-150" : ""
+                  "w-4 h-4 transition-transform",
+                  isLiked ? "fill-current" : "",
+                  animateLike ? "scale-125" : ""
                 )} />
-                <span className="tabular-nums text-[12px] sm:text-xs">{currentLikes}</span>
+                <span className="text-xs font-semibold">{currentLikes}</span>
               </button>
-              <div className="flex items-center gap-2 min-h-[48px] sm:min-h-0">
-                <Eye className="w-5 h-5 sm:w-4 sm:h-4 opacity-70" />
-                <span className="tabular-nums text-[12px] sm:text-xs">{currentViews}</span>
+              <div className="flex items-center gap-1.5">
+                <Eye className="w-4 h-4 opacity-70" />
+                <span className="text-xs font-semibold">{currentViews}</span>
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
-              {/* Save/Bookmark Button */}
+            <div className="flex items-center gap-1">
               <button
                 onClick={handleSave}
                 disabled={isSaveLoading}
                 className={cn(
-                  "w-12 h-12 sm:w-10 sm:h-10 rounded-2xl transition-all flex items-center justify-center shrink-0 border border-border/10 active:scale-90",
+                  "p-1.5 rounded-md transition-colors",
                   isSaved 
-                    ? "text-primary bg-primary/10 border-primary/20 shadow-sm" 
-                    : "text-muted-foreground hover:text-primary hover:bg-primary/5 hover:border-primary/10"
+                    ? "text-primary bg-primary/10" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
                 title={isSaved ? 'Remove from saved' : 'Save artwork'}
               >
                 <Bookmark className={cn(
-                  "w-5.5 h-5.5 sm:w-4.5 sm:h-4.5",
+                  "w-4 h-4",
                   isSaved ? "fill-current" : ""
                 )} />
               </button>
-              
-              {/* More Options Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
-                  <button className="w-12 h-12 sm:w-10 sm:h-10 rounded-2xl text-muted-foreground hover:text-foreground hover:bg-accent border border-border/10 transition-all flex items-center justify-center shrink-0 active:scale-90">
-                    <MoreVertical className="w-5.5 h-5.5 sm:w-4.5 sm:h-4.5" />
+                  <button className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                    <MoreVertical className="w-4 h-4" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="rounded-2xl border-border/20 shadow-xl min-w-[160px]" onClick={(e) => e.stopPropagation()}>
-                  <DropdownMenuItem onClick={handleReportClick} className="text-destructive font-black text-[10px] uppercase tracking-widest py-3 px-4 focus:bg-destructive/5 cursor-pointer">
-                    <Flag className="w-4 h-4 mr-3" />
-                    Report Content
+                <DropdownMenuContent align="end" className="min-w-[140px]" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenuItem onClick={handleReportClick} className="text-destructive text-xs font-medium cursor-pointer">
+                    <Flag className="w-3.5 h-3.5 mr-2" />
+                    Report
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </div>
         </div>
-      </GlassCard>
+        </GlassCard>
       </div>
 
     {/* Report Dialog */}
