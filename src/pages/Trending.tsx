@@ -5,10 +5,11 @@ import TrendingAlgorithm from '@/components/discovery/TrendingAlgorithm';
 
 const Trending = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-[#fafafa]">
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.03),transparent_50%),radial-gradient(circle_at_bottom_left,rgba(168,85,247,0.03),transparent_50%)] pointer-events-none" />
       <Navbar />
       
-      <main className="w-full max-w-[1400px] mx-auto px-3 sm:px-4 lg:px-6 py-6 sm:py-8 pt-20 sm:pt-24">
+      <main className="w-full max-w-[1400px] mx-auto px-3 sm:px-4 lg:px-6 py-12 sm:py-16 pt-24 sm:pt-32">
         <TrendingAlgorithm />
       </main>
 

@@ -8,8 +8,10 @@ import SignupHeader from "@/components/auth/SignupHeader";
 import SocialLoginButtons from "@/components/auth/SocialLoginButtons";
 import SignupForm, { SignupFormData } from "@/components/auth/SignupForm";
 import LogoWithName from "@/components/LogoWithName";
+import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const Signup = () => {
+const Signup = ({ isModal = false }: { isModal?: boolean }) => {
   const navigate = useNavigate();
   const { signUp, signInWithGoogle, loading, user } = useAuth();
   const { toast } = useToast();
@@ -105,9 +107,19 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <Navbar />
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20 sm:py-24">
+    <div className={cn("min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50", isModal && "min-h-0 bg-none")}>
+      {!isModal && <Navbar />}
+
+      {isModal && (
+        <button 
+          onClick={() => navigate(-1)}
+          className="absolute top-4 right-4 z-50 h-8 w-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      )}
+
+      <div className={cn("flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8", isModal ? "py-6" : "py-20 sm:py-24")}>
         <div className="w-full max-w-md space-y-4 sm:space-y-5">
           <div className="text-center space-y-1">
             <LogoWithName />
@@ -124,7 +136,7 @@ const Signup = () => {
           />
         </div>
       </div>
-      <Footer />
+      {!isModal && <Footer />}
     </div>
   );
 };

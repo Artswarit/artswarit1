@@ -9,6 +9,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import GlassCard from '@/components/ui/glass-card';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface TrendingItem {
   id: string;
@@ -35,6 +37,7 @@ const TrendingAlgorithm = () => {
   const [sortBy, setSortBy] = useState<string>('score');
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const { user } = useAuth();
 
   const fetchTrendingData = async () => {
     try {
@@ -61,7 +64,10 @@ const TrendingAlgorithm = () => {
           created_at
         `)
         .eq('status', 'public')
-        .limit(100);
+        .filter('metadata->>visibility', 'eq', 'public')
+        .filter('metadata->>access_type', 'eq', 'free')
+        .order('created_at', { ascending: false })
+        .limit(200);
 
       if (error) throw error;
       if (!artworks) return;
@@ -77,44 +83,71 @@ const TrendingAlgorithm = () => {
 
       const artistMap = new Map(artists?.map(a => [a.id, a.full_name]) || []);
 
-      // Fetch RECENT engagement for velocity calculation
-      const [{ data: recentLikes }, { data: recentViews }] = await Promise.all([
-        supabase.from('artwork_likes').select('artwork_id, created_at').in('artwork_id', artworkIds).gte('created_at', cutoffDate.toISOString()),
-        supabase.from('artwork_views').select('artwork_id, created_at').in('artwork_id', artworkIds).gte('created_at', cutoffDate.toISOString())
+      // Personalization: Fetch following list for the user
+      const followingIds = new Set<string>();
+      if (user?.id) {
+        const { data: following } = await supabase
+          .from('follows')
+          .select('following_id')
+          .eq('follower_id', user.id);
+        following?.forEach(f => followingIds.add(f.following_id));
+      }
+
+      // Fetch RECENT engagement (Instagram-style velocity focus)
+      const [{ data: recentLikes }, { data: recentViews }, { data: recentComments }, { data: recentSaves }] = await Promise.all([
+        supabase.from('artwork_likes').select('artwork_id').in('artwork_id', artworkIds).gte('created_at', cutoffDate.toISOString()),
+        supabase.from('artwork_views').select('artwork_id').in('artwork_id', artworkIds).gte('created_at', cutoffDate.toISOString()),
+        supabase.from('comments').select('artwork_id').in('artwork_id', artworkIds).gte('created_at', cutoffDate.toISOString()),
+        supabase.from('saved_artworks').select('artwork_id').in('artwork_id', artworkIds).gte('created_at', cutoffDate.toISOString())
       ]);
 
       // Map engagement counts
-      const recentLikesCount = new Map<string, number>();
-      recentLikes?.forEach(l => recentLikesCount.set(l.artwork_id, (recentLikesCount.get(l.artwork_id) || 0) + 1));
+      const getCounts = (data: any[] | null) => {
+        const map = new Map<string, number>();
+        data?.forEach(item => map.set(item.artwork_id, (map.get(item.artwork_id) || 0) + 1));
+        return map;
+      };
 
-      const recentViewsCount = new Map<string, number>();
-      recentViews?.forEach(v => recentViewsCount.set(v.artwork_id, (recentViewsCount.get(v.artwork_id) || 0) + 1));
+      const likesCount = getCounts(recentLikes);
+      const viewsCount = getCounts(recentViews);
+      const commentsCount = getCounts(recentComments);
+      const savesCount = getCounts(recentSaves);
 
-      // Calculate trending scores using a decay algorithm
+      // Instagram Algorithm Logic:
+      // 1. High weights for deep interactions (Saves/Comments)
+      // 2. Velocity focus: What's hot right now vs historical
+      // 3. Personalization boost for followed artists
+      // 4. Freshness boost for very new content
       const trending: TrendingItem[] = artworks.map(artwork => {
         const metadata = artwork.metadata as any;
-        const totalLikes = metadata?.likes_count || 0;
-        const totalViews = metadata?.views_count || 0;
+        const recentL = likesCount.get(artwork.id) || 0;
+        const recentV = viewsCount.get(artwork.id) || 0;
+        const recentC = commentsCount.get(artwork.id) || 0;
+        const recentS = savesCount.get(artwork.id) || 0;
         
-        const recentLikes = recentLikesCount.get(artwork.id) || 0;
-        const recentViews = recentViewsCount.get(artwork.id) || 0;
+        // 1. Interaction Score (Weighted like Instagram)
+        // Saves are strongest signal, followed by comments, then likes, then views
+        const interactionScore = (recentS * 15) + (recentC * 10) + (recentL * 5) + (recentV * 1);
         
-        // Velocity: Engagement per hour in the selected timeframe
+        // 2. Velocity calculation (per hour)
         const hoursInTimeframe = selectedTimeframe === '1h' ? 1 : selectedTimeframe === '24h' ? 24 : selectedTimeframe === '7d' ? 168 : 720;
-        const velocity = (recentLikes * 5 + recentViews * 1) / hoursInTimeframe;
+        const velocity = interactionScore / hoursInTimeframe;
         
-        // Decay Score: (Total Engagement) / (Age + 2)^Gravity
-        const ageInHours = Math.max(1, (now.getTime() - new Date(artwork.created_at).getTime()) / (1000 * 60 * 60));
-        const gravity = 1.8;
-        const engagementScore = (totalLikes * 10 + totalViews * 1);
-        const trendingScore = Math.floor((engagementScore / Math.pow(ageInHours + 2, gravity)) * 1000) + Math.floor(velocity * 100);
+        // 3. Freshness & Decay (Instagram prefers newer content)
+        const ageHours = Math.max(1, (now.getTime() - new Date(artwork.created_at).getTime()) / (1000 * 60 * 60));
+        const freshnessBoost = ageHours < 24 ? 1.5 : ageHours < 72 ? 1.2 : 1.0;
         
-        // Change: Real growth percentage in current timeframe vs total
-        const totalEngagement = totalLikes + (totalViews * 0.1);
-        const recentEngagement = recentLikes + (recentViews * 0.1);
-        const trendingChange = totalEngagement > 0 
-          ? Math.floor((recentEngagement / totalEngagement) * 100) 
-          : 0;
+        // Gravity decay: 1.8 is standard for high-decay feeds (Hacker News/Instagram style)
+        const decay = 1 / Math.pow(ageHours + 2, 1.8);
+        
+        // 4. Personalization (Relationship Boost)
+        const relationshipBoost = followingIds.has(artwork.artist_id) ? 1.4 : 1.0;
+
+        // Final Composite Score
+        const trendingScore = Math.floor((interactionScore + velocity * 10) * decay * freshnessBoost * relationshipBoost * 1000);
+        
+        // Growth percentage for indicator
+        const trendingChange = Math.floor((interactionScore / (metadata?.likes_count || 1)) * 100);
 
         return {
           id: artwork.id,
@@ -122,9 +155,9 @@ const TrendingAlgorithm = () => {
           artist: artistMap.get(artwork.artist_id) || 'Unknown Artist',
           artistId: artwork.artist_id,
           type: artwork.media_type,
-          views: totalViews,
-          likes: totalLikes,
-          shares: Math.floor(totalLikes * 0.15),
+          views: metadata?.views_count || 0,
+          likes: metadata?.likes_count || 0,
+          shares: Math.floor((metadata?.likes_count || 0) * 0.15),
           trendingScore,
           trendingChange,
           timeframe: selectedTimeframe,
@@ -134,8 +167,8 @@ const TrendingAlgorithm = () => {
         };
       });
 
-      // Sort and slice
-      setTrendingItems(trending.sort((a, b) => b.trendingScore - a.trendingScore).slice(0, 30));
+      // Update state with all scored items
+      setTrendingItems(trending);
       setLastUpdate(new Date());
     } catch (error) {
       // Silent — background fetch error
@@ -198,7 +231,7 @@ const TrendingAlgorithm = () => {
     }
     
     // Sorting
-    return items.sort((a, b) => {
+    items.sort((a, b) => {
       if (sortBy === 'score') return b.trendingScore - a.trendingScore;
       if (sortBy === 'velocity') return b.velocity - a.velocity;
       if (sortBy === 'growth') return b.trendingChange - a.trendingChange;
@@ -206,6 +239,9 @@ const TrendingAlgorithm = () => {
       if (sortBy === 'likes') return b.likes - a.likes;
       return 0;
     });
+
+    // Take top 30 after filtering and sorting
+    return items.slice(0, 30);
   }, [trendingItems, selectedCategory, selectedType, sortBy]);
 
   const categories = useMemo(() => {
@@ -391,98 +427,67 @@ const TrendingAlgorithm = () => {
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.4, delay: index * 0.05 }}
                 >
-                  <Link to={`/artwork/${item.id}`} className="group block h-full">
-                    <Card className="h-full border-none bg-white/40 backdrop-blur-xl hover:bg-white/80 transition-all duration-500 shadow-sm hover:shadow-2xl hover:shadow-purple-500/10 rounded-[2.5rem] overflow-hidden group">
-                      <div className="relative aspect-[16/10] overflow-hidden">
-                        {/* Rank Overlay */}
-                        <div className="absolute top-4 left-4 z-20 flex items-center justify-center w-10 h-10 rounded-2xl bg-white/90 backdrop-blur-md text-slate-900 font-black text-lg shadow-lg border border-white/50">
-                          {index + 1}
-                        </div>
-                        
-                        {/* Growth Indicator */}
-                        <div className={cn(
-                          "absolute top-4 right-4 z-20 px-3 py-1.5 rounded-xl backdrop-blur-md font-bold text-xs flex items-center gap-1.5 border border-white/50 shadow-lg",
-                          item.trendingChange > 0 ? "bg-green-500/10 text-green-600" : "bg-slate-500/10 text-slate-600"
-                        )}>
-                          {item.trendingChange > 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
-                          {item.trendingChange}%
-                        </div>
-
+                  <Link to={`/artwork/${item.id}`} state={{ backgroundLocation: location }} className="group block h-full">
+                    <GlassCard className="h-full p-0 flex flex-col group hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 cursor-pointer rounded-[2rem] border-border/20 shadow-sm hover:shadow-2xl hover:shadow-primary/5 bg-background/50 overflow-hidden">
+                      <div className="relative aspect-[3/4] overflow-hidden bg-muted">
                         {/* Media */}
                         <div className="w-full h-full relative">
                           {item.type === 'video' ? (
-                            <>
-                              <video 
-                                src={item.thumbnail} 
-                                autoPlay loop muted playsInline
-                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                              />
-                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/20 backdrop-blur-[2px]">
-                                <div className="w-12 h-12 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center border border-white/40">
-                                  <Play className="h-6 w-6 text-white fill-current" />
-                                </div>
-                              </div>
-                            </>
+                            <video 
+                              src={item.thumbnail} 
+                              autoPlay loop muted playsInline
+                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                            />
                           ) : (
-                            <>
-                              <img 
-                                src={item.thumbnail} 
-                                alt={item.title}
-                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                            </>
+                            <img 
+                              src={item.thumbnail} 
+                              alt={item.title}
+                              loading="lazy"
+                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                            />
                           )}
-                        </div>
-                        
-                        {/* Category Badge */}
-                        <div className="absolute bottom-4 left-4 z-20 flex items-center gap-2">
-                          <Badge className="bg-white/90 backdrop-blur-md text-slate-900 border-none px-3 py-1 rounded-xl font-bold text-[10px] uppercase tracking-wider shadow-sm">
-                            {item.category}
-                          </Badge>
-                          {item.type === 'video' && (
-                            <Badge className="bg-blue-600/90 backdrop-blur-md text-white border-none px-2 py-1 rounded-lg font-bold text-[8px] uppercase tracking-widest">
-                              Video
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                          
+                          {/* Category Badge overlayed on image */}
+                          <div className="absolute bottom-4 left-4 z-20 flex gap-2">
+                            <Badge className="bg-white/20 backdrop-blur-md text-white border-white/20 px-2.5 py-0.5 rounded-lg font-black text-[9px] uppercase tracking-widest shadow-sm">
+                              {item.category}
                             </Badge>
-                          )}
+                          </div>
                         </div>
                       </div>
 
-                      <CardContent className="p-6">
-                        <div className="flex justify-between items-start gap-4 mb-4">
-                          <div className="min-w-0">
-                            <h3 className="font-black text-xl text-foreground truncate group-hover:text-blue-600 transition-colors">
+                      <CardContent className="p-4 sm:p-5 flex flex-col flex-1 gap-4">
+                        <div className="flex justify-between items-start gap-3">
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-black text-lg text-foreground truncate group-hover:text-primary transition-colors tracking-tight uppercase leading-tight">
                               {item.title}
                             </h3>
-                            <p className="text-muted-foreground font-bold text-sm truncate">
+                            <p className="text-muted-foreground font-bold text-xs truncate">
                               by {item.artist}
                             </p>
                           </div>
-                          <div className="flex flex-col items-end">
-                            <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Score</div>
-                            <div className="text-lg font-black text-foreground">{formatNumber(item.trendingScore)}</div>
-                          </div>
                         </div>
 
-                        <div className="flex items-center justify-between pt-4 border-t border-slate-100/50">
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-1.5 text-slate-400 font-bold text-xs">
-                              <Eye className="h-4 w-4" />
+                        <div className="mt-auto flex items-center justify-between pt-4 border-t border-border/10">
+                          <div className="flex items-center gap-4 text-muted-foreground">
+                            <div className="flex items-center gap-1.5 font-bold text-[11px] uppercase tracking-tight">
+                              <Eye className="h-3.5 w-3.5" />
                               {formatNumber(item.views)}
                             </div>
-                            <div className="flex items-center gap-1.5 text-slate-400 font-bold text-xs">
-                              <Heart className="h-4 w-4" />
+                            <div className="flex items-center gap-1.5 font-bold text-[11px] uppercase tracking-tight">
+                              <Heart className="h-3.5 w-3.5" />
                               {formatNumber(item.likes)}
                             </div>
                           </div>
                           
-                          <div className="flex items-center gap-1 text-blue-600 font-black text-xs uppercase tracking-wider">
-                            View Art
-                            <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                          <div className="flex items-center gap-1 text-primary font-black text-[10px] uppercase tracking-[0.1em]">
+                            Full Story
+                            <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                           </div>
                         </div>
                       </CardContent>
-                    </Card>
+                    </GlassCard>
                   </Link>
                 </motion.div>
               ))

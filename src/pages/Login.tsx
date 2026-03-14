@@ -10,10 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import LogoWithName from "@/components/LogoWithName";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
-const Login = () => {
+const Login = ({ isModal = false }: { isModal?: boolean }) => {
   const navigate = useNavigate();
   const { signIn, signInWithGoogle, loading, user } = useAuth();
   const { toast } = useToast();
@@ -99,9 +100,19 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <Navbar />
-      <div className="flex-1 flex items-center justify-center px-3 sm:px-6 lg:px-8 py-[80px]">
+    <div className={cn("min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50", isModal && "min-h-0 bg-none")}>
+      {!isModal && <Navbar />}
+      
+      {isModal && (
+        <button 
+          onClick={() => navigate(-1)}
+          className="absolute top-4 right-4 z-50 h-8 w-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      )}
+
+      <div className={cn("flex-1 flex items-center justify-center px-3 sm:px-6 lg:px-8", isModal ? "py-6" : "py-[80px]")}>
         <div className="w-full max-w-sm sm:max-w-md space-y-4">
           <div className="text-center space-y-0">
             <LogoWithName />
@@ -236,7 +247,7 @@ const Login = () => {
           </Card>
         </div>
       </div>
-      <Footer />
+      {!isModal && <Footer />}
     </div>
   );
 };

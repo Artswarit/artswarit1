@@ -168,18 +168,26 @@ export default function ArtistProfile() {
         }
         
         // Fetch artist info from public_profiles view (has avatar_url and cover_url)
+        // Create the artworks query based on whether the viewer is the owner
+        const artworksQuery = supabase
+          .from('artworks')
+          .select('*')
+          .eq('artist_id', id)
+          .neq('status', 'archived')
+          .order('created_at', { ascending: false });
+
+        // If not the owner, only show public artworks that are marked as public visibility
+        if (id !== user?.id) {
+          artworksQuery.eq('status', 'public').filter('metadata->>visibility', 'eq', 'public');
+        }
+
         const [profileResult, artworksResult, followersResult, servicesResult, reviewsResult, projectsResult] = await Promise.all([
           supabase
             .from('public_profiles')
             .select('*')
             .eq('id', id)
             .maybeSingle(),
-          supabase
-            .from('artworks')
-            .select('*')
-            .eq('artist_id', id)
-            .eq('status', 'public')
-            .order('created_at', { ascending: false }),
+          artworksQuery,
           supabase
             .from('follows')
             .select('id')
@@ -333,7 +341,7 @@ export default function ArtistProfile() {
     }
 
     fetchArtistProfile();
-  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [id, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Scroll to top when the profile finishes loading to counteract any
   // scroll that may have happened during the loading phase
@@ -817,7 +825,7 @@ export default function ArtistProfile() {
 
   const handleArtworkClick = (art: any) => {
     if (!art?.id) return;
-    navigate(`/artwork/${art.id}`);
+    navigate(`/artwork/${art.id}`, { state: { backgroundLocation: location } });
   };
 
   // Extra robust: always show demo data for /artist/1 and /artist/2, regardless of login

@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import {
   ArrowLeft, Eye, Heart, Maximize2, Bookmark,
-  Crown, Lock, Music, Send, MessageCircle, Share2,
+  Crown, Lock, Music, Send, MessageCircle, Share2, X
 } from "lucide-react";
 import ArtworkFeedback from "@/components/artwork/ArtworkFeedback";
 import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import LogoLoader from "@/components/ui/LogoLoader";
 
-export default function ArtworkDetails() {
+export default function ArtworkDetails({ isModal = false }: { isModal?: boolean }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -238,8 +238,8 @@ export default function ArtworkDetails() {
   // ── Loading ───────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Navbar />
+      <div className={cn("min-h-screen flex flex-col bg-background", isModal && "min-h-0 h-[400px]")}>
+        {!isModal && <Navbar />}
         <div className="flex-1 flex items-center justify-center pt-24">
           <LogoLoader text="Loading artwork…" />
         </div>
@@ -250,8 +250,8 @@ export default function ArtworkDetails() {
   // ── Access Denied ─────────────────────────────────────────
   if (accessDenied) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Navbar />
+      <div className={cn("min-h-screen flex flex-col bg-background", isModal && "min-h-0")}>
+        {!isModal && <Navbar />}
         <main className="flex-1 flex items-center justify-center px-4 pt-20">
           <div className="max-w-sm w-full text-center space-y-6 p-8 rounded-2xl border border-border/40 bg-card shadow-xl">
             <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg">
@@ -286,8 +286,8 @@ export default function ArtworkDetails() {
   // ── Not Found ─────────────────────────────────────────────
   if (!artwork) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Navbar />
+      <div className={cn("min-h-screen flex flex-col bg-background", isModal && "min-h-0")}>
+        {!isModal && <Navbar />}
         <main className="flex-1 flex items-center justify-center px-4 pt-20">
           <div className="text-center space-y-4">
             <h1 className="text-2xl font-bold">Artwork Not Found</h1>
@@ -302,12 +302,21 @@ export default function ArtworkDetails() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Navbar />
+    <div className={cn("min-h-screen flex flex-col bg-background", isModal && "min-h-0")}>
+      {!isModal && <Navbar />}
 
-      <main className="flex-1 pt-24 pb-4">
-        <div className="max-w-6xl mx-auto px-0 sm:px-4 lg:px-8">
-          <div className="bg-card sm:rounded-2xl border-x-0 sm:border border-border/40 overflow-hidden shadow-sm">
+      {isModal && (
+        <button 
+          onClick={() => navigate(-1)}
+          className="fixed top-4 right-4 z-[110] h-10 w-10 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/60 transition-all shadow-xl"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      )}
+
+      <main className={cn("flex-1 pb-4", isModal ? "pt-0" : "pt-24")}>
+        <div className={cn("max-w-6xl mx-auto px-0", !isModal && "sm:px-4 lg:px-8")}>
+          <div className={cn("bg-card overflow-hidden", !isModal ? "sm:rounded-2xl border-x-0 sm:border border-border/40 shadow-sm" : "border-none")}>
 
           {/* ── ARTIST HEADER (Instagram-style post header) ─────────── */}
           <div className="flex items-center gap-3 px-3 sm:px-4 py-3">
