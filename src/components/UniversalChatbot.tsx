@@ -147,7 +147,7 @@ const UniversalChatbot: React.FC = () => {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed z-50 bottom-5 right-5 md:bottom-7 md:right-7 h-12 w-12 rounded-full bg-primary/90 backdrop-blur-sm shadow-xl hover:shadow-2xl hover:scale-105 transition-all flex items-center justify-center ring-4 ring-primary/20 hover:ring-primary/40 cursor-pointer p-0"
+          className="fixed z-[100] bottom-[calc(1.25rem+var(--safe-bottom))] right-5 md:bottom-7 md:right-7 h-12 w-12 rounded-full bg-primary/90 backdrop-blur-sm shadow-xl hover:shadow-2xl hover:scale-105 transition-all flex items-center justify-center ring-4 ring-primary/20 hover:ring-primary/40 cursor-pointer p-0"
           aria-label="Open chatbot"
         >
           <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center p-0.5 shadow-sm overflow-hidden">
@@ -162,10 +162,10 @@ const UniversalChatbot: React.FC = () => {
 
       {/* Expanded Chat Window */}
       {open && (
-        <div className="fixed z-50 inset-x-0 bottom-0 md:inset-x-auto md:bottom-7 md:right-7 md:w-[350px] md:bottom-7 animate-in slide-in-from-bottom-6 zoom-in-95 fade-in duration-300 ease-out fill-mode-both shadow-2xl md:rounded-2xl">
-          <div className="rounded-none md:rounded-2xl border-t md:border border-white/20 overflow-hidden flex flex-col bg-white/5 backdrop-blur-[40px] shadow-[0_8px_32px_rgba(0,0,0,0.2)] h-[85vh] md:h-auto md:max-h-[75vh]">
+        <div className="fixed z-[1000] inset-x-0 bottom-0 md:inset-x-auto md:bottom-7 md:right-7 md:w-[350px] animate-in slide-in-from-bottom-6 zoom-in-95 fade-in duration-300 ease-out fill-mode-both shadow-2xl md:rounded-2xl overflow-hidden chat-window-container">
+          <div className="rounded-none md:rounded-2xl border-t md:border border-white/40 overflow-hidden flex flex-col bg-white/30 backdrop-blur-[80px] shadow-[0_8px_32px_rgba(0,0,0,0.3)] h-[100dvh] md:h-auto md:max-h-[85vh] pt-[var(--safe-top)] md:pt-0">
             {/* Header */}
-            <div className="bg-primary/90 text-primary-foreground px-4 py-3.5 flex items-center justify-between shrink-0 border-b border-primary/20">
+            <div className="bg-primary text-primary-foreground px-4 py-3.5 flex items-center justify-between shrink-0 border-b border-white/10">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 flex items-center justify-center shrink-0">
                   <img
@@ -189,7 +189,7 @@ const UniversalChatbot: React.FC = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="flex gap-2 px-3 py-2.5 overflow-x-auto border-b border-white/10 bg-white/5 backdrop-blur-3xl shrink-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div className="flex gap-2 px-3 py-2.5 overflow-x-auto border-b border-white/10 bg-transparent shrink-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {quickActions.map(({ label, onClick }) => (
                 <button
                   key={label}
@@ -206,7 +206,7 @@ const UniversalChatbot: React.FC = () => {
 
             {/* Messages Area */}
             <div
-              className="flex-1 flex flex-col gap-3 px-3 py-4 overflow-y-auto min-h-[220px] bg-white/5 backdrop-blur-[40px] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+              className="flex-1 flex flex-col gap-3 px-3 py-4 overflow-y-auto min-h-[220px] bg-transparent [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
               style={{ scrollBehavior: "smooth" }}
               ref={chatRef}
             >
@@ -229,8 +229,8 @@ const UniversalChatbot: React.FC = () => {
                   <div
                     className={`rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed max-w-[85%] whitespace-pre-line break-words shadow-sm border ${
                       msg.sender === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-sm shadow-primary/10 border-transparent"
-                        : "bg-white/10 backdrop-blur-2xl border-white/20 text-foreground rounded-bl-sm shadow-lg shadow-black/5"
+                        ? "bg-white text-primary font-bold rounded-br-sm shadow-primary/5 border-primary/10"
+                        : "bg-white text-foreground rounded-bl-sm shadow-md border-white/20"
                     }`}
                   >
                     {msg.text}
@@ -246,7 +246,7 @@ const UniversalChatbot: React.FC = () => {
                       className="h-7 w-7 object-contain drop-shadow-sm"
                     />
                   </div>
-                  <div className="rounded-2xl rounded-bl-sm px-4 py-2.5 bg-background border border-border shadow-sm flex items-center gap-1.5 h-[38px]">
+                  <div className="rounded-2xl rounded-bl-sm px-4 py-2.5 bg-white border border-border shadow-sm flex items-center gap-1.5 h-[38px]">
                     <span className="flex gap-[3px]">
                       <span className="h-[5px] w-[5px] rounded-full bg-muted-foreground/50 animate-bounce [animation-delay:0ms]" />
                       <span className="h-[5px] w-[5px] rounded-full bg-muted-foreground/50 animate-bounce [animation-delay:150ms]" />
@@ -257,10 +257,10 @@ const UniversalChatbot: React.FC = () => {
               )}
             </div>
 
-            <div className="flex items-center gap-2 px-3 py-2.5 border-t border-white/10 bg-white/10 backdrop-blur-[40px] shrink-0 pb-safe">
+            <div className="flex items-center gap-2 px-3 py-2.5 border-t border-white/10 bg-white/10 shrink-0 pb-[calc(1.25rem+var(--safe-bottom))] xl:pb-2.5">
               <input
                 ref={inputRef}
-                className="flex-1 text-[16px] bg-muted rounded-full px-4 py-2.5 outline-none border border-transparent focus:border-primary/30 focus:ring-1 focus:ring-ring/20 transition-all placeholder:text-muted-foreground/50"
+                className="flex-1 text-[16px] bg-white rounded-full px-4 py-2.5 outline-none border border-transparent focus:border-primary/30 focus:ring-1 focus:ring-ring/20 transition-all placeholder:text-muted-foreground/50 text-foreground shadow-inner"
                 autoFocus={open}
                 disabled={isLoading}
                 value={input}

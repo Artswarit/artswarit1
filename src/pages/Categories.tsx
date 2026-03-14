@@ -93,7 +93,7 @@ const Categories = () => {
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Navbar />
       
-      <main className="container mx-auto px-4 py-16 sm:px-6 lg:px-8">
+      <main className="container mx-auto px-4 pt-[calc(var(--navbar-height-mobile)+var(--safe-top)+1rem)] sm:pt-[calc(var(--navbar-height-desktop)+var(--safe-top)+2rem)] pb-16 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h1 className="font-heading text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-artswarit-purple to-blue-500">
             All Categories

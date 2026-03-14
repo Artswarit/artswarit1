@@ -7,7 +7,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-gradient-to-br from-violet-950 via-indigo-950 to-purple-950 text-white/90 border-t border-white/5 relative overflow-hidden">
+    <footer className="bg-gradient-to-br from-violet-950 via-indigo-950 to-purple-950 text-white/90 border-t border-white/5 relative overflow-hidden pb-[var(--safe-bottom)]">
       {/* Decorative background elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px]" />

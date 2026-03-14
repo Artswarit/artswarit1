@@ -59,7 +59,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white/80 dark:bg-card/80 backdrop-blur-xl border-b border-muted/20 fixed w-full top-0 z-50 transition-all duration-300">
+    <nav className="bg-white/80 dark:bg-card/80 backdrop-blur-xl border-b border-muted/20 fixed w-full top-0 z-50 transition-all duration-300 pt-[var(--safe-top)]">
       <div className="max-w-[1400px] mx-auto h-16 sm:h-20 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Left: logo + desktop menu */}
         <div className="flex items-center gap-4 lg:gap-8">
@@ -144,10 +144,10 @@ const Navbar = () => {
           ) : (
             <div className="hidden sm:flex items-center gap-3">
               <Button variant="ghost" asChild className="font-bold text-sm px-6 rounded-xl hover:bg-primary/5 hover:text-primary transition-all">
-                <Link to="/login" state={{ backgroundLocation: location }}>Login</Link>
+                <Link to="/login">Login</Link>
               </Button>
               <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-black text-sm px-6 rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95">
-                <Link to="/signup" state={{ backgroundLocation: location }}>Sign Up</Link>
+                <Link to="/signup">Sign Up</Link>
               </Button>
             </div>
           )}
@@ -185,8 +185,8 @@ const Navbar = () => {
       {/* Modern Mobile Menu */}
       {isOpen && (
         <div id="mobile-menu" className="lg:hidden absolute top-full left-0 right-0 p-4 animate-in fade-in slide-in-from-top-4 duration-300 z-50">
-          <div className="bg-white/95 dark:bg-card/95 backdrop-blur-2xl rounded-[2rem] border border-muted/20 shadow-2xl overflow-hidden">
-            <div className="p-4 space-y-2">
+          <div className="bg-white/95 dark:bg-card/95 backdrop-blur-2xl rounded-[2rem] border border-muted/20 shadow-2xl overflow-y-auto max-h-[calc(100dvh-4rem-var(--safe-top)-var(--safe-bottom)-2rem)] sm:max-h-[calc(100dvh-5rem-var(--safe-top)-var(--safe-bottom)-2rem)]">
+            <div className="p-4 space-y-2 pb-[var(--safe-bottom)]">
               <div className="flex items-center justify-end mb-2">
                 <Button
                   type="button"

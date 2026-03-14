@@ -128,25 +128,32 @@ const TopFilters = ({ onFiltersChange, onViewModeChange, viewMode, resultsCount,
   };
 
   return (
-    <div className="sticky top-16 sm:top-20 z-40 bg-white/60 dark:bg-card/60 backdrop-blur-xl border-b border-border/40 shadow-sm transition-all duration-300">
-      <div className="container mx-auto px-4 py-2 sm:py-4">
+    <div className="bg-background border-b border-border/40 shadow-sm transition-all duration-300">
+      <div className="container mx-auto px-4 py-1.5 sm:py-3">
         {/* Main Filter Row */}
         <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 items-stretch lg:items-center">
+          {/* Results Count (visible on desktop in row) */}
+          <div className="hidden xl:block shrink-0 pr-2">
+            <p className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground/60 bg-muted/30 px-3 py-2 rounded-full border border-border/10 whitespace-nowrap">
+              {resultsCount} Artwork{resultsCount !== 1 ? 's' : ''}
+            </p>
+          </div>
+
           {/* Search Bar */}
-          <div className="relative flex-1 lg:max-w-md">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <div className="relative flex-1 lg:max-w-[200px] xl:max-w-xs">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-3.5 h-3.5" />
             <Input
               placeholder="Search..."
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
-              className="pl-11 h-11 sm:h-12 bg-white/80 dark:bg-card/80 border-border/30 backdrop-blur-sm rounded-2xl focus-visible:ring-primary/20 text-sm sm:text-base min-h-[48px] sm:min-h-0"
+              className="pl-9 h-10 bg-white/50 dark:bg-card/50 border-border/20 rounded-xl focus-visible:ring-primary/20 text-xs sm:text-sm"
             />
           </div>
 
           {/* Quick Filters - Scrollable on mobile */}
-          <div className="flex overflow-x-auto sm:overflow-visible pb-1 sm:pb-0 gap-2 flex-1 items-center scrollbar-hide -mx-1 px-1 sm:mx-0 sm:px-0 scroll-smooth touch-pan-x">
+          <div className="flex overflow-x-auto sm:overflow-visible pb-1 sm:pb-0 gap-2 items-center flex-1 scrollbar-hide">
             <Select value={filters.category} onValueChange={(value) => handleFilterChange('category', value)}>
-              <SelectTrigger className="flex-none w-[140px] sm:w-[160px] bg-white/50 dark:bg-card/50 backdrop-blur-sm border-border/30 rounded-2xl h-11 sm:h-12 focus:ring-primary/20 transition-all hover:bg-white/80 dark:hover:bg-card/80 text-xs sm:text-sm min-h-[44px] sm:min-h-0">
+              <SelectTrigger className="flex-none w-[130px] sm:w-[150px] bg-white/50 dark:bg-card/50 border-border/20 rounded-xl h-10 text-xs">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent className="bg-white/95 dark:bg-card/95 backdrop-blur-md border-border/30 rounded-2xl max-h-[300px]">
@@ -158,10 +165,10 @@ const TopFilters = ({ onFiltersChange, onViewModeChange, viewMode, resultsCount,
             </Select>
 
             <Select value={filters.artworkType} onValueChange={(value) => handleFilterChange('artworkType', value)}>
-              <SelectTrigger className="flex-none w-[120px] sm:w-[140px] bg-white/50 dark:bg-card/50 backdrop-blur-sm border-border/30 rounded-2xl h-11 sm:h-12 focus:ring-primary/20 transition-all hover:bg-white/80 dark:hover:bg-card/80 text-xs sm:text-sm min-h-[44px] sm:min-h-0">
+              <SelectTrigger className="flex-none w-[110px] sm:w-[130px] bg-white/50 dark:bg-card/50 border-border/20 rounded-xl h-10 text-xs">
                 <SelectValue placeholder="Media" />
               </SelectTrigger>
-              <SelectContent className="bg-white/95 dark:bg-card/95 backdrop-blur-md border-border/30 rounded-2xl">
+              <SelectContent className="bg-white/95 dark:bg-card/95 backdrop-blur-md border-border/30 rounded-xl">
                 <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="image">Images</SelectItem>
                 <SelectItem value="video">Videos</SelectItem>
@@ -170,10 +177,10 @@ const TopFilters = ({ onFiltersChange, onViewModeChange, viewMode, resultsCount,
             </Select>
 
             <Select value={filters.sortBy} onValueChange={(value) => handleFilterChange('sortBy', value)}>
-              <SelectTrigger className="flex-none w-[140px] sm:w-[160px] bg-white/50 dark:bg-card/50 backdrop-blur-sm border-border/30 rounded-2xl h-11 sm:h-12 focus:ring-primary/20 transition-all hover:bg-white/80 dark:hover:bg-card/80 text-xs sm:text-sm min-h-[44px] sm:min-h-0">
+              <SelectTrigger className="flex-none w-[130px] sm:w-[150px] bg-white/50 dark:bg-card/50 border-border/20 rounded-xl h-10 text-xs">
                 <SelectValue placeholder="Sort" />
               </SelectTrigger>
-              <SelectContent className="bg-white/95 dark:bg-card/95 backdrop-blur-md border-border/30 rounded-2xl">
+              <SelectContent className="bg-white/95 dark:bg-card/95 backdrop-blur-md border-border/30 rounded-xl">
                 <SelectItem value="most_recent">Most Recent</SelectItem>
                 <SelectItem value="most_liked">Most Liked</SelectItem>
                 <SelectItem value="most_viewed">Most Viewed</SelectItem>
@@ -183,26 +190,25 @@ const TopFilters = ({ onFiltersChange, onViewModeChange, viewMode, resultsCount,
             </Select>
           </div>
 
-          {/* View Controls and Actions */}
-          <div className="flex items-center gap-2 justify-between lg:justify-start">
-            <div className="flex items-center gap-2 flex-1 lg:flex-none">
+          <div className="flex items-center gap-1.5 justify-between lg:justify-start">
+            <div className="flex items-center gap-1.5 flex-1 lg:flex-none">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowAdvanced(!showAdvanced)}
                 className={cn(
-                  "h-11 sm:h-12 flex-1 lg:flex-none px-4 rounded-2xl transition-all relative overflow-hidden group active:scale-95",
+                  "h-10 px-3 rounded-xl transition-all relative overflow-hidden group active:scale-95 border border-border/10",
                   showAdvanced 
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
-                    : "bg-white/60 dark:bg-card/60 hover:bg-primary/10 hover:text-primary border border-border/20"
+                    ? "bg-primary text-primary-foreground shadow-md" 
+                    : "bg-white/40 dark:bg-card/40 hover:bg-primary/5 hover:text-primary"
                 )}
               >
-                <SlidersHorizontal className={cn("w-4 h-4 mr-2 transition-transform duration-300", showAdvanced && "rotate-180")} />
-                <span className="font-bold tracking-tight text-xs sm:text-sm">Filters</span>
+                <SlidersHorizontal className={cn("w-3.5 h-3.5 mr-1.5 transition-transform duration-300", showAdvanced && "rotate-180")} />
+                <span className="font-bold text-xs">Filters</span>
                 {activeFiltersCount > 0 && (
                   <Badge 
                     variant="secondary" 
-                    className="ml-2 bg-primary-foreground/20 text-primary-foreground border-none h-5 min-w-5 flex items-center justify-center p-0 text-[10px]"
+                    className="ml-1.5 bg-primary/20 text-primary border-none h-4 min-w-4 flex items-center justify-center p-0 text-[9px]"
                   >
                     {activeFiltersCount}
                   </Badge>
@@ -213,44 +219,44 @@ const TopFilters = ({ onFiltersChange, onViewModeChange, viewMode, resultsCount,
                 variant="outline"
                 size="sm"
                 onClick={resetFilters}
-                className="h-11 sm:h-12 px-3 sm:px-4 rounded-2xl bg-white/60 dark:bg-card/60 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all active:scale-95 border border-border/20"
+                className="h-10 px-3 rounded-xl bg-white/40 dark:bg-card/40 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all active:scale-95 border border-border/10"
               >
-                <X className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline font-bold text-xs sm:text-sm">Reset</span>
+                <X className="w-3.5 h-3.5 sm:mr-1.5" />
+                <span className="hidden sm:inline font-bold text-xs">Reset</span>
               </Button>
             </div>
 
-            <div className="flex items-center bg-white/60 dark:bg-card/60 rounded-2xl p-1 border border-border/20 shadow-sm">
+            <div className="flex items-center bg-muted/30 rounded-xl p-0.5 border border-border/10">
               <Button
                 variant={viewMode === 'grid' ? 'default' : 'ghost'}
                 size="icon"
                 onClick={() => onViewModeChange('grid')}
                 className={cn(
-                  "h-9 w-9 sm:h-10 sm:w-10 rounded-xl transition-all duration-300",
-                  viewMode === 'grid' ? "shadow-md" : "hover:bg-primary/5"
+                  "h-8 w-8 rounded-lg transition-all duration-300",
+                  viewMode === 'grid' ? "shadow-sm bg-white dark:bg-background text-primary" : "hover:bg-primary/5"
                 )}
               >
-                <Grid className="h-4 w-4" />
+                <Grid className="h-3.5 w-3.5" />
               </Button>
               <Button
                 variant={viewMode === 'list' ? 'default' : 'ghost'}
                 size="icon"
                 onClick={() => onViewModeChange('list')}
                 className={cn(
-                  "h-9 w-9 sm:h-10 sm:w-10 rounded-xl transition-all duration-300",
-                  viewMode === 'list' ? "shadow-md" : "hover:bg-primary/5"
+                  "h-8 w-8 rounded-lg transition-all duration-300",
+                  viewMode === 'list' ? "shadow-sm bg-white dark:bg-background text-primary" : "hover:bg-primary/5"
                 )}
               >
-                <List className="h-4 w-4" />
+                <List className="h-3.5 w-3.5" />
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Results Count & Active Filter Badges */}
-        <div className="mt-2.5 flex flex-wrap items-center gap-2">
-          <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground/60 bg-muted/30 px-3 py-1.5 rounded-full border border-border/10">
-            {resultsCount} artwork{resultsCount !== 1 ? 's' : ''}
+        {/* Desktop results count removed from bottom as it's now in the main row */}
+        <div className="mt-2 flex xl:hidden flex-wrap items-center gap-2">
+          <p className="text-[9px] font-black uppercase tracking-[0.15em] text-muted-foreground/60 bg-muted/30 px-3 py-1.5 rounded-full border border-border/10">
+            {resultsCount} Artwork{resultsCount !== 1 ? 's' : ''}
           </p>
           
           <div className="flex flex-wrap gap-1.5">

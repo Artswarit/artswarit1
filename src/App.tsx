@@ -11,6 +11,7 @@ import { useScrollAnchor } from "./hooks/useScrollAnchor";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
 import { TopLoadingBar } from "./components/TopLoadingBar";
+import { AppSplashScreen } from "./components/AppSplashScreen";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import UniversalChatbot from "./components/UniversalChatbot";
@@ -119,12 +120,11 @@ const PageTransition = ({ children }: { children: React.ReactNode }) => (
 
 const AppRoutes = () => {
   const location = useLocation();
-  const state = location.state as { backgroundLocation?: Location };
 
   return (
     <ErrorBoundary>
       <AnimatePresence mode="wait">
-        <Routes location={state?.backgroundLocation || location} key={(state?.backgroundLocation || location).pathname}>
+        <Routes location={location} key={location.pathname}>
           <Route path="/" element={<PageTransition><Index /></PageTransition>} />
           <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
           <Route path="/signup" element={<PageTransition><Signup /></PageTransition>} />
@@ -158,42 +158,6 @@ const AppRoutes = () => {
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>
       </AnimatePresence>
-
-      {/* Modal Routes */}
-      {state?.backgroundLocation && (
-        <Routes>
-          <Route 
-            path="/artwork/:id" 
-            element={
-              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-                <div className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-background rounded-3xl shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-10 duration-500">
-                  <ArtworkDetails isModal={true} />
-                </div>
-              </div>
-            } 
-          />
-          <Route 
-            path="/login" 
-            element={
-              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-                <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-background rounded-3xl shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-10 duration-500">
-                  <Login isModal={true} />
-                </div>
-              </div>
-            } 
-          />
-          <Route 
-            path="/signup" 
-            element={
-              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-                <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-background rounded-3xl shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-10 duration-500">
-                  <Signup isModal={true} />
-                </div>
-              </div>
-            } 
-          />
-        </Routes>
-      )}
     </ErrorBoundary>
   );
 };
@@ -202,6 +166,7 @@ const App = () => {
   useScrollAnchor("availability-calendar");
   return (
     <BrowserRouter>
+      <AppSplashScreen />
       <TopLoadingBar />
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
