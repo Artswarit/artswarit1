@@ -147,29 +147,31 @@ const UniversalChatbot: React.FC = () => {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed z-50 bottom-5 right-5 md:bottom-7 md:right-7 h-14 w-14 rounded-full bg-primary shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center overflow-hidden ring-4 ring-primary/20 cursor-pointer"
+          className="fixed z-50 bottom-5 right-5 md:bottom-7 md:right-7 h-12 w-12 rounded-full bg-primary/90 backdrop-blur-sm shadow-xl hover:shadow-2xl hover:scale-105 transition-all flex items-center justify-center ring-4 ring-primary/20 hover:ring-primary/40 cursor-pointer p-0"
           aria-label="Open chatbot"
         >
-          <img
-            src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png"
-            alt="Artswarit"
-            className="h-9 w-9 object-contain rounded-full bg-white p-0.5"
-          />
+          <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center p-0.5 shadow-sm overflow-hidden">
+            <img
+              src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png"
+              alt="Artswarit"
+              className="h-full w-full object-contain relative z-10 hover:opacity-90 transition-opacity transform scale-105"
+            />
+          </div>
         </button>
       )}
 
       {/* Expanded Chat Window */}
       {open && (
-        <div className="fixed z-50 inset-x-3 bottom-3 md:inset-x-auto md:bottom-7 md:right-7 md:w-[360px] animate-in slide-in-from-bottom-4 fade-in duration-300">
-          <div className="rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col bg-card max-h-[80vh] md:max-h-[75vh]">
+        <div className="fixed z-50 inset-x-3 bottom-3 md:inset-x-auto md:bottom-7 md:right-7 md:w-[350px] animate-in slide-in-from-bottom-6 zoom-in-95 fade-in duration-300 ease-out fill-mode-both shadow-2xl rounded-2xl">
+          <div className="rounded-2xl border border-border/20 overflow-hidden flex flex-col bg-transparent backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] max-h-[80vh] md:max-h-[75vh]">
             {/* Header */}
-            <div className="bg-gradient-to-r from-primary to-primary/85 text-primary-foreground px-4 py-3.5 flex items-center justify-between shrink-0">
+            <div className="bg-primary/90 text-primary-foreground px-4 py-3.5 flex items-center justify-between shrink-0 border-b border-primary/20">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center ring-2 ring-primary-foreground/30 overflow-hidden">
+                <div className="h-10 w-10 flex items-center justify-center shrink-0">
                   <img
                     src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png"
                     alt="Artswarit"
-                    className="h-7 w-7 object-contain"
+                    className="h-10 w-10 object-contain filter drop-shadow-[0_6px_6px_rgba(0,0,0,0.5)] drop-shadow-[0_0_12px_rgba(255,255,255,0.4)] hover:-translate-y-1 hover:scale-105 transition-all duration-300"
                   />
                 </div>
                 <div className="leading-tight">
@@ -187,7 +189,7 @@ const UniversalChatbot: React.FC = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="flex gap-1.5 px-3 py-2.5 overflow-x-auto border-b border-border bg-muted/40 shrink-0">
+            <div className="flex gap-2 px-3 py-2.5 overflow-x-auto border-b border-border/20 bg-card/80 shrink-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {quickActions.map(({ label, onClick }) => (
                 <button
                   key={label}
@@ -204,48 +206,47 @@ const UniversalChatbot: React.FC = () => {
 
             {/* Messages Area */}
             <div
-              className="flex-1 flex flex-col gap-2.5 px-3 py-3 overflow-y-auto min-h-[160px]"
+              className="flex-1 flex flex-col gap-3 px-3 py-4 overflow-y-auto min-h-[220px] bg-card/60 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
               style={{ scrollBehavior: "smooth" }}
               ref={chatRef}
             >
               {messages.map((msg, i) => (
                 <div
                   key={i}
-                  className={`flex items-end gap-1.5 ${
+                  className={`flex items-end gap-1.5 animate-in slide-in-from-bottom-2 fade-in duration-300 ease-out ${
                     msg.sender === "user" ? "justify-end" : "justify-start"
                   }`}
                 >
                   {msg.sender === "bot" && (
-                    <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mb-0.5 overflow-hidden">
+                    <div className="h-8 w-8 flex items-center justify-center shrink-0 mb-0.5 z-10">
                       <img
                         src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png"
                         alt=""
-                        className="h-5 w-5 object-contain"
+                        className="h-7 w-7 object-contain drop-shadow-sm"
                       />
                     </div>
                   )}
                   <div
-                    className={`rounded-2xl px-3.5 py-2 text-[13px] leading-relaxed max-w-[80%] whitespace-pre-line ${
+                    className={`rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed max-w-[85%] whitespace-pre-line break-words shadow-sm border border-transparent ${
                       msg.sender === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-md"
-                        : "bg-muted text-foreground rounded-bl-md"
+                        ? "bg-primary text-primary-foreground rounded-br-sm shadow-primary/10"
+                        : "bg-background border-border text-foreground rounded-bl-sm shadow-black/5"
                     }`}
                   >
                     {msg.text}
                   </div>
                 </div>
               ))}
-
               {isLoading && (
-                <div className="flex items-end gap-1.5 justify-start">
-                  <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mb-0.5 overflow-hidden">
+                <div className="flex items-end gap-1.5 justify-start animate-in slide-in-from-bottom-2 fade-in duration-300 ease-out">
+                  <div className="h-8 w-8 flex items-center justify-center shrink-0 mb-0.5 z-10">
                     <img
                       src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png"
                       alt=""
-                      className="h-5 w-5 object-contain"
+                      className="h-7 w-7 object-contain drop-shadow-sm"
                     />
                   </div>
-                  <div className="rounded-2xl rounded-bl-md px-4 py-2.5 bg-muted flex items-center gap-1">
+                  <div className="rounded-2xl rounded-bl-sm px-4 py-2.5 bg-background border border-border shadow-sm flex items-center gap-1.5 h-[38px]">
                     <span className="flex gap-[3px]">
                       <span className="h-[5px] w-[5px] rounded-full bg-muted-foreground/50 animate-bounce [animation-delay:0ms]" />
                       <span className="h-[5px] w-[5px] rounded-full bg-muted-foreground/50 animate-bounce [animation-delay:150ms]" />
@@ -257,7 +258,7 @@ const UniversalChatbot: React.FC = () => {
             </div>
 
             {/* Input Bar */}
-            <div className="flex items-center gap-2 px-3 py-2.5 border-t border-border bg-card shrink-0">
+            <div className="flex items-center gap-2 px-3 py-2.5 border-t border-border/20 bg-card/90 shrink-0">
               <input
                 ref={inputRef}
                 className="flex-1 text-sm bg-muted rounded-full px-4 py-2.5 outline-none border border-transparent focus:border-primary/30 focus:ring-1 focus:ring-ring/20 transition-all placeholder:text-muted-foreground/50"
