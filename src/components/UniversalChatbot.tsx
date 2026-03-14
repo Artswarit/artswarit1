@@ -165,11 +165,11 @@ const UniversalChatbot: React.FC = () => {
             {/* Header */}
             <div className="bg-gradient-to-r from-primary to-primary/85 text-primary-foreground px-4 py-3.5 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center ring-2 ring-primary-foreground/30">
+                <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center ring-2 ring-primary-foreground/30 overflow-hidden">
                   <img
                     src="/lovable-uploads/eec23911-0863-40d6-84da-ea787a8759c1.png"
                     alt="Artswarit"
-                    className="h-5 w-5 object-contain"
+                    className="h-7 w-7 object-contain"
                   />
                 </div>
                 <div className="leading-tight">
