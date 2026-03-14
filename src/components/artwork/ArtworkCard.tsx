@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Heart, Eye, Play, ExternalLink, Bookmark, Flag, MoreVertical } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import GlassCard from '@/components/ui/glass-card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -55,6 +55,7 @@ const ArtworkCard = ({
   const { toast } = useToast();
   const { format } = useCurrencyFormat();
   const { savedArtworkIds, toggleSaveArtwork, loading: isSaveLoading } = useSavedArtworks();
+  const location = useLocation();
   
   // Define formatPrice locally or pass the currency to format
   const formattedPrice = price ? format(price, currency) : null;
@@ -244,7 +245,7 @@ const ArtworkCard = ({
     if ((e.target as HTMLElement).closest('a, button')) {
       return;
     }
-    navigate(`/artwork/${id}`, { state: { backgroundLocation: location } });
+    navigate(`/artwork/${id}`);
   };
 
   return (

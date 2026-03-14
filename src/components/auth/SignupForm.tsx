@@ -138,22 +138,21 @@ const SignupForm = ({
           {/* Artist info hint */}
           {formData.role === 'artist'}
         </div>
-        <div className="flex items-start space-x-2 py-2">
+        <div className="flex items-center space-x-2 py-1">
           <Checkbox 
             id="terms" 
             checked={formData.acceptTerms} 
             onCheckedChange={handleTermsChange} 
             required 
-            disabled={loading} 
-            className="mt-1" 
+            disabled={loading}
           />
-          <Label htmlFor="terms" className="text-xs sm:text-sm leading-tight cursor-pointer">
+          <Label htmlFor="terms" className="text-xs sm:text-sm font-medium leading-none cursor-pointer flex-1">
             I accept the{" "}
-            <Link to="/terms-of-service" target="_blank" className="text-artswarit-purple hover:text-artswarit-purple-dark underline" onClick={e => e.stopPropagation()}>
+            <Link to="/terms-of-service" className="text-primary hover:underline font-bold">
               Terms of Service
             </Link>{" "}
             and{" "}
-            <Link to="/privacy-policy" target="_blank" className="text-artswarit-purple hover:text-artswarit-purple-dark underline" onClick={e => e.stopPropagation()}>
+            <Link to="/privacy-policy" className="text-primary hover:underline font-bold">
               Privacy Policy
             </Link>
             <span className="text-destructive"> *</span>

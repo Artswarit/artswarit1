@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 
 const Login = ({ isModal = false }: { isModal?: boolean }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signIn, signInWithGoogle, loading, user } = useAuth();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
@@ -112,7 +113,7 @@ const Login = ({ isModal = false }: { isModal?: boolean }) => {
         </button>
       )}
 
-      <div className={cn("flex-1 flex items-center justify-center px-3 sm:px-6 lg:px-8", isModal ? "py-6" : "py-[80px]")}>
+      <div className={cn("flex-1 flex items-center justify-center px-3 sm:px-6 lg:px-8", isModal ? "py-6" : "pt-[calc(var(--navbar-height-mobile)+var(--safe-top)+2rem)] sm:pt-[calc(var(--navbar-height-desktop)+var(--safe-top)+3rem)] pb-20")}>
         <div className="w-full max-w-sm sm:max-w-md space-y-4">
           <div className="text-center space-y-0">
             <LogoWithName />

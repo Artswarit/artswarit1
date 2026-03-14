@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TrendingUp, TrendingDown, Eye, Heart, RefreshCw, Zap, Info, ChevronRight, BarChart3, Play, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -30,6 +30,7 @@ interface TrendingItem {
 }
 
 const TrendingAlgorithm = () => {
+  const location = useLocation();
   const [trendingItems, setTrendingItems] = useState<TrendingItem[]>([]);
   const [selectedTimeframe, setSelectedTimeframe] = useState<'1h' | '24h' | '7d' | '30d'>('24h');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -427,7 +428,7 @@ const TrendingAlgorithm = () => {
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.4, delay: index * 0.05 }}
                 >
-                  <Link to={`/artwork/${item.id}`} state={{ backgroundLocation: location }} className="group block h-full">
+                  <Link to={`/artwork/${item.id}`} className="group block h-full">
                     <GlassCard className="h-full p-0 flex flex-col group hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 cursor-pointer rounded-[2rem] border-border/20 shadow-sm hover:shadow-2xl hover:shadow-primary/5 bg-background/50 overflow-hidden">
                       <div className="relative aspect-[3/4] overflow-hidden bg-muted">
                         {/* Media */}

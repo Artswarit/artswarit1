@@ -39,7 +39,7 @@ const AnimatedHeroSlider = () => {
   }, []);
 
   return (
-    <section className="relative h-[85vh] overflow-hidden">
+    <section className="relative min-h-screen md:h-[90vh] overflow-hidden">
       {/* Background elements */}
       <div className="absolute inset-0 bg-black/40"></div>
       
@@ -49,7 +49,7 @@ const AnimatedHeroSlider = () => {
       <div className="absolute -bottom-20 left-1/3 w-80 h-80 bg-indigo-600/30 rounded-full blur-3xl animate-pulse animation-delay-4000"></div>
       
       {/* Slides */}
-      <div className="relative h-full">
+      <div className="absolute inset-0">
         {slides.map((slide, index) => (
           <div 
             key={slide.id}
@@ -57,7 +57,7 @@ const AnimatedHeroSlider = () => {
               index === currentSlide ? "opacity-100 z-10 scale-100" : "opacity-0 z-0 scale-105"
             }`}
           >
-            <div className="relative h-full">
+            <div className="relative w-full h-full">
               <img 
                 src={slide.imageUrl} 
                 alt={slide.title}
@@ -69,7 +69,7 @@ const AnimatedHeroSlider = () => {
         ))}
         
         {/* Content */}
-        <div className="relative h-full z-20 flex items-center">
+        <div className="absolute inset-0 z-20 flex items-center pt-[calc(var(--navbar-height-mobile)+var(--safe-top))!important] sm:pt-[calc(var(--navbar-height-desktop)+var(--safe-top))!important]">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl text-white">
               <h1 className="font-heading text-5xl md:text-6xl lg:text-7xl font-bold mb-6 animate-slide-up">

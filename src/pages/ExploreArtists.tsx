@@ -447,7 +447,7 @@ const ExploreArtists = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       
-      <main className="flex-1 container mx-auto px-4 py-6 sm:py-8 pt-20 sm:pt-24">
+      <main className="flex-1 container mx-auto px-4 py-6 sm:py-8 pt-[calc(5rem+var(--safe-top))] sm:pt-[calc(6rem+var(--safe-top))]">
         <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-1 sm:mb-2">Explore Artists</h1>
@@ -521,7 +521,7 @@ const ExploreArtists = () => {
                   onClick={() => setShowFilters(false)}
                 />
                 <div className="absolute right-0 top-0 h-full w-[85%] max-w-sm bg-background border-l shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300">
-                  <div className="p-4">
+                  <div className="p-4 pt-[calc(var(--safe-top)+1rem)] pb-[calc(var(--safe-bottom)+1.5rem)]">
                     <ArtistFilters 
                       onFiltersChange={handleFiltersChange}
                       onClose={() => setShowFilters(false)}

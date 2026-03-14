@@ -11,6 +11,7 @@ import { Loader2 } from 'lucide-react';
 import LogoLoader from '@/components/ui/LogoLoader';
 import { Button } from '@/components/ui/button';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { ArtworkSkeleton } from '@/components/artwork/ArtworkSkeleton';
 
 const Explore = () => {
   const { artworks, loading, error, hasMore, loadMore, loadingMore } = usePublicArtworks();
@@ -259,6 +260,7 @@ const Explore = () => {
     }
   }, [artworks]);
 
+  /* 
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
@@ -269,6 +271,7 @@ const Explore = () => {
       </div>
     );
   }
+  */
 
   if (error) {
     console.error('Explore error:', error);
@@ -299,7 +302,7 @@ const Explore = () => {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="relative pt-24 sm:pt-32 pb-12 sm:pb-20 overflow-hidden">
+      <section className="relative pt-[calc(6rem+var(--safe-top))] sm:pt-[calc(8rem+var(--safe-top))] pb-12 sm:pb-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 pointer-events-none" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_50%_-20%,rgba(120,119,198,0.1),transparent)] pointer-events-none" />
         
@@ -330,8 +333,8 @@ const Explore = () => {
       </div>
 
       {/* Trending Section */}
-      {trendingArtworks.length > 0 && !loading && (
-        <section className="max-w-[1400px] mx-auto px-4 py-12 animate-in fade-in duration-1000 delay-500">
+      {(trendingArtworks.length > 0 || loading) && (
+        <section className="max-w-[1400px] mx-auto px-4 py-8 animate-in fade-in duration-1000 delay-500">
           <div className="flex items-center justify-between mb-8 sm:mb-12">
             <div>
               <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-foreground">TRENDING NOW</h2>
@@ -340,25 +343,29 @@ const Explore = () => {
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            {trendingArtworks.map((artwork, idx) => (
-              <div 
-                key={`trending-${artwork.id}`} 
-                className="animate-in fade-in slide-in-from-bottom-4 duration-700"
-                style={{ animationDelay: `${idx * 100}ms` }}
-              >
-                <ArtworkCard
-                  {...artwork}
-                />
-              </div>
-            ))}
+            {loading ? (
+              [...Array(4)].map((_, idx) => <ArtworkSkeleton key={`trend-skeleton-${idx}`} />)
+            ) : (
+              trendingArtworks.map((artwork, idx) => (
+                <div 
+                  key={`trending-${artwork.id}`} 
+                  className="animate-in fade-in slide-in-from-bottom-4 duration-700"
+                  style={{ animationDelay: `${idx * 100}ms` }}
+                >
+                  <ArtworkCard
+                    {...artwork}
+                  />
+                </div>
+              ))
+            )}
           </div>
-          <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent my-16 sm:my-24" />
+          <div className="h-px bg-gradient-to-r from-transparent via-border/10 to-transparent my-4" />
         </section>
       )}
 
       {/* Filters & Content */}
       <div className="relative pb-24">
-        <div className="sticky top-16 sm:top-20 z-30 bg-background/80 backdrop-blur-xl border-y border-border/40 mb-8 transition-all duration-300">
+        <div className="relative z-30 bg-background/50 backdrop-blur-sm border-y border-border/10 mb-2 transition-all duration-300">
           <TopFilters
             onFiltersChange={handleFiltersChange}
             onViewModeChange={setViewMode}
@@ -369,8 +376,8 @@ const Explore = () => {
           />
         </div>
 
-        <main className="max-w-[1400px] mx-auto px-4">
-          {filteredArtworks && filteredArtworks.length > 0 ? (
+        <main className="max-w-[1400px] mx-auto px-4 relative z-0 mt-4">
+          {(filteredArtworks && filteredArtworks.length > 0) || loading ? (
             <div className="space-y-12">
               <div className={cn(
                 "transition-all duration-500",
@@ -378,17 +385,21 @@ const Explore = () => {
                   ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8'
                   : 'flex flex-col gap-4 sm:gap-6 max-w-4xl mx-auto'
               )}>
-                {filteredArtworks.map((artwork, idx) => (
-                  <div 
-                    key={artwork.id}
-                    className="animate-in fade-in zoom-in-95 duration-500"
-                    style={{ animationDelay: `${(idx % 12) * 50}ms` }}
-                  >
-                    <ArtworkCard
-                      {...artwork}
-                    />
-                  </div>
-                ))}
+                {loading ? (
+                  [...Array(8)].map((_, idx) => <ArtworkSkeleton key={`skeleton-${idx}`} />)
+                ) : (
+                  filteredArtworks.map((artwork, idx) => (
+                    <div 
+                      key={artwork.id}
+                      className="animate-in fade-in zoom-in-95 duration-500"
+                      style={{ animationDelay: `${(idx % 12) * 50}ms` }}
+                    >
+                      <ArtworkCard
+                        {...artwork}
+                      />
+                    </div>
+                  ))
+                )}
               </div>
 
               {hasMore && (

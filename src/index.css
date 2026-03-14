@@ -78,12 +78,34 @@
 }
 
 @layer base {
+  :root {
+    --navbar-height-mobile: 4rem; /* 64px */
+    --navbar-height-desktop: 5rem; /* 80px */
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
   * {
     @apply border-border;
   }
 
+  html {
+    @apply w-full;
+    margin: 0;
+    padding: 0;
+    overflow-y: scroll; /* Force vertical scrollbar gutter to stay visible */
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    height: 100%;
+  }
+
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans w-full;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: visible; /* Prevent body from spawning its own scrollbar */
+    padding-bottom: var(--safe-bottom);
     background-image:
       radial-gradient(
         circle at 0% 0%,
@@ -103,8 +125,17 @@
     background-attachment: fixed;
   }
 
-  html, body {
-    @apply overflow-x-hidden w-full;
+  /* Automatic top spacing for standalone PWA mode */
+  @media (display-mode: standalone) {
+    :root {
+      /* Status bar compensation in standalone mode */
+      --safe-top: env(safe-area-inset-top, 20px);
+    }
+    
+    .chat-window-container {
+      top: var(--safe-top);
+      padding-top: var(--safe-top);
+    }
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -442,11 +473,7 @@
   }
 }
 
-/* Prevent horizontal scroll on mobile */
-body, html {
-  overflow-x: hidden;
-  width: 100%;
-}
+/* Consolidated root overflow settings */
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;

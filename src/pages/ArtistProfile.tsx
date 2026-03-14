@@ -1,5 +1,5 @@
 
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import GlassCard from "@/components/ui/glass-card";
@@ -92,6 +92,7 @@ function toDemoUUID(id: string | undefined): string | undefined {
 }
 
 export default function ArtistProfile() {
+  const location = useLocation();
   const { id: routeId } = useParams();
   const id = toDemoUUID(routeId);
   const navigate = useNavigate();
@@ -825,7 +826,7 @@ export default function ArtistProfile() {
 
   const handleArtworkClick = (art: any) => {
     if (!art?.id) return;
-    navigate(`/artwork/${art.id}`, { state: { backgroundLocation: location } });
+    navigate(`/artwork/${art.id}`);
   };
 
   // Extra robust: always show demo data for /artist/1 and /artist/2, regardless of login
@@ -908,7 +909,7 @@ export default function ArtistProfile() {
       <Navbar />
       
       {/* Artist Header - responsive spacing */}
-      <div className="pt-16 w-full">
+      <div className="pt-[calc(var(--navbar-height-mobile)+var(--safe-top))] sm:pt-[calc(var(--navbar-height-desktop)+var(--safe-top))] w-full">
         <ArtistHeader
           artist={{
             ...profileState,

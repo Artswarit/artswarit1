@@ -308,13 +308,13 @@ export default function ArtworkDetails({ isModal = false }: { isModal?: boolean 
       {isModal && (
         <button 
           onClick={() => navigate(-1)}
-          className="fixed top-4 right-4 z-[110] h-10 w-10 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/60 transition-all shadow-xl"
+          className="fixed top-[calc(1rem+var(--safe-top))] right-4 z-[110] h-10 w-10 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/60 transition-all shadow-xl"
         >
           <X className="h-5 w-5" />
         </button>
       )}
 
-      <main className={cn("flex-1 pb-4", isModal ? "pt-0" : "pt-24")}>
+      <main className={cn("flex-1 pb-4", isModal ? "pt-[var(--safe-top)]" : "pt-[calc(var(--navbar-height-mobile)+var(--safe-top)+1rem)] sm:pt-[calc(var(--navbar-height-desktop)+var(--safe-top)+1.5rem)]")}>
         <div className={cn("max-w-6xl mx-auto px-0", !isModal && "sm:px-4 lg:px-8")}>
           <div className={cn("bg-card overflow-hidden", !isModal ? "sm:rounded-2xl border-x-0 sm:border border-border/40 shadow-sm" : "border-none")}>
 
