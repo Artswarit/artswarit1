@@ -456,7 +456,7 @@ const ProjectDetailModal = ({
           </div>
         </DialogContent>
       ) : (
-        <DialogContent className="max-w-6xl w-[95vw] h-[95vh] sm:h-[92vh] overflow-hidden flex flex-col p-0 gap-0 border-none shadow-[0_0_50px_-12px_rgba(0,0,0,0.25)] bg-background/95 backdrop-blur-2xl ring-1 ring-white/10 dark:ring-white/5">
+        <DialogContent className="max-w-6xl w-[98vw] sm:w-[95vw] h-[95vh] sm:h-[92vh] overflow-hidden flex flex-col p-0 gap-0 border-none shadow-[0_0_50px_-12px_rgba(0,0,0,0.25)] bg-background/95 backdrop-blur-2xl ring-1 ring-white/10 dark:ring-white/5">
           <DialogHeader className="sr-only">
             <DialogTitle>{project.title}</DialogTitle>
             <DialogDescription>Project details and collaboration workspace</DialogDescription>
