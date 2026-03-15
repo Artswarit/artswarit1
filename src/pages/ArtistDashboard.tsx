@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { computeProfileCompletion } from '@/hooks/useProfileCompletion';
@@ -25,7 +25,8 @@ import { cn } from '@/lib/utils';
 import LogoLoader from '@/components/ui/LogoLoader';
 
 const ArtistDashboard = () => {
-  const { tab } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get('tab');
   const navigate = useNavigate();
   const { user } = useAuth();
   const { profile, loading: profileLoading, updateProfile, uploadImage } = useProfile();
@@ -33,8 +34,14 @@ const ArtistDashboard = () => {
   const { isComplete, completionPercentage, missingFields } = completion;
   const { toast } = useToast();
   const [isChatActive, setIsChatActive] = useState(false);
-
   const activeTab = tab || 'profile';
+  const [visitedTabs, setVisitedTabs] = useState<Set<string>>(new Set([activeTab]));
+
+  useEffect(() => {
+    if (activeTab) {
+      setVisitedTabs(prev => new Set(prev).add(activeTab));
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     sessionStorage.setItem('artist_dashboard_active_tab', activeTab);
@@ -59,16 +66,16 @@ const ArtistDashboard = () => {
 
     if (profileIncomplete && tab !== 'premium') {
       if (tab !== 'profile') {
-        navigate('/artist-dashboard/profile', { replace: true });
+        setSearchParams({ tab: 'profile' }, { replace: true });
       }
       return;
     }
 
     if (!tab) {
       if (savedTab) {
-        navigate(`/artist-dashboard/${savedTab}`, { replace: true });
+        setSearchParams({ tab: savedTab }, { replace: true });
       } else if (isComplete) {
-        navigate('/artist-dashboard/artworks', { replace: true });
+        setSearchParams({ tab: 'artworks' }, { replace: true });
       }
     }
   }, [profileReady, profileIncomplete, isComplete, tab, navigate]);
@@ -83,7 +90,7 @@ const ArtistDashboard = () => {
       });
       return;
     }
-    navigate(`/artist-dashboard/${newTab}`);
+    setSearchParams({ tab: newTab });
   };
 
   // Scroll Position Tracking
@@ -233,43 +240,67 @@ const ArtistDashboard = () => {
             </div>
 
             <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out">
-              <TabsContent value="artworks" className="outline-none">
-                <ArtworkManagement />
+              <TabsContent value="artworks" className="outline-none focus-visible:ring-0" forceMount>
+                <div className={cn(activeTab !== 'artworks' && "hidden")}>
+                  {visitedTabs.has('artworks') && <ArtworkManagement />}
+                </div>
               </TabsContent>
-              <TabsContent value="projects" className="outline-none">
-                <ProjectManagement />
+              <TabsContent value="projects" className="outline-none focus-visible:ring-0" forceMount>
+                <div className={cn(activeTab !== 'projects' && "hidden")}>
+                  {visitedTabs.has('projects') && <ProjectManagement />}
+                </div>
               </TabsContent>
-              <TabsContent value="services" className="outline-none">
-                <ServicesManagement />
+              <TabsContent value="services" className="outline-none focus-visible:ring-0" forceMount>
+                <div className={cn(activeTab !== 'services' && "hidden")}>
+                  {visitedTabs.has('services') && <ServicesManagement />}
+                </div>
               </TabsContent>
-              <TabsContent value="profile" className="outline-none">
-                <ArtistProfile
-                  isLoading={profileLoading}
-                  profile={profile}
-                  updateProfile={updateProfile}
-                  uploadImage={uploadImage}
-                />
+              <TabsContent value="profile" className="outline-none focus-visible:ring-0" forceMount>
+                <div className={cn(activeTab !== 'profile' && "hidden")}>
+                  {visitedTabs.has('profile') && (
+                    <ArtistProfile
+                      isLoading={profileLoading}
+                      profile={profile}
+                      updateProfile={updateProfile}
+                      uploadImage={uploadImage}
+                    />
+                  )}
+                </div>
               </TabsContent>
-              <TabsContent value="premium" className="outline-none">
-                <PremiumMembership />
+              <TabsContent value="premium" className="outline-none focus-visible:ring-0" forceMount>
+                <div className={cn(activeTab !== 'premium' && "hidden")}>
+                  {visitedTabs.has('premium') && <PremiumMembership />}
+                </div>
               </TabsContent>
-              <TabsContent value="earnings" className="outline-none">
-                <ArtistEarnings isLoading={profileLoading} />
+              <TabsContent value="earnings" className="outline-none focus-visible:ring-0" forceMount>
+                <div className={cn(activeTab !== 'earnings' && "hidden")}>
+                  {visitedTabs.has('earnings') && <ArtistEarnings isLoading={profileLoading} />}
+                </div>
               </TabsContent>
-              <TabsContent value="billing" className="outline-none">
-                <ArtistBilling />
+              <TabsContent value="billing" className="outline-none focus-visible:ring-0" forceMount>
+                <div className={cn(activeTab !== 'billing' && "hidden")}>
+                  {visitedTabs.has('billing') && <ArtistBilling />}
+                </div>
               </TabsContent>
-              <TabsContent value="messages" className="outline-none">
-                <MessagingModule onChatActiveChange={setIsChatActive} />
+              <TabsContent value="messages" className="outline-none focus-visible:ring-0" forceMount>
+                <div className={cn(activeTab !== 'messages' && "hidden")}>
+                  {visitedTabs.has('messages') && <MessagingModule onChatActiveChange={setIsChatActive} />}
+                </div>
               </TabsContent>
-              <TabsContent value="notifications" className="outline-none">
-                <ArtistNotifications isLoading={profileLoading} />
+              <TabsContent value="notifications" className="outline-none focus-visible:ring-0" forceMount>
+                <div className={cn(activeTab !== 'notifications' && "hidden")}>
+                  {visitedTabs.has('notifications') && <ArtistNotifications isLoading={profileLoading} />}
+                </div>
               </TabsContent>
-              <TabsContent value="settings" className="outline-none">
-                <ArtistSettings isLoading={profileLoading} />
+              <TabsContent value="settings" className="outline-none focus-visible:ring-0" forceMount>
+                <div className={cn(activeTab !== 'settings' && "hidden")}>
+                  {visitedTabs.has('settings') && <ArtistSettings isLoading={profileLoading} />}
+                </div>
               </TabsContent>
-              <TabsContent value="exclusive" className="outline-none">
-                <ExclusiveMembers />
+              <TabsContent value="exclusive" className="outline-none focus-visible:ring-0" forceMount>
+                <div className={cn(activeTab !== 'exclusive' && "hidden")}>
+                  {visitedTabs.has('exclusive') && <ExclusiveMembers />}
+                </div>
               </TabsContent>
             </div>
           </Tabs>

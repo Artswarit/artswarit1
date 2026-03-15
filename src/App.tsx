@@ -124,7 +124,7 @@ const AppRoutes = () => {
   return (
     <ErrorBoundary>
       <AnimatePresence mode="wait">
-        <Routes location={location} key={location.pathname}>
+        <Routes location={location}>
           <Route path="/" element={<PageTransition><Index /></PageTransition>} />
           <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
           <Route path="/signup" element={<PageTransition><Signup /></PageTransition>} />
@@ -134,12 +134,12 @@ const AppRoutes = () => {
           <Route path="/explore" element={<PageTransition><Explore /></PageTransition>} />
           <Route path="/explore-artists" element={<PageTransition><ExploreArtists /></PageTransition>} />
           <Route path="/categories" element={<PageTransition><Categories /></PageTransition>} />
-          <Route path="/artist/:id" element={<PageTransition><ArtistProfile /></PageTransition>} />
-          <Route path="/profile/:id" element={<PageTransition><UserProfile /></PageTransition>} />
-          <Route path="/review/:id" element={<PageTransition><ReviewRedirect /></PageTransition>} />
-          <Route path="/artwork/:id" element={<PageTransition><ArtworkDetails /></PageTransition>} />
-          <Route path="/artist-dashboard/:tab?" element={<ProtectedRoute><PageTransition><ArtistDashboard /></PageTransition></ProtectedRoute>} />
-          <Route path="/client-dashboard" element={<ProtectedRoute><PageTransition><ClientDashboard /></PageTransition></ProtectedRoute>} />
+          <Route path="/artist/:id" element={<PageTransition key="artist-public"><ArtistProfile /></PageTransition>} />
+          <Route path="/profile/:id" element={<PageTransition key="user-public"><UserProfile /></PageTransition>} />
+          <Route path="/review/:id" element={<PageTransition key="review"><ReviewRedirect /></PageTransition>} />
+          <Route path="/artwork/:id" element={<PageTransition key="artwork"><ArtworkDetails /></PageTransition>} />
+          <Route path="/artist-dashboard" element={<ProtectedRoute><PageTransition key="artist-dashboard"><ArtistDashboard /></PageTransition></ProtectedRoute>} />
+          <Route path="/client-dashboard" element={<ProtectedRoute><PageTransition key="client-dashboard"><ClientDashboard /></PageTransition></ProtectedRoute>} />
           <Route path="/admin-dashboard" element={<ProtectedRoute adminOnly><PageTransition><AdminDashboard /></PageTransition></ProtectedRoute>} />
           <Route path="/about-us" element={<PageTransition><AboutUs /></PageTransition>} />
           <Route path="/terms-of-service" element={<PageTransition><TermsOfService /></PageTransition>} />

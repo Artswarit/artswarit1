@@ -31,15 +31,15 @@ export function ArtistBilling() {
       
       const checkoutUrl = data?.url || data?.short_url;
       if (checkoutUrl) {
-        window.open(checkoutUrl, '_blank');
+        window.location.href = checkoutUrl;
       } else {
         // Fallback: open the hardcoded subscription link directly
-        window.open('https://rzp.io/rzp/JgMbYCOw', '_blank');
+        window.location.href = 'https://rzp.io/rzp/JgMbYCOw';
       }
     } catch (error: any) {
       console.error('Subscription error details:', error);
       // Fallback: open the direct Razorpay subscription link
-      window.open('https://rzp.io/rzp/JgMbYCOw', '_blank');
+      window.location.href = 'https://rzp.io/rzp/JgMbYCOw';
       toast.info('Opening subscription page directly...');
     } finally {
       setLoadingPortal(false);

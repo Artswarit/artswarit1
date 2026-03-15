@@ -19,13 +19,17 @@ serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), {
-        status: 200,
+    if (!authHeader) {
+      console.error("No authorization header provided");
+      return new Response(JSON.stringify({ success: false, error: 'Not authenticated' }), {
+        status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
+    // Extract token more robustly
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+    
     if (!RAZORPAY_KEY_SECRET) {
       console.error('Missing RAZORPAY_KEY_SECRET');
       return new Response(JSON.stringify({ 
@@ -40,17 +44,16 @@ serve(async (req) => {
     // Use service role for database updates
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     
-    // Also create a client with user auth for validation
+    // Create client with auth header for better compatibility
     const supabaseUser = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_ANON_KEY')!, {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const token = authHeader.replace('Bearer ', '');
     const { data: userData, error: userError } = await supabaseUser.auth.getUser(token);
     if (userError || !userData?.user) {
       console.error('Auth error:', userError);
       return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), {
-        status: 200,
+        status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

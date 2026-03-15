@@ -251,7 +251,7 @@ const ServicesManagement: React.FC = () => {
       e.stopPropagation();
     }
     // Navigate to premium page using the correct route format
-    navigate('/artist-dashboard/premium');
+    navigate('/artist-dashboard?tab=premium');
   };
 
   const handleAddClick = (e?: React.MouseEvent) => {

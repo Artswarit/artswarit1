@@ -390,7 +390,7 @@ const ArtistSettings = ({ isLoading: propLoading }: ArtistSettingsProps) => {
         </div>
         {!isProArtist && !planLoading && (
           <Button 
-            onClick={() => navigate('/artist-dashboard/premium')}
+            onClick={() => navigate('/artist-dashboard?tab=premium')}
             className="w-full sm:w-auto bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white border-none shadow-lg shadow-indigo-500/20 rounded-xl h-12 px-6 font-bold transition-all active:scale-95"
           >
             <Crown className="h-4 w-4 mr-2" />
