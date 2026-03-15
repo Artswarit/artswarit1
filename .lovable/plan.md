@@ -1,252 +1,142 @@
 
-# Implementation Plan: Remaining Fixes for Artswarit Platform
 
-## Overview
-This plan addresses multiple interconnected issues across currency handling, project workflows, analytics, recommendations, and UI/UX improvements. The work is organized into logical phases to ensure stability.
+# Mobile UI Polish & Visual Audit Plan
 
----
+## 1. Critical Build Fix (Blocking)
 
-## Phase 1: Currency Consistency (Critical)
+**File:** `src/pages/ClientDashboard.tsx` (lines 212-214)
 
-### Problem Analysis
-- Currency display mismatch: Some areas show USD symbol ($) with INR amounts
-- Razorpay receiving USD instead of INR (gateway incompatibility)
-- Artwork pricing shows incorrect conversion (e.g., $1 showing as ₹1 instead of ₹83.5)
-- Milestone payment button and gateway amount mismatch
-
-### Technical Changes
-
-**1.1 Update Payment Gateway Hook**
-- File: `src/hooks/usePaymentGateway.ts`
-- Add centralized USD-to-INR conversion constant (83.5 rate)
-- Add `convertToGatewayCurrency()` function for consistent Razorpay amount calculation
-- Ensure `gatewayAmount` always returns INR for Razorpay
-
-**1.2 Fix Milestone Payment Display**
-- File: `src/components/payments/PayMilestoneButton.tsx`
-- Use gateway-converted amount in "Pay" button text
-- Ensure button shows exact INR amount that Razorpay will charge
-
-**1.3 Fix Artwork Card Pricing**
-- File: `src/components/artist-profile/ArtworkCardModern.tsx`
-- Replace direct price display with `useCurrencyFormat` hook
-- Ensure Premium unlock price shows correct INR conversion
-
-**1.4 Fix Project Dashboard Budget Display**
-- File: `src/pages/ClientDashboard.tsx`
-- Replace hardcoded `$` symbol with `format()` from `useCurrencyFormat`
-- Update completed projects budget display (line ~591)
-
-**1.5 Update Edge Functions for Currency**
-- Files: `supabase/functions/create-artwork-order/index.ts`, `supabase/functions/create-milestone-order/index.ts`
-- Ensure all Razorpay orders are created with INR currency
-- Add logging for currency conversion debugging
+`useRealtimeSync` calls reference `fetchNotifications` and `fetchSavedArtistsCount` before they are declared (lines 215, 229). Move the two `useRealtimeSync` calls to after the function declarations (after line 238).
 
 ---
 
-## Phase 2: Internal Scroll Fixes (UI Bug)
+## 2. Dashboard Tab Navigation — Mobile Polish
 
-### Problem Analysis
-Fixed heights on ScrollArea components create scroll traps and cut off content in:
-- Project Quick View tab
-- Files tab
-- Chat tab
-- Workflow tab
+**File:** `src/pages/ClientDashboard.tsx` (lines 580-735) and `src/pages/ArtistDashboard.tsx` (lines 199-233)
 
-### Technical Changes
+Current issues on mobile:
+- Tab triggers have inconsistent heights (`min-h-[80px]` on TabsList is excessive)
+- Icons at `h-5 w-5` are too large for mobile tabs; text at `11px` is cramped
+- 10 tabs in a horizontal scroll with no visual affordance for scrolling
 
-**2.1 Update ProjectDetailModal Scroll Areas**
-- File: `src/components/dashboard/projects/ProjectDetailModal.tsx`
-- Change `h-[350px]` and `h-[300px]` to use flexible height with `flex-1 min-h-0`
-- Ensure parent containers use flexbox layout
-- Update all four tab content areas:
-  - Workflow tab (line 502): `h-[400px]` -> `flex-1 min-h-0 max-h-[60vh]`
-  - Quick View tab (line 509): Similar update
-  - Files tab (line 569): Similar update
-  - Messages tab (line 609): Similar update
-
-**2.2 Dashboard Scroll Improvements**
-- Ensure main container in both Artist and Client dashboards allows natural scrolling
-- Remove any conflicting `overflow-hidden` on parent containers
+Fixes:
+- Standardize tab icon size to `h-4 w-4` on mobile, `h-[18px] w-[18px]` on sm+
+- Reduce TabsList `min-h` to `min-h-[56px]` on mobile
+- Set tab trigger padding to `px-2.5 py-2.5` on mobile, `px-5 py-3` on sm+
+- Add `gap-1` on mobile, `gap-1.5` on sm+ between icon and label
+- Ensure all tab triggers have `min-w-[72px]` on mobile for consistent sizing
+- Add subtle scroll-snap with `snap-center` (already present, keep)
 
 ---
 
-## Phase 3: Project Reference Files Visibility
+## 3. Buttons — Consistent Sizing & States
 
-### Problem Analysis
-Reference files uploaded during project creation are stored in `projects.reference_files` (JSONB array of URLs), but the Files tab only queries the `project_files` table.
+**Files:** `src/pages/ClientDashboard.tsx`, `src/components/dashboard/projects/ProjectDetailModal.tsx`
 
-### Technical Changes
+Audit findings:
+- Mixed button heights: `h-7`, `h-8`, `h-9`, `h-10`, `h-11`, `h-12` — no system
+- Some buttons lack `min-h-[44px]` touch target on mobile
+- "View" buttons at `h-7` are too small for touch
 
-**3.1 Update CreateProjectForm to Insert File Records**
-- File: `src/components/projects/CreateProjectForm.tsx`
-- After uploading files to storage, also insert records into `project_files` table
-- This ensures both storage and database tracking
-
-```text
-Current flow:
-  Upload -> storage -> reference_files JSONB
-
-New flow:
-  Upload -> storage -> reference_files JSONB
-                    -> project_files table (for Files tab visibility)
-```
-
-**3.2 Update ProjectDetailModal to Show Reference Files**
-- File: `src/components/dashboard/projects/ProjectDetailModal.tsx`
-- Merge files from `project_files` table with `reference_files` from project record
-- Handle backward compatibility for projects created before the fix
+Fixes:
+- Standardize: small actions = `h-9 min-h-[44px]` on mobile, primary CTAs = `h-10 min-h-[44px]`
+- All buttons get `rounded-xl` consistently (currently mixed `rounded-lg`, `rounded-xl`, `rounded-2xl`)
+- Active/inactive states for action buttons: add `aria-pressed` styling and `data-[state=active]` visual cue with filled background
+- Ensure `font-semibold` on all action buttons, `font-bold` on primary CTAs
 
 ---
 
-## Phase 4: Following System and Recommendations
+## 4. Spacing & Alignment — 4px/8px Scale
 
-### Problem Analysis
-- Recommendations use mock data instead of real user preferences
-- Followed artists' work doesn't appear higher in Explore feed
-- No personalization based on actual follows
+**Files:** Multiple dashboard components
 
-### Technical Changes
-
-**4.1 Update PersonalizedRecommendations Component**
-- File: `src/components/recommendations/PersonalizedRecommendations.tsx`
-- Fetch actual followed artists from `follows` table
-- Query artworks from followed artists
-- Score recommendations based on:
-  - Follow status (highest priority)
-  - User's liked categories
-  - Engagement metrics (views, likes)
-
-**4.2 Update Explore Page Sorting**
-- File: `src/pages/Explore.tsx`
-- Add optional "For You" sorting option
-- When user is logged in, boost artworks from followed artists
-
-**4.3 Database Query Pattern**
-```text
-1. Fetch followed artist IDs from `follows` table
-2. Fetch artworks, marking those from followed artists
-3. Sort: followed artists first, then by engagement score
-```
+Fixes:
+- Normalize all `gap-*` values to multiples of 1 (4px): `gap-1`, `gap-2`, `gap-3`, `gap-4`, `gap-6`
+- Remove fractional padding like `p-3.5` — use `p-3` or `p-4`
+- Icon + text vertical alignment: ensure all `flex items-center` pairs use consistent `gap-2` (8px)
+- Project cards: standardize to `p-4` on mobile, `p-5` on sm+ (currently mixed `p-3`, `p-4`, `p-5`)
 
 ---
 
-## Phase 5: Artist Analytics Access Control
+## 5. Typography Standardization
 
-### Problem Analysis
-- Analytics are accessible to all artists (should be premium-only for advanced)
-- Analytics use hardcoded mock data
-- No real-time updates after events
-
-### Technical Changes
-
-**5.1 Create Advanced Analytics Component**
-- File: `src/components/dashboard/AdvancedAnalytics.tsx` (new)
-- Premium-only detailed analytics with:
-  - Revenue trends (line chart)
-  - Engagement breakdown (pie chart)
-  - Top performing artworks
-  - Follower growth over time
-
-**5.2 Update ArtworkManagement Analytics Button**
-- File: `src/components/dashboard/ArtworkManagement.tsx`
-- Add `isProArtist` check from `useArtistPlan` hook
-- Show lock icon for non-premium artists
-- Show upgrade prompt when clicked by non-premium
-
-**5.3 Implement Real Analytics Data**
-- File: `src/components/dashboard/ArtworkManagement.tsx`
-- Replace mock `analyticsData` (lines 38-47) with real queries:
-  - `totalViews`: Sum views from `artwork_views` table
-  - `totalLikes`: Sum likes from `artwork_likes` table
-  - `totalRevenue`: Sum from `transactions` or `payments` table
-  - `totalFollowers`: Count from `follows` table
-
-**5.4 Add Real-Time Subscription**
-- Subscribe to `artwork_views`, `artwork_likes`, `follows` tables
-- Refresh analytics data on changes
-
-**5.5 Integrate EarningsAnalysis for Pro Artists**
-- File: `src/components/dashboard/ArtistEarnings.tsx`
-- Import and conditionally render `EarningsAnalysis` component for Pro artists
-- Keep basic earnings view for free tier
+Fixes:
+- Section headers: `text-base font-bold` on mobile, `text-lg font-bold` on sm+ (currently mixed `font-semibold`, `font-black`, `font-bold`)
+- Body/meta text: `text-xs` for metadata, `text-sm` for body — remove `text-[10px]` and `text-[11px]` instances, replace with `text-xs`
+- Card titles: `text-sm font-semibold` on mobile, `text-base font-semibold` on sm+
+- Stat numbers: `text-lg font-bold` on mobile, `text-2xl font-bold` on sm+ (normalize from `text-xl` / `text-3xl` / `text-4xl` extremes)
 
 ---
 
-## Phase 6: Additional Fixes
+## 6. Icon Sizing — Uniform Standard
 
-### 6.1 Saved Artworks Already Implemented
-The SavedArtworks component exists and is integrated into ClientDashboard's "saved" tab.
-- Verify real-time subscription works
-- Test save/unsave from artist profile and explore page
-
-### 6.2 Billing Address Form Context
-- File: `src/components/billing/BillingAddressForm.tsx`
-- This is for invoice generation, not payment processing
-- Razorpay handles payment details; this is for tax invoices
-- Add clarifying text: "Used for invoices and receipts only. Not required for payments."
+Fixes:
+- Inline icons (next to text): `h-4 w-4` universally (currently mixed `h-3`, `h-3.5`, `h-4`, `h-5`, `h-6`)
+- Section header icons: `h-5 w-5`
+- Stat card icons: `h-5 w-5` on mobile, `h-6 w-6` on desktop
+- Ensure all icon + text combos use `flex items-center gap-2`
 
 ---
 
-## Implementation Order
+## 7. Project Detail Modal — Mobile Optimization
 
-1. **Currency Fixes (Critical)** - Phase 1
-   - Prevents payment failures and user confusion
-   - Estimated: 2-3 files, straightforward changes
+**File:** `src/components/dashboard/projects/ProjectDetailModal.tsx`
 
-2. **Scroll Fixes** - Phase 2
-   - Quick UX improvement
-   - Estimated: 1 file, CSS/layout changes
+Current issues:
+- Header section uses `text-3xl sm:text-5xl` — too large on mobile
+- Stat cards use `rounded-[2.5rem]` and `p-8` — too much padding and radius on mobile
+- Inner tab navigation has `rounded-[2rem]` — overwhelming on small screens
 
-3. **Reference Files** - Phase 3
-   - Important for artist-client workflow
-   - Estimated: 2 files, database insert logic
-
-4. **Analytics Gating** - Phase 5
-   - Premium feature enforcement
-   - Estimated: 3-4 files, conditional rendering + data fetching
-
-5. **Recommendations** - Phase 4
-   - Improves personalization
-   - Estimated: 2 files, database queries
+Fixes:
+- Header title: `text-xl sm:text-3xl` on mobile
+- Stat cards: `rounded-2xl p-4 sm:p-6` on mobile, keep `rounded-[2rem] p-8` on desktop
+- Inner tabs: `rounded-xl` on mobile, `rounded-2xl` on desktop
+- Reduce header padding: `pt-8 pb-6 px-4 sm:px-8` on mobile
+- Content sections: `px-4 sm:px-8` on mobile instead of `px-6 sm:px-12`
 
 ---
 
-## Files to Modify
+## 8. Dashboard Header KPI Cards — Mobile
 
-| File | Changes |
-|------|---------|
-| `src/hooks/usePaymentGateway.ts` | Add conversion function |
-| `src/components/payments/PayMilestoneButton.tsx` | Fix amount display |
-| `src/components/artist-profile/ArtworkCardModern.tsx` | Fix price formatting |
-| `src/pages/ClientDashboard.tsx` | Fix budget symbol |
-| `src/components/dashboard/projects/ProjectDetailModal.tsx` | Fix scrolling, add reference files |
-| `src/components/projects/CreateProjectForm.tsx` | Insert file records |
-| `src/components/dashboard/ArtworkManagement.tsx` | Real analytics + gating |
-| `src/components/dashboard/ArtistEarnings.tsx` | Add advanced analytics for Pro |
-| `src/components/recommendations/PersonalizedRecommendations.tsx` | Real follow data |
-| `src/pages/Explore.tsx` | Add "For You" boost |
-| `src/components/billing/BillingAddressForm.tsx` | Add clarifying text |
-| `supabase/functions/create-artwork-order/index.ts` | Ensure INR |
+**File:** `src/components/dashboard/DashboardHeader.tsx`
+
+Fixes:
+- Grid: change `grid-cols-1 xs:grid-cols-2` to `grid-cols-2` always on mobile for a tighter 2x2 layout
+- Card padding: `p-3 sm:p-5` (currently `p-5 sm:p-6`)
+- Icon containers: `p-2.5 rounded-xl` on mobile, `p-3 rounded-2xl` on desktop
+- Stat label: `text-[10px]` → `text-xs` for readability
+- Followers button: reduce oversized `min-h-[48px]` to `min-h-[44px]`
 
 ---
 
-## Testing Checklist
+## 9. White Space & Card Separation
 
-- [ ] Indian user sees INR prices everywhere
-- [ ] Razorpay checkout shows matching INR amount
-- [ ] All project tabs scroll to bottom
-- [ ] Reference files appear in Files tab
-- [ ] Saved artworks appear instantly in client dashboard
-- [ ] Non-premium artists see locked analytics
-- [ ] Pro artists see advanced analytics with real data
-- [ ] Followed artists appear higher in Explore
+Fixes:
+- Add `border border-border/40` to all project list cards that currently only have `border-gray-100`
+- Add `shadow-sm` to cards missing it
+- Ensure consistent `space-y-4` between card groups on mobile
+- Project sections ("In Progress" / "Completed"): upgrade from `rounded-lg` to `rounded-2xl` with `shadow-sm`
 
 ---
 
-## Notes
+## 10. Overview Stats Cards — Breathing Room
 
-- All currency conversions use single source: `useCurrencyFormat` hook
-- Rate: $1 = ₹83.5 (configurable in CurrencyContext)
-- Database stores USD, display converts based on user location
-- Razorpay always receives INR (converted from USD base)
+**File:** `src/pages/ClientDashboard.tsx` (lines 740-812)
+
+Fixes:
+- Change `grid-cols-3 gap-2` to `grid-cols-3 gap-3` on mobile for more breathing room
+- Reduce inner padding from `p-3 sm:p-5` to `p-3 sm:p-4` — keep it compact but not cramped
+- Background icons: keep at reduced opacity, no changes needed
+
+---
+
+## Summary of Files to Edit
+
+1. `src/pages/ClientDashboard.tsx` — Build fix + tab/button/spacing polish
+2. `src/pages/ArtistDashboard.tsx` — Tab navigation polish
+3. `src/components/dashboard/DashboardHeader.tsx` — KPI card mobile sizing
+4. `src/components/dashboard/projects/ProjectDetailModal.tsx` — Modal mobile optimization
+5. `src/index.css` — No changes needed (existing utilities are sufficient)
+
+All changes are CSS/Tailwind class adjustments only. No logic changes except the build-blocking declaration order fix.
+
