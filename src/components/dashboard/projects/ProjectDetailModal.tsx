@@ -464,7 +464,7 @@ const ProjectDetailModal = ({
           <ScrollArea className="flex-1 h-full">
             <div className="flex flex-col min-h-full">
             {/* Ultra Modern Header Section */}
-            <div className="relative overflow-hidden pt-12 pb-10 px-6 sm:px-12 border-b bg-gradient-to-br from-primary/[0.07] via-background to-primary/[0.03]">
+            <div className="relative overflow-hidden pt-8 pb-6 px-4 sm:px-8 lg:px-12 border-b bg-gradient-to-br from-primary/[0.07] via-background to-primary/[0.03]">
               {/* Abstract Background Shapes */}
               <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
               <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
