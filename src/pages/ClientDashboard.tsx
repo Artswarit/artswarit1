@@ -232,6 +232,12 @@ const ClientDashboard = () => {
     }).eq('client_id', user.id);
     setSavedArtistsCount(count || 0);
   }, [user?.id]);
+
+  // Realtime Sync (must be after function declarations)
+  useRealtimeSync('projects', fetchProjects);
+  useRealtimeSync('notifications', fetchNotifications);
+  useRealtimeSync('artworks', fetchSavedArtistsCount);
+
   const fetchRecommendedArtists = useCallback(async () => {
     try {
       // Fetch artists from profiles
