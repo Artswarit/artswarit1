@@ -521,7 +521,7 @@ const ArtworkManagement = () => {
                 Maybe Later
               </Button>
               <Button asChild className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600">
-                <Link to="/artist-dashboard/premium">
+                <Link to="/artist-dashboard?tab=premium">
                   Upgrade to Pro
                 </Link>
               </Button>

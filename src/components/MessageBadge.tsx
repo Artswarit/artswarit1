@@ -16,7 +16,7 @@ const MessageBadge = () => {
   const dashboardPath = isAdmin 
     ? "/admin-dashboard" 
     : user.user_metadata?.role === "artist" 
-      ? "/artist-dashboard/messages" 
+      ? "/artist-dashboard?tab=messages" 
       : "/client-dashboard?tab=messages";
 
   return (

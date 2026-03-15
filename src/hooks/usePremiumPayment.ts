@@ -177,7 +177,19 @@ export function usePremiumPayment() {
       razorpay.open();
     } catch (error: any) {
       console.error('Subscription error:', error);
-      toast.error(error.message || 'Subscription failed');
+      
+      // Fallback: If there's an error, opening the direct payment link can be a reliable backup
+      const isAuthError = error.message?.includes('Unauthorized') || error.message?.includes('log in');
+      
+      if (!isAuthError) {
+        toast.info('Redirecting to secure subscription page...');
+        setTimeout(() => {
+          window.location.href = 'https://rzp.io/rzp/JgMbYCOw';
+        }, 1500);
+      } else {
+        toast.error(error.message || 'Subscription failed');
+      }
+      
       onFailure?.(error.message);
     } finally {
       setLoading(false);

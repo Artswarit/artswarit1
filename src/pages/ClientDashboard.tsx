@@ -60,6 +60,7 @@ const ClientDashboard = () => {
   const profileIncomplete = profileReady && !isComplete;
   
   const [searchParams, setSearchParams] = useSearchParams();
+  const [visitedTabs, setVisitedTabs] = useState<Set<string>>(new Set([searchParams.get('tab') || 'overview']));
   const currentTab = searchParams.get('tab') || 'overview';
   const [selectedTab, setSelectedTab] = useState(currentTab);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -109,6 +110,7 @@ const ClientDashboard = () => {
     }
     setSelectedTab(newTab);
     setSearchParams({ tab: newTab });
+    setVisitedTabs(prev => new Set(prev).add(newTab));
   };
 
   // Read tab from URL on mount
@@ -740,7 +742,10 @@ const ClientDashboard = () => {
           </div>
 
           {/* Overview Tab Content */}
-          <TabsContent value="overview" className="space-y-4 sm:space-y-6 lg:space-y-8 animate-fade-in outline-none">
+          <TabsContent value="overview" className="space-y-4 sm:space-y-6 lg:space-y-8 animate-fade-in outline-none focus-visible:ring-0" forceMount>
+            <div className={cn(selectedTab !== 'overview' && "hidden")}>
+              {visitedTabs.has('overview') && (
+                <div className="space-y-4 sm:space-y-6 lg:space-y-8">
             {/* Stats Row - Modernized & Clickable Grid */}
             <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6">
               <div 
@@ -965,51 +970,60 @@ const ClientDashboard = () => {
                               </p>
                             </div>
                           </div>
-                        ))
-                      )}
-                    </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
             </div>
-          </TabsContent>
+                </div>
+              </div>
+            )}
+          </div>
+        </TabsContent>
 
           {/* Collection Tab */}
-          <TabsContent value="collection" className="animate-fade-in">
-            <PurchasedArtworks />
+          <TabsContent value="collection" className="animate-fade-in outline-none focus-visible:ring-0" forceMount>
+            <div className={cn(selectedTab !== 'collection' && "hidden")}>
+              {visitedTabs.has('collection') && <PurchasedArtworks />}
+            </div>
           </TabsContent>
 
           {/* Projects Tab */}
-          <TabsContent value="projects" className="space-y-4 sm:space-y-6 lg:space-y-8 animate-fade-in">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-              <h2 className="font-heading text-base sm:text-lg lg:text-xl font-black uppercase tracking-tight">All Projects</h2>
-              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                <div className="relative flex-1 sm:flex-initial">
-                  <input
-                    type="text"
-                    placeholder="Search projects..."
-                    value={projectSearch}
-                    onChange={e => setProjectSearch(e.target.value)}
-                    className="w-full sm:w-48 lg:w-64 pl-9 pr-4 py-2.5 border border-gray-200 dark:border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/70 focus:border-transparent bg-white/80 dark:bg-card/80 min-h-[44px]"
-                  />
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    <Search size={16} />
+          <TabsContent value="projects" className="space-y-4 sm:space-y-6 lg:space-y-8 animate-fade-in outline-none focus-visible:ring-0" forceMount>
+            <div className={cn(selectedTab !== 'projects' && "hidden")}>
+              {visitedTabs.has('projects') && (
+                <>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                    <h2 className="font-heading text-base sm:text-lg lg:text-xl font-black uppercase tracking-tight">All Projects</h2>
+                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                      <div className="relative flex-1 sm:flex-initial">
+                        <input
+                          type="text"
+                          placeholder="Search projects..."
+                          value={projectSearch}
+                          onChange={e => setProjectSearch(e.target.value)}
+                          className="w-full sm:w-48 lg:w-64 pl-9 pr-4 py-2.5 border border-gray-200 dark:border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/70 focus:border-transparent bg-white/80 dark:bg-card/80 min-h-[44px]"
+                        />
+                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                          <Search size={16} />
+                        </div>
+                      </div>
+                      <Button className="w-full sm:w-auto text-sm min-h-[44px]" onClick={() => setCreateProjectOpen(true)}>
+                        <PlusCircle className="h-4 w-4 mr-2" />
+                        New Project
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                <Button className="w-full sm:w-auto text-sm min-h-[44px]" onClick={() => setCreateProjectOpen(true)}>
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  New Project
-                </Button>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              <div className="bg-white/60 dark:bg-card/60 backdrop-blur-sm p-4 sm:p-6 rounded-lg sm:rounded-xl shadow-sm border border-blue-100 dark:border-border">
-                <h3 className="font-heading text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center">
-                  <Clock className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-amber-600" />
-                  In Progress
-                  {projectSearch && <span className="ml-2 text-xs font-normal text-muted-foreground">({searchedActiveProjects.length} result{searchedActiveProjects.length !== 1 ? 's' : ''})</span>}
-                </h3>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    <div className="bg-white/60 dark:bg-card/60 backdrop-blur-sm p-4 sm:p-6 rounded-lg sm:rounded-xl shadow-sm border border-blue-100 dark:border-border">
+                      <h3 className="font-heading text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center">
+                        <Clock className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-amber-600" />
+                        In Progress
+                        {projectSearch && <span className="ml-2 text-xs font-normal text-muted-foreground">({searchedActiveProjects.length} result{searchedActiveProjects.length !== 1 ? 's' : ''})</span>}
+                      </h3>
+                      {/* Projects list will follow */}
                 <div className="space-y-3 sm:space-y-4">
                   {searchedActiveProjects.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 px-4 rounded-[2rem] border-2 border-dashed border-border/30 bg-muted/10">
@@ -1199,38 +1213,55 @@ const ClientDashboard = () => {
                     </>
                   )}
                 </div>
+                </div>
               </div>
+            </>
+          )}
+        </div>
+      </TabsContent>
+          
+          {/* Profile Tab */}
+          <TabsContent value="profile" className="animate-fade-in outline-none focus-visible:ring-0" forceMount>
+            <div className={cn(selectedTab !== 'profile' && "hidden")}>
+              {visitedTabs.has('profile') && <ClientProfile />}
             </div>
           </TabsContent>
           
-          {/* Profile Tab */}
-          <TabsContent value="profile" className="animate-fade-in">
-            <ClientProfile />
-          </TabsContent>
-          
           {/* Messages Tab */}
-          <TabsContent value="messages" className="animate-fade-in">
-            <ClientMessages />
+          <TabsContent value="messages" className="animate-fade-in outline-none focus-visible:ring-0" forceMount>
+            <div className={cn(selectedTab !== 'messages' && "hidden")}>
+              {visitedTabs.has('messages') && <ClientMessages />}
+            </div>
           </TabsContent>
           
-          <TabsContent value="saved" className="animate-fade-in">
-            <SavedArtworks />
+          <TabsContent value="saved" className="animate-fade-in outline-none focus-visible:ring-0" forceMount>
+            <div className={cn(selectedTab !== 'saved' && "hidden")}>
+              {visitedTabs.has('saved') && <SavedArtworks />}
+            </div>
           </TabsContent>
 
-          <TabsContent value="artists" className="animate-fade-in">
-            <SavedArtists />
+          <TabsContent value="artists" className="animate-fade-in outline-none focus-visible:ring-0" forceMount>
+            <div className={cn(selectedTab !== 'artists' && "hidden")}>
+              {visitedTabs.has('artists') && <SavedArtists />}
+            </div>
           </TabsContent>
 
-          <TabsContent value="ratings" className="animate-fade-in">
-            <ProjectRating />
+          <TabsContent value="ratings" className="animate-fade-in outline-none focus-visible:ring-0" forceMount>
+            <div className={cn(selectedTab !== 'ratings' && "hidden")}>
+              {visitedTabs.has('ratings') && <ProjectRating />}
+            </div>
           </TabsContent>
           
-          <TabsContent value="payments" className="animate-fade-in">
-            <ClientPayments />
+          <TabsContent value="payments" className="animate-fade-in outline-none focus-visible:ring-0" forceMount>
+            <div className={cn(selectedTab !== 'payments' && "hidden")}>
+              {visitedTabs.has('payments') && <ClientPayments />}
+            </div>
           </TabsContent>
           
-          <TabsContent value="settings" className="animate-fade-in">
-            <ClientSettings />
+          <TabsContent value="settings" className="animate-fade-in outline-none focus-visible:ring-0" forceMount>
+            <div className={cn(selectedTab !== 'settings' && "hidden")}>
+              {visitedTabs.has('settings') && <ClientSettings />}
+            </div>
           </TabsContent>
         </Tabs>
       </div>

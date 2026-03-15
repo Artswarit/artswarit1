@@ -73,7 +73,7 @@ const ArtworkUploadForm = ({ onCancel, onSuccess }: ArtworkUploadFormProps) => {
       e.preventDefault();
       e.stopPropagation();
     }
-    navigate('/artist-dashboard/premium');
+    navigate('/artist-dashboard?tab=premium');
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -186,7 +186,7 @@ const ArtworkUploadForm = ({ onCancel, onSuccess }: ArtworkUploadFormProps) => {
       if (onSuccess) {
         onSuccess();
       } else {
-        navigate("/artist-dashboard/artworks");
+        navigate("/artist-dashboard?tab=artworks");
       }
     }
     setIsUploading(false);
