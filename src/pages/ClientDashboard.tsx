@@ -928,7 +928,7 @@ const ClientDashboard = () => {
                             width: `${project.progress}%`
                           }} />
                               </div>
-                              <span className="text-[10px] sm:text-xs font-medium">{project.progress}%</span>
+                              <span className="text-xs font-medium">{project.progress}%</span>
                             </div>
                             <div className="mt-2 sm:mt-3 flex justify-between items-center">
                               <div className="flex items-center gap-3">
