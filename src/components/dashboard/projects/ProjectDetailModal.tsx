@@ -602,7 +602,7 @@ const ProjectDetailModal = ({
               </div>
             </div>
 
-            <div className="px-6 sm:px-12 pb-12 space-y-12">
+            <div className="px-4 sm:px-8 lg:px-12 pb-8 sm:pb-12 space-y-8 sm:space-y-12">
               {/* Description Section */}
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
