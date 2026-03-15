@@ -938,7 +938,7 @@ const ClientDashboard = () => {
                                   </span>}
                               </div>
                               <div className="flex flex-wrap gap-2">
-                                  <Button size="sm" variant="outline" className="h-7 sm:h-8 text-xs" onClick={() => {
+                                  <Button size="sm" variant="outline" className="h-9 min-h-[44px] text-xs rounded-xl font-semibold" onClick={() => {
                                     setSelectedProjectId(project.id);
                                     setProjectModalOpen(true);
                                   }}>
