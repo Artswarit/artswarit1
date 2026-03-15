@@ -545,7 +545,7 @@ const ProjectDetailModal = ({
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60">Total Budget</p>
-                    <h3 className="text-3xl font-black tracking-tighter text-foreground">
+                    <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
                       {project.budget ? formatCurrency(project.budget) : 'Not set'}
                     </h3>
                   </div>
