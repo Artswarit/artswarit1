@@ -481,7 +481,7 @@ const ProjectDetailModal = ({
                   </div>
                   
                   <div className="space-y-2">
-                    <DialogTitle className="text-3xl sm:text-5xl font-black tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground to-foreground/60">
+                    <DialogTitle className="text-xl sm:text-3xl lg:text-4xl font-bold tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground to-foreground/60">
                       {project.title}
                     </DialogTitle>
                     <div className="flex items-center gap-4 flex-wrap">
