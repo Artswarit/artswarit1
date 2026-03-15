@@ -609,7 +609,7 @@ const ProjectDetailModal = ({
                   <div className="w-8 h-1 bg-primary/20 rounded-full" />
                   <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">Project Overview</h4>
                 </div>
-                <div className="group relative p-6 sm:p-8 rounded-[2rem] sm:rounded-[3rem] bg-muted/10 border border-border/30 hover:bg-muted/20 transition-all duration-500">
+                <div className="group relative p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-[2rem] bg-muted/10 border border-border/30 hover:bg-muted/20 transition-all duration-500">
                   <div className="absolute top-8 left-0 w-1.5 h-12 bg-primary/40 rounded-r-full group-hover:h-24 transition-all duration-500" />
                   <p className="text-base sm:text-lg leading-relaxed text-foreground/80 whitespace-pre-wrap font-medium pl-4">
                     {project.description || 'No description provided for this project. Use the communication tab to discuss requirements with your collaborator.'}
