@@ -582,152 +582,38 @@ const ClientDashboard = () => {
         <Tabs value={selectedTab} className="mb-4 sm:mb-6 lg:mb-8" onValueChange={handleTabChange}>
           <div className="relative mb-4 sm:mb-6 group">
             <div className="overflow-x-auto scroll-smooth snap-x snap-mandatory py-2 pb-4">
-              <TabsList className="bg-white/80 dark:bg-card/80 backdrop-blur-md inline-flex sm:flex sm:flex-wrap lg:grid lg:grid-cols-5 xl:grid-cols-10 gap-2 p-1.5 rounded-[1.5rem] shadow-xl border border-border/40 min-w-full sm:min-w-0 h-auto min-h-[80px] sm:min-h-0">
-                <TabsTrigger 
-                  value="overview" 
-                  disabled={profileIncomplete} 
-                  className={cn(
-                    "flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm px-3 sm:px-6 py-3.5 sm:py-3 rounded-2xl transition-all duration-300 snap-center flex-1 sm:flex-initial min-w-[85px] sm:min-w-0", 
-                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30", 
-                    "hover:bg-primary/5 hover:text-primary", 
-                    profileIncomplete && "opacity-50 cursor-not-allowed grayscale pointer-events-none"
-                  )}
-                >
-                  <LayoutDashboard className="h-5 w-5 sm:h-4.5 sm:w-4.5" />
-                  <span className="font-bold sm:font-medium">Overview</span>
-                  {profileIncomplete && <Lock className="h-3 w-3 ml-0.5" />}
-                </TabsTrigger>
-                
-                <TabsTrigger 
-                  value="profile" 
-                  className={cn(
-                    "flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm px-3 sm:px-6 py-3.5 sm:py-3 rounded-2xl transition-all duration-300 snap-center flex-1 sm:flex-initial min-w-[85px] sm:min-w-0", 
-                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30", 
-                    "hover:bg-primary/5 hover:text-primary"
-                  )}
-                >
-                  <User className="h-5 w-5 sm:h-4.5 sm:w-4.5" />
-                  <span className="font-bold sm:font-medium">Profile</span>
-                </TabsTrigger>
-                
-                <TabsTrigger 
-                  value="projects" 
-                  disabled={profileIncomplete} 
-                  className={cn(
-                    "flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm px-3 sm:px-6 py-3.5 sm:py-3 rounded-2xl transition-all duration-300 snap-center flex-1 sm:flex-initial min-w-[85px] sm:min-w-0", 
-                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30", 
-                    "hover:bg-primary/5 hover:text-primary", 
-                    profileIncomplete && "opacity-50 cursor-not-allowed grayscale pointer-events-none"
-                  )}
-                >
-                  <FileText className="h-5 w-5 sm:h-4.5 sm:w-4.5" />
-                  <span className="font-bold sm:font-medium">Projects</span>
-                  {profileIncomplete && <Lock className="h-3 w-3 ml-0.5" />}
-                </TabsTrigger>
-                
-                <TabsTrigger 
-                  value="collection" 
-                  disabled={profileIncomplete} 
-                  className={cn(
-                    "flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm px-3 sm:px-6 py-3.5 sm:py-3 rounded-2xl transition-all duration-300 snap-center flex-1 sm:flex-initial min-w-[85px] sm:min-w-0", 
-                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30", 
-                    "hover:bg-primary/5 hover:text-primary", 
-                    profileIncomplete && "opacity-50 cursor-not-allowed grayscale pointer-events-none"
-                  )}
-                >
-                  <ShoppingBag className="h-5 w-5 sm:h-4.5 sm:w-4.5" />
-                  <span className="font-bold sm:font-medium whitespace-nowrap">Collection</span>
-                  {profileIncomplete && <Lock className="h-3 w-3 ml-0.5" />}
-                </TabsTrigger>
-
-                <TabsTrigger 
-                  value="messages" 
-                  disabled={profileIncomplete} 
-                  className={cn(
-                    "flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm px-3 sm:px-6 py-3.5 sm:py-3 rounded-2xl transition-all duration-300 snap-center flex-1 sm:flex-initial min-w-[85px] sm:min-w-0", 
-                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30", 
-                    "hover:bg-primary/5 hover:text-primary", 
-                    profileIncomplete && "opacity-50 cursor-not-allowed grayscale pointer-events-none"
-                  )}
-                >
-                  <MessageSquare className="h-5 w-5 sm:h-4.5 sm:w-4.5" />
-                  <span className="font-bold sm:font-medium">Messages</span>
-                  {profileIncomplete && <Lock className="h-3 w-3 ml-0.5" />}
-                </TabsTrigger>
-
-                <TabsTrigger 
-                  value="saved" 
-                  disabled={profileIncomplete} 
-                  className={cn(
-                    "flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm px-3 sm:px-6 py-3.5 sm:py-3 rounded-2xl transition-all duration-300 snap-center flex-1 sm:flex-initial min-w-[85px] sm:min-w-0", 
-                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30", 
-                    "hover:bg-primary/5 hover:text-primary", 
-                    profileIncomplete && "opacity-50 cursor-not-allowed grayscale pointer-events-none"
-                  )}
-                >
-                  <Bookmark className="h-5 w-5 sm:h-4.5 sm:w-4.5" />
-                  <span className="font-bold sm:font-medium">Saved</span>
-                  {profileIncomplete && <Lock className="h-3 w-3 ml-0.5" />}
-                </TabsTrigger>
-
-                <TabsTrigger 
-                  value="artists" 
-                  disabled={profileIncomplete} 
-                  className={cn(
-                    "flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm px-3 sm:px-6 py-3.5 sm:py-3 rounded-2xl transition-all duration-300 snap-center flex-1 sm:flex-initial min-w-[85px] sm:min-w-0", 
-                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30", 
-                    "hover:bg-primary/5 hover:text-primary", 
-                    profileIncomplete && "opacity-50 cursor-not-allowed grayscale pointer-events-none"
-                  )}
-                >
-                  <Users className="h-5 w-5 sm:h-4.5 sm:w-4.5" />
-                  <span className="font-bold sm:font-medium">Saved Artists</span>
-                  {profileIncomplete && <Lock className="h-3 w-3 ml-0.5" />}
-                </TabsTrigger>
-
-                <TabsTrigger 
-                  value="ratings" 
-                  disabled={profileIncomplete} 
-                  className={cn(
-                    "flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm px-3 sm:px-6 py-3.5 sm:py-3 rounded-2xl transition-all duration-300 snap-center flex-1 sm:flex-initial min-w-[85px] sm:min-w-0", 
-                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30", 
-                    "hover:bg-primary/5 hover:text-primary", 
-                    profileIncomplete && "opacity-50 cursor-not-allowed grayscale pointer-events-none"
-                  )}
-                >
-                  <Star className="h-5 w-5 sm:h-4.5 sm:w-4.5" />
-                  <span className="font-bold sm:font-medium">Reviews</span>
-                  {profileIncomplete && <Lock className="h-3 w-3 ml-0.5" />}
-                </TabsTrigger>
-
-                <TabsTrigger 
-                  value="payments" 
-                  disabled={profileIncomplete} 
-                  className={cn(
-                    "flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm px-3 sm:px-6 py-3.5 sm:py-3 rounded-2xl transition-all duration-300 snap-center flex-1 sm:flex-initial min-w-[85px] sm:min-w-0", 
-                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30", 
-                    "hover:bg-primary/5 hover:text-primary", 
-                    profileIncomplete && "opacity-50 cursor-not-allowed grayscale pointer-events-none"
-                  )}
-                >
-                  <CreditCard className="h-5 w-5 sm:h-4.5 sm:w-4.5" />
-                  <span className="font-bold sm:font-medium">Payments</span>
-                  {profileIncomplete && <Lock className="h-3 w-3 ml-0.5" />}
-                </TabsTrigger>
-
-                <TabsTrigger 
-                  value="settings" 
-                  disabled={profileIncomplete}
-                  className={cn(
-                    "flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm px-3 sm:px-6 py-3.5 sm:py-3 rounded-2xl transition-all duration-300 snap-center flex-1 sm:flex-initial min-w-[85px] sm:min-w-0", 
-                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30", 
-                    "hover:bg-primary/5 hover:text-primary",
-                    profileIncomplete && "opacity-50 cursor-not-allowed grayscale pointer-events-none"
-                  )}
-                >
-                  <Settings className="h-5 w-5 sm:h-4.5 sm:w-4.5" />
-                  <span className="font-bold sm:font-medium">Settings</span>
-                </TabsTrigger>
+              <TabsList className="bg-white/80 dark:bg-card/80 backdrop-blur-md inline-flex sm:flex sm:flex-wrap lg:grid lg:grid-cols-5 xl:grid-cols-10 gap-1.5 p-1.5 rounded-xl sm:rounded-2xl shadow-lg border border-border/40 min-w-full sm:min-w-0 h-auto min-h-[56px] sm:min-h-0">
+                {[
+                  { value: 'overview', icon: LayoutDashboard, label: 'Overview', disabled: profileIncomplete },
+                  { value: 'profile', icon: User, label: 'Profile', disabled: false },
+                  { value: 'projects', icon: FileText, label: 'Projects', disabled: profileIncomplete },
+                  { value: 'collection', icon: ShoppingBag, label: 'Collection', disabled: profileIncomplete },
+                  { value: 'messages', icon: MessageSquare, label: 'Messages', disabled: profileIncomplete },
+                  { value: 'saved', icon: Bookmark, label: 'Saved', disabled: profileIncomplete },
+                  { value: 'artists', icon: Users, label: 'Artists', disabled: profileIncomplete },
+                  { value: 'ratings', icon: Star, label: 'Reviews', disabled: profileIncomplete },
+                  { value: 'payments', icon: CreditCard, label: 'Payments', disabled: profileIncomplete },
+                  { value: 'settings', icon: Settings, label: 'Settings', disabled: profileIncomplete },
+                ].map((tabItem) => {
+                  const Icon = tabItem.icon;
+                  return (
+                    <TabsTrigger 
+                      key={tabItem.value}
+                      value={tabItem.value} 
+                      disabled={tabItem.disabled} 
+                      className={cn(
+                        "flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2.5 sm:px-5 py-2.5 sm:py-3 rounded-xl transition-all duration-300 snap-center flex-1 sm:flex-initial min-w-[72px] sm:min-w-0", 
+                        "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20", 
+                        "hover:bg-primary/5 hover:text-primary", 
+                        tabItem.disabled && "opacity-50 cursor-not-allowed grayscale pointer-events-none"
+                      )}
+                    >
+                      <Icon className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
+                      <span className="font-semibold sm:font-medium whitespace-nowrap">{tabItem.label}</span>
+                      {tabItem.disabled && <Lock className="h-2.5 w-2.5 sm:h-3 sm:w-3 ml-0.5" />}
+                    </TabsTrigger>
+                  );
+                })}
               </TabsList>
             </div>
             
