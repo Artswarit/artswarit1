@@ -547,7 +547,7 @@ const ClientDashboard = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 pt-28 sm:pt-32 lg:pt-36">
         {/* Dashboard Header */}
         <div className="mb-4 sm:mb-6 lg:mb-8 animate-fade-in">
-          <h1 className="font-heading text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">Client Dashboard</h1>
+          <h1 className="font-heading text-xl sm:text-2xl lg:text-3xl font-black mb-1 sm:mb-2">Client Dashboard</h1>
           <p className="text-muted-foreground text-xs sm:text-sm lg:text-base">
             Welcome back, <span className="font-black text-foreground">{userName}</span>! Manage your projects and discover new artists.
           </p>
@@ -585,38 +585,152 @@ const ClientDashboard = () => {
         <Tabs value={selectedTab} className="mb-4 sm:mb-6 lg:mb-8" onValueChange={handleTabChange}>
           <div className="relative mb-4 sm:mb-6 group">
             <div className="overflow-x-auto scroll-smooth snap-x snap-mandatory py-2 pb-4">
-              <TabsList className="bg-white/80 dark:bg-card/80 backdrop-blur-md inline-flex sm:flex sm:flex-wrap lg:grid lg:grid-cols-5 xl:grid-cols-10 gap-1.5 p-1.5 rounded-xl sm:rounded-2xl shadow-lg border border-border/40 min-w-full sm:min-w-0 h-auto min-h-[56px] sm:min-h-0">
-                {[
-                  { value: 'overview', icon: LayoutDashboard, label: 'Overview', disabled: profileIncomplete },
-                  { value: 'profile', icon: User, label: 'Profile', disabled: false },
-                  { value: 'projects', icon: FileText, label: 'Projects', disabled: profileIncomplete },
-                  { value: 'collection', icon: ShoppingBag, label: 'Collection', disabled: profileIncomplete },
-                  { value: 'messages', icon: MessageSquare, label: 'Messages', disabled: profileIncomplete },
-                  { value: 'saved', icon: Bookmark, label: 'Saved', disabled: profileIncomplete },
-                  { value: 'artists', icon: Users, label: 'Artists', disabled: profileIncomplete },
-                  { value: 'ratings', icon: Star, label: 'Reviews', disabled: profileIncomplete },
-                  { value: 'payments', icon: CreditCard, label: 'Payments', disabled: profileIncomplete },
-                  { value: 'settings', icon: Settings, label: 'Settings', disabled: profileIncomplete },
-                ].map((tabItem) => {
-                  const Icon = tabItem.icon;
-                  return (
-                    <TabsTrigger 
-                      key={tabItem.value}
-                      value={tabItem.value} 
-                      disabled={tabItem.disabled} 
-                      className={cn(
-                        "flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2.5 sm:px-5 py-2.5 sm:py-3 rounded-xl transition-all duration-300 snap-center flex-1 sm:flex-initial min-w-[72px] sm:min-w-0", 
-                        "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20", 
-                        "hover:bg-primary/5 hover:text-primary", 
-                        tabItem.disabled && "opacity-50 cursor-not-allowed grayscale pointer-events-none"
-                      )}
-                    >
-                      <Icon className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
-                      <span className="font-semibold sm:font-medium whitespace-nowrap">{tabItem.label}</span>
-                      {tabItem.disabled && <Lock className="h-2.5 w-2.5 sm:h-3 sm:w-3 ml-0.5" />}
-                    </TabsTrigger>
-                  );
-                })}
+              <TabsList className="bg-white/80 dark:bg-card/80 backdrop-blur-md inline-flex sm:flex sm:flex-wrap lg:grid lg:grid-cols-5 xl:grid-cols-10 gap-2 p-1.5 rounded-[1.5rem] shadow-xl border border-border/40 min-w-full sm:min-w-0 h-auto min-h-[80px] sm:min-h-0">
+                <TabsTrigger 
+                  value="overview" 
+                  disabled={profileIncomplete} 
+                  className={cn(
+                    "flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm px-3 sm:px-6 py-3.5 sm:py-3 rounded-2xl transition-all duration-300 snap-center flex-1 sm:flex-initial min-w-[85px] sm:min-w-0", 
+                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30", 
+                    "hover:bg-primary/5 hover:text-primary", 
+                    profileIncomplete && "opacity-50 cursor-not-allowed grayscale pointer-events-none"
+                  )}
+                >
+                  <LayoutDashboard className="h-5 w-5 sm:h-4.5 sm:w-4.5" />
+                  <span className="font-bold sm:font-medium">Overview</span>
+                  {profileIncomplete && <Lock className="h-3 w-3 ml-0.5" />}
+                </TabsTrigger>
+                
+                <TabsTrigger 
+                  value="profile" 
+                  className={cn(
+                    "flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm px-3 sm:px-6 py-3.5 sm:py-3 rounded-2xl transition-all duration-300 snap-center flex-1 sm:flex-initial min-w-[85px] sm:min-w-0", 
+                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30", 
+                    "hover:bg-primary/5 hover:text-primary"
+                  )}
+                >
+                  <User className="h-5 w-5 sm:h-4.5 sm:w-4.5" />
+                  <span className="font-bold sm:font-medium">Profile</span>
+                </TabsTrigger>
+                
+                <TabsTrigger 
+                  value="projects" 
+                  disabled={profileIncomplete} 
+                  className={cn(
+                    "flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm px-3 sm:px-6 py-3.5 sm:py-3 rounded-2xl transition-all duration-300 snap-center flex-1 sm:flex-initial min-w-[85px] sm:min-w-0", 
+                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30", 
+                    "hover:bg-primary/5 hover:text-primary", 
+                    profileIncomplete && "opacity-50 cursor-not-allowed grayscale pointer-events-none"
+                  )}
+                >
+                  <FileText className="h-5 w-5 sm:h-4.5 sm:w-4.5" />
+                  <span className="font-bold sm:font-medium">Projects</span>
+                  {profileIncomplete && <Lock className="h-3 w-3 ml-0.5" />}
+                </TabsTrigger>
+                
+                <TabsTrigger 
+                  value="collection" 
+                  disabled={profileIncomplete} 
+                  className={cn(
+                    "flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm px-3 sm:px-6 py-3.5 sm:py-3 rounded-2xl transition-all duration-300 snap-center flex-1 sm:flex-initial min-w-[85px] sm:min-w-0", 
+                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30", 
+                    "hover:bg-primary/5 hover:text-primary", 
+                    profileIncomplete && "opacity-50 cursor-not-allowed grayscale pointer-events-none"
+                  )}
+                >
+                  <ShoppingBag className="h-5 w-5 sm:h-4.5 sm:w-4.5" />
+                  <span className="font-bold sm:font-medium whitespace-nowrap">Collection</span>
+                  {profileIncomplete && <Lock className="h-3 w-3 ml-0.5" />}
+                </TabsTrigger>
+
+                <TabsTrigger 
+                  value="messages" 
+                  disabled={profileIncomplete} 
+                  className={cn(
+                    "flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm px-3 sm:px-6 py-3.5 sm:py-3 rounded-2xl transition-all duration-300 snap-center flex-1 sm:flex-initial min-w-[85px] sm:min-w-0", 
+                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30", 
+                    "hover:bg-primary/5 hover:text-primary", 
+                    profileIncomplete && "opacity-50 cursor-not-allowed grayscale pointer-events-none"
+                  )}
+                >
+                  <MessageSquare className="h-5 w-5 sm:h-4.5 sm:w-4.5" />
+                  <span className="font-bold sm:font-medium">Messages</span>
+                  {profileIncomplete && <Lock className="h-3 w-3 ml-0.5" />}
+                </TabsTrigger>
+
+                <TabsTrigger 
+                  value="saved" 
+                  disabled={profileIncomplete} 
+                  className={cn(
+                    "flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm px-3 sm:px-6 py-3.5 sm:py-3 rounded-2xl transition-all duration-300 snap-center flex-1 sm:flex-initial min-w-[85px] sm:min-w-0", 
+                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30", 
+                    "hover:bg-primary/5 hover:text-primary", 
+                    profileIncomplete && "opacity-50 cursor-not-allowed grayscale pointer-events-none"
+                  )}
+                >
+                  <Bookmark className="h-5 w-5 sm:h-4.5 sm:w-4.5" />
+                  <span className="font-bold sm:font-medium">Saved</span>
+                  {profileIncomplete && <Lock className="h-3 w-3 ml-0.5" />}
+                </TabsTrigger>
+
+                <TabsTrigger 
+                  value="artists" 
+                  disabled={profileIncomplete} 
+                  className={cn(
+                    "flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm px-3 sm:px-6 py-3.5 sm:py-3 rounded-2xl transition-all duration-300 snap-center flex-1 sm:flex-initial min-w-[85px] sm:min-w-0", 
+                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30", 
+                    "hover:bg-primary/5 hover:text-primary", 
+                    profileIncomplete && "opacity-50 cursor-not-allowed grayscale pointer-events-none"
+                  )}
+                >
+                  <Users className="h-5 w-5 sm:h-4.5 sm:w-4.5" />
+                  <span className="font-bold sm:font-medium">Saved Artists</span>
+                  {profileIncomplete && <Lock className="h-3 w-3 ml-0.5" />}
+                </TabsTrigger>
+
+                <TabsTrigger 
+                  value="ratings" 
+                  disabled={profileIncomplete} 
+                  className={cn(
+                    "flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm px-3 sm:px-6 py-3.5 sm:py-3 rounded-2xl transition-all duration-300 snap-center flex-1 sm:flex-initial min-w-[85px] sm:min-w-0", 
+                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30", 
+                    "hover:bg-primary/5 hover:text-primary", 
+                    profileIncomplete && "opacity-50 cursor-not-allowed grayscale pointer-events-none"
+                  )}
+                >
+                  <Star className="h-5 w-5 sm:h-4.5 sm:w-4.5" />
+                  <span className="font-bold sm:font-medium">Reviews</span>
+                  {profileIncomplete && <Lock className="h-3 w-3 ml-0.5" />}
+                </TabsTrigger>
+
+                <TabsTrigger 
+                  value="payments" 
+                  disabled={profileIncomplete} 
+                  className={cn(
+                    "flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm px-3 sm:px-6 py-3.5 sm:py-3 rounded-2xl transition-all duration-300 snap-center flex-1 sm:flex-initial min-w-[85px] sm:min-w-0", 
+                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30", 
+                    "hover:bg-primary/5 hover:text-primary", 
+                    profileIncomplete && "opacity-50 cursor-not-allowed grayscale pointer-events-none"
+                  )}
+                >
+                  <CreditCard className="h-5 w-5 sm:h-4.5 sm:w-4.5" />
+                  <span className="font-bold sm:font-medium">Payments</span>
+                  {profileIncomplete && <Lock className="h-3 w-3 ml-0.5" />}
+                </TabsTrigger>
+
+                <TabsTrigger 
+                  value="settings" 
+                  disabled={profileIncomplete}
+                  className={cn(
+                    "flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm px-3 sm:px-6 py-3.5 sm:py-3 rounded-2xl transition-all duration-300 snap-center flex-1 sm:flex-initial min-w-[85px] sm:min-w-0", 
+                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=active]:shadow-primary/30", 
+                    "hover:bg-primary/5 hover:text-primary",
+                    profileIncomplete && "opacity-50 cursor-not-allowed grayscale pointer-events-none"
+                  )}
+                >
+                  <Settings className="h-5 w-5 sm:h-4.5 sm:w-4.5" />
+                  <span className="font-bold sm:font-medium">Settings</span>
+                </TabsTrigger>
               </TabsList>
             </div>
             
@@ -628,72 +742,75 @@ const ClientDashboard = () => {
           {/* Overview Tab Content */}
           <TabsContent value="overview" className="space-y-4 sm:space-y-6 lg:space-y-8 animate-fade-in outline-none">
             {/* Stats Row - Modernized & Clickable Grid */}
-            <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6">
               <div 
                 onClick={() => handleTabChange('projects')}
-                className="group relative bg-white/80 dark:bg-card/80 backdrop-blur-sm p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-sm border border-border/40 dark:border-border overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-1 cursor-pointer"
+                className="group relative bg-white/80 dark:bg-card/80 backdrop-blur-sm p-3 sm:p-5 rounded-xl sm:rounded-2xl shadow-sm border border-blue-100/50 dark:border-border overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-1 cursor-pointer"
               >
                 <div className="absolute -top-2 -right-2 p-4 opacity-5 sm:opacity-10 transition-opacity group-hover:opacity-20">
-                  <Clock className="h-10 w-10 sm:h-14 sm:w-14 text-blue-600" />
+                  <Clock className="h-12 w-12 sm:h-16 sm:w-16 text-blue-600" />
                 </div>
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 via-transparent to-blue-500/0 group-hover:from-blue-500/5 group-hover:to-indigo-500/5 transition-all duration-500" />
                 <div className="relative z-10">
-                  <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                  <div className="flex items-center gap-1.5 sm:gap-3 mb-1 sm:mb-3">
                     <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-                      <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <Clock className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
                     </div>
-                    <h3 className="font-semibold text-xs sm:text-xs text-muted-foreground uppercase tracking-wide truncate">Active</h3>
+                    <h3 className="font-semibold text-[10px] sm:text-xs lg:text-sm text-muted-foreground uppercase tracking-tight sm:tracking-wider truncate">Active</h3>
                   </div>
                   <div className="flex items-baseline gap-1 sm:gap-2">
-                    <p className="text-lg sm:text-2xl lg:text-3xl font-bold bg-gradient-to-br from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                    <p className="text-xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-br from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                       {activeProjects.length}
                     </p>
-                    <span className="hidden sm:inline text-xs text-muted-foreground font-medium">Projects</span>
+                    <span className="hidden xs:inline text-[8px] sm:text-xs text-muted-foreground font-medium">Projects</span>
                   </div>
                 </div>
               </div>
 
               <div 
                 onClick={() => handleTabChange('projects')}
-                className="group relative bg-white/80 dark:bg-card/80 backdrop-blur-sm p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-sm border border-border/40 dark:border-border overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-1 cursor-pointer"
+                className="group relative bg-white/80 dark:bg-card/80 backdrop-blur-sm p-3 sm:p-5 rounded-xl sm:rounded-2xl shadow-sm border border-emerald-100/50 dark:border-border overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-1 cursor-pointer"
               >
                 <div className="absolute -top-2 -right-2 p-4 opacity-5 sm:opacity-10 transition-opacity group-hover:opacity-20">
-                  <CheckCircle className="h-10 w-10 sm:h-14 sm:w-14 text-emerald-600" />
+                  <CheckCircle className="h-12 w-12 sm:h-16 sm:w-16 text-emerald-600" />
                 </div>
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 via-transparent to-emerald-500/0 group-hover:from-emerald-500/5 group-hover:to-teal-500/5 transition-all duration-500" />
                 <div className="relative z-10">
-                  <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                  <div className="flex items-center gap-1.5 sm:gap-3 mb-1 sm:mb-3">
                     <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
-                      <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <CheckCircle className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
                     </div>
-                    <h3 className="font-semibold text-xs sm:text-xs text-muted-foreground uppercase tracking-wide truncate">Done</h3>
+                    <h3 className="font-semibold text-[10px] sm:text-xs lg:text-sm text-muted-foreground uppercase tracking-tight sm:tracking-wider truncate">Done</h3>
                   </div>
                   <div className="flex items-baseline gap-1 sm:gap-2">
-                    <p className="text-lg sm:text-2xl lg:text-3xl font-bold bg-gradient-to-br from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                    <p className="text-xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-br from-emerald-600 to-teal-600 bg-clip-text text-transparent">
                       {completedProjects.length}
                     </p>
-                    <span className="hidden sm:inline text-xs text-muted-foreground font-medium">Projects</span>
+                    <span className="hidden xs:inline text-[8px] sm:text-xs text-muted-foreground font-medium">Projects</span>
                   </div>
                 </div>
               </div>
 
               <div 
                 onClick={() => handleTabChange('artists')}
-                className="group relative bg-white/80 dark:bg-card/80 backdrop-blur-sm p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-sm border border-border/40 dark:border-border overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-1 cursor-pointer"
+                className="group relative bg-white/80 dark:bg-card/80 backdrop-blur-sm p-3 sm:p-5 rounded-xl sm:rounded-2xl shadow-sm border border-purple-100/50 dark:border-border overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-1 cursor-pointer"
               >
                 <div className="absolute -top-2 -right-2 p-4 opacity-5 sm:opacity-10 transition-opacity group-hover:opacity-20">
-                  <Users className="h-10 w-10 sm:h-14 sm:w-14 text-purple-600" />
+                  <Users className="h-12 w-12 sm:h-16 sm:w-16 text-purple-600" />
                 </div>
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 via-transparent to-purple-500/0 group-hover:from-purple-500/5 group-hover:to-fuchsia-500/5 transition-all duration-500" />
                 <div className="relative z-10">
-                  <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                  <div className="flex items-center gap-1.5 sm:gap-3 mb-1 sm:mb-3">
                     <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
-                      <Users className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <Users className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
                     </div>
-                    <h3 className="font-semibold text-xs sm:text-xs text-muted-foreground uppercase tracking-wide truncate">Saved</h3>
+                    <h3 className="font-semibold text-[10px] sm:text-xs lg:text-sm text-muted-foreground uppercase tracking-tight sm:tracking-wider truncate">Saved</h3>
                   </div>
                   <div className="flex items-baseline gap-1 sm:gap-2">
-                    <p className="text-lg sm:text-2xl lg:text-3xl font-bold bg-gradient-to-br from-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
+                    <p className="text-xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-br from-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
                       {savedArtistsCount}
                     </p>
-                    <span className="hidden sm:inline text-xs text-muted-foreground font-medium">Artists</span>
+                    <span className="hidden xs:inline text-[8px] sm:text-xs text-muted-foreground font-medium">Artists</span>
                   </div>
                 </div>
               </div>
@@ -920,7 +1037,7 @@ const ClientDashboard = () => {
                                   </Link>
                                 </div>
                               </div>
-                              <span className={cn("px-2 py-0.5 text-xs rounded-full shrink-0", project.status === "In Progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300")}>
+                              <span className={cn("px-2 py-0.5 text-[10px] sm:text-xs rounded-full shrink-0", project.status === "In Progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300")}>
                                 {project.status}
                               </span>
                             </div>
@@ -931,17 +1048,17 @@ const ClientDashboard = () => {
                             width: `${project.progress}%`
                           }} />
                               </div>
-                              <span className="text-xs font-medium">{project.progress}%</span>
+                              <span className="text-[10px] sm:text-xs font-medium">{project.progress}%</span>
                             </div>
                             <div className="mt-2 sm:mt-3 flex justify-between items-center">
                               <div className="flex items-center gap-3">
-                                <span className="text-xs text-muted-foreground">Due: {project.dueDate}</span>
-                                {project.budget > 0 && <span className="text-xs text-green-600 font-medium">
+                                <span className="text-[10px] sm:text-xs text-gray-500">Due: {project.dueDate}</span>
+                                {project.budget > 0 && <span className="text-[10px] sm:text-xs text-green-600 font-medium">
                                     {format(project.budget)}
                                   </span>}
                               </div>
                               <div className="flex flex-wrap gap-2">
-                                  <Button size="sm" variant="outline" className="h-9 min-h-[44px] text-xs rounded-xl font-semibold" onClick={() => {
+                                  <Button size="sm" variant="outline" className="h-7 sm:h-8 text-xs" onClick={() => {
                                     setSelectedProjectId(project.id);
                                     setProjectModalOpen(true);
                                   }}>
