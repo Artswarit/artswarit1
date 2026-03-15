@@ -18,6 +18,8 @@ export type SyncEventType =
   | 'notifications' 
   | 'subscription' 
   | 'payments'
+  | 'saved_artists'
+  | 'saved_artworks'
   | 'all';
 
 /**

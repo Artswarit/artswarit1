@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
+import { broadcastRefresh } from '@/lib/realtime-sync';
 
 interface ArtworkManagementCardProps {
   artwork: {
@@ -98,6 +99,8 @@ const ArtworkManagementCard = ({
         description: `Artwork is now ${newStatus}.`
       });
 
+      broadcastRefresh('artworks');
+
       onUpdate({
         ...artwork,
         status: newStatus
@@ -143,6 +146,8 @@ const ArtworkManagementCard = ({
           ? `This artwork will appear at the top of your profile.` 
           : 'This artwork has been unpinned.'
       });
+
+      broadcastRefresh('artworks');
 
       onUpdate({
         ...artwork,

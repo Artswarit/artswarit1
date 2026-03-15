@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 import { cn } from '@/lib/utils';
+import { broadcastRefresh } from '@/lib/realtime-sync';
 interface Artist {
   id: string;
   name: string;
@@ -88,6 +89,8 @@ const ArtistCard = ({
         setIsFollowing(true);
         toast.success('Following artist!');
       }
+      
+      broadcastRefresh('profile');
       onFollow?.(artist.id);
     } catch (err: any) {
       toast.error(err.message || 'Something went wrong');
