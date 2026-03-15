@@ -27,52 +27,19 @@ const NotificationCenter = () => {
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      fetchNotifications();
-    }
-  }, [user]);
-
-  // Real-time subscription for notifications
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const channel = supabase
-      .channel(`notification-center-${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`
-        },
-        () => {
-          fetchNotifications();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id]);
-
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false })
-        .limit(200);
-
+      const {
+        data,
+        error
+      } = await supabase.from('notifications').select('*').eq('user_id', user?.id).order('created_at', {
+        ascending: false
+      }).limit(200);
       if (error) {
         console.error('Error fetching notifications:', error);
         setNotifications([]);
         return;
       }
-
       setNotifications(data as Notification[] || []);
     } catch (error) {
       console.error('Error:', error);
@@ -80,7 +47,29 @@ const NotificationCenter = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user) {
+      fetchNotifications();
+    }
+  }, [user, fetchNotifications]);
+
+  // Real-time subscription for notifications
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase.channel(`notification-center-${user.id}`).on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'notifications',
+      filter: `user_id=eq.${user.id}`
+    }, () => {
+      fetchNotifications();
+    }).subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, fetchNotifications]);
 
   const displayedNotifications = notifications.slice(0, displayCount);
   const hasMore = notifications.length > displayCount;
