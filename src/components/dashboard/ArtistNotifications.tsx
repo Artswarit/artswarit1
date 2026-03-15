@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bell, DollarSign, Award, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { broadcastRefresh, useRealtimeSync } from "@/lib/realtime-sync";
 
 interface Notification {
   id: string;
@@ -51,6 +52,9 @@ const ArtistNotifications = ({ isLoading }: ArtistNotificationsProps) => {
       setLoading(false);
     }
   }, [user?.id]);
+
+  // Realtime Sync
+  useRealtimeSync('notifications', fetchNotifications);
 
   useEffect(() => {
     fetchNotifications();
@@ -120,6 +124,7 @@ const ArtistNotifications = ({ isLoading }: ArtistNotificationsProps) => {
       setNotifications(prev => prev.map(n => 
         n.id === id ? { ...n, is_read: true } : n
       ));
+      broadcastRefresh('notifications');
     } catch (err) {
       console.error('Error marking notification as read:', err);
     }
@@ -136,6 +141,7 @@ const ArtistNotifications = ({ isLoading }: ArtistNotificationsProps) => {
         .eq('is_read', false);
       
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+      broadcastRefresh('notifications');
     } catch (err) {
       console.error('Error marking all as read:', err);
     }

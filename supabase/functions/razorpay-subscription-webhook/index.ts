@@ -132,7 +132,7 @@ serve(async (req) => {
             stripe_customer_id: subscription.id, // Using this field for razorpay subscription id
             updated_at: new Date().toISOString(),
           }, {
-            onConflict: "user_id",
+            onConflict: "user_id,subscription_tier",
             ignoreDuplicates: false
           });
 

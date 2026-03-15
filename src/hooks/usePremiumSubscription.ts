@@ -1,6 +1,6 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeSync } from "@/lib/realtime-sync";
 
 export interface PremiumInfo {
   isActive: boolean;
@@ -18,7 +18,7 @@ export const usePremiumSubscription = (userId: string | undefined | null) => {
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchPremium = useCallback(async () => {
     if (!userId) {
       setPremium({
         isActive: false,
@@ -30,36 +30,41 @@ export const usePremiumSubscription = (userId: string | undefined | null) => {
       return;
     }
 
-    const fetchPremium = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("subscribers")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("is_active", true)
-        .order("started_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("subscribers")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("is_active", true)
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-      if (data) {
-        setPremium({
-          isActive: true,
-          subscriptionTier: data.subscription_tier,
-          renewAt: data.renew_at,
-          startedAt: data.started_at
-        });
-      } else {
-        setPremium({
-          isActive: false,
-          subscriptionTier: null,
-          renewAt: null,
-          startedAt: null
-        });
-      }
-      setLoading(false);
-    };
+    if (data) {
+      setPremium({
+        isActive: true,
+        subscriptionTier: data.subscription_tier,
+        renewAt: data.renew_at,
+        startedAt: data.started_at
+      });
+    } else {
+      setPremium({
+        isActive: false,
+        subscriptionTier: null,
+        renewAt: null,
+        startedAt: null
+      });
+    }
+    setLoading(false);
+  }, [userId]);
 
+  // Realtime Sync
+  useRealtimeSync('subscription', fetchPremium);
+
+  useEffect(() => {
     fetchPremium();
+
+    if (!userId) return;
 
     // Real-time subscription for premium changes
     const channel = supabase
@@ -81,7 +86,7 @@ export const usePremiumSubscription = (userId: string | undefined | null) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId]);
+  }, [userId, fetchPremium]);
 
   return { ...premium, loading };
 };

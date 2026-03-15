@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { broadcastRefresh, useRealtimeSync } from '@/lib/realtime-sync';
 
 export const useArtworks = () => {
   const [artworks, setArtworks] = useState<any[]>([]);
@@ -87,6 +88,9 @@ export const useArtworks = () => {
       setLoading(false);
     }
   }, [userId]);
+
+  // Use the new realtime sync utility
+  useRealtimeSync('artworks', fetchArtworks);
 
   const optimizeImage = (file: File): Promise<File> => {
     return new Promise((resolve) => {
@@ -195,6 +199,9 @@ export const useArtworks = () => {
 
       if (error) throw error;
 
+      // Broadcast update for other tabs
+      broadcastRefresh('artworks');
+
       // Refresh artworks list
       await fetchArtworks();
 
@@ -235,6 +242,9 @@ export const useArtworks = () => {
           });
       }
 
+      // Broadcast update
+      broadcastRefresh('artworks');
+
       // Refresh artworks to get updated like counts
       await fetchArtworks();
     } catch (err) {
@@ -246,7 +256,7 @@ export const useArtworks = () => {
     fetchArtworks();
   }, [fetchArtworks]);
 
-  // Realtime subscription
+  // Realtime subscription as fallback
   useEffect(() => {
     if (!userId) return;
 

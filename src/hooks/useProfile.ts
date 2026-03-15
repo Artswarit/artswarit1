@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { broadcastRefresh, useRealtimeSync } from '@/lib/realtime-sync';
 
 interface SocialLinks {
   instagram?: string;
@@ -78,11 +79,14 @@ export const useProfile = () => {
     }
   }, [user]);
 
+  // Realtime Sync
+  useRealtimeSync('profile', fetchProfile);
+
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
 
-  // Real-time subscription for profile updates
+  // Real-time subscription for profile updates (Direct Supabase)
   useEffect(() => {
     if (!user) return;
 
@@ -125,6 +129,9 @@ export const useProfile = () => {
         });
         return { error };
       }
+
+      // Broadcast update
+      broadcastRefresh('profile');
 
       // Refresh profile data
       await fetchProfile();
@@ -185,6 +192,9 @@ export const useProfile = () => {
         });
         return null;
       }
+
+      // Broadcast update
+      broadcastRefresh('profile');
 
       await fetchProfile();
 

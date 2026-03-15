@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Attachment } from '@/components/messages/MessageAttachments';
+import { broadcastRefresh, useRealtimeSync } from '@/lib/realtime-sync';
 
 interface Message {
   id: string;
@@ -289,6 +290,9 @@ export const useRealtimeMessages = () => {
         .eq('id', conversationId)
         .abortSignal(signal);
 
+      // Broadcast update
+      broadcastRefresh('messages');
+
       return data;
     } catch (error: any) {
       if (error.name === 'AbortError' || (error as any).code === 'ABORT' || error.message?.includes('signal is aborted')) return null;
@@ -463,6 +467,14 @@ export const useRealtimeMessages = () => {
       setMessages([]);
     }
   }, [activeConversationId, fetchMessages]);
+
+  // Realtime Sync for conversations
+  useRealtimeSync('messages', () => {
+    fetchConversations();
+    if (activeConversationId) {
+      fetchMessages(activeConversationId);
+    }
+  });
 
   return {
     conversations,

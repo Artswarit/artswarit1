@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { broadcastRefresh, useRealtimeSync } from "@/lib/realtime-sync";
 
 // Plan configuration constants
 export const PLANS = {
@@ -110,6 +111,9 @@ export const useArtistPlan = (userId: string | undefined | null) => {
     }
     setLoading(false);
   }, [userId]);
+
+  // Realtime Sync
+  useRealtimeSync('subscription', fetchPlan);
 
   useEffect(() => {
     fetchPlan();

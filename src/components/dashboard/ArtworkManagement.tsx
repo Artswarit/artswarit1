@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useArtistPlan } from '@/hooks/useArtistPlan';
 import { useFeatureGating } from '@/hooks/useFeatureGating';
 import { useRealAnalytics } from '@/hooks/useRealAnalytics';
+import { broadcastRefresh } from '@/lib/realtime-sync';
 import { Grid3X3, List, Plus, BarChart3, ImagePlus, FolderOpen, Pin, Lock, Crown } from 'lucide-react';
 import ArtworkUploadForm from './artwork/ArtworkUploadForm';
 import ArtworkEditModal from './artwork/ArtworkEditModal';
@@ -173,6 +174,7 @@ const ArtworkManagement = () => {
             description: `${selectedArtworks.length} artwork(s) have been deleted.`,
           });
           setSelectedArtworks([]);
+          broadcastRefresh('artworks');
           fetchArtworks();
           break;
         }
@@ -186,6 +188,7 @@ const ArtworkManagement = () => {
             title: 'Status Updated',
             description: `${selectedArtworks.length} artwork(s) status changed to ${options.status}.`,
           });
+          broadcastRefresh('artworks');
           fetchArtworks();
           break;
         }
@@ -200,6 +203,7 @@ const ArtworkManagement = () => {
             description: `${selectedArtworks.length} artwork(s) have been archived.`,
           });
           setSelectedArtworks([]);
+          broadcastRefresh('artworks');
           fetchArtworks();
           break;
         }
@@ -230,6 +234,7 @@ const ArtworkManagement = () => {
   };
 
   const handleArtworkUpdate = (updatedArtwork: any) => {
+    broadcastRefresh('artworks');
     fetchArtworks(); // Refresh the list
     toast({
       title: 'Artwork Updated',
@@ -251,6 +256,7 @@ const ArtworkManagement = () => {
         title: 'Artwork Deleted',
         description: 'Your artwork has been deleted successfully.',
       });
+      broadcastRefresh('artworks');
       fetchArtworks();
       refreshGating();
     } catch (err: any) {

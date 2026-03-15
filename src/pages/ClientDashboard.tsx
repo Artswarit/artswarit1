@@ -24,6 +24,7 @@ import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { broadcastRefresh, useRealtimeSync } from "@/lib/realtime-sync";
 interface Project {
   id: string;
   title: string;
@@ -206,6 +207,11 @@ const ClientDashboard = () => {
       setLoading(false);
     }
   }, [user?.id]);
+  
+  // Realtime Sync
+  useRealtimeSync('projects', fetchProjects);
+  useRealtimeSync('notifications', fetchNotifications);
+  useRealtimeSync('artworks', fetchSavedArtistsCount);
   const fetchNotifications = useCallback(async () => {
     if (!user?.id) return;
     const {
@@ -435,6 +441,7 @@ const ClientDashboard = () => {
       if (error) throw error;
       
       toast.success('Artist unassigned successfully');
+      broadcastRefresh('projects');
       fetchProjects();
     } catch (err: any) {
       const msg = err?.code === 'PGRST301' ? 'Permission denied. You can only edit your own projects.'
@@ -472,6 +479,7 @@ const ClientDashboard = () => {
       if (notifyError) throw notifyError;
       
       toast.success('Project sent to artist for approval');
+      broadcastRefresh('projects');
       fetchProjects();
     } catch (err: any) {
       toast.error(err.message || 'Failed to confirm project');
@@ -500,6 +508,7 @@ const ClientDashboard = () => {
       toast.success('Artist assigned successfully. Click confirm to send project.');
       setArtistSelectionOpen(false);
       setAssigningProjectId(null);
+      broadcastRefresh('projects');
       fetchProjects();
     } catch (err: any) {
       toast.error(err.message || 'Failed to assign artist');
