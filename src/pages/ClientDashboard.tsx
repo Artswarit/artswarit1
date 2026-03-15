@@ -208,10 +208,6 @@ const ClientDashboard = () => {
     }
   }, [user?.id]);
   
-  // Realtime Sync
-  useRealtimeSync('projects', fetchProjects);
-  useRealtimeSync('notifications', fetchNotifications);
-  useRealtimeSync('artworks', fetchSavedArtistsCount);
   const fetchNotifications = useCallback(async () => {
     if (!user?.id) return;
     const {
