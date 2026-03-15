@@ -456,7 +456,7 @@ const ProjectDetailModal = ({
           </div>
         </DialogContent>
       ) : (
-        <DialogContent className="max-w-6xl w-[98vw] sm:w-[95vw] h-[95vh] sm:h-[92vh] overflow-hidden flex flex-col p-0 gap-0 border-none shadow-[0_0_50px_-12px_rgba(0,0,0,0.25)] bg-background/95 backdrop-blur-2xl ring-1 ring-white/10 dark:ring-white/5">
+        <DialogContent className="max-w-6xl w-[95vw] h-[95vh] sm:h-[92vh] overflow-hidden flex flex-col p-0 gap-0 border-none shadow-[0_0_50px_-12px_rgba(0,0,0,0.25)] bg-background/95 backdrop-blur-2xl ring-1 ring-white/10 dark:ring-white/5">
           <DialogHeader className="sr-only">
             <DialogTitle>{project.title}</DialogTitle>
             <DialogDescription>Project details and collaboration workspace</DialogDescription>
@@ -464,7 +464,7 @@ const ProjectDetailModal = ({
           <ScrollArea className="flex-1 h-full">
             <div className="flex flex-col min-h-full">
             {/* Ultra Modern Header Section */}
-            <div className="relative overflow-hidden pt-8 pb-6 px-4 sm:px-8 lg:px-12 border-b bg-gradient-to-br from-primary/[0.07] via-background to-primary/[0.03]">
+            <div className="relative overflow-hidden pt-12 pb-10 px-6 sm:px-12 border-b bg-gradient-to-br from-primary/[0.07] via-background to-primary/[0.03]">
               {/* Abstract Background Shapes */}
               <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
               <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
@@ -481,7 +481,7 @@ const ProjectDetailModal = ({
                   </div>
                   
                   <div className="space-y-2">
-                    <DialogTitle className="text-xl sm:text-3xl lg:text-4xl font-bold tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground to-foreground/60">
+                    <DialogTitle className="text-3xl sm:text-5xl font-black tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground to-foreground/60">
                       {project.title}
                     </DialogTitle>
                     <div className="flex items-center gap-4 flex-wrap">
@@ -536,8 +536,8 @@ const ProjectDetailModal = ({
               </div>
             </div>
 
-            <div className="px-4 sm:px-8 lg:px-12 py-6 grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-              <div className="group relative p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-[2rem] bg-white dark:bg-card/40 border border-border/50 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 overflow-hidden">
+            <div className="px-6 sm:px-12 py-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="group relative p-8 rounded-[2.5rem] bg-white dark:bg-card/40 border border-border/50 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-primary/10 transition-colors" />
                 <div className="relative z-10 flex flex-col gap-6">
                   <div className="p-3 rounded-2xl bg-primary/10 text-primary w-fit group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
@@ -545,7 +545,7 @@ const ProjectDetailModal = ({
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60">Total Budget</p>
-                    <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
+                    <h3 className="text-3xl font-black tracking-tighter text-foreground">
                       {project.budget ? formatCurrency(project.budget) : 'Not set'}
                     </h3>
                   </div>
@@ -556,7 +556,7 @@ const ProjectDetailModal = ({
                 </div>
               </div>
 
-              <div className="group relative p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-[2rem] bg-white dark:bg-card/40 border border-border/50 hover:border-amber-500/30 hover:shadow-2xl hover:shadow-amber-500/5 transition-all duration-500 overflow-hidden">
+              <div className="group relative p-8 rounded-[2.5rem] bg-white dark:bg-card/40 border border-border/50 hover:border-amber-500/30 hover:shadow-2xl hover:shadow-amber-500/5 transition-all duration-500 overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-amber-500/10 transition-colors" />
                 <div className="relative z-10 flex flex-col gap-6">
                   <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-600 w-fit group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500">
@@ -564,7 +564,7 @@ const ProjectDetailModal = ({
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60">Target Deadline</p>
-                    <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
+                    <h3 className="text-3xl font-black tracking-tighter text-foreground">
                       {project.deadline ? formatDate(new Date(project.deadline), 'MMM dd, yyyy') : 'Flex Timeline'}
                     </h3>
                   </div>
@@ -577,7 +577,7 @@ const ProjectDetailModal = ({
                 </div>
               </div>
 
-              <div className="group relative p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-[2rem] bg-white dark:bg-card/40 border border-border/50 hover:border-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/5 transition-all duration-500 overflow-hidden">
+              <div className="group relative p-8 rounded-[2.5rem] bg-white dark:bg-card/40 border border-border/50 hover:border-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/5 transition-all duration-500 overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-emerald-500/10 transition-colors" />
                 <div className="relative z-10 flex flex-col gap-6">
                   <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-600 w-fit group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500">
@@ -602,14 +602,14 @@ const ProjectDetailModal = ({
               </div>
             </div>
 
-            <div className="px-4 sm:px-8 lg:px-12 pb-8 sm:pb-12 space-y-8 sm:space-y-12">
+            <div className="px-6 sm:px-12 pb-12 space-y-12">
               {/* Description Section */}
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-1 bg-primary/20 rounded-full" />
                   <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">Project Overview</h4>
                 </div>
-                <div className="group relative p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-[2rem] bg-muted/10 border border-border/30 hover:bg-muted/20 transition-all duration-500">
+                <div className="group relative p-6 sm:p-8 rounded-[2rem] sm:rounded-[3rem] bg-muted/10 border border-border/30 hover:bg-muted/20 transition-all duration-500">
                   <div className="absolute top-8 left-0 w-1.5 h-12 bg-primary/40 rounded-r-full group-hover:h-24 transition-all duration-500" />
                   <p className="text-base sm:text-lg leading-relaxed text-foreground/80 whitespace-pre-wrap font-medium pl-4">
                     {project.description || 'No description provided for this project. Use the communication tab to discuss requirements with your collaborator.'}
@@ -620,13 +620,13 @@ const ProjectDetailModal = ({
 
             {/* Enhanced Sticky Navigation */}
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <div className="sticky top-0 z-30 -mx-4 sm:-mx-8 lg:-mx-12 px-4 sm:px-8 lg:px-12 pt-4 pb-4 sm:pt-6 sm:pb-6 bg-background/80 backdrop-blur-2xl border-b border-border/40 mb-6 sm:mb-8 transition-all duration-300">
+                <div className="sticky top-0 z-30 -mx-6 sm:-mx-12 px-6 sm:px-12 pt-6 pb-8 bg-background/80 backdrop-blur-2xl border-b border-border/40 mb-8 transition-all duration-300">
                   <div className="relative group/tabs">
                     {/* Scroll Gradient Indicators */}
                     <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 opacity-0 group-hover/tabs:opacity-100 transition-opacity pointer-events-none" />
                     <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 opacity-0 group-hover/tabs:opacity-100 transition-opacity pointer-events-none" />
                     
-                    <TabsList className="w-full h-auto min-h-[48px] sm:min-h-0 p-1 sm:p-2 bg-muted/50 rounded-xl sm:rounded-2xl border border-border/40 flex items-stretch gap-1 sm:gap-2 overflow-x-auto no-scrollbar scroll-smooth shadow-inner">
+                    <TabsList className="w-full h-auto min-h-[52px] sm:min-h-0 p-1.5 sm:p-2 bg-muted/50 rounded-[2rem] border border-border/40 flex items-stretch gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar scroll-smooth shadow-inner">
                     <TabsTrigger 
                       value="workflow" 
                       onClick={() => scrollToTab('workflow')}
