@@ -556,7 +556,7 @@ const ProjectDetailModal = ({
                 </div>
               </div>
 
-              <div className="group relative p-8 rounded-[2.5rem] bg-white dark:bg-card/40 border border-border/50 hover:border-amber-500/30 hover:shadow-2xl hover:shadow-amber-500/5 transition-all duration-500 overflow-hidden">
+              <div className="group relative p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-[2rem] bg-white dark:bg-card/40 border border-border/50 hover:border-amber-500/30 hover:shadow-2xl hover:shadow-amber-500/5 transition-all duration-500 overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-amber-500/10 transition-colors" />
                 <div className="relative z-10 flex flex-col gap-6">
                   <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-600 w-fit group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500">
