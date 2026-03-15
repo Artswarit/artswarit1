@@ -932,8 +932,8 @@ const ClientDashboard = () => {
                             </div>
                             <div className="mt-2 sm:mt-3 flex justify-between items-center">
                               <div className="flex items-center gap-3">
-                                <span className="text-[10px] sm:text-xs text-gray-500">Due: {project.dueDate}</span>
-                                {project.budget > 0 && <span className="text-[10px] sm:text-xs text-green-600 font-medium">
+                                <span className="text-xs text-muted-foreground">Due: {project.dueDate}</span>
+                                {project.budget > 0 && <span className="text-xs text-green-600 font-medium">
                                     {format(project.budget)}
                                   </span>}
                               </div>
