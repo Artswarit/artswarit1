@@ -620,7 +620,7 @@ const ProjectDetailModal = ({
 
             {/* Enhanced Sticky Navigation */}
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <div className="sticky top-0 z-30 -mx-6 sm:-mx-12 px-6 sm:px-12 pt-6 pb-8 bg-background/80 backdrop-blur-2xl border-b border-border/40 mb-8 transition-all duration-300">
+                <div className="sticky top-0 z-30 -mx-4 sm:-mx-8 lg:-mx-12 px-4 sm:px-8 lg:px-12 pt-4 pb-4 sm:pt-6 sm:pb-6 bg-background/80 backdrop-blur-2xl border-b border-border/40 mb-6 sm:mb-8 transition-all duration-300">
                   <div className="relative group/tabs">
                     {/* Scroll Gradient Indicators */}
                     <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 opacity-0 group-hover/tabs:opacity-100 transition-opacity pointer-events-none" />
