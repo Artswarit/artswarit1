@@ -17,6 +17,7 @@ import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 import { EnablePaymentsDialog } from '@/components/payments/EnablePaymentsDialog';
 import { useArtistPaymentAccount } from '@/hooks/useArtistPaymentAccount';
 import LogoLoader from '@/components/ui/LogoLoader';
+import { broadcastRefresh, useRealtimeSync } from '@/lib/realtime-sync';
 
 interface Milestone {
   id: string;
@@ -180,6 +181,10 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
     }
   };
 
+  // Realtime Sync for project/milestones
+  useRealtimeSync('projects', fetchProjectData);
+  useRealtimeSync('milestones', fetchMilestones);
+
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { color: string; icon: React.ReactNode }> = {
       LOCKED: { color: 'bg-muted text-muted-foreground', icon: <Lock className="h-3 w-3" /> },
@@ -250,6 +255,7 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
 
       await logActivity(milestoneId, 'milestone_started', { milestoneId });
       toast.success('Milestone started');
+      broadcastRefresh('milestones');
       fetchMilestones();
     } catch (error: any) {
       toast.error('Failed to start milestone');
@@ -407,6 +413,7 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
                   setDisputeDialogOpen(true);
                 }}
                 onPaymentSuccess={() => {
+                  broadcastRefresh('milestones');
                   fetchMilestones();
                   logActivity(milestone.id, 'payment_initiated', { milestoneId: milestone.id });
                 }}
@@ -431,6 +438,7 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
             milestone={selectedMilestone}
             projectId={projectId}
             onSuccess={() => {
+              broadcastRefresh('milestones');
               fetchMilestones();
               logActivity(selectedMilestone.id, 'submission_created', { milestoneId: selectedMilestone.id });
             }}
@@ -443,6 +451,7 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
             projectId={projectId}
             autoApproveDays={project.auto_approve_days}
             onSuccess={() => {
+              broadcastRefresh('milestones');
               fetchMilestones();
             }}
           />
@@ -453,6 +462,7 @@ export function MilestoneWorkflow({ projectId }: MilestoneWorkflowProps) {
             milestone={selectedMilestone}
             projectId={projectId}
             onSuccess={() => {
+              broadcastRefresh('milestones');
               fetchMilestones();
               logActivity(selectedMilestone.id, 'dispute_raised', { milestoneId: selectedMilestone.id });
             }}

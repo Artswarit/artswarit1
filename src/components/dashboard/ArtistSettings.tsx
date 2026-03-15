@@ -24,6 +24,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { broadcastRefresh, useRealtimeSync } from "@/lib/realtime-sync";
 import ChangeEmailForm from "@/components/settings/ChangeEmailForm";
 import AvailabilityCalendar from "@/components/dashboard/AvailabilityCalendar";
 import { useArtistPlan } from "@/hooks/useArtistPlan";
@@ -96,6 +97,9 @@ const ArtistSettings = ({ isLoading: propLoading }: ArtistSettingsProps) => {
       // No profile found
     }
   }, [user?.id, toast]);
+  
+  // Realtime Sync
+  useRealtimeSync('profile', fetchProfile);
 
   useEffect(() => {
     fetchProfile();
@@ -186,6 +190,10 @@ const ArtistSettings = ({ isLoading: propLoading }: ArtistSettingsProps) => {
         .eq('id', user.id);
 
       if (error) throw error;
+      
+      // Broadcast update for realtime sync across tabs
+      broadcastRefresh('profile');
+      
       // Broadcast to other tabs immediately
       try {
         localStorage.setItem('artswarit:settings', JSON.stringify({ userId: user.id, key, value, ts: Date.now() }));
@@ -252,6 +260,8 @@ const ArtistSettings = ({ isLoading: propLoading }: ArtistSettingsProps) => {
         .eq('id', user.id);
 
       if (error) throw error;
+
+      broadcastRefresh('profile');
 
       toast({
         title: "Settings saved",

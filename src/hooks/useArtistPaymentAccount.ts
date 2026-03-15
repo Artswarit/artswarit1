@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { broadcastRefresh, useRealtimeSync } from '@/lib/realtime-sync';
 
 interface RazorpayAccount {
   id: string;
@@ -60,6 +61,9 @@ export function useArtistPaymentAccount() {
     }
   }, [user?.id]);
 
+  // Realtime Sync
+  useRealtimeSync('payments', fetchAccount);
+
   useEffect(() => {
     fetchAccount();
 
@@ -103,6 +107,7 @@ export function useArtistPaymentAccount() {
       }
 
       toast.success('Payment account created successfully!');
+      broadcastRefresh('payments');
       await fetchAccount();
       return true;
     } catch (error: any) {

@@ -63,20 +63,41 @@ export function usePremiumPayment() {
         throw new Error('Please log in to subscribe');
       }
 
-      // Create subscription via edge function
-      const { data, error } = await supabase.functions.invoke('create-razorpay-subscription', {
-        body: { plan },
+      // Create subscription via edge function (direct fetch for better reliability)
+      const baseUrl = (supabase as any).supabaseUrl;
+      const anonKey = (supabase as any).supabaseKey;
+      
+      const response = await fetch(`${baseUrl}/functions/v1/create-razorpay-subscription`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': anonKey,
+        },
+        body: JSON.stringify({ plan }),
       });
 
-      if (error) {
-        throw new Error(error.message || 'Failed to create subscription');
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data?.error || `Failed to create subscription (HTTP ${response.status})`);
+      }
+
+      if (data?.url) {
+        toast.info('Opening subscription page...');
+        // Use location.href instead of window.open to avoid popup blockers 
+        // and provide a better experience on Mobile/PWA
+        setTimeout(() => {
+          window.location.href = data.url;
+        }, 1000);
+        return;
       }
 
       if (!data?.subscriptionId && !data?.orderId) {
         throw new Error(data?.error || 'Failed to create subscription');
       }
 
-      console.log('Subscription created:', data);
+      console.log('Subscription/Order created:', data);
 
       // Configure Razorpay options
       const options: any = {

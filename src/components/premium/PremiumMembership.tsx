@@ -1,9 +1,10 @@
-import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { usePremiumSubscription } from '@/hooks/usePremiumSubscription';
 import { useArtistPlan, PLANS } from '@/hooks/useArtistPlan';
+import { usePremiumPayment } from '@/hooks/usePremiumPayment';
 import { supabase } from '@/integrations/supabase/client';
+import { broadcastRefresh } from '@/lib/realtime-sync';
 import { useToast } from '@/hooks/use-toast';
 import { Crown, CheckCircle, Star, Sparkles, Shield, Infinity, Zap, TrendingUp } from 'lucide-react';
 import PlanComparisonPanel from './PlanComparisonPanel';
@@ -27,52 +28,24 @@ const PremiumMembership = () => {
     isProArtist,
     plan,
     renewAt,
-    startedAt
+    startedAt,
+    refetch: refetchPlan
   } = useArtistPlan(user?.id);
   const {
     toast
   } = useToast();
-  const [upgradeLoading, setUpgradeLoading] = useState(false);
+  const { initiateSubscription, loading: upgradeLoading } = usePremiumPayment();
+
   const handleUpgrade = async (planType?: string) => {
-    try {
-      setUpgradeLoading(true);
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('create-razorpay-subscription', {
-        body: {
-          plan: planType || 'pro'
-        }
-      });
-      if (error) {
-        toast({
-          title: "Payment Error",
-          description: error.message,
-          variant: "destructive"
-        });
-        return;
+    await initiateSubscription({
+      plan: (planType as any) || 'monthly',
+      onSuccess: () => {
+        // Broadcast for other tabs
+        broadcastRefresh('subscription');
+        // Refetch locally
+        refetchPlan();
       }
-      // Handle both link and API response
-      const checkoutUrl = data?.url || data?.short_url;
-      if (checkoutUrl) {
-        window.open(checkoutUrl, '_blank');
-      } else if (data?.error) {
-        toast({
-          title: "Subscription Error",
-          description: data.error,
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Error creating subscription:', error);
-      toast({
-        title: "Error",
-        description: "Failed to initiate subscription. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setUpgradeLoading(false);
-    }
+    });
   };
   if (loading) {
     return <div className="flex justify-center items-center h-64">

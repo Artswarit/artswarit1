@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, Calendar, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { FollowersList } from "@/components/dashboard/FollowersList";
+import { useRealtimeSync } from "@/lib/realtime-sync";
 
 interface DashboardHeaderProps {
   user?: any;
@@ -32,102 +33,96 @@ const DashboardHeader = ({ user, profile, title, subtitle }: DashboardHeaderProp
   });
   const [openFollowers, setOpenFollowers] = useState(false);
 
+  const fetchStats = useCallback(async (signal?: AbortSignal) => {
+    if (!user?.id) return;
+    
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    try {
+      const [artworksCountRes, followersCountRes, earningsRes, monthlyEarningsRes, artworksViewsRes] =
+        await Promise.all([
+          supabase
+            .from("artworks")
+            .select("id", { count: "exact", head: true })
+            .eq("artist_id", user.id)
+            .abortSignal(signal),
+          supabase
+            .from("follows")
+            .select("id", { count: "exact", head: true })
+            .eq("following_id", user.id)
+            .abortSignal(signal),
+          supabase
+            .from("transactions")
+            .select("amount")
+            .eq("seller_id", user.id)
+            .eq("status", "success")
+            .abortSignal(signal),
+          supabase
+            .from("transactions")
+            .select("amount")
+            .eq("seller_id", user.id)
+            .eq("status", "success")
+            .gte("created_at", monthStart.toISOString())
+            .abortSignal(signal),
+          supabase
+            .from("artworks")
+            .select("metadata")
+            .eq("artist_id", user.id)
+            .abortSignal(signal),
+        ]);
+
+      const isAbortError = (error: any) => 
+        error?.name === 'AbortError' || 
+        error?.message === 'AbortError: signal is aborted without reason' ||
+        error?.message?.includes('Fetch aborted') ||
+        error?.message?.includes('signal is aborted');
+
+      if (
+        (artworksCountRes.error && !isAbortError(artworksCountRes.error)) ||
+        (followersCountRes.error && !isAbortError(followersCountRes.error)) ||
+        (earningsRes.error && !isAbortError(earningsRes.error)) ||
+        (monthlyEarningsRes.error && !isAbortError(monthlyEarningsRes.error)) ||
+        (artworksViewsRes.error && !isAbortError(artworksViewsRes.error))
+      ) {
+        return;
+      }
+
+      const totalEarnings = (earningsRes.data ?? []).reduce(
+        (sum, row) => sum + (Number(row.amount) || 0),
+        0
+      );
+      const monthlyEarnings = (monthlyEarningsRes.data ?? []).reduce(
+        (sum, row) => sum + (Number(row.amount) || 0),
+        0
+      );
+      const totalViews = (artworksViewsRes.data ?? []).reduce((sum, row: any) => {
+        const metadata = row?.metadata as any;
+        const views = Number(metadata?.views_count ?? metadata?.views ?? metadata?.viewsCount ?? 0) || 0;
+        return sum + views;
+      }, 0);
+
+      setArtistStats({
+        totalViews,
+        monthlyEarnings,
+        totalArtworks: artworksCountRes.count ?? 0,
+        followers: followersCountRes.count ?? 0,
+      });
+    } catch (err: any) {
+      // Fetch error handled
+    }
+  }, [user?.id]);
+
+  // Use Realtime Sync for multi-tab updates
+  useRealtimeSync('artworks', fetchStats);
+  useRealtimeSync('all', fetchStats);
+
   useEffect(() => {
     if (!user?.id) return;
 
     const controller = new AbortController();
-    let isActive = true;
-
-    const fetchStats = async () => {
-      const monthStart = new Date();
-      monthStart.setDate(1);
-      monthStart.setHours(0, 0, 0, 0);
-
-      try {
-        // Use individual try-catches or Promise.allSettled for more robustness
-        // For now, keeping Promise.all but with better error reporting
-        const [artworksCountRes, followersCountRes, earningsRes, monthlyEarningsRes, artworksViewsRes] =
-          await Promise.all([
-            supabase
-              .from("artworks")
-              .select("id", { count: "exact", head: true })
-              .eq("artist_id", user.id)
-              .abortSignal(controller.signal),
-            supabase
-              .from("follows")
-              .select("id", { count: "exact", head: true })
-              .eq("following_id", user.id)
-              .abortSignal(controller.signal),
-            supabase
-              .from("transactions")
-              .select("amount")
-              .eq("seller_id", user.id)
-              .eq("status", "success")
-              .abortSignal(controller.signal),
-            supabase
-              .from("transactions")
-              .select("amount")
-              .eq("seller_id", user.id)
-              .eq("status", "success")
-              .gte("created_at", monthStart.toISOString())
-              .abortSignal(controller.signal),
-            supabase
-              .from("artworks")
-              .select("metadata")
-              .eq("artist_id", user.id)
-              .abortSignal(controller.signal),
-          ]);
-
-        const isAbortError = (error: any) => 
-          error?.name === 'AbortError' || 
-          error?.message === 'AbortError: signal is aborted without reason' ||
-          error?.message?.includes('Fetch aborted') ||
-          error?.message?.includes('signal is aborted');
-
-        if (!isActive) return;
-
-        if (
-          (artworksCountRes.error && !isAbortError(artworksCountRes.error)) ||
-          (followersCountRes.error && !isAbortError(followersCountRes.error)) ||
-          (earningsRes.error && !isAbortError(earningsRes.error)) ||
-          (monthlyEarningsRes.error && !isAbortError(monthlyEarningsRes.error)) ||
-          (artworksViewsRes.error && !isAbortError(artworksViewsRes.error))
-        ) {
-          return;
-        }
-
-        const totalEarnings = (earningsRes.data ?? []).reduce(
-          (sum, row) => sum + (Number(row.amount) || 0),
-          0
-        );
-        const monthlyEarnings = (monthlyEarningsRes.data ?? []).reduce(
-          (sum, row) => sum + (Number(row.amount) || 0),
-          0
-        );
-        const totalViews = (artworksViewsRes.data ?? []).reduce((sum, row: any) => {
-          const metadata = row?.metadata as any;
-          const views = Number(metadata?.views_count ?? metadata?.views ?? metadata?.viewsCount ?? 0) || 0;
-          return sum + views;
-        }, 0);
-
-        if (!isActive) return;
-
-        setArtistStats({
-          totalViews,
-          monthlyEarnings,
-          totalArtworks: artworksCountRes.count ?? 0,
-          followers: followersCountRes.count ?? 0,
-        });
-      } catch (err: any) {
-        if (err.name === 'AbortError') {
-          // Fetch aborted
-        } else {
-          // Fetch error
-        }
-      }
-    };
-
-    fetchStats();
+    fetchStats(controller.signal);
 
     const channel = supabase
       .channel(`artist-dashboard-stats:${user.id}`)
@@ -149,11 +144,10 @@ const DashboardHeader = ({ user, profile, title, subtitle }: DashboardHeaderProp
       .subscribe();
 
     return () => {
-      isActive = false;
       controller.abort();
       supabase.removeChannel(channel);
     };
-  }, [user?.id]);
+  }, [user?.id, fetchStats]);
 
   return (
     <div className="space-y-6 sm:space-y-10 py-4 sm:py-6 my-2 sm:my-10">
