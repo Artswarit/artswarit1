@@ -626,7 +626,7 @@ const ProjectDetailModal = ({
                     <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 opacity-0 group-hover/tabs:opacity-100 transition-opacity pointer-events-none" />
                     <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 opacity-0 group-hover/tabs:opacity-100 transition-opacity pointer-events-none" />
                     
-                    <TabsList className="w-full h-auto min-h-[52px] sm:min-h-0 p-1.5 sm:p-2 bg-muted/50 rounded-[2rem] border border-border/40 flex items-stretch gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar scroll-smooth shadow-inner">
+                    <TabsList className="w-full h-auto min-h-[48px] sm:min-h-0 p-1 sm:p-2 bg-muted/50 rounded-xl sm:rounded-2xl border border-border/40 flex items-stretch gap-1 sm:gap-2 overflow-x-auto no-scrollbar scroll-smooth shadow-inner">
                     <TabsTrigger 
                       value="workflow" 
                       onClick={() => scrollToTab('workflow')}
