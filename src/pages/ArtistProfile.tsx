@@ -7,7 +7,7 @@ import GlassButton from "@/components/ui/glass-button";
 import ArtistHeader from "@/components/artist-profile/ArtistHeader";
 import ArtistTabs from "@/components/artist-profile/ArtistTabs";
 import TagDisplay from "@/components/artist-profile/TagDisplay";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -27,7 +27,6 @@ import { useArtistAvailability } from "@/hooks/useArtistAvailability";
 import { format as formatDate } from "date-fns";
 import { Calendar, TrendingUp } from "lucide-react";
 import LogoLoader from "@/components/ui/LogoLoader";
-import { broadcastRefresh, useRealtimeSync } from "@/lib/realtime-sync";
 
 // --- Demo Data for fallback ---
 const ARTIST_UUID_1 = "11111111-1111-1111-1111-111111111111";
@@ -128,7 +127,6 @@ export default function ArtistProfile() {
   const [loadingFollow, setLoadingFollow] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [loadingSave, setLoadingSave] = useState(false);
-  const [followersDataLoading, setFollowersDataLoading] = useState(false);
 
   // State for project request dialog
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
@@ -460,15 +458,14 @@ export default function ArtistProfile() {
   // Get supabase user is now handled by useAuth
 
   // Fetch actual followers count & user following state + Real-time subscriptions
-  const fetchFollowersData = useCallback(async () => {
-    // skip for demo profiles
-    if (!id || id === ARTIST_UUID_1 || id === ARTIST_UUID_2) {
-      console.log("[ARTIST PROFILE] Demo/fallback profile - skipping real DB fetch");
-      return;
-    }
+  useEffect(() => {
+    async function fetchFollowersData() {
+      // skip for demo profiles
+      if (!id || id === ARTIST_UUID_1 || id === ARTIST_UUID_2) {
+        console.log("[ARTIST PROFILE] Demo/fallback profile - skipping real DB fetch");
+        return;
+      }
 
-    setFollowersDataLoading(true);
-    try {
       // total followers for this artist
       const { data: followers, error: countErr } = await supabase
         .from("follows")
@@ -480,7 +477,7 @@ export default function ArtistProfile() {
       }
       // check if this user is following the artist
       if (user?.id) {
-        const { data: following } = await supabase
+        const { data: following, error: followErr } = await supabase
           .from("follows")
           .select("id")
           .eq("following_id", id)
@@ -488,101 +485,93 @@ export default function ArtistProfile() {
           .maybeSingle();
         setIsFollowing(!!following);
       }
-    } finally {
-      setFollowersDataLoading(false);
     }
-  }, [id, user?.id]);
-
-  useEffect(() => {
     fetchFollowersData();
-  }, [fetchFollowersData]);
 
-  useRealtimeSync('profile', fetchFollowersData);
-
-  useEffect(() => {
     // Real-time subscription for follows
-    if (!id || id === ARTIST_UUID_1 || id === ARTIST_UUID_2) return;
-
-    const followsChannel = supabase
-      .channel(`artist-follows-${id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'follows',
-          filter: `following_id=eq.${id}`
-        },
-        async (payload) => {
-          // Refetch followers count
-          const { data: followers } = await supabase
-            .from("follows")
-            .select("id")
-            .eq("following_id", id);
-          setFollowersCount(followers?.length || 0);
-          
-          // Also update the current user's following status
-          if (user?.id) {
-            const newRecord = payload.new as { follower_id?: string } | null;
-            const oldRecord = payload.old as { follower_id?: string } | null;
+    if (id && id !== ARTIST_UUID_1 && id !== ARTIST_UUID_2) {
+      const followsChannel = supabase
+        .channel(`artist-follows-${id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'follows',
+            filter: `following_id=eq.${id}`
+          },
+          async (payload) => {
+            // Refetch followers count
+            const { data: followers } = await supabase
+              .from("follows")
+              .select("id")
+              .eq("following_id", id);
+            setFollowersCount(followers?.length || 0);
             
-            if (payload.eventType === 'INSERT' && newRecord?.follower_id === user.id) {
-              setIsFollowing(true);
-            } else if (payload.eventType === 'DELETE' && oldRecord?.follower_id === user.id) {
-              setIsFollowing(false);
+            // Also update the current user's following status
+            if (user?.id) {
+              const newRecord = payload.new as { follower_id?: string } | null;
+              const oldRecord = payload.old as { follower_id?: string } | null;
+              
+              if (payload.eventType === 'INSERT' && newRecord?.follower_id === user.id) {
+                setIsFollowing(true);
+              } else if (payload.eventType === 'DELETE' && oldRecord?.follower_id === user.id) {
+                setIsFollowing(false);
+              }
             }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
 
-    // Real-time subscription for reviews
-    const reviewsChannel = supabase
-      .channel(`artist-reviews-${id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'project_reviews',
-          filter: `artist_id=eq.${id}`
-        },
-        () => {
-          refreshReviews();
-        }
-      )
-      .subscribe();
+      // Real-time subscription for reviews
+      const reviewsChannel = supabase
+        .channel(`artist-reviews-${id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'project_reviews',
+            filter: `artist_id=eq.${id}`
+          },
+          () => {
+            refreshReviews();
+          }
+        )
+        .subscribe();
 
-    // Real-time subscription for completed projects (to update stats)
-    const projectsChannel = supabase
-      .channel(`artist-projects-${id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'projects',
-          filter: `artist_id=eq.${id}`
-        },
-        async () => {
-          // Refresh completed projects count when projects change
-          const { data: projectsData } = await supabase
-            .from('projects')
-            .select('id')
-            .eq('artist_id', id)
-            .eq('status', 'completed');
-          
-          setCompletedProjectsCount(projectsData?.length || 0);
-        }
-      )
-      .subscribe();
+      // Real-time subscription for completed projects (to update stats)
+      const projectsChannel = supabase
+        .channel(`artist-projects-${id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'projects',
+            filter: `artist_id=eq.${id}`
+          },
+          async () => {
+            // Refresh completed projects count when projects change
+            const { data: projectsData } = await supabase
+              .from('projects')
+              .select('id')
+              .eq('artist_id', id)
+              .eq('status', 'completed');
+            
+            setCompletedProjectsCount(projectsData?.length || 0);
+          }
+        )
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(followsChannel);
-      supabase.removeChannel(reviewsChannel);
-      supabase.removeChannel(projectsChannel);
-    };
-  }, [id, user?.id, refreshReviews]);
+      return () => {
+        supabase.removeChannel(followsChannel);
+        supabase.removeChannel(reviewsChannel);
+        supabase.removeChannel(projectsChannel);
+      };
+    }
+    // re-run when id or userId changes
+  }, [id, user?.id]);
 
   // Fetch saved artist status
   useEffect(() => {
@@ -669,7 +658,6 @@ export default function ArtistProfile() {
       if (!error) {
         setIsFollowing(true);
         setFollowersCount((cnt) => cnt + 1);
-        broadcastRefresh('profile');
         toast({
           title: "Followed",
           description: "You are now following this artist!",
@@ -692,7 +680,6 @@ export default function ArtistProfile() {
       if (!error) {
         setIsFollowing(false);
         setFollowersCount((cnt) => Math.max(cnt - 1, 0));
-        broadcastRefresh('profile');
         toast({
           title: "Unfollowed",
           description: "You have unfollowed this artist.",
@@ -767,7 +754,6 @@ export default function ArtistProfile() {
       
       if (!error) {
         setIsSaved(false);
-        broadcastRefresh('saved_artists');
         toast({ title: "Artist Unsaved" });
       } else {
         toast({ variant: "destructive", title: "Error", description: "Could not unsave artist." });
@@ -780,7 +766,6 @@ export default function ArtistProfile() {
 
       if (!error) {
         setIsSaved(true);
-        broadcastRefresh('saved_artists');
         toast({ title: "Artist Saved!" });
       } else {
         toast({ variant: "destructive", title: "Error", description: "Could not save artist." });

@@ -14,7 +14,6 @@ import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { CreateProjectForm } from "@/components/projects/CreateProjectForm";
-import { useRealtimeSync } from "@/lib/realtime-sync";
 
 interface SavedArtist {
   id: string;
@@ -148,9 +147,6 @@ const SavedArtists = () => {
       supabase.removeChannel(channel);
     };
   }, [user?.id, refetch]);
-  
-  // Cross-tab/Instant refresh
-  useRealtimeSync('saved_artists', refetch);
 
   const unsaveArtistMutation = useMutation({
     mutationFn: async (artistId: string) => {

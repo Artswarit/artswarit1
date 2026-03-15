@@ -231,18 +231,16 @@ const ClientDashboard = () => {
       } = await supabase.from('saved_artists').select('*', {
         count: 'exact',
         head: true
-      }).eq('client_id', user.id);
+      }).eq('user_id', user.id);
       setSavedArtistsCount(count || 0);
     } catch (err) {
       console.error('Error fetching saved artists:', err);
     }
   }, [user?.id]);
-  
   // Realtime Sync - Moved after function definitions to avoid TDZ error
   useRealtimeSync('projects', fetchProjects);
   useRealtimeSync('notifications', fetchNotifications);
-  useRealtimeSync('saved_artists', fetchSavedArtistsCount);
-
+  useRealtimeSync('artworks', fetchSavedArtistsCount);
   const fetchRecommendedArtists = useCallback(async () => {
     try {
       // Fetch artists from profiles

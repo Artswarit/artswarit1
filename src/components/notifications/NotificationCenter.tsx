@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,12 +28,11 @@ const NotificationCenter = () => {
   const [loadingMore, setLoadingMore] = useState(false);
 
   const fetchNotifications = useCallback(async () => {
-    if (!user?.id) return;
     try {
       const {
         data,
         error
-      } = await supabase.from('notifications').select('*').eq('user_id', user.id).order('created_at', {
+      } = await supabase.from('notifications').select('*').eq('user_id', user?.id).order('created_at', {
         ascending: false
       }).limit(200);
       if (error) {

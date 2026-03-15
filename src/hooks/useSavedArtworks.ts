@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { broadcastRefresh } from '@/lib/realtime-sync';
 
 interface SavedArtwork {
   id: string;
@@ -148,9 +147,6 @@ export function useSavedArtworks() {
           description: "Artwork added to your collection.",
         });
       }
-
-      // Broadcast refresh for other tabs/components
-      broadcastRefresh('saved_artworks');
 
       // Refresh full list
       fetchSavedArtworks();

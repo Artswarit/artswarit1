@@ -9,7 +9,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 import { useSavedArtworks } from '@/hooks/useSavedArtworks';
 import { toast } from 'sonner';
-import { useRealtimeSync } from '@/lib/realtime-sync';
 
 interface SavedArtworkItem {
   id: string;
@@ -146,9 +145,6 @@ export default function SavedArtworks() {
       supabase.removeChannel(channel);
     };
   }, [user?.id, refresh]);
-  
-  // Cross-tab/Instant refresh
-  useRealtimeSync('saved_artworks', refresh);
 
   const handleRemove = async (artworkId: string) => {
     await toggleSaveArtwork(artworkId);

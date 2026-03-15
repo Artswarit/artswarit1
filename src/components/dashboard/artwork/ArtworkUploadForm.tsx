@@ -17,7 +17,6 @@ import { Calendar as CalendarIcon, ImageIcon, MusicIcon, VideoIcon, AlertTriangl
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
-import { broadcastRefresh } from "@/lib/realtime-sync";
 
 
 import { FeatureLimitBanner } from "@/components/premium/FeatureLimitBanner";
@@ -172,8 +171,6 @@ const ArtworkUploadForm = ({ onCancel, onSuccess }: ArtworkUploadFormProps) => {
       
       // Refresh gating limits instantly
       refreshGating();
-      
-      broadcastRefresh('artworks');
       
       // Reset form
       setTitle("");
