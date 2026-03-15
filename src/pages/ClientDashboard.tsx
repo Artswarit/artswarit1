@@ -544,7 +544,7 @@ const ClientDashboard = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 pt-28 sm:pt-32 lg:pt-36">
         {/* Dashboard Header */}
         <div className="mb-4 sm:mb-6 lg:mb-8 animate-fade-in">
-          <h1 className="font-heading text-xl sm:text-2xl lg:text-3xl font-black mb-1 sm:mb-2">Client Dashboard</h1>
+          <h1 className="font-heading text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">Client Dashboard</h1>
           <p className="text-muted-foreground text-xs sm:text-sm lg:text-base">
             Welcome back, <span className="font-black text-foreground">{userName}</span>! Manage your projects and discover new artists.
           </p>
