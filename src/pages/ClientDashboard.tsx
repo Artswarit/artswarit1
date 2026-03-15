@@ -917,7 +917,7 @@ const ClientDashboard = () => {
                                   </Link>
                                 </div>
                               </div>
-                              <span className={cn("px-2 py-0.5 text-[10px] sm:text-xs rounded-full shrink-0", project.status === "In Progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300")}>
+                              <span className={cn("px-2 py-0.5 text-xs rounded-full shrink-0", project.status === "In Progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300")}>
                                 {project.status}
                               </span>
                             </div>
